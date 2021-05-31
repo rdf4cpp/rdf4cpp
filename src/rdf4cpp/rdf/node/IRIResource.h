@@ -8,6 +8,10 @@
 #include "RDFNode.h"
 
 namespace rdf4cpp::rdf::node {
+
+    ///
+    /// IRI resource node.
+    ///
     class IRIResource : public RDFNode {
     public:
         [[nodiscard]] std::string as_string(bool quoting)const override{ return "";};

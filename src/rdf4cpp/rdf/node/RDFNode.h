@@ -17,7 +17,7 @@ namespace rdf4cpp::rdf::node{
     class RDFNode {
     public:
 
-        //virtual ~RDFNode(){};
+        virtual ~RDFNode(){};
 
         [[nodiscard]] virtual std::string as_string(bool quoting) const = 0;
 

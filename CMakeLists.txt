@@ -3,7 +3,9 @@ project(rdf4cpp)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -g -O0")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 add_library(rdf4cpp
         src/rdf4cpp/rdf/node/RDFNode.h
@@ -24,7 +26,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/node/Literal.cpp
         src/rdf4cpp/rdf/node/Literal.h
         src/rdf4cpp/library.cpp
-        )
+        src/rdf4cpp/utils/IRI.cpp src/rdf4cpp/utils/IRI.h src/rdf4cpp/utils/error/InvalidIRIError.cpp src/rdf4cpp/utils/error/InvalidIRIError.h src/rdf4cpp/utils/UTF8String.cpp src/rdf4cpp/utils/UTF8String.h src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp src/rdf4cpp/utils/error/InvalidUTF8StringError.h)
 target_link_libraries(rdf4cpp PUBLIC
         rdfnode)
 # target_include_directories(rdf4cpp PUBLIC src/rdf/node/)

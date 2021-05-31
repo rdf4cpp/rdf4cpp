@@ -26,7 +26,6 @@ namespace rdf4cpp::utils::sec {
 
     public:
 
-        ///
         /// Tries to return the Ok Value otherwise will panic exit.
         ///
         /// \return The unwrapped Ok Value.
@@ -57,14 +56,14 @@ namespace rdf4cpp::utils::sec {
         ///
         /// \return true if result is valid and ok, false otherwise.
         [[nodiscard]] bool is_ok() const{
-            std::holds_alternative<V>(this->value);
+            return std::holds_alternative<V>(this->value);
         }
 
         /// If the Result is an error thus contains the Err (K) Object
         ///
         /// \return true if the result is an error, false otherwise
         [[nodiscard]] bool is_err() const{
-            std::holds_alternative<K>(this->value);
+            return std::holds_alternative<K>(this->value);
         }
 
         /// Converts the result object to an std::optional containing the Ok Value <V> if the Ok value is set,
@@ -92,11 +91,10 @@ namespace rdf4cpp::utils::sec {
         }
 
     protected:
-        std::variant<V, K> value;
-        Result() {}
+        //K() otherwise variant won't be initialized
+        std::variant<V, K> value = K();
+        Result() = default;
     };
-
-
 
 }
 
