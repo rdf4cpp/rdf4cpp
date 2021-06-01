@@ -14,17 +14,17 @@ rdf4cpp::utils::utf8::UTF8String::UTF8String(std::string string) {
 
 bool rdf4cpp::utils::utf8::UTF8String::has_next() const {
     if( string.length()>pos ){
-        auto pos_char = string[pos];
+        u_char pos_char = string[pos];
         if (pos_char<0x80){ // 1 byte ascii char
             return true;
         }
-        else if (pos_char&0xC0){ // 2byte utf 8 char
+        else if (pos_char<=0xDF && pos_char >= 0xC2){ // 2byte utf 8 char
             return string.length()>pos+1;
         }
-        else if (pos_char&0xE0){ // 3byte utf 8 char
+        else if (pos_char<=0xEF && pos_char >= 0xE0){ // 3byte utf 8 char
             return string.length()>pos+2;
         }
-        else if (pos_char&0xF0){ // 4byte utf 8 char
+        else if (pos_char<=0xF4 && pos_char >= 0xF0){ // 4byte utf 8 char
             return string.length()>pos+3;
         }
     }
@@ -38,15 +38,15 @@ std::optional<std::string> rdf4cpp::utils::utf8::UTF8String::next() {
         ret = string.substr(pos, pos+1);
         pos++;
     }
-    else if (pos_char&0xC0){ // 2byte utf 8 char
+    else if (pos_char<=0xDF && pos_char >= 0xC2){ // 2byte utf 8 char
         ret = string.substr(pos, pos+2);
         pos+=2;
     }
-    else if (pos_char&0xE0){ // 3byte utf 8 char
+    else if (pos_char<=0xEF && pos_char >= 0xE0){ // 3byte utf 8 char
         ret = string.substr(pos, pos+3);
         pos+=3;
     }
-    else if (pos_char&0xF0){ // 4byte utf 8 char
+    else if (pos_char<=0xF4 && pos_char >= 0xF0){ // 4byte utf 8 char
         ret = string.substr(pos, pos+4);
         pos+=4;
     }
@@ -59,18 +59,18 @@ std::optional<std::string> rdf4cpp::utils::utf8::UTF8String::next() {
 rdf4cpp::utils::sec::Result<rdf4cpp::utils::utf8::UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError> rdf4cpp::utils::utf8::UTF8String::create(std::string utf8_string) {
     u_int8_t size = 0;
     size_t pos =0;
-    for(char c : utf8_string){
+    for(u_char c : utf8_string){
         if(size==0){ // new Char
             if (c<0x80){ // 1 byte ascii char
                 //nothing to do here
             }
-            else if (c&0xC0){ // 2byte utf 8 char
+            else if (c<=0xDF && c >= 0xC2){ // 2byte utf 8 char
                 size=1;
             }
-            else if (c&0xE0){ // 3byte utf 8 char
+            else if (c<=0xEF && c >= 0xE0){ // 3byte utf 8 char
                 size=2;
             }
-            else if (c&0xF0){ // 4byte utf 8 char
+            else if (c<=0xF4 && c >= 0xF0){ // 4byte utf 8 char
                 size=3;
             }else{
                 // not valid
@@ -80,7 +80,7 @@ rdf4cpp::utils::sec::Result<rdf4cpp::utils::utf8::UTF8String, rdf4cpp::utils::er
             }
         }
         else if(size>=1){ // 2 byte char, 2nd byte: 10xxxxxx
-            if(!(c&0x80)){
+            if(!(c <= 0xBF && c >= 0x80)){
                 // not valid
                 return rdf4cpp::utils::sec::Err<UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError>(
                         rdf4cpp::utils::error::InvalidUTF8StringError("Invalid UTF-8 Character at position "+pos)

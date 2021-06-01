@@ -8,6 +8,7 @@
 #include "../sec/Result.h"
 #include "../error/InvalidUTF8StringError.h"
 
+//TODO make UTF8Wrappers thread safe using mutexes
 namespace rdf4cpp::utils::utf8 {
 
     ///
@@ -26,7 +27,7 @@ namespace rdf4cpp::utils::utf8 {
         virtual std::optional<std::string> next() = 0;
 
 
-        static bool is_valid_utf8_char(std::string utf8_char);
+        static bool is_valid_utf8_char(std::string &utf8_char);
     };
 }
 
