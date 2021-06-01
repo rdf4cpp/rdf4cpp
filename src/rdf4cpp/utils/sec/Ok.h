@@ -26,7 +26,7 @@ namespace rdf4cpp::utils::sec {
         ///
         /// \param value the value the Ok object should contain.
         explicit Ok(V value){
-            this->value=value;
+            this->value=std::move(value);
         }
     };
 }

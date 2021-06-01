@@ -3,16 +3,16 @@
 //
 
 #include "UTF8String.h"
-#include "error/InvalidUTF8StringError.h"
-#include "sec/Result.h"
-#include "sec/Ok.h"
-#include "sec/Err.h"
+#include "../error/InvalidUTF8StringError.h"
+#include "../sec/Result.h"
+#include "../sec/Ok.h"
+#include "../sec/Err.h"
 
-UTF8String::UTF8String(std::string string) {
+rdf4cpp::utils::utf8::UTF8String::UTF8String(std::string string) {
     this->string = string;
 }
 
-bool UTF8String::has_next() {
+bool rdf4cpp::utils::utf8::UTF8String::has_next() const {
     if( string.length()>pos ){
         auto pos_char = string[pos];
         if (pos_char<0x80){ // 1 byte ascii char
@@ -31,24 +31,32 @@ bool UTF8String::has_next() {
     return false;
 }
 
-std::string UTF8String::next() {
-    auto pos_char = string[pos];
+std::optional<std::string> rdf4cpp::utils::utf8::UTF8String::next() {
+    u_char pos_char = string[pos];
+    std::string ret;
     if (pos_char<0x80){ // 1 byte ascii char
-        return string.substr(pos, pos+1);
+        ret = string.substr(pos, pos+1);
+        pos++;
     }
     else if (pos_char&0xC0){ // 2byte utf 8 char
-        return string.substr(pos, pos+2);
+        ret = string.substr(pos, pos+2);
+        pos+=2;
     }
     else if (pos_char&0xE0){ // 3byte utf 8 char
-        return string.substr(pos, pos+3);
+        ret = string.substr(pos, pos+3);
+        pos+=3;
     }
     else if (pos_char&0xF0){ // 4byte utf 8 char
-        return string.substr(pos, pos+4);
+        ret = string.substr(pos, pos+4);
+        pos+=4;
     }
-    return "";
+    else{
+        return std::nullopt;
+    }
+    return std::optional<std::string>(ret);
 }
 
-rdf4cpp::utils::sec::Result<UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError> UTF8String::create(std::string utf8_string) {
+rdf4cpp::utils::sec::Result<rdf4cpp::utils::utf8::UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError> rdf4cpp::utils::utf8::UTF8String::create(std::string utf8_string) {
     u_int8_t size = 0;
     size_t pos =0;
     for(char c : utf8_string){

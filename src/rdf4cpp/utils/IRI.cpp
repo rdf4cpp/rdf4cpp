@@ -12,6 +12,11 @@
 #include "error/InvalidIRIError.h"
 #include "sec/Err.h"
 
+/*
+ *
+ * What we do is to check each if each var is valid with mathematical ops or built in ops and find the end char
+ *
+ */
 rdf4cpp::utils::sec::Result<rdf4cpp::utils::IRI, rdf4cpp::utils::error::InvalidIRIError> rdf4cpp::utils::IRI::create(std::string iri_string) {
     //TODO validate IRI RFC3986
     // : allowed are < ALPHA / DIGIT / "+" / "-" / "." > First one is ALPHA

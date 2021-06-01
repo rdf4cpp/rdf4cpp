@@ -26,7 +26,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/node/Literal.cpp
         src/rdf4cpp/rdf/node/Literal.h
         src/rdf4cpp/library.cpp
-        src/rdf4cpp/utils/IRI.cpp src/rdf4cpp/utils/IRI.h src/rdf4cpp/utils/error/InvalidIRIError.cpp src/rdf4cpp/utils/error/InvalidIRIError.h src/rdf4cpp/utils/UTF8String.cpp src/rdf4cpp/utils/UTF8String.h src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp src/rdf4cpp/utils/error/InvalidUTF8StringError.h)
+        src/rdf4cpp/utils/IRI.cpp src/rdf4cpp/utils/IRI.h src/rdf4cpp/utils/error/InvalidIRIError.cpp src/rdf4cpp/utils/error/InvalidIRIError.h src/rdf4cpp/utils/utf8/UTF8String.cpp src/rdf4cpp/utils/utf8/UTF8String.h src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp src/rdf4cpp/utils/error/InvalidUTF8StringError.h src/rdf4cpp/utils/utf8/UTF8StringStream.cpp src/rdf4cpp/utils/utf8/UTF8StringStream.h src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp src/rdf4cpp/utils/utf8/UTF8Wrapper.h src/rdf4cpp/utils/StringValidator.cpp src/rdf4cpp/utils/StringValidator.h)
 target_link_libraries(rdf4cpp PUBLIC
         rdfnode)
 # target_include_directories(rdf4cpp PUBLIC src/rdf/node/)
