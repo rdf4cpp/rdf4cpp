@@ -44,6 +44,13 @@ add_library(rdf4cpp
         src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
         src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
         src/rdf4cpp/utils/StringValidator.cpp
+        src/rdf4cpp/rdf/graph/node_manager/ID.cpp
+        src/rdf4cpp/rdf/graph/node_manager/LiteralBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/BNodeBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/IRIBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/VariableBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/ResourceManager.cpp
+        src/rdf4cpp/rdf/graph/node_manager/TaggedResourcePointer.cpp
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 set_target_properties(rdf4cpp PROPERTIES

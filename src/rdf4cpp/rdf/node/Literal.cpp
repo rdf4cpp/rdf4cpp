@@ -1,5 +1,5 @@
-//
-// Created by Lixi Alié Conrads on 5/30/21.
-//
-
 #include "Literal.h"
+namespace rdf4cpp::rdf::node {
+
+Literal::Literal(void *ptr, const RDFNode::ID &id) : RDFNode(ptr, id) {}
+}  // namespace rdf4cpp::rdf::node

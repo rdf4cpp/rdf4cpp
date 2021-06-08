@@ -8,11 +8,18 @@
 #include "RDFNode.h"
 
 namespace rdf4cpp::rdf::node {
-    class Literal : public RDFNode {
-    public:
-        [[nodiscard]] std::string as_string(bool quoting)const override{ return "";};
+class Literal : public RDFNode {
+protected:
+    Literal(void *ptr, const ID &id);
+
+public:
+    [[nodiscard]] std::string as_string(bool quoting) const {
+        return id_.literal().as_string(quoting);
     };
-}
+
+    friend class RDFNode;
+};
+}  // namespace rdf4cpp::rdf::node
 
 
-#endif //RDF4CPP_LITERAL_H
+#endif  //RDF4CPP_LITERAL_H

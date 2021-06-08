@@ -3,3 +3,6 @@
 //
 
 #include "BlankNode.h"
+namespace rdf4cpp::rdf::node {
+BlankNode::BlankNode() : RDFNode{} {}
+}  // namespace rdf4cpp::rdf::node

@@ -9,13 +9,13 @@
 
 namespace rdf4cpp::rdf::node {
 
-    class ResourceNode : public RDFNode {
-    public:
-        [[nodiscard]] std::string as_string(bool quoting)const override{ return "";};
-    protected:
-        ResourceNode(){};
-    };
-}
+class ResourceNode : public RDFNode {
+public:
+    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const { return ""; };
+
+protected:
+};
+}  // namespace rdf4cpp::rdf::node
 
 
-#endif //RDF4CPP_RESOURCENODE_H
+#endif  //RDF4CPP_RESOURCENODE_H
