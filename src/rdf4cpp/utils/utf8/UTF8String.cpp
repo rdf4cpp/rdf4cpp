@@ -3,13 +3,15 @@
 //
 
 #include "UTF8String.h"
+
+#include <utility>
 #include "../error/InvalidUTF8StringError.h"
 #include "../sec/Result.h"
 #include "../sec/Ok.h"
 #include "../sec/Err.h"
 
 rdf4cpp::utils::utf8::UTF8String::UTF8String(std::string string) {
-    this->string = string;
+    this->string = std::move(string);
 }
 
 bool rdf4cpp::utils::utf8::UTF8String::has_next() const {
