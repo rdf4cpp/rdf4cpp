@@ -1,8 +1,10 @@
 #ifndef RDF4CPP_BNODEBACKEND_H
 #define RDF4CPP_BNODEBACKEND_H
 
-#include "ID.h"
+#include "rdf4cpp/rdf/graph/node_manager/ID.h"
 #include <string>
+#include <compare>
+
 namespace rdf4cpp::rdf::graph::node_manager {
 
 class BNodeBackend {

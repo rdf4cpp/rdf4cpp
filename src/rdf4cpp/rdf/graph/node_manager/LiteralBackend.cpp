@@ -1,10 +1,10 @@
-#include "LiteralBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/LiteralBackend.h"
 
 namespace rdf4cpp::rdf::graph::node_manager {
 
 LiteralBackend::LiteralBackend(std::string lexical, const ID &dataType, std::string langTag)
     : lexical(std::move(lexical)),
-      data_type(dataType),
+      datatype_id_(dataType),
       lang_tag(std::move(langTag)) {}
 std::weak_ordering LiteralBackend::operator<=>(const LiteralBackend *other) const {
     if (other != nullptr)

@@ -1,4 +1,4 @@
-#include "TaggedResourcePointer.h"
+#include "rdf4cpp/rdf/graph/node_manager/TaggedResourcePointer.h"
 namespace rdf4cpp::rdf::graph::node_manager {
 std::bitset<TaggedResourcePtr::size_t_bits> TaggedResourcePtr::encode_ptr(const void *ptr, ID id) {
     std::bitset<size_t_bits> ptr_bits{size_t(ptr)};

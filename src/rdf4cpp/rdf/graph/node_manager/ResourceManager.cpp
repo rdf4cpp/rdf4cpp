@@ -1,4 +1,4 @@
-#include "ResourceManager.h"
+#include "rdf4cpp/rdf/graph/node_manager/ResourceManager.h"
 namespace rdf4cpp::rdf::graph::node_manager {
 ResourceManager::ResourceManager() {
     // xsd:string is there by default

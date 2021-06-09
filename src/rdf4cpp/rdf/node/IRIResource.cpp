@@ -1,5 +1,5 @@
-//
-// Created by Lixi Alié Conrads on 5/30/21.
-//
-
 #include "IRIResource.h"
+namespace rdf4cpp::rdf::node {
+
+IRIResource::IRIResource(void *ptr, const RDFNode::ID &id) : RDFNode(ptr, id) {}
+}  // namespace rdf4cpp::rdf::node

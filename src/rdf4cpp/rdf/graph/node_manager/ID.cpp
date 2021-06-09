@@ -1,4 +1,4 @@
-#include "ID.h"
+#include "rdf4cpp/rdf/graph/node_manager/ID.h"
 namespace rdf4cpp::rdf::graph::node_manager {
 
 size_t ID::add_type_tag(size_t id, RDFNodeType node_type) {

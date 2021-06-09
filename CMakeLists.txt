@@ -32,7 +32,6 @@ add_library(rdf4cpp
         src/rdf4cpp/utils/sec/Result.cpp
         src/rdf4cpp/utils/sec/Err.cpp
         src/rdf4cpp/utils/sec/Ok.cpp
-        src/rdf4cpp/rdf/node/ResourceNode.cpp
         src/rdf4cpp/rdf/node/IRIResource.cpp
         src/rdf4cpp/rdf/node/BlankNode.cpp
         src/rdf4cpp/rdf/node/Literal.cpp
@@ -51,6 +50,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/graph/node_manager/VariableBackend.cpp
         src/rdf4cpp/rdf/graph/node_manager/ResourceManager.cpp
         src/rdf4cpp/rdf/graph/node_manager/TaggedResourcePointer.cpp
+        src/rdf4cpp/rdf/node/Variable.cpp
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 set_target_properties(rdf4cpp PROPERTIES

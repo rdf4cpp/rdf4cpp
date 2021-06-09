@@ -1,8 +1,9 @@
 #ifndef RDF4CPP_ID_H
 #define RDF4CPP_ID_H
 
-#include "RDFNodeType.h"
+#include "rdf4cpp/rdf/graph/node_manager/RDFNodeType.h"
 #include <bitset>
+#include <compare>
 
 namespace rdf4cpp::rdf::graph::node_manager {
 

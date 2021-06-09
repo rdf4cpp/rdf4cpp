@@ -1,11 +1,11 @@
 #ifndef RDF4CPP_RESOURCEMANAGER_H
 #define RDF4CPP_RESOURCEMANAGER_H
 
-#include "BNodeBackend.h"
-#include "ID.h"
-#include "IRIBackend.h"
-#include "LiteralBackend.h"
-#include "VariableBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/BNodeBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/ID.h"
+#include "rdf4cpp/rdf/graph/node_manager/IRIBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/LiteralBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/VariableBackend.h"
 #include <map>
 #include <memory>
 namespace rdf4cpp::rdf::graph::node_manager {
@@ -57,6 +57,22 @@ public:
     std::pair<BNodeBackend *, ID> getBnode(const std::string &identifier);
 
     ID lookup_id(void const *const ptr, const RDFNodeType node_type);
+
+    IRIBackend *lookup_iri(ID id) const {
+        return iri_storage.at(id).get();
+    }
+
+    LiteralBackend *lookup_literal(ID id) const {
+        return literal_storage.at(id).get();
+    }
+
+    BNodeBackend *lookup_bnode(ID id) const {
+        return bnode_storage.at(id).get();
+    }
+
+    VariableBackend *lookup_variable(ID id) const {
+        return variable_storage.at(id).get();
+    }
 
     /**
      *

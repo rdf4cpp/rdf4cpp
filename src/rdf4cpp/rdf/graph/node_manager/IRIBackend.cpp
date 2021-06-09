@@ -1,4 +1,4 @@
-#include "IRIBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/IRIBackend.h"
 namespace rdf4cpp::rdf::graph::node_manager {
 
 IRIBackend::IRIBackend(std::string iri) : iri(std::move(iri)) {}

@@ -1,5 +1,5 @@
 
-#include "BNodeBackend.h"
+#include "rdf4cpp/rdf/graph/node_manager/BNodeBackend.h"
 
 namespace rdf4cpp::rdf::graph::node_manager {
 

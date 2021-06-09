@@ -14,7 +14,19 @@ namespace rdf4cpp::rdf::node {
 ///
 class IRIResource : public RDFNode {
 public:
+    IRIResource(void *ptr, const ID &id);
+
+public:
+    IRIResource() : RDFNode(){};
     [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const { return ""; };
+
+    [[nodiscard]] bool is_blank_node() const { return false; }
+    [[nodiscard]] bool is_literal() const { return false; }
+    [[nodiscard]] bool is_variable() const { return false; }
+    [[nodiscard]] bool is_bnode() const { return false; }
+    [[nodiscard]] bool is_iri() const { return true; }
+    [[nodiscard]] RDFNodeType type() const { return RDFNodeType::IRI; }
+    friend class RDFNode;
 };
 }  // namespace rdf4cpp::rdf::node
 
