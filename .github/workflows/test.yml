@@ -7,7 +7,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-latest, ubuntu-latest ]
+        os: [ ubuntu-latest ] # windows-latest, macos-latest,  ]
+        include:
+          - runs-on: ubuntu-latest
+            compiler: gcc
+            gcc: 10
     steps:
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
@@ -22,7 +26,7 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build
+          sudo apt install cmake ninja-build g++-10 clang-10
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
