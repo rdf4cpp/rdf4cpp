@@ -1,45 +1,36 @@
-//
-// Created by Lixi Alié Conrads on 5/30/21.
-//
-
 #ifndef RDF4CPP_LITERAL_H
 #define RDF4CPP_LITERAL_H
 
-#include "RDFNode.h"
+#include <rdf4cpp/rdf/node/RDFNode.h>
 
 namespace rdf4cpp::rdf::node {
 class Literal : public RDFNode {
 protected:
-    Literal(void *ptr, const ID &id);
+    Literal(void *ptr, const NodeID &id);
 
 public:
-    Literal() : RDFNode() {}
+    Literal();
 
-    [[nodiscard]] const std::string &lexical_form() const {
-        return id_.literal().lexical_form();
+    [[nodiscard]] const std::string &lexical_form() const;
+
+    [[nodiscard]] IRIResource datatype(NodeManager &node_manager = NodeManager::default_instance()) const;
+
+    [[nodiscard]] NodeID datatype_id() const {
+        return handle_.literal_backend().datatype_id();
     }
 
-    [[nodiscard]] IRIResource datatype(ResourceManager &node_manager = ResourceManager::default_instance()) const;
-
-    [[nodiscard]] ID datatype_id() const {
-        return id_.literal().datatype_id();
-    }
-
-    [[nodiscard]] const std::string &language_tag() const {
-        return id_.literal().language_tag();
-    }
+    [[nodiscard]] const std::string &language_tag() const;
 
 
-    [[nodiscard]] std::string as_string(bool quoting) const {
-        return id_.literal().as_string(quoting);
-    };
+    [[nodiscard]] std::string as_string(bool quoting = false,
+                                        NodeManager &node_manager = NodeManager::default_instance()) const;
 
-    [[nodiscard]] bool is_blank_node() const { return false; }
-    [[nodiscard]] bool is_literal() const { return true; }
-    [[nodiscard]] bool is_variable() const { return false; }
-    [[nodiscard]] bool is_bnode() const { return false; }
-    [[nodiscard]] bool is_iri() const { return false; }
-    [[nodiscard]] RDFNodeType type() const { return RDFNodeType::Literal; }
+    [[nodiscard]] bool is_blank_node() const;
+    [[nodiscard]] bool is_literal() const;
+    [[nodiscard]] bool is_variable() const;
+    [[nodiscard]] bool is_bnode() const;
+    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] RDFNodeType type() const;
 
     friend class RDFNode;
 };

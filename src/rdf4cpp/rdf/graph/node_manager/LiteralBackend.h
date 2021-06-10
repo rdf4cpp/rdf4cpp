@@ -1,29 +1,29 @@
 #ifndef RDF4CPP_LITERALBACKEND_H
 #define RDF4CPP_LITERALBACKEND_H
 
-#include "rdf4cpp/rdf/graph/node_manager/ID.h"
+#include <rdf4cpp/rdf/graph/node_manager/NodeID.h>
+
 #include <compare>
 #include <string>
 
 namespace rdf4cpp::rdf::graph::node_manager {
 
 class LiteralBackend {
+    NodeID datatype_id_;
     std::string lexical;
-    ID datatype_id_;
     std::string lang_tag;
 
 public:
-    LiteralBackend(std::string lexical, const ID &dataType, std::string langTag = "");
+    [[nodiscard]] std::string quote_lexical() const;
+    LiteralBackend(std::string lexical, const NodeID &dataType, std::string langTag = "");
     auto operator<=>(const LiteralBackend &) const = default;
-    std::weak_ordering operator<=>(LiteralBackend const *other) const;
-
-    [[nodiscard]] std::string as_string(bool quoting) const;
+    std::strong_ordering operator<=>(LiteralBackend const *other) const;
 
     [[nodiscard]] const std::string &lexical_form() const {
         return lexical;
     }
 
-    [[nodiscard]] const ID &datatype_id() const {
+    [[nodiscard]] const NodeID &datatype_id() const {
         return datatype_id_;
     }
 

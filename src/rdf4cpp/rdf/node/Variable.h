@@ -1,35 +1,28 @@
 #ifndef RDF4CPP_VARIABLE_H
 #define RDF4CPP_VARIABLE_H
 
-
-#include "RDFNode.h"
+#include <rdf4cpp/rdf/node/RDFNode.h>
 
 namespace rdf4cpp::rdf::node {
 class Variable : public RDFNode {
 protected:
-    Variable(void *ptr, const ID &id) : RDFNode(ptr, id) {}
+    Variable(void *ptr, const NodeID &id);
 
 public:
-    Variable() : RDFNode() {}
+    Variable();
 
-    [[nodiscard]] bool is_anonymous() const {
-        return this->id_.variable().is_anonymous();
-    }
+    [[nodiscard]] bool is_anonymous() const;
 
-    [[nodiscard]] const std::string &name() const {
-        return this->id_.variable().name();
-    }
+    [[nodiscard]] const std::string &name() const;
 
-    [[nodiscard]] std::string as_string(bool quoting) const {
-        return id_.variable().as_string(quoting);
-    };
+    [[nodiscard]] std::string as_string(bool quoting = false) const;
 
-    [[nodiscard]] bool is_blank_node() const { return false; }
-    [[nodiscard]] bool is_literal() const { return false; }
-    [[nodiscard]] bool is_variable() const { return true; }
-    [[nodiscard]] bool is_bnode() const { return false; }
-    [[nodiscard]] bool is_iri() const { return false; }
-    [[nodiscard]] RDFNodeType type() const { return RDFNodeType::Variable; }
+    [[nodiscard]] bool is_blank_node() const;
+    [[nodiscard]] bool is_literal() const;
+    [[nodiscard]] bool is_variable() const;
+    [[nodiscard]] bool is_bnode() const;
+    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] RDFNodeType type() const;
 
     friend class RDFNode;
 };

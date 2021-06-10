@@ -3,14 +3,13 @@
 
 #include <cstdint>
 
-
 namespace rdf4cpp::rdf::graph::node_manager {
 
 enum class RDFNodeType : uint8_t {
-    IRI = 0,
+    Variable = 0,
     BNode,
-    Literal,
-    Variable
+    IRI,
+    Literal
 };
 
 }

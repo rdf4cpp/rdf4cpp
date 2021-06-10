@@ -1,10 +1,11 @@
 #ifndef RDF4CPP_RDFNODE_H
 #define RDF4CPP_RDFNODE_H
 
-
-#include "rdf4cpp/rdf/graph/node_manager/TaggedResourcePointer.h"
 #include <optional>
 #include <string>
+
+#include <rdf4cpp/rdf/graph/node_manager/BackendNodeHandle.h>
+#include <rdf4cpp/rdf/graph/node_manager/NodeManager.h>
 
 namespace rdf4cpp::rdf::node {
 class Literal;
@@ -17,71 +18,63 @@ class Variable;
  */
 class RDFNode {
 protected:
-    using TaggedResourcePtr = rdf4cpp::rdf::graph::node_manager::TaggedResourcePtr;
-    using ID = rdf4cpp::rdf::graph::node_manager::ID;
-    using ResourceManager = rdf4cpp::rdf::graph::node_manager::ResourceManager;
-    using LiteralBackend = rdf4cpp::rdf::graph::node_manager::LiteralBackend;
+    using BackendNodeHandle = rdf4cpp::rdf::graph::node_manager::BackendNodeHandle;
+    using NodeID = rdf4cpp::rdf::graph::node_manager::NodeID;
+    using NodeManager = rdf4cpp::rdf::graph::node_manager::NodeManager;
     using RDFNodeType = rdf4cpp::rdf::graph::node_manager::RDFNodeType;
-    TaggedResourcePtr id_;
+    BackendNodeHandle handle_;
 
-    RDFNode(void *ptr, ID id) : id_(ptr, id) {}
-    explicit RDFNode(const TaggedResourcePtr &id) : id_(id) {}
+    RDFNode(void *ptr, NodeID id);
+    explicit RDFNode(const BackendNodeHandle &id);
 
 public:
     RDFNode() = default;
 
-    // TODO: implement all other "make"-methods
-    static Literal make_literal(const std::string &lexical_form,
-                                ResourceManager &node_manager = ResourceManager::default_instance());
+    static Literal make_string_literal(const std::string &lexical_form,
+                                       NodeManager &node_manager = NodeManager::default_instance());
 
 
-    [[nodiscard]] std::string as_string(bool quoting) const;
+    static Literal make_typed_literal(const std::string &lexical_form, const std::string &datatype,
+                                      NodeManager &node_manager = NodeManager::default_instance());
+
+    static Literal make_typed_literal(const std::string &lexical_form, const IRIResource &datatype,
+                                      NodeManager &node_manager = NodeManager::default_instance());
+
+    static Literal make_lang_literal(const std::string &lexical_form, const std::string &lang,
+                                     NodeManager &node_manager = NodeManager::default_instance());
+
+    static IRIResource make_iri(const std::string &iri,
+                                NodeManager &node_manager = NodeManager::default_instance());
+
+    /**
+     *
+     * @param identifier name name without _: or ?
+     * @param anonymous true if string repr. it starts with ? and false if it starts with ?
+     * @return
+     */
+    static Variable make_variable(const std::string &identifier, bool anonymous = false,
+                                  NodeManager &node_manager = NodeManager::default_instance());
+
+    /**
+     *
+     * @param name name without _:
+     * @return
+     */
+    static BlankNode make_bnode(const std::string &identifier,
+                                NodeManager &node_manager = NodeManager::default_instance());
+
+
+    [[nodiscard]] std::string as_string(bool quoting = false,
+                                        NodeManager &node_manager = NodeManager::default_instance()) const;
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_bnode() const;
     [[nodiscard]] bool is_iri() const;
     [[nodiscard]] RDFNodeType type() const;
 
-    bool operator==(const RDFNode &other) const {
-        if (this->id_ == other.id_) {
-            return true;
-        } else if (this->type() != other.type()) {
-            return false;
-        } else {
-            switch (this->type()) {
-                case RDFNodeType::IRI:
-                    return this->id_.iri() == other.id_.iri();
-                case RDFNodeType::BNode:
-                    return this->id_.bnode() == other.id_.bnode();
-                case RDFNodeType::Literal:
-                    return this->id_.literal() == other.id_.literal();
-                case RDFNodeType::Variable:
-                    return this->id_.variable() == other.id_.variable();
-            }
-            return false;
-        }
-    }
+    bool operator==(const RDFNode &other) const;
 
-    std::weak_ordering operator<=>(const RDFNode &other) const {
-        if (auto comp_id = this->id_ <=> other.id_; comp_id == std::strong_ordering::equal) {
-            return comp_id;
-        } else if (auto comp_type = this->type() <=> other.type(); comp_id != std::strong_ordering::equal) {
-            return comp_type;
-        } else {  // same type, different id.
-            switch (this->type()) {
-                // TODO. implement equivalence comparison in the backend types
-                case RDFNodeType::IRI:
-                    return this->id_.iri() <=> other.id_.iri();
-                case RDFNodeType::BNode:
-                    return this->id_.bnode() <=> other.id_.bnode();
-                case RDFNodeType::Literal:
-                    return this->id_.literal() <=> other.id_.literal();
-                case RDFNodeType::Variable:
-                    return this->id_.variable() <=> other.id_.variable();
-            }
-            return std::weak_ordering::less;
-        }
-    }
+    std::strong_ordering operator<=>(const RDFNode &other) const;
 };
 }  // namespace rdf4cpp::rdf::node
 

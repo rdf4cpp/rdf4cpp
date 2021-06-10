@@ -1,31 +1,28 @@
-//
-// Created by Lixi Alié Conrads on 5/30/21.
-//
-
 #ifndef RDF4CPP_IRIRESOURCE_H
 #define RDF4CPP_IRIRESOURCE_H
 
-#include "RDFNode.h"
+#include <rdf4cpp/rdf/node/RDFNode.h>
 
 namespace rdf4cpp::rdf::node {
 
-///
-/// IRI resource node.
-///
+/**
+ * IRI Resource node.
+ */
 class IRIResource : public RDFNode {
 public:
-    IRIResource(void *ptr, const ID &id);
+    IRIResource(void *ptr, const NodeID &id);
 
 public:
-    IRIResource() : RDFNode(){};
-    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const { return ""; };
+    IRIResource();
+    ;
+    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting = false) const;
 
-    [[nodiscard]] bool is_blank_node() const { return false; }
-    [[nodiscard]] bool is_literal() const { return false; }
-    [[nodiscard]] bool is_variable() const { return false; }
-    [[nodiscard]] bool is_bnode() const { return false; }
-    [[nodiscard]] bool is_iri() const { return true; }
-    [[nodiscard]] RDFNodeType type() const { return RDFNodeType::IRI; }
+    [[nodiscard]] bool is_blank_node() const;
+    [[nodiscard]] bool is_literal() const;
+    [[nodiscard]] bool is_variable() const;
+    [[nodiscard]] bool is_bnode() const;
+    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] RDFNodeType type() const;
     friend class RDFNode;
 };
 }  // namespace rdf4cpp::rdf::node

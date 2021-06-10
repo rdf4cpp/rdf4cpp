@@ -1,6 +1,8 @@
 #ifndef RDF4CPP_VARIABLEBACKEND_H
 #define RDF4CPP_VARIABLEBACKEND_H
-#include "ID.h"
+
+#include <rdf4cpp/rdf/graph/node_manager/NodeID.h>
+
 #include <compare>
 #include <string>
 
@@ -13,17 +15,13 @@ class VariableBackend {
 public:
     explicit VariableBackend(std::string name, bool anonymous = false);
     auto operator<=>(const VariableBackend &) const = default;
-    std::weak_ordering operator<=>(VariableBackend const *other) const;
+    std::strong_ordering operator<=>(VariableBackend const *other) const;
 
     [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const;
 
-    [[nodiscard]] bool is_anonymous() const {
-        return anonymous_;
-    }
+    [[nodiscard]] bool is_anonymous() const;
 
-    [[nodiscard]] const std::string &name() const {
-        return name_;
-    }
+    [[nodiscard]] const std::string &name() const;
 };
 }  // namespace rdf4cpp::rdf::graph::node_manager
 
