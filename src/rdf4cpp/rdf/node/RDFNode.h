@@ -75,6 +75,11 @@ public:
     bool operator==(const RDFNode &other) const;
 
     std::strong_ordering operator<=>(const RDFNode &other) const;
+
+    explicit operator BlankNode() const;
+    explicit operator IRIResource() const;
+    explicit operator Literal() const;
+    explicit operator Variable() const;
 };
 }  // namespace rdf4cpp::rdf::node
 

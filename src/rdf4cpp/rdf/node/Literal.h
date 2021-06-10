@@ -7,9 +7,16 @@ namespace rdf4cpp::rdf::node {
 class Literal : public RDFNode {
 protected:
     Literal(void *ptr, const NodeID &id);
+    explicit Literal(RDFNode::BackendNodeHandle handle);
 
 public:
     Literal();
+    explicit Literal(const std::string &lexical_form,
+                     NodeManager &node_manager = NodeManager::default_instance());
+    Literal(const std::string &lexical_form, const IRIResource &datatype,
+            NodeManager &node_manager = NodeManager::default_instance());
+    Literal(const std::string &lexical_form, const std::string &lang,
+            NodeManager &node_manager = NodeManager::default_instance());
 
     [[nodiscard]] const std::string &lexical_form() const;
 

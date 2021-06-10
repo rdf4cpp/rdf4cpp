@@ -8,6 +8,15 @@ std::bitset<BackendNodeHandle::size_t_bits> BackendNodeHandle::encode_ptr(const 
     ptr_bits[size_t_bits - 2] = id_bits[size_t_bits - 2];
     return ptr_bits;
 }
+
+std::bitset<BackendNodeHandle::size_t_bits> BackendNodeHandle::encode_ptr(const void *ptr, RDFNodeType type) {
+    std::bitset<size_t_bits> ptr_bits{size_t(ptr)};
+    const std::bitset<8> type_bits{uint8_t(type)};
+    ptr_bits[size_t_bits - 1] = type_bits[1];
+    ptr_bits[size_t_bits - 2] = type_bits[0];
+    return ptr_bits;
+}
+
 void *BackendNodeHandle::ptr() const {
     std::bitset<size_t_bits> bits_ = this->bits;
     bits_[size_t_bits - 1] = false;
@@ -15,6 +24,8 @@ void *BackendNodeHandle::ptr() const {
     return reinterpret_cast<void *>(bits_.to_ulong());
 }
 BackendNodeHandle::BackendNodeHandle(void *ptr, NodeID id) : bits(encode_ptr(ptr, id)) {}
+BackendNodeHandle::BackendNodeHandle(void *ptr, RDFNodeType type) : bits(encode_ptr(ptr, type)) {}
+
 RDFNodeType BackendNodeHandle::type() const {
     return static_cast<RDFNodeType>(uint8_t(bits.to_ulong() >> (size_t_bits - 2)));
 }

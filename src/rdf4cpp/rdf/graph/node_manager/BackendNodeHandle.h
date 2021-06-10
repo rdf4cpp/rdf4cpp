@@ -15,11 +15,14 @@ class BackendNodeHandle {
 
     static std::bitset<size_t_bits> encode_ptr(void const *ptr, NodeID id);
 
+    static std::bitset<size_t_bits> encode_ptr(void const *ptr, RDFNodeType type);
+
     [[nodiscard]] void *ptr() const;
 
 public:
     BackendNodeHandle() = default;
     BackendNodeHandle(void *ptr, NodeID id);
+    BackendNodeHandle(void *ptr, RDFNodeType type);
 
     [[nodiscard]] RDFNodeType type() const;
 

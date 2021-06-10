@@ -6,8 +6,19 @@
 namespace rdf4cpp::rdf::node {
 
 Literal::Literal(void *ptr, const RDFNode::NodeID &id) : RDFNode(ptr, id) {}
-
 Literal::Literal() : RDFNode() {}
+Literal::Literal(const std::string &lexical_form, RDFNode::NodeManager &node_manager)
+    : RDFNode(BackendNodeHandle{node_manager.get_string_literal(lexical_form).first, RDFNodeType::Literal}) {}
+Literal::Literal(const std::string &lexical_form, const IRIResource &datatype, RDFNode::NodeManager &node_manager)
+    : RDFNode(BackendNodeHandle{
+              node_manager.get_typed_literal(
+                                  lexical_form,
+                                  node_manager.lookup_id(&datatype.handle_.iri_backend(), RDFNodeType::IRI))
+                      .first,
+              RDFNodeType::Literal}) {}
+Literal::Literal(const std::string &lexical_form, const std::string &lang, RDFNode::NodeManager &node_manager)
+    : RDFNode(BackendNodeHandle{node_manager.get_lang_literal(lexical_form, lang).first, RDFNodeType::Literal}) {}
+
 
 IRIResource Literal::datatype(NodeManager &node_manager) const {
     NodeID datatype_id = handle_.literal_backend().datatype_id();
@@ -41,4 +52,6 @@ bool Literal::is_variable() const { return false; }
 bool Literal::is_bnode() const { return false; }
 bool Literal::is_iri() const { return false; }
 RDFNode::RDFNodeType Literal::type() const { return RDFNodeType::Literal; }
+Literal::Literal(RDFNode::BackendNodeHandle handle) : RDFNode(handle) {}
+
 }  // namespace rdf4cpp::rdf::node

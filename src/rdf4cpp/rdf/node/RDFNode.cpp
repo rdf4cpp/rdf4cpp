@@ -1,5 +1,6 @@
 #include "RDFNode.h"
 
+#include <cassert>
 #include <rdf4cpp/rdf/graph/node_manager/IRIBackend.h>
 #include <rdf4cpp/rdf/node/BlankNode.h>
 #include <rdf4cpp/rdf/node/IRIResource.h>
@@ -117,6 +118,22 @@ bool RDFNode::operator==(const RDFNode &other) const {
         }
         return false;
     }
+}
+RDFNode::operator BlankNode() const {
+    assert(is_bnode());
+    return BlankNode{handle_};
+}
+RDFNode::operator IRIResource() const {
+    assert(is_iri());
+    return IRIResource(handle_);
+}
+RDFNode::operator Literal() const {
+    assert(is_literal());
+    return Literal(handle_);
+}
+RDFNode::operator Variable() const {
+    assert(is_variable());
+    return Variable(handle_);
 }
 
 }  // namespace rdf4cpp::rdf::node
