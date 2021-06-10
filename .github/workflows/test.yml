@@ -11,7 +11,12 @@ jobs:
         include:
           - runs-on: ubuntu-latest
             compiler: gcc
-            gcc: 10
+            CC: gcc-10
+            CXX: g++-10
+          - runs-on: ubuntu-latest
+            compiler: clang
+            CC: clang-10
+            CXX: clang++-10
     steps:
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
