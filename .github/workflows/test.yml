@@ -2,12 +2,32 @@ name: Test
 on: [ 'push' ]
 jobs:
   test:
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ windows-latest, macos-latest, ubuntu-latest ]
+        config:
+#          - {
+#            name: "windows-latest",
+#            os: windows-latest,
+#          }
+#          - {
+#            name: "macos-latest",
+#            os: macos-latest,
+#          }
+          - {
+            name: "ubuntu-latest g++-10",
+            os: ubuntu-latest,
+            cc: "gcc-10",
+            cxx: "g++-10",
+          }
+          - {
+            name: "ubuntu-latest clang++-10",
+            os: ubuntu-latest,
+            cc: "clang-10",
+            cxx: "clang++-10",
+          }
     steps:
       - name: Install Windows dependencies
         if: runner.os == 'Windows'
@@ -22,7 +42,11 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build
+          sudo apt install cmake ninja-build g++-10 clang-10
+          sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
+          sudo update-alternatives --config c++
+          sudo update-alternatives --install /usr/bin/cc cc /usr/bin/${{ matrix.config.cc }} 90
+          sudo update-alternatives --config cc
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1

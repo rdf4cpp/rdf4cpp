@@ -32,7 +32,6 @@ add_library(rdf4cpp
         src/rdf4cpp/utils/sec/Result.cpp
         src/rdf4cpp/utils/sec/Err.cpp
         src/rdf4cpp/utils/sec/Ok.cpp
-        src/rdf4cpp/rdf/node/ResourceNode.cpp
         src/rdf4cpp/rdf/node/IRIResource.cpp
         src/rdf4cpp/rdf/node/BlankNode.cpp
         src/rdf4cpp/rdf/node/Literal.cpp
@@ -44,6 +43,14 @@ add_library(rdf4cpp
         src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
         src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
         src/rdf4cpp/utils/StringValidator.cpp
+        src/rdf4cpp/rdf/graph/node_manager/NodeID.cpp
+        src/rdf4cpp/rdf/graph/node_manager/LiteralBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/BNodeBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/IRIBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/VariableBackend.cpp
+        src/rdf4cpp/rdf/graph/node_manager/NodeManager.cpp
+        src/rdf4cpp/rdf/graph/node_manager/BackendNodeHandle.cpp
+        src/rdf4cpp/rdf/node/Variable.cpp
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 set_target_properties(rdf4cpp PROPERTIES
@@ -79,4 +86,6 @@ endif ()
 
 ### old here
 
-# add_executable(rdf4cpp_exec src/rdf4cpp/library.cpp)
+add_executable(rdf4cpp_exec src/rdf4cpp/library.cpp)
+target_link_libraries(rdf4cpp_exec PRIVATE
+        rdf4cpp::rdf4cpp)
