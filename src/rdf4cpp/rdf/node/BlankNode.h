@@ -9,13 +9,13 @@ namespace rdf4cpp::rdf::node {
 class BlankNode : public RDFNode {
 
 private:
-    BlankNode(void *ptr, const NodeID &id);
+    BlankNode(const NodeID &id);
     explicit BlankNode(BackendNodeHandle handle);
 
 public:
     BlankNode();
     explicit BlankNode(const std::string &identifier,
-                       NodeManager &node_manager = NodeManager::default_instance());
+                       NodeManager &node_storage = NodeManager::primary_instance());
 
     [[nodiscard]] const std::string &identifier() const;
 

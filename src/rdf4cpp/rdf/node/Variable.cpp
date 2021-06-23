@@ -2,12 +2,13 @@
 
 namespace rdf4cpp::rdf::node {
 Variable::Variable() : RDFNode() {}
-Variable::Variable(void *ptr, const RDFNode::NodeID &id) : RDFNode(ptr, id) {}
-Variable::Variable(const std::string &identifier, bool anonymous, NodeManager &node_manager)
-    : RDFNode(BackendNodeHandle{node_manager.get_variable(identifier, anonymous).first, RDFNodeType::Variable}) {}
+Variable::Variable(const RDFNode::NodeID &id) : RDFNode(id) {}
+Variable::Variable(const std::string &identifier, bool anonymous, NodeManager &node_storage)
+    : RDFNode(BackendNodeHandle{node_storage.get_variable(identifier, anonymous).second}) {}
 Variable::Variable(RDFNode::BackendNodeHandle handle) : RDFNode(handle) {}
 
 bool Variable::is_anonymous() const {
+    // TODO: encode is_anonymous into variable ID
     return this->handle_.variable_backend().is_anonymous();
 }
 const std::string &Variable::name() const {

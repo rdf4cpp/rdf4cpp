@@ -1,6 +1,6 @@
 #include "IRIBackend.h"
 
-namespace rdf4cpp::rdf::graph::node_manager {
+namespace rdf4cpp::rdf::graph::node_storage {
 
 IRIBackend::IRIBackend(std::string iri) : iri(std::move(iri)) {}
 std::strong_ordering IRIBackend::operator<=>(const IRIBackend *other) const {
@@ -15,4 +15,4 @@ std::string IRIBackend::as_string(bool quoting) const {
     else
         return iri;
 }
-}  // namespace rdf4cpp::rdf::graph::node_manager
+}  // namespace rdf4cpp::rdf::graph::node_storage

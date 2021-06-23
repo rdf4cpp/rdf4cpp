@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_IRIBACKEND_H
 #define RDF4CPP_IRIBACKEND_H
 
-#include <rdf4cpp/rdf/graph/node_manager/NodeID.h>
+#include <rdf4cpp/rdf/graph/node_storage/NodeID.h>
 
 #include <compare>
 #include <string>
 
-namespace rdf4cpp::rdf::graph::node_manager {
+namespace rdf4cpp::rdf::graph::node_storage {
 class IRIBackend {
     std::string iri;
 
@@ -18,6 +18,6 @@ public:
 
     [[nodiscard]] std::string as_string(bool quoting) const;
 };
-}  // namespace rdf4cpp::rdf::graph::node_manager
+}  // namespace rdf4cpp::rdf::graph::node_storage
 
 #endif  //RDF4CPP_IRIBACKEND_H

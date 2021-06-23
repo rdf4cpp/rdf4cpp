@@ -6,14 +6,14 @@
 namespace rdf4cpp::rdf::node {
 class Variable : public RDFNode {
 protected:
-    Variable(void *ptr, const NodeID &id);
+    Variable(const NodeID &id);
     explicit Variable(RDFNode::BackendNodeHandle handle);
 
 public:
     Variable();
 
     explicit Variable(const std::string &name, bool anonymous = false,
-                      NodeManager &node_manager = NodeManager::default_instance());
+                      NodeManager &node_storage = NodeManager::primary_instance());
 
     [[nodiscard]] bool is_anonymous() const;
 
@@ -29,6 +29,8 @@ public:
     [[nodiscard]] RDFNodeType type() const;
 
     friend class RDFNode;
+
+    // todo unbound()
 };
 }  // namespace rdf4cpp::rdf::node
 

@@ -1,10 +1,10 @@
 #include "BlankNode.h"
 
 namespace rdf4cpp::rdf::node {
-BlankNode::BlankNode(void *ptr, const RDFNode::NodeID &id) : RDFNode(ptr, id) {}
+BlankNode::BlankNode(const RDFNode::NodeID &id) : RDFNode(id) {}
 BlankNode::BlankNode() : RDFNode{} {}
-BlankNode::BlankNode(const std::string &identifier, RDFNode::NodeManager &node_manager)
-    : RDFNode(BackendNodeHandle{node_manager.get_bnode(identifier).first, RDFNodeType::BNode}) {}
+BlankNode::BlankNode(const std::string &identifier, RDFNode::NodeManager &node_storage)
+    : RDFNode(BackendNodeHandle{node_storage.get_bnode(identifier).second}) {}
 BlankNode::BlankNode(RDFNode::BackendNodeHandle handle) : RDFNode(handle) {}
 
 bool BlankNode::is_blank_node() const { return true; }

@@ -6,31 +6,26 @@
 namespace rdf4cpp::rdf::node {
 class Literal : public RDFNode {
 protected:
-    Literal(void *ptr, const NodeID &id);
+    Literal(const NodeID &id);
     explicit Literal(RDFNode::BackendNodeHandle handle);
 
 public:
     Literal();
     explicit Literal(const std::string &lexical_form,
-                     NodeManager &node_manager = NodeManager::default_instance());
+                     NodeManager &node_storage = NodeManager::primary_instance());
     Literal(const std::string &lexical_form, const IRIResource &datatype,
-            NodeManager &node_manager = NodeManager::default_instance());
+            NodeManager &node_storage = NodeManager::primary_instance());
     Literal(const std::string &lexical_form, const std::string &lang,
-            NodeManager &node_manager = NodeManager::default_instance());
+            NodeManager &node_storage = NodeManager::primary_instance());
 
     [[nodiscard]] const std::string &lexical_form() const;
 
-    [[nodiscard]] IRIResource datatype(NodeManager &node_manager = NodeManager::default_instance()) const;
-
-    [[nodiscard]] NodeID datatype_id() const {
-        return handle_.literal_backend().datatype_id();
-    }
+    [[nodiscard]] IRIResource datatype() const;
 
     [[nodiscard]] const std::string &language_tag() const;
 
 
-    [[nodiscard]] std::string as_string(bool quoting = false,
-                                        NodeManager &node_manager = NodeManager::default_instance()) const;
+    [[nodiscard]] std::string as_string(bool quoting = false) const;
 
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_literal() const;

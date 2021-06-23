@@ -1,6 +1,6 @@
 #include "VariableBackend.h"
 
-namespace rdf4cpp::rdf::graph::node_manager {
+namespace rdf4cpp::rdf::graph::node_storage {
 
 VariableBackend::VariableBackend(std::string name, bool anonymous) : name_(std::move(name)), anonymous_(anonymous) {}
 std::strong_ordering VariableBackend::operator<=>(const VariableBackend *other) const {
@@ -21,4 +21,4 @@ bool VariableBackend::is_anonymous() const {
 const std::string &VariableBackend::name() const {
     return name_;
 }
-}  // namespace rdf4cpp::rdf::graph::node_manager
+}  // namespace rdf4cpp::rdf::graph::node_storage

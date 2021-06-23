@@ -7,6 +7,9 @@
 
 #include <iostream>
 #include <optional>
+#include <rdf4cpp/rdf/graph/Dataset.h>
+#include <rdf4cpp/rdf/graph/Graph.h>
+#include <rdf4cpp/rdf/graph/Quad.h>
 #include <variant>
 
 void mover2(const rdf4cpp::utils::sec::Result<int, std::string> &test);
@@ -40,18 +43,61 @@ void mover2(const rdf4cpp::utils::sec::Result<int, std::string> &test) {
 }
 
 int main() {
+    using namespace rdf4cpp::rdf::graph;
     using namespace rdf4cpp::rdf::node;
-    Variable variable = RDFNode::make_variable("x");
+
+    node_storage::NodeStorage::new_instance<node_storage::DefaultNodeStorageBackend>();
+
+    using namespace node_storage;
+
+    NodeID node_id;
+    std::cout << sizeof(node_id) << std::endl;
+    NodeIDValue id = {0};
+    std::cout << sizeof(id) << std::endl;
+    node_id = {NodeStorageID{1}, RDFNodeType::Literal, id};
+    std::cout << node_id.as_string() << std::endl;
+
+
+    Graph g;
+
+    Dataset dataset = g.dataset();
+
+    g.add({IRIResource{"http://example.com"}, IRIResource{"http://example.com"}, Literal("text", "en")});
+    g.add({IRIResource{"http://example.com"}, IRIResource{"http://example.com"}, Literal("text", "fr")});
+    g.add({IRIResource{"http://example.com"}, IRIResource{"http://example.com"}, Literal("txt")});
+    g.add({IRIResource{"http://example.com"}, IRIResource{"http://example.com"}, Literal("text")});
+
+    dataset.add({IRIResource{"http://named_graph.com"}, IRIResource{"http://example.com"}, IRIResource{"http://example.com"}, Literal("text")});
+
+    std::cout << "dataset string: \n"
+              << g.dataset().as_string() << std::endl;
+    TriplePattern triple_pattern{Variable("x"), IRIResource{"http://example.com"}, Variable{"z"}};
+    std::cout << triple_pattern.subject().as_string() << std::endl;
+    std::cout << triple_pattern.predicate().as_string() << std::endl;
+    std::cout << triple_pattern.object().as_string() << std::endl;
+    PatternSolutions solutions = g.match(triple_pattern);
+
+    std::cout << "g size " << g.size() << std::endl;
+
+    for (const PatternSolution &solution : solutions) {
+        std::cout << "bound variables: " << solution.bound_count() << std::endl;
+
+        for (size_t i = 0; i < solution.bound_count(); ++i) {
+            std::cout << solution.variable(i).as_string() << " -> " << solution[i].as_string(true) << std::endl;
+        }
+    }
+
+    Variable variable("x");
     std::cout << variable.as_string() << std::endl;
 
-    Variable variable2 = RDFNode::make_variable("x1", true);
+    Variable variable2 ("x1", true);
     std::cout << "variable2 =" << variable2.as_string() << std::endl;
 
     Variable variable3{"x1", true};
     std::cout << "variable3 =" << variable2.as_string() << std::endl;
     std::cout << "(variable 2 == variable3) = " << (variable2 == variable3) << std::endl;
 
-    BlankNode blankNode = RDFNode::make_bnode("x1");
+    BlankNode blankNode ("x1");
     std::cout << "blankNode =" << blankNode.as_string() << std::endl;
 
     std::cout << "(variable2 != blankNode) = " << (variable2 != blankNode) << std::endl;
@@ -59,7 +105,7 @@ int main() {
     IRIResource iri = IRIResource("http://example.com/");
     std::cout << iri.as_string() << std::endl;
 
-    IRIResource iri_pred = RDFNode::make_iri("http://example.com/pred");
+    IRIResource iri_pred("http://example.com/pred");
     std::cout << iri_pred.as_string() << std::endl;
 
     auto print_literal_info = [](Literal lit) {
@@ -72,10 +118,10 @@ int main() {
         std::cout << "---" << std::endl;
     };
 
-    Literal lit1 = RDFNode::make_string_literal("xxxx");
-    Literal lit2 = RDFNode::make_typed_literal("xxxx", iri_pred);
-    Literal lit3 = RDFNode::make_typed_literal("xxxx", "http://example.com/pred2");
-    Literal lit4 = RDFNode::make_lang_literal("xxxx", "de");
+    Literal lit1 ("xxxx");
+    Literal lit2 ("xxxx", iri_pred);
+    Literal lit3 ("xxxx", "http://example.com/pred2");
+    Literal lit4 ("xxxx", "de");
     Literal lit5{"xxxx", "de"};
 
     print_literal_info(lit1);

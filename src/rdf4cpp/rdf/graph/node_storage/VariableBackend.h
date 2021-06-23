@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_VARIABLEBACKEND_H
 #define RDF4CPP_VARIABLEBACKEND_H
 
-#include <rdf4cpp/rdf/graph/node_manager/NodeID.h>
+#include <rdf4cpp/rdf/graph/node_storage/NodeID.h>
 
 #include <compare>
 #include <string>
 
-namespace rdf4cpp::rdf::graph::node_manager {
+namespace rdf4cpp::rdf::graph::node_storage {
 
 class VariableBackend {
     std::string name_;
@@ -23,6 +23,6 @@ public:
 
     [[nodiscard]] const std::string &name() const;
 };
-}  // namespace rdf4cpp::rdf::graph::node_manager
+}  // namespace rdf4cpp::rdf::graph::node_storage
 
 #endif  //RDF4CPP_VARIABLEBACKEND_H

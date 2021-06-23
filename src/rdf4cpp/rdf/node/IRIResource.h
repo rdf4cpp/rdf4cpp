@@ -10,7 +10,7 @@ namespace rdf4cpp::rdf::node {
  */
 class IRIResource : public RDFNode {
 public:
-    IRIResource(void *ptr, const NodeID &id);
+    IRIResource(const NodeID &id);
     explicit IRIResource(RDFNode::BackendNodeHandle handle);
 
 
@@ -18,7 +18,7 @@ public:
     IRIResource();
 
     explicit IRIResource(const std::string &iri,
-                         NodeManager &node_manager = NodeManager::default_instance());
+                         NodeManager &node_storage = NodeManager::primary_instance());
     [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting = false) const;
 
     [[nodiscard]] bool is_blank_node() const;
@@ -29,6 +29,8 @@ public:
     [[nodiscard]] RDFNodeType type() const;
     friend class RDFNode;
     friend class Literal;
+
+    static IRIResource default_graph(NodeManager &node_storage = NodeManager::primary_instance());
 };
 }  // namespace rdf4cpp::rdf::node
 

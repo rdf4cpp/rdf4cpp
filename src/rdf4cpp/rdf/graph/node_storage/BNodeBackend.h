@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_BNODEBACKEND_H
 #define RDF4CPP_BNODEBACKEND_H
 
-#include <rdf4cpp/rdf/graph/node_manager/NodeID.h>
+#include <rdf4cpp/rdf/graph/node_storage/NodeID.h>
 
 #include <compare>
 #include <string>
 
-namespace rdf4cpp::rdf::graph::node_manager {
+namespace rdf4cpp::rdf::graph::node_storage {
 
 class BNodeBackend {
     std::string identifier_;
@@ -18,6 +18,6 @@ public:
     [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const;
     [[nodiscard]] const std::string &indentifier() const;
 };
-}  // namespace rdf4cpp::rdf::graph::node_manager
+}  // namespace rdf4cpp::rdf::graph::node_storage
 
 #endif  //RDF4CPP_BNODEBACKEND_H
