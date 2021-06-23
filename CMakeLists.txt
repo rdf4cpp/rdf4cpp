@@ -15,8 +15,8 @@ endif()
 
 if (NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET AND
         NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
-    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+    set(CMAKE_CXX_VISIBILITY_PRESET default)
+    set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
 endif ()
 
 ## Let rdf4cpp_SHARED_LIBS override BUILD_SHARED_LIBS
@@ -107,4 +107,6 @@ endif ()
 
 add_executable(rdf4cpp_exec src/rdf4cpp/library.cpp)
 target_link_libraries(rdf4cpp_exec PRIVATE
-        rdf4cpp::rdf4cpp)
+        rdf4cpp::rdf4cpp
+        )
+
