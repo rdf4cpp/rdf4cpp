@@ -38,43 +38,42 @@ find_library(serd
 ## Create the main rdf4cpp library target
 
 add_library(rdf4cpp
-        src/rdf4cpp/rdf/node/RDFNode.cpp
-        src/rdf4cpp/utils/sec/Result.cpp
+        src/rdf4cpp/rdf/BlankNode.cpp
+        src/rdf4cpp/rdf/Dataset.cpp
+        src/rdf4cpp/rdf/Graph.cpp
+        src/rdf4cpp/rdf/IRI.cpp
+        src/rdf4cpp/rdf/Literal.cpp
+        src/rdf4cpp/rdf/Node.cpp
+        src/rdf4cpp/rdf/Quad.cpp
+        src/rdf4cpp/rdf/query/PatternSolution.cpp
+        src/rdf4cpp/rdf/query/PatternSolutions.cpp
+        src/rdf4cpp/rdf/query/QuadPattern.cpp
+        src/rdf4cpp/rdf/query/TriplePattern.cpp
+        src/rdf4cpp/rdf/query/Variable.cpp
+        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/storage/node/BackendNodeHandle.cpp
+        src/rdf4cpp/rdf/storage/node/BNodeBackend.cpp
+        src/rdf4cpp/rdf/storage/node/DefaultNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/IRIBackend.cpp
+        src/rdf4cpp/rdf/storage/node/LiteralBackend.cpp
+        src/rdf4cpp/rdf/storage/node/NodeID.cpp
+        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
+        src/rdf4cpp/rdf/storage/node/RDFNodeType.cpp
+        src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
+        src/rdf4cpp/utils/error/InvalidIRIError.cpp
+        src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
+        src/rdf4cpp/utils/PlainIRI.cpp
         src/rdf4cpp/utils/sec/Err.cpp
         src/rdf4cpp/utils/sec/Ok.cpp
-        src/rdf4cpp/rdf/node/IRIResource.cpp
-        src/rdf4cpp/rdf/node/BlankNode.cpp
-        src/rdf4cpp/rdf/node/Literal.cpp
-        src/rdf4cpp/library.cpp
-        src/rdf4cpp/utils/IRI.cpp
-        src/rdf4cpp/utils/error/InvalidIRIError.cpp
+        src/rdf4cpp/utils/sec/Result.cpp
+        src/rdf4cpp/utils/StringValidator.cpp
         src/rdf4cpp/utils/utf8/UTF8String.cpp
-        src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
         src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
         src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
-        src/rdf4cpp/utils/StringValidator.cpp
-        src/rdf4cpp/rdf/graph/node_storage/NodeID.cpp
-        src/rdf4cpp/rdf/graph/node_storage/LiteralBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/BNodeBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/IRIBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/VariableBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/BackendNodeHandle.cpp
-        src/rdf4cpp/rdf/node/Variable.cpp
-        src/rdf4cpp/rdf/graph/Graph.cpp
-        src/rdf4cpp/rdf/graph/Dataset.cpp
-        src/rdf4cpp/rdf/graph/DefaultDatasetBackend.cpp
-        src/rdf4cpp/rdf/graph/DatasetBackend.cpp
-        src/rdf4cpp/rdf/graph/QuadPattern.cpp
-        src/rdf4cpp/rdf/graph/Quad.cpp
-        src/rdf4cpp/rdf/graph/PatternSolutions.cpp
-        src/rdf4cpp/rdf/graph/TriplePattern.cpp
-        src/rdf4cpp/rdf/graph/Statement.cpp
-        src/rdf4cpp/rdf/graph/PatternSolution.cpp
-        src/rdf4cpp/rdf/graph/node_storage/NodeStorage.cpp
-        src/rdf4cpp/rdf/graph/node_storage/INodeStorageBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/DefaultNodeStorageBackend.cpp
-        src/rdf4cpp/rdf/graph/node_storage/RDFNodeType.cpp
-        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/graph/SerdParsing.cpp>
+        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
         )
 target_link_libraries(rdf4cpp PRIVATE
         Threads::Threads
@@ -114,7 +113,7 @@ endif ()
 
 ### old here
 
-add_executable(rdf4cpp_exec src/rdf4cpp/library.cpp)
+add_executable(rdf4cpp_exec delete_me_later_please.cpp)
 target_link_libraries(rdf4cpp_exec PRIVATE
         rdf4cpp::rdf4cpp
         )
