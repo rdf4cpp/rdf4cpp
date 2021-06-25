@@ -87,6 +87,12 @@ int main() {
         }
     }
 
+    const std::string ttl_file = "/home/me/Code/rdf4cpp/test.ttl";
+    Dataset ds2;
+    ds2.add_ttl_file("/home/me/Code/rdf4cpp/test.ttl");
+    std::cout << "ds2 from " << ttl_file << ":" << std::endl;
+    std::cout << ds2.as_string() << std::endl;
+
     Variable variable("x");
     std::cout << variable.as_string() << std::endl;
 

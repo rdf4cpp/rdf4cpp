@@ -30,6 +30,11 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
+# TODO: check version of serd
+find_library(serd
+        NAMES serd-0
+        NO_CACHE)
+
 ## Create the main rdf4cpp library target
 
 add_library(rdf4cpp
@@ -69,8 +74,12 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/graph/node_storage/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/graph/node_storage/DefaultNodeStorageBackend.cpp
         src/rdf4cpp/rdf/graph/node_storage/RDFNodeType.cpp
+        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/graph/SerdParsing.cpp>
         )
-target_link_libraries(rdf4cpp PRIVATE Threads::Threads)
+target_link_libraries(rdf4cpp PRIVATE
+        Threads::Threads
+        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>
+        )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${rdf4cpp_VERSION}

@@ -40,6 +40,8 @@ public:
     [[nodiscard]] std::string as_string() const;
 
     // TODO: iterator
+
+    void add_ttl_file(const std::string &path);
 };
 
 
