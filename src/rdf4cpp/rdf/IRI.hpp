@@ -19,6 +19,12 @@ public:
 
     explicit IRI(const std::string &iri,
                  NodeStorage &node_storage = NodeStorage::primary_instance());
+
+    /**
+     * Returns a string representation. Quoting has no effect on IRI.
+     * @param quoting
+     * @return
+     */
     [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting = false) const;
 
     [[nodiscard]] bool is_blank_node() const;

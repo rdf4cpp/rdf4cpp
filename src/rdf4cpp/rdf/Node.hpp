@@ -6,13 +6,13 @@
  * Long
  */
 
+#include <rdf4cpp/rdf/storage/node/BackendNodeHandle.hpp>
+
 #include <optional>
 #include <string>
 
-#include <rdf4cpp/rdf/storage/node/BackendNodeHandle.hpp>
-
 /**
- * Namespace docu
+ * In this namespace the implementations of core RDF Concepts are defined. Class names are equal to terms defined in <a href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#resources-and-statements">RDF 1.1 Concepts and Abstract Syntax"</a>.
  */
 namespace rdf4cpp::rdf {
 class Literal;
@@ -22,7 +22,10 @@ namespace query {
 class Variable;
 };
 /**
- * @brief RDFNode models IRI, Literal, BlankNode and Variable.
+ * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
+ * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
+ * For the sake of simplicity, we decided to have no separate class for edges in an RDF graph.
+ * You can determine if a Node is an edge by the the fact that it is used as predicate in a Dataset, Graph, Quad, Statement, QuadPattern or TriplePattern.</p>
  */
 class Node {
 protected:
@@ -37,10 +40,18 @@ protected:
 
 public:
     /**
-     * Default construction produces null() const RDFNode. This node models an unset or invalid RDFNode.
+     * Default construction produces null() const Node. This node models an unset or invalid Node.
+     * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
      */
     Node() = default;
 
+    /**
+     * Returns a string representation of the given node. If quoting is enabled, the serialisation of ntriple is used for IRI, Literal and BlankNode.
+     * For details refer to the concrete implementations in the subclasses IRI, Literal, BlankNode and Variable.
+     * @param quoting if ntriple serialisation should be used.
+     * @return string representation
+     */
+     // TODO: quoting doesn't make sense here.
     [[nodiscard]] std::string as_string(bool quoting = false) const;
 
     /**
@@ -67,21 +78,37 @@ public:
      */
     [[nodiscard]] bool is_iri() const;
 
-
+    // TODO: remove?
     [[nodiscard]] RDFNodeType type() const;
 
     bool operator==(const Node &other) const;
 
     std::strong_ordering operator<=>(const Node &other) const;
 
+    /**
+     * Conversion to BlankNode is only safe if `(is_bnode() == true)`
+     * @return a copy of type BlankNode
+     */
     explicit operator BlankNode() const;
+    /**
+     * Conversion to IRI is only safe if `(is_iri() == true)`
+     * @return a copy of type IRI
+     */
     explicit operator IRI() const;
+    /**
+     * Conversion to Literal is only safe if `(is_literal() == true)`
+     * @return a copy of type Literal
+     */
     explicit operator Literal() const;
+    /**
+     * Conversion to Variable is only safe if `(is_variable() == true)`
+     * @return a copy of type Variable
+     */
     explicit operator query::Variable() const;
 
 
     /**
-     * Check weather the has no value are an invalid value.
+     * Check whether the Node has no value or an invalid value.
      * @return if value is unset or invalid
      */
     [[nodiscard]] bool null() const noexcept;
