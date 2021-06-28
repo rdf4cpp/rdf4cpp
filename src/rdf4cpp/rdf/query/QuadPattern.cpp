@@ -1,12 +1,13 @@
 #include "QuadPattern.hpp"
 namespace rdf4cpp::rdf::query {
-std::string QuadPattern::as_string() const {
-    std::string str = (graph().is_iri() and ((IRI) graph()).as_string() == "") ? "" : (graph().as_string(true) + " ");
-    str += subject().as_string(true) +
-           " " + predicate().as_string(true) +
-           " " + object().as_string(true) +
-           " . ";
-    return str;
+QuadPattern::operator std::string() const {
+
+    return (graph().is_iri() and ((IRI) graph()).identifier() == "")  // Graph
+                   ? std::string{}
+                   : (((std::string) graph()) + " ") +
+                             (std::string) subject() + " " +  // Subject
+                             (std::string) predicate() +      // Predicate
+                             (std::string) object() + " . ";  // Object
 }
 QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) : entries_({graph, subject, predicate, object}) {}
 Node &QuadPattern::graph() { return entries_[0]; }
@@ -31,4 +32,7 @@ QuadPattern::reverse_iterator QuadPattern::rbegin() { return entries_.rbegin(); 
 QuadPattern::const_reverse_iterator QuadPattern::rbegin() const { return entries_.rbegin(); }
 QuadPattern::reverse_iterator QuadPattern::rend() { return entries_.rend(); }
 QuadPattern::const_reverse_iterator QuadPattern::rend() const { return entries_.rend(); }
+std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
+    return os;
+}
 }  // namespace rdf4cpp::rdf::query

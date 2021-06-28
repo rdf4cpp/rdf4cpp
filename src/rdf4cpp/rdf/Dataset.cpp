@@ -25,7 +25,16 @@ Graph Dataset::graph(const IRI &graph_name) {
 Graph Dataset::graph() {
     return Graph(dataset_backend_, IRI::default_graph(dataset_backend_->node_storage()));
 }
-std::string Dataset::as_string() const {
-    return dataset_backend_->as_string();
+Dataset::iterator Dataset::begin() const {
+    return dataset_backend_->begin();
+}
+Dataset::iterator Dataset::end() const {
+    return dataset_backend_->end();
+}
+std::shared_ptr<storage::tuple::IDatasetBackend> &Dataset::backend() {
+    return dataset_backend_;
+}
+const std::shared_ptr<storage::tuple::IDatasetBackend> &Dataset::backend() const {
+    return dataset_backend_;
 }
 }  // namespace rdf4cpp::rdf

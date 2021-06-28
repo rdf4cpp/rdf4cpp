@@ -67,11 +67,11 @@ int main() {
     dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text")});
 
     std::cout << "dataset string: \n"
-              << g.dataset().as_string() << std::endl;
+              << writer::NQuadsWriter(g.dataset()) << std::endl;
     query::TriplePattern triple_pattern{query::Variable("x"), IRI{"http://example.com"}, query::Variable{"z"}};
-    std::cout << triple_pattern.subject().as_string() << std::endl;
-    std::cout << triple_pattern.predicate().as_string() << std::endl;
-    std::cout << triple_pattern.object().as_string() << std::endl;
+    std::cout << triple_pattern.subject() << std::endl;
+    std::cout << triple_pattern.predicate() << std::endl;
+    std::cout << triple_pattern.object() << std::endl;
     query::PatternSolutions solutions = g.match(triple_pattern);
 
     std::cout << "g size " << g.size() << std::endl;
@@ -80,7 +80,7 @@ int main() {
         std::cout << "bound variables: " << solution.bound_count() << std::endl;
 
         for (size_t i = 0; i < solution.bound_count(); ++i) {
-            std::cout << solution.variable(i).as_string() << " -> " << solution[i].as_string(true) << std::endl;
+            std::cout << solution.variable(i) << " -> " << solution[i] << std::endl;
         }
     }
 
@@ -88,35 +88,35 @@ int main() {
     Dataset ds2;
     ds2.add_ttl_file("/home/me/Code/rdf4cpp/test.ttl");
     std::cout << "ds2 from " << ttl_file << ":" << std::endl;
-    std::cout << ds2.as_string() << std::endl;
+    std::cout << writer::NQuadsWriter(ds2) << std::endl;
 
     query::Variable variable("x");
-    std::cout << variable.as_string() << std::endl;
+    std::cout << variable << std::endl;
 
     query::Variable variable2 ("x1", true);
-    std::cout << "variable2 =" << variable2.as_string() << std::endl;
+    std::cout << "variable2 =" << variable2 << std::endl;
 
     query::Variable variable3{"x1", true};
-    std::cout << "variable3 =" << variable2.as_string() << std::endl;
+    std::cout << "variable3 =" << variable2 << std::endl;
     std::cout << "(variable 2 == variable3) = " << (variable2 == variable3) << std::endl;
 
     BlankNode blankNode ("x1");
-    std::cout << "blankNode =" << blankNode.as_string() << std::endl;
+    std::cout << "blankNode =" << blankNode << std::endl;
 
     std::cout << "(variable2 != blankNode) = " << (variable2 != blankNode) << std::endl;
 
     IRI iri = IRI("http://example.com/");
-    std::cout << iri.as_string() << std::endl;
+    std::cout << iri << std::endl;
 
     IRI iri_pred("http://example.com/pred");
-    std::cout << iri_pred.as_string() << std::endl;
+    std::cout << iri_pred << std::endl;
 
     auto print_literal_info = [](Literal lit) {
         std::cout << "---" << std::endl;
-        std::cout << "unquoted: " << lit.as_string() << std::endl;
-        std::cout << "quoted: " << lit.as_string(true) << std::endl;
+        std::cout << "operator<<: " << lit << std::endl;
+        std::cout << "NNodeWriter: " << writer::NNodeWriter(lit) << std::endl;
         std::cout << "lexical_form: " << lit.lexical_form() << std::endl;
-        std::cout << "datatype: " << lit.datatype().as_string() << std::endl;
+        std::cout << "datatype: " << lit.datatype() << std::endl;
         std::cout << "language_tag: " << lit.language_tag() << std::endl;
         std::cout << "---" << std::endl;
     };
@@ -148,12 +148,12 @@ int main() {
     std::sort(nodes.begin(), nodes.end());
     std::cout << "sorted:" << std::endl;
     for (const auto &item : nodes) {
-        std::cout << item.as_string() << std::endl;
+        std::cout << item << std::endl;
     }
 
     if (nodes[1].is_variable()) {
         auto v = (query::Variable) nodes[1];
-        std::cout << v.as_string() << std::endl;
+        std::cout << v << std::endl;
     }
 
     std::cout << "fails in debug (is actually variable): auto b = (BlankNode) nodes[1];" << std::endl;

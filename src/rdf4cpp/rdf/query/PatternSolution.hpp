@@ -33,7 +33,6 @@ public:
 
     [[nodiscard]] size_t bound_count() const;
 
-    // todo: as_string
     // todo: iterator
 };
 }  // namespace rdf4cpp::rdf::query

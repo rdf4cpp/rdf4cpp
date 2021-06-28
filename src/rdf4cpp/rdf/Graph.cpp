@@ -39,5 +39,14 @@ size_t Graph::size() const {
 Dataset Graph::dataset() {
     return Dataset(dataset_backend_);
 }
+const IRI &Graph::name() const {
+    return graph_name;
+}
+std::shared_ptr<IDatasetBackend> &Graph::backend() {
+    return dataset_backend_;
+}
+const std::shared_ptr<IDatasetBackend> &Graph::backend() const {
+    return dataset_backend_;
+}
 
 }  // namespace rdf4cpp::rdf

@@ -10,7 +10,7 @@ std::strong_ordering BNodeBackend::operator<=>(const BNodeBackend *other) const 
     else
         return std::strong_ordering::greater;
 }
-std::string BNodeBackend::as_string([[maybe_unused]] bool quoting) const {
+std::string BNodeBackend::n_string() const {
     return "_:" + identifier_;
 }
 const std::string &BNodeBackend::indentifier() const {

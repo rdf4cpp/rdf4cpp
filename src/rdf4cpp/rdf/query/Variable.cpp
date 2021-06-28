@@ -14,8 +14,8 @@ bool Variable::is_anonymous() const {
 const std::string &Variable::name() const {
     return this->handle_.variable_backend().name();
 }
-std::string Variable::as_string(bool quoting) const {
-    return handle_.variable_backend().as_string(quoting);
+Variable::operator std::string() const {
+    return handle_.variable_backend().n_string();
 }
 bool Variable::is_blank_node() const { return false; }
 bool Variable::is_literal() const { return false; }
@@ -23,5 +23,9 @@ bool Variable::is_variable() const { return true; }
 bool Variable::is_bnode() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
+std::ostream &operator<<(std::ostream &os, const Variable &variable) {
+    os << (std::string) variable;
+    return os;
+}
 
 }  // namespace rdf4cpp::rdf::query

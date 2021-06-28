@@ -9,10 +9,10 @@ std::strong_ordering IRIBackend::operator<=>(const IRIBackend *other) const {
     else
         return std::strong_ordering::greater;
 }
-std::string IRIBackend::as_string(bool quoting) const {
-    if (quoting)
-        return "<" + iri + ">";
-    else
-        return iri;
+std::string IRIBackend::n_string() const {
+    return "<" + iri + ">";
+}
+std::string IRIBackend::identifier() const {
+    return iri;
 }
 }  // namespace rdf4cpp::rdf::storage::node

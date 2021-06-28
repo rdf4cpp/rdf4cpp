@@ -15,7 +15,7 @@ public:
     explicit BNodeBackend(std::string identifier);
     auto operator<=>(const BNodeBackend &) const = default;
     std::strong_ordering operator<=>(BNodeBackend const *other) const;
-    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const;
+    [[nodiscard]] std::string n_string() const;
     [[nodiscard]] const std::string &indentifier() const;
 };
 }  // namespace rdf4cpp::rdf::storage::node

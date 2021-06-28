@@ -39,11 +39,21 @@ public:
 
     Graph graph();
 
-    [[nodiscard]] std::string as_string() const;
-
     // TODO: iterator
 
     void add_ttl_file(const std::string &path);
+
+    using const_interator = IDatasetBackend::const_iterator;
+
+    using iterator = const_interator;
+
+    iterator begin() const;
+
+    iterator end() const;
+
+    std::shared_ptr<IDatasetBackend> &backend();
+
+    [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
 };
 
 

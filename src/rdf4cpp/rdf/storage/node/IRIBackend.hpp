@@ -16,7 +16,9 @@ public:
     auto operator<=>(const IRIBackend &) const = default;
     std::strong_ordering operator<=>(IRIBackend const *other) const;
 
-    [[nodiscard]] std::string as_string(bool quoting) const;
+    std::string identifier() const;
+
+    [[nodiscard]] std::string n_string() const;
 };
 }  // namespace rdf4cpp::rdf::storage::node
 

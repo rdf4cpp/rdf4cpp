@@ -37,11 +37,11 @@ public:
 
     Dataset dataset();
 
-    [[nodiscard]] std::string as_string() const;
+    const IRI &name() const;
 
-    // TODO: iterator
+    std::shared_ptr<IDatasetBackend> &backend();
 
-    // TODO: to string
+    [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
 };
 }  // namespace rdf4cpp::rdf
 

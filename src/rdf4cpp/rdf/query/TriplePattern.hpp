@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/Node.hpp>
 
 #include <array>
+#include <ostream>
 
 namespace rdf4cpp::rdf::query {
 class TriplePattern {
@@ -46,7 +47,9 @@ public:
 
     auto operator<=>(const TriplePattern &rhs) const = default;
 
-    std::string as_string() const;
+    operator std::string () const;
+
+    friend std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern);
 };
 }  // namespace rdf4cpp::rdf::query
 

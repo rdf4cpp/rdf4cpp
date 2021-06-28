@@ -9,7 +9,7 @@ std::strong_ordering VariableBackend::operator<=>(const VariableBackend *other) 
     else
         return std::strong_ordering::greater;
 }
-std::string VariableBackend::as_string([[maybe_unused]] bool quoting) const {
+std::string VariableBackend::n_string() const {
     if (anonymous_)
         return "_:" + name_;
     else

@@ -24,7 +24,68 @@ public:
     [[nodiscard]] virtual size_t size() const = 0;
     [[nodiscard]] virtual PatternSolutions match(const QuadPattern &quad_pattern) const = 0;
     [[nodiscard]] virtual size_t size(const IRI &graph_name) const = 0;
-    [[nodiscard]] virtual std::string as_string() const = 0;
+
+    struct const_iterator {
+        // from https://stackoverflow.com/questions/35866041/returning-different-iterators-with-virtual-derived-methods
+        using value_type = Quad;
+
+        struct I_const_iterator {
+            virtual void next(int n) = 0;
+            [[nodiscard]] virtual const value_type &deref() const = 0;
+            [[nodiscard]] virtual bool equal(const void *other) const = 0;
+            [[nodiscard]] virtual std::unique_ptr<I_const_iterator> clone() const = 0;
+            [[nodiscard]] virtual const std::type_info &type() const = 0;
+            [[nodiscard]] virtual const void *address() const = 0;
+            virtual ~I_const_iterator() = default;
+        };
+
+        template<class Iter>
+        requires std::forward_iterator<Iter>
+        struct const_iterator_impl : I_const_iterator {
+            explicit const_iterator_impl(Iter iter) : _iter(iter) {}
+
+            void next(int n) override { _iter = std::next(_iter, n); }
+            [[nodiscard]] const value_type &deref() const override { return *_iter; }
+            [[nodiscard]] bool equal(const void *rp) const override { return _iter == static_cast<const const_iterator_impl *>(rp)->_iter; }
+            [[nodiscard]] std::unique_ptr<I_const_iterator> clone() const override { return std::make_unique<const_iterator_impl>(*this); }
+            [[nodiscard]] const std::type_info &type() const override { return typeid(_iter); }
+            [[nodiscard]] const void *address() const override { return this; }
+
+
+            Iter _iter;
+        };
+
+        std::unique_ptr<I_const_iterator> _impl;
+
+    public:
+        // interface
+
+        template<class Iter>
+        requires std::forward_iterator<Iter>
+        explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)){};
+
+        const_iterator(const const_iterator &r) : _impl(r._impl->clone()){};
+
+        const value_type &operator*() const {
+            return _impl->deref();
+        }
+
+        const_iterator &operator++() {
+            _impl->next(1);
+            return *this;
+        }
+
+        bool operator==(const const_iterator &r) const {
+            return _impl->type() == r._impl->type() and _impl->equal(r._impl->address());
+        }
+
+        bool operator!=(const const_iterator &r) const {
+            return not(*this == r);
+        }
+    };
+
+    [[nodiscard]] virtual const_iterator begin() const = 0;
+    [[nodiscard]] virtual const_iterator end() const = 0;
 };
 
 

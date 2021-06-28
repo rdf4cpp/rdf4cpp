@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_LITERAL_HPP
 #define RDF4CPP_LITERAL_HPP
 
+#include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 
 namespace rdf4cpp::rdf {
@@ -25,7 +26,9 @@ public:
     [[nodiscard]] const std::string &language_tag() const;
 
 
-    [[nodiscard]] std::string as_string(bool quoting = false) const;
+    [[nodiscard]] operator std::string() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_literal() const;

@@ -17,7 +17,7 @@ public:
     auto operator<=>(const VariableBackend &) const = default;
     std::strong_ordering operator<=>(VariableBackend const *other) const;
 
-    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting) const;
+    [[nodiscard]] std::string n_string() const;
 
     [[nodiscard]] bool is_anonymous() const;
 

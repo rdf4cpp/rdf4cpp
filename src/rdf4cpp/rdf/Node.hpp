@@ -46,13 +46,18 @@ public:
     Node() = default;
 
     /**
-     * Returns a string representation of the given node. If quoting is enabled, the serialisation of ntriple is used for IRI, Literal and BlankNode.
-     * For details refer to the concrete implementations in the subclasses IRI, Literal, BlankNode and Variable.
-     * @param quoting if ntriple serialisation should be used.
-     * @return string representation
+     * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
+     * @return string representation in N-format
      */
-     // TODO: quoting doesn't make sense here.
-    [[nodiscard]] std::string as_string(bool quoting = false) const;
+    [[nodiscard]] operator std::string() const;
+
+    /**
+     * @see operator std::string() const
+     * @param os
+     * @param node
+     * @return
+     */
+    friend std::ostream &operator<<(std::ostream &os, const Node &node);
 
     /**
      * Checks weather the node is a Literal. If yes, it is safe to convert it with `auto literal = (Literal) rdf_node;`
@@ -115,6 +120,7 @@ public:
 };
 }  // namespace rdf4cpp::rdf
 
+#include <ostream>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/Literal.hpp>

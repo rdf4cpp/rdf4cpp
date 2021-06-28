@@ -31,19 +31,13 @@ const std::string &Literal::lexical_form() const {
 const std::string &Literal::language_tag() const {
     return handle_.literal_backend().language_tag();
 }
-std::string Literal::as_string(bool quoting) const {
+Literal::operator std::string() const {
+    // TODO: escape non-standard chars correctly
     const auto &literal = handle_.literal_backend();
-    if (not quoting and literal.datatype_id().node_id() == NodeID::xsd_string_iri.first) {
-        // TODO: support non datatype literals?
-        return literal.lexical_form();
+    if (literal.datatype_id().node_id() == NodeID::rdf_langstring_iri.first) {
+        return literal.quote_lexical() + "@" + literal.language_tag();
     } else {
-        if (literal.datatype_id().node_id() == NodeID::xsd_string_iri.first) {
-            return literal.quote_lexical();
-        } else if (literal.datatype_id().node_id() == NodeID::rdf_langstring_iri.first) {
-            return literal.quote_lexical() + "@" + literal.language_tag();
-        } else {
-            return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->as_string(true);
-        }
+        return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->n_string();
     }
 }
 bool Literal::is_blank_node() const { return false; }
@@ -53,6 +47,10 @@ bool Literal::is_bnode() const { return false; }
 bool Literal::is_iri() const { return false; }
 Node::RDFNodeType Literal::type() const { return RDFNodeType::Literal; }
 Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
+std::ostream &operator<<(std::ostream &os, const Literal &literal) {
+    os << (std::string) literal;
+    return os;
+}
 
 
 }  // namespace rdf4cpp::rdf

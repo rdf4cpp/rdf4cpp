@@ -28,11 +28,10 @@ size_t DefaultDatasetBackend::size(const IRI &graph_name) const {
     return std::count_if(quads_.begin(), quads_.end(), [&](const Quad &quad) { return (IRI) quad.graph() == graph_name; });
 }
 
-std::string DefaultDatasetBackend::as_string() const {
-    std::string str;
-    for (const auto &item : quads_) {
-        str += item.as_string() + "\n";
-    }
-    return str;
+IDatasetBackend::const_iterator DefaultDatasetBackend::begin() const {
+    return const_iterator(quads_.begin());
+}
+IDatasetBackend::const_iterator DefaultDatasetBackend::end() const {
+    return const_iterator(quads_.end());
 }
 }  // namespace rdf4cpp::rdf::storage::tuple

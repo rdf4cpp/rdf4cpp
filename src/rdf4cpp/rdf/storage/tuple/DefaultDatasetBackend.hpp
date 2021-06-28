@@ -32,7 +32,9 @@ public:
 
     [[nodiscard]] size_t size(const IRI &graph_name) const override;
 
-    [[nodiscard]] std::string as_string() const override;
+
+    const_iterator begin() const override;
+    const_iterator end() const override;
 };
 }  // namespace rdf4cpp::rdf::storage::tuple
 

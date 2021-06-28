@@ -63,6 +63,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
+        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
+        src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/utils/error/InvalidIRIError.cpp
         src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
         src/rdf4cpp/utils/PlainIRI.cpp

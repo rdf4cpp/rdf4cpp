@@ -3,6 +3,7 @@
 
 #include <optional>
 
+#include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 
 namespace rdf4cpp::rdf {
@@ -19,7 +20,9 @@ public:
 
     [[nodiscard]] const std::string &identifier() const;
 
-    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting = false) const;
+    [[nodiscard]] operator std::string() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;

@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_IRI_HPP
 #define RDF4CPP_IRI_HPP
 
+#include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 
 namespace rdf4cpp::rdf {
@@ -20,12 +21,17 @@ public:
     explicit IRI(const std::string &iri,
                  NodeStorage &node_storage = NodeStorage::primary_instance());
 
+
+    std::string identifier() const;
+
     /**
      * Returns a string representation. Quoting has no effect on IRI.
      * @param quoting
      * @return
      */
-    [[nodiscard]] std::string as_string([[maybe_unused]] bool quoting = false) const;
+    [[nodiscard]] operator std::string() const;
+
+    friend std::ostream &operator<<(std::ostream &os, const IRI &iri);
 
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_literal() const;

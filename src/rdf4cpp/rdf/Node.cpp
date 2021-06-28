@@ -13,22 +13,23 @@ Node::Node(Node::NodeID id) : handle_(id) {}
 
 Node::Node(const Node::BackendNodeHandle &id) : handle_(id) {}
 
-std::string Node::as_string(bool quoting) const {
+Node::operator std::string() const {
     switch (handle_.type()) {
 
         case RDFNodeType::IRI:
-            return handle_.iri_backend().as_string(quoting);
+            return handle_.iri_backend().n_string();
         case RDFNodeType::BNode:
-            return handle_.bnode_backend().as_string(quoting);
+            return handle_.bnode_backend().n_string();
         case RDFNodeType::Literal: {
             const auto &literal = static_cast<const Literal &>(*this);
-            return literal.as_string(quoting);
+            return (std::string) literal;
         }
         case RDFNodeType::Variable:
-            return handle_.variable_backend().as_string(quoting);
+            return handle_.variable_backend().n_string();
     }
     return "";
 }
+
 bool Node::is_literal() const {
     return handle_.is_literal();
 }
@@ -102,5 +103,9 @@ Node::operator query::Variable() const {
 bool Node::null() const noexcept {
     return handle_.empty();
 }
+std::ostream &operator<<(std::ostream &os, const Node &node) {
+    return os << (std::string) node;
+}
+
 
 }  // namespace rdf4cpp::rdf
