@@ -114,6 +114,10 @@ public:
      * @return if value is unset or invalid
      */
     [[nodiscard]] bool null() const noexcept;
+
+    [[nodiscard]] const BackendNodeHandle &backend_handle() const noexcept;
+
+    [[nodiscard]] BackendNodeHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp::rdf
 
