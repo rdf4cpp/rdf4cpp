@@ -4,6 +4,10 @@
 
 namespace rdf4cpp::rdf {
 Dataset::Dataset(std::shared_ptr<storage::tuple::IDatasetBackend> datasetBackend) : dataset_backend_(std::move(datasetBackend)) {}
+
+Dataset::Dataset(Dataset::NodeStorage node_storage)
+        : dataset_backend_(std::make_shared<storage::tuple::DefaultDatasetBackend>(std::move(node_storage))) {}
+
 void Dataset::add(const Quad &quad) {
     dataset_backend_->add(quad);
 }

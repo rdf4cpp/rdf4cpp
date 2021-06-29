@@ -16,15 +16,17 @@ class Graph;
 
 class Dataset {
     using IDatasetBackend = ::rdf4cpp::rdf::storage::tuple::IDatasetBackend;
+    using NodeStorage = storage::node::NodeStorage;
     friend class Graph;
 
-    std::shared_ptr<IDatasetBackend> dataset_backend_ = std::make_shared<storage::tuple::DefaultDatasetBackend>();
+    std::shared_ptr<IDatasetBackend> dataset_backend_;
 
     explicit Dataset(std::shared_ptr<IDatasetBackend> datasetBackend);
 
 public:
-    // TODO: constructor with NodeStorage
-    Dataset() = default;
+    // TODO: allow to change default backend impl.
+    explicit Dataset(NodeStorage node_storage = NodeStorage::primary_instance());
+
 
     void add(const Quad &quad);
 

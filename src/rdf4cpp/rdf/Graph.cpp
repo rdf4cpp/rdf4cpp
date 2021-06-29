@@ -2,11 +2,18 @@
 
 #include <rdf4cpp/rdf/Dataset.hpp>
 
+#include <utility>
+
 namespace rdf4cpp::rdf {
 
-Graph::Graph(std::shared_ptr<storage::tuple::IDatasetBackend> datasetBackend, const IRI &graphName) : dataset_backend_(std::move(datasetBackend)), graph_name(graphName) {}
+Graph::Graph(std::shared_ptr<storage::tuple::IDatasetBackend> dataset_backend, const IRI &graph_name) : dataset_backend_(std::move(dataset_backend)), graph_name(graph_name) {}
 
-Graph::Graph(const IRI &graphName) : graph_name(graphName) {}
+Graph::Graph(Graph::NodeStorage node_storage)
+    : dataset_backend_(std::make_shared<storage::tuple::DefaultDatasetBackend>(std::move(node_storage))) {}
+
+Graph::Graph(const IRI &graph_name, NodeStorage node_storage) : Graph(std::move(node_storage)) {
+    this->graph_name = graph_name;
+}
 
 void Graph::add(const Statement &statement) {
     Quad quad{graph_name,
@@ -35,7 +42,6 @@ query::PatternSolutions Graph::match(const query::TriplePattern &triple_pattern)
 size_t Graph::size() const {
     return dataset_backend_->size(graph_name);
 }
-
 Dataset Graph::dataset() {
     return Dataset(dataset_backend_);
 }

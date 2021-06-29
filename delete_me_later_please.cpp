@@ -58,6 +58,9 @@ int main() {
     Graph g;
 
     Dataset dataset = g.dataset();
+    Dataset dataset2(NodeStorage::new_instance());  // Dataset with an independent NodeStorage
+    std::cout << "dataset node storage id: " << dataset.backend()->node_storage().id().value << std::endl;
+    std::cout << "dataset2 node storage id: " << dataset2.backend()->node_storage().id().value << std::endl;
 
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text", "en")});
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text", "fr")});

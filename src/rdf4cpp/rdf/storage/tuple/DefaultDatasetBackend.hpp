@@ -19,8 +19,7 @@ public:
     // TODO: thread safety
     std::set<Quad> quads_{};
 
-    // TODO: make NodeStorage configurable
-    node::NodeStorage *node_storage_ = &node::NodeStorage::primary_instance();
+    explicit DefaultDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::primary_instance());
 
     [[nodiscard]] node::NodeStorage &node_storage() const override;
 

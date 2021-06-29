@@ -16,17 +16,19 @@ class Dataset;
 class Graph {
     friend class Dataset;
     using IDatasetBackend = ::rdf4cpp::rdf::storage::tuple::IDatasetBackend;
+    using NodeStorage = storage::node::NodeStorage;
 
-    std::shared_ptr<IDatasetBackend> dataset_backend_ = std::make_shared<storage::tuple::DefaultDatasetBackend>();
+
+    std::shared_ptr<IDatasetBackend> dataset_backend_;
     IRI graph_name = IRI::default_graph(dataset_backend_->node_storage());
 
-    Graph(std::shared_ptr<IDatasetBackend> datasetBackend, const IRI &graphName);
+    Graph(std::shared_ptr<IDatasetBackend> dataset_backend, const IRI &graph_name);
 
 public:
-    // TODO: constructor with NodeStorage
-    Graph() = default;
+    // TODO: allow to change default backend impl.
+    explicit Graph(NodeStorage node_storage = NodeStorage::primary_instance());
 
-    explicit Graph(const IRI &graphName);
+    explicit Graph(const IRI &graph_name, NodeStorage node_storage = NodeStorage::primary_instance());
 
     void add(const Statement &statement);
 
@@ -38,7 +40,7 @@ public:
 
     Dataset dataset();
 
-    const IRI &name() const;
+    [[nodiscard]] const IRI &name() const;
 
     std::shared_ptr<IDatasetBackend> &backend();
 

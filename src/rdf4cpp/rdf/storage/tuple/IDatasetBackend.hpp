@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/PatternSolutions.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
+#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <algorithm>
 #include <set>
@@ -12,11 +13,15 @@ namespace rdf4cpp::rdf::storage::tuple {
 
 
 class IDatasetBackend {
-private:
     using PatternSolutions = rdf4cpp::rdf::query::PatternSolutions;
     using QuadPattern = rdf4cpp::rdf::query::QuadPattern;
 
+protected:
+    mutable node::NodeStorage node_storage_;
+
 public:
+    explicit IDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::primary_instance());
+
     virtual ~IDatasetBackend() = 0;
     virtual void add(const Quad &quad) = 0;
     [[nodiscard]] virtual node::NodeStorage &node_storage() const = 0;

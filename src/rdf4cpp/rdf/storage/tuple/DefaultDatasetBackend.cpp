@@ -1,9 +1,13 @@
 #include "DefaultDatasetBackend.hpp"
 
+#include <utility>
+
 namespace rdf4cpp::rdf::storage::tuple {
-storage::node::NodeStorage &DefaultDatasetBackend::node_storage() const {
-    return *node_storage_;
+node::NodeStorage &DefaultDatasetBackend::node_storage() const {
+    return this->node_storage_;
 }
+
+DefaultDatasetBackend::DefaultDatasetBackend(node::NodeStorage node_storage) : IDatasetBackend(std::move(node_storage)) {}
 
 void DefaultDatasetBackend::add(const Quad &quad) {
     if (not quad.valid())
