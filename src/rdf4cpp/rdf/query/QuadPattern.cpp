@@ -33,6 +33,7 @@ QuadPattern::const_reverse_iterator QuadPattern::rbegin() const { return entries
 QuadPattern::reverse_iterator QuadPattern::rend() { return entries_.rend(); }
 QuadPattern::const_reverse_iterator QuadPattern::rend() const { return entries_.rend(); }
 std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
+    os << (std::string) pattern;
     return os;
 }
 }  // namespace rdf4cpp::rdf::query

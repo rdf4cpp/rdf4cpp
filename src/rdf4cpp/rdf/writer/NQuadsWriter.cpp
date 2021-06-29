@@ -19,7 +19,7 @@ std::ostream &operator<<(std::ostream &os, const NQuadsWriter &writer) {
         os << NNodeWriter(quad.subject()) << " "
            << NNodeWriter(quad.predicate()) << " "
            << NNodeWriter(quad.object()) << " .\n";
-        return os;
     }
+    return os;
 }
 }  // namespace rdf4cpp::rdf::writer

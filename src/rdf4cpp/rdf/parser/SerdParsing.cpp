@@ -53,7 +53,7 @@ Literal getLiteral(const SerdNode *literal, const SerdNode *type_node, const Ser
 };
 
 SerdStatus on_statement(SerdHandle *handle,
-                        SerdStatementFlags flags,
+                        [[maybe_unused]] SerdStatementFlags flags,
                         const SerdNode *graph,
                         const SerdNode *subject,
                         const SerdNode *predicate,
@@ -123,7 +123,7 @@ SerdStatus on_statement(SerdHandle *handle,
     return SERD_SUCCESS;
 }
 
-SerdStatus on_end(SerdHandle *handle, const SerdNode *node) {
+SerdStatus on_end([[maybe_unused]] SerdHandle *handle, [[maybe_unused]] const SerdNode *node) {
     return SERD_SUCCESS;
 }
 namespace rdf4cpp::rdf {

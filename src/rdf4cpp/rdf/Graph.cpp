@@ -42,10 +42,10 @@ Dataset Graph::dataset() {
 const IRI &Graph::name() const {
     return graph_name;
 }
-std::shared_ptr<IDatasetBackend> &Graph::backend() {
+std::shared_ptr<storage::tuple::IDatasetBackend> &Graph::backend() {
     return dataset_backend_;
 }
-const std::shared_ptr<IDatasetBackend> &Graph::backend() const {
+const std::shared_ptr<storage::tuple::IDatasetBackend> &Graph::backend() const {
     return dataset_backend_;
 }
 
