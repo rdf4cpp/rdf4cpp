@@ -12,6 +12,7 @@ class NNodeWriter {
     Node node_;
 
 public:
+    // TODO: correct escaping in Literals and IRIs
     explicit NNodeWriter(Node node);
 
     operator std::string() const;

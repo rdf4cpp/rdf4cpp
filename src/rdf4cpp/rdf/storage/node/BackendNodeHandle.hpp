@@ -36,6 +36,8 @@ public:
     bool operator==(const BackendNodeHandle &other) const = default;
 
     auto operator<=>(const BackendNodeHandle &other) const = default;
+
+    // TODO: support value retrieval from basic XSD datatypes
 };
 }  // namespace rdf4cpp::rdf::storage::node
 

@@ -23,6 +23,7 @@ class Graph {
     Graph(std::shared_ptr<IDatasetBackend> datasetBackend, const IRI &graphName);
 
 public:
+    // TODO: constructor with NodeStorage
     Graph() = default;
 
     explicit Graph(const IRI &graphName);
@@ -42,6 +43,8 @@ public:
     std::shared_ptr<IDatasetBackend> &backend();
 
     [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
+
+    // TODO: support union (+) and difference (-); open question: which graph name should be assigned?
 };
 }  // namespace rdf4cpp::rdf
 

@@ -39,6 +39,8 @@ protected:
     explicit Node(const BackendNodeHandle &id);
 
 public:
+    // TODO: revisit comparison implementation
+    // TODO: support comparison between NodeStorages
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.

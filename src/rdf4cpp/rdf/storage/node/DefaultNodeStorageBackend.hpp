@@ -26,6 +26,7 @@ class DefaultNodeStorageBackend : public INodeStorageBackend {
     NodeIDValue next_variable_id = NodeID::min_variable_id;
 
 public:
+    // TODO: thread safety
     DefaultNodeStorageBackend();
 
     ~DefaultNodeStorageBackend() override = default;

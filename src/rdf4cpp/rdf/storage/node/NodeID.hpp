@@ -14,7 +14,7 @@
 namespace rdf4cpp::rdf::storage::node {
 
 enum class LiteralType : uint16_t {
-
+    // TODO: support different literal types
     STRING = 0,
     INT,
     FLOAT
@@ -23,6 +23,7 @@ enum class LiteralType : uint16_t {
 };
 
 struct __attribute__((__packed__)) LiteralID {
+    // TODO: inline literal types < 42 bits into the literalID
     uint64_t value : 42;
 
     explicit LiteralID(uint64_t value);
@@ -116,10 +117,12 @@ public:
 
     [[nodiscard]] bool empty() const;
 
+    // TODO: support basic xsd literal datatypes for comparison
     std::partial_ordering operator<=>(const NodeID &other) const;
 
     bool operator==(const NodeID &other) const;
 
+    // TODO: operator std::string and operator<< overload
     [[nodiscard]] std::string as_string() const;
 };
 

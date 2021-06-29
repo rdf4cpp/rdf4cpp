@@ -36,6 +36,8 @@ public:
     [[nodiscard]] bool is_bnode() const;
     [[nodiscard]] bool is_iri() const;
     [[nodiscard]] RDFNodeType type() const;
+    // TODO: support value retrieval from XSD data types
+    // TODO: support arithmetics with XSD data types
 
     friend class Node;
 };

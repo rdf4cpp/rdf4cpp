@@ -23,6 +23,7 @@ class Dataset {
     explicit Dataset(std::shared_ptr<IDatasetBackend> datasetBackend);
 
 public:
+    // TODO: constructor with NodeStorage
     Dataset() = default;
 
     void add(const Quad &quad);
@@ -54,6 +55,8 @@ public:
     std::shared_ptr<IDatasetBackend> &backend();
 
     [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
+
+    // TODO: support union (+) and difference (-)
 };
 
 
