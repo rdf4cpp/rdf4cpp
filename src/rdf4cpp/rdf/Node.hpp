@@ -83,9 +83,6 @@ public:
      */
     [[nodiscard]] bool is_iri() const;
 
-    // TODO: remove?
-    [[nodiscard]] RDFNodeType type() const;
-
     bool operator==(const Node &other) const;
 
     std::strong_ordering operator<=>(const Node &other) const;
