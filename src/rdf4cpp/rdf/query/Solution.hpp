@@ -10,6 +10,7 @@ namespace rdf4cpp::rdf::query {
 class SolutionSequence;
 
 class Solution {
+    using Entries_t = std::vector<std::pair<Variable, Node>>;
 
     std::vector<std::pair<Variable, Node>> partial_mapping;
     friend class SolutionSequence;
@@ -32,7 +33,15 @@ public:
 
     [[nodiscard]] size_t bound_count() const;
 
-    // todo: iterator
+    typedef typename Entries_t::const_iterator const_iterator;
+    typedef const_iterator iterator;
+    typedef typename Entries_t::const_reverse_iterator const_reverse_iterator;
+    typedef const_reverse_iterator reverse_iterator;
+
+    [[nodiscard]] const_iterator begin() const;
+    [[nodiscard]] const_iterator end() const;
+    [[nodiscard]] const_reverse_iterator rbegin() const;
+    [[nodiscard]] const_reverse_iterator rend() const;
 };
 }  // namespace rdf4cpp::rdf::query
 

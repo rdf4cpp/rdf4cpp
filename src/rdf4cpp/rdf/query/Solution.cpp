@@ -46,4 +46,17 @@ size_t Solution::bound_count() const {
     return std::count_if(partial_mapping.begin(), partial_mapping.end(),
                          [](const auto &item) { return not item.second.null(); });
 }
+
+Solution::const_iterator Solution::end() const {
+    return partial_mapping.end();
+}
+Solution::const_iterator Solution::begin() const {
+    return partial_mapping.begin();
+}
+Solution::const_reverse_iterator Solution::rbegin() const {
+    return partial_mapping.crbegin();
+}
+Solution::const_reverse_iterator Solution::rend() const {
+    return partial_mapping.crend();
+}
 }  // namespace rdf4cpp::rdf::query
