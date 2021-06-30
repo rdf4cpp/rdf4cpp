@@ -75,7 +75,7 @@ int main() {
     std::cout << triple_pattern.subject() << std::endl;
     std::cout << triple_pattern.predicate() << std::endl;
     std::cout << triple_pattern.object() << std::endl;
-    query::PatternSolutions solutions = g.match(triple_pattern);
+    query::SolutionSequence solutions = g.match(triple_pattern);
 
     std::cout << "g size " << g.size() << std::endl;
 

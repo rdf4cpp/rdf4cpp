@@ -34,7 +34,7 @@ public:
 
     [[nodiscard]] bool contains(const Statement &statement) const;
 
-    [[nodiscard]] query::PatternSolutions match(const query::TriplePattern &triple_pattern) const;
+    [[nodiscard]] query::SolutionSequence match(const query::TriplePattern &triple_pattern) const;
 
     [[nodiscard]] size_t size() const;
 
@@ -47,6 +47,8 @@ public:
     [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
 
     // TODO: support union (+) and difference (-); open question: which graph name should be assigned?
+    // TODO: add size
+    // TODO: add empty
 };
 }  // namespace rdf4cpp::rdf
 

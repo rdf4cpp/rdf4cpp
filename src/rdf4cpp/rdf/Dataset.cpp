@@ -14,7 +14,7 @@ void Dataset::add(const Quad &quad) {
 bool Dataset::contains(const Quad &quad) const {
     return dataset_backend_->contains(quad);
 }
-query::PatternSolutions Dataset::match(const query::QuadPattern &quad_pattern) const {
+query::SolutionSequence Dataset::match(const query::QuadPattern &quad_pattern) const {
     return dataset_backend_->match(quad_pattern);
 }
 size_t Dataset::size() const {

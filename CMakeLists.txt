@@ -45,8 +45,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Literal.cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
-        src/rdf4cpp/rdf/query/PatternSolution.cpp
-        src/rdf4cpp/rdf/query/PatternSolutions.cpp
+        src/rdf4cpp/rdf/query/Solution.cpp
+        src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp

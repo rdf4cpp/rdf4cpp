@@ -31,7 +31,7 @@ bool Graph::contains(const Statement &statement) const {
     return dataset_backend_->contains(quad);
 }
 
-query::PatternSolutions Graph::match(const query::TriplePattern &triple_pattern) const {
+query::SolutionSequence Graph::match(const query::TriplePattern &triple_pattern) const {
     query::QuadPattern quad_pattern{graph_name,
                                     triple_pattern.subject(),
                                     triple_pattern.predicate(),

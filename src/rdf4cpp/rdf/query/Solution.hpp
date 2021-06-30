@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_PATTERNSOLUTION_HPP
-#define RDF4CPP_PATTERNSOLUTION_HPP
+#ifndef RDF4CPP_SOLUTION_HPP
+#define RDF4CPP_SOLUTION_HPP
 
 
 #include <rdf4cpp/rdf/Quad.hpp>
@@ -7,21 +7,20 @@
 
 namespace rdf4cpp::rdf::query {
 
-class PatternSolutions;
+class SolutionSequence;
 
-class PatternSolution {
+class Solution {
 
-    std::vector<Variable> variables;
-    std::vector<Node> current_solution;
-    friend class PatternSolutions;
+    std::vector<std::pair<Variable, Node>> partial_mapping;
+    friend class SolutionSequence;
 
     static std::vector<Variable> extract_variables(const QuadPattern &quad);
 
 public:
-    PatternSolution() = default;
+    Solution() = default;
 
-    explicit PatternSolution(std::vector<Variable> variables);
-    explicit PatternSolution(const QuadPattern &quad_pattern);
+    explicit Solution(const std::vector<Variable> &variables);
+    explicit Solution(const QuadPattern &quad_pattern);
 
     Node operator[](const Variable &variable) const;
 
@@ -37,4 +36,4 @@ public:
 };
 }  // namespace rdf4cpp::rdf::query
 
-#endif  //RDF4CPP_PATTERNSOLUTION_HPP
+#endif  //RDF4CPP_SOLUTION_HPP

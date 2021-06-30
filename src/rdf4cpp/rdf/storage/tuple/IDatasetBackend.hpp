@@ -2,8 +2,8 @@
 #define RDF4CPP_IDATASETBACKEND_HPP
 
 #include <rdf4cpp/rdf/Quad.hpp>
-#include <rdf4cpp/rdf/query/PatternSolutions.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
+#include <rdf4cpp/rdf/query/SolutionSequence.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <algorithm>
@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::storage::tuple {
 
 
 class IDatasetBackend {
-    using PatternSolutions = rdf4cpp::rdf::query::PatternSolutions;
+    using PatternSolutions = rdf4cpp::rdf::query::SolutionSequence;
     using QuadPattern = rdf4cpp::rdf::query::QuadPattern;
 
 protected:

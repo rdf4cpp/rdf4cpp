@@ -2,8 +2,8 @@
 #define RDF4CPP_DEFAULTDATASETBACKEND_HPP
 
 #include <rdf4cpp/rdf/Quad.hpp>
-#include <rdf4cpp/rdf/query/PatternSolutions.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
+#include <rdf4cpp/rdf/query/SolutionSequence.hpp>
 #include <rdf4cpp/rdf/storage/tuple/IDatasetBackend.hpp>
 
 #include <algorithm>
@@ -12,7 +12,7 @@ namespace rdf4cpp::rdf::storage::tuple {
 
 struct DefaultDatasetBackend : public IDatasetBackend {
 private:
-    using PatternSolutions = rdf4cpp::rdf::query::PatternSolutions;
+    using PatternSolutions = rdf4cpp::rdf::query::SolutionSequence;
     using QuadPattern = rdf4cpp::rdf::query::QuadPattern;
 
 public:

@@ -1,39 +1,39 @@
-#include "PatternSolutions.hpp"
+#include "SolutionSequence.hpp"
 namespace rdf4cpp::rdf::query {
-PatternSolutions::PatternSolutions(const std::set<Quad> &quads, QuadPattern pattern)
+SolutionSequence::SolutionSequence(const std::set<Quad> &quads, QuadPattern pattern)
     : quads_(&quads),
       pattern_(pattern),
       solution(this->pattern_),
       end_(this->quads_->cend()) {}
-const QuadPattern &PatternSolutions::pattern() {
+const QuadPattern &SolutionSequence::pattern() {
     return pattern_;
 }
-size_t PatternSolutions::variable_count() const {
+size_t SolutionSequence::variable_count() const {
     return solution.variable_count();
 }
-PatternSolutions &PatternSolutions::begin() {
+SolutionSequence &SolutionSequence::begin() {
     iter_ = quads_->begin();
     forward_to_solution();
     return *this;
 }
-bool PatternSolutions::end() {
+bool SolutionSequence::end() {
     return false;
 }
-const PatternSolution &PatternSolutions::operator*() const {
+const Solution &SolutionSequence::operator*() const {
     return solution;
 }
-PatternSolutions &PatternSolutions::operator++() {
+SolutionSequence &SolutionSequence::operator++() {
     iter_++;
     forward_to_solution();
     return *this;
 }
-PatternSolutions::operator bool() const {
+SolutionSequence::operator bool() const {
     return not ended();
 }
-bool PatternSolutions::ended() const {
+bool SolutionSequence::ended() const {
     return iter_ == end_;
 }
-void PatternSolutions::forward_to_solution() {
+void SolutionSequence::forward_to_solution() {
     while (not is_solution()) {
         if (not ended())
             iter_++;
@@ -41,13 +41,13 @@ void PatternSolutions::forward_to_solution() {
             break;
     }
 }
-bool PatternSolutions::is_solution() const {
+bool SolutionSequence::is_solution() const {
     auto pattern_it = pattern_.begin();
     size_t solution_pos = 0;
     for (const auto &entry : *iter_) {
         const auto &pattern_entry = *pattern_it;
         if (pattern_entry.is_variable()) {
-            solution.current_solution[solution_pos++] = entry;
+            solution.partial_mapping[solution_pos++].second = entry;
         } else {
             if (entry != pattern_entry)
                 return false;

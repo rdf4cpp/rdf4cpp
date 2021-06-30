@@ -24,7 +24,7 @@ size_t DefaultDatasetBackend::size() const {
     return quads_.size();
 }
 
-query::PatternSolutions DefaultDatasetBackend::match(const QuadPattern &quad_pattern) const {
+query::SolutionSequence DefaultDatasetBackend::match(const QuadPattern &quad_pattern) const {
     return PatternSolutions(quads_, quad_pattern);
 }
 
