@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_SOLUTIONSEQUENCEBACKEND_HPP
-#define RDF4CPP_SOLUTIONSEQUENCEBACKEND_HPP
+#ifndef RDF4CPP_ISOLUTIONSEQUENCEBACKEND_HPP
+#define RDF4CPP_ISOLUTIONSEQUENCEBACKEND_HPP
 
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
@@ -11,7 +11,7 @@
 
 namespace rdf4cpp::rdf::storage::tuple {
 
-class SolutionSequenceBackend {
+class ISolutionSequenceBackend {
 protected:
     using QuadPattern = query::QuadPattern;
     using Solution = query::Solution;
@@ -20,18 +20,13 @@ protected:
 
 
 public:
-    explicit SolutionSequenceBackend(QuadPattern pattern);
-    SolutionSequenceBackend() = default;
+    explicit ISolutionSequenceBackend(QuadPattern pattern);
+    ISolutionSequenceBackend() = default;
 
-    virtual ~SolutionSequenceBackend() = 0;
+    virtual ~ISolutionSequenceBackend() = 0;
     virtual const QuadPattern &pattern();
 
-    size_t variable_count() const {
-        return std::count_if(pattern_.begin(), pattern_.end(),
-                             [](const Node &item) {
-                                 return not item.null() and item.is_variable();
-                             });
-    }
+    size_t variable_count() const;
 
     struct const_iterator {
         // from https://stackoverflow.com/questions/35866041/returning-different-iterators-with-virtual-derived-methods
@@ -74,22 +69,13 @@ public:
 
         const_iterator(const const_iterator &r) : _impl(r._impl->clone()){};
 
-        const value_type &operator*() const {
-            return _impl->deref();
-        }
+        const value_type &operator*() const;
 
-        const_iterator &operator++() {
-            _impl->next(1);
-            return *this;
-        }
+        const_iterator &operator++();
 
-        bool operator==(const const_iterator &r) const {
-            return _impl->type() == r._impl->type() and _impl->equal(r._impl->address());
-        }
+        bool operator==(const const_iterator &r) const;
 
-        bool operator!=(const const_iterator &r) const {
-            return not(*this == r);
-        }
+        bool operator!=(const const_iterator &r) const;
     };
 
     virtual const_iterator begin() const = 0;
@@ -99,4 +85,4 @@ public:
 }  // namespace rdf4cpp::rdf::storage::tuple
 
 
-#endif  //RDF4CPP_SOLUTIONSEQUENCEBACKEND_HPP
+#endif  //RDF4CPP_ISOLUTIONSEQUENCEBACKEND_HPP

@@ -25,7 +25,7 @@ size_t DefaultDatasetBackend::size() const {
 }
 
 query::SolutionSequence DefaultDatasetBackend::match(const QuadPattern &quad_pattern) const {
-    return query::SolutionSequence::new_instance<tuple::DefaultSolutionSequence>(quad_pattern, &quads_);
+    return query::SolutionSequence::new_instance<tuple::DefaultSolutionSequenceBackend>(quad_pattern, &quads_);
 }
 
 size_t DefaultDatasetBackend::size(const IRI &graph_name) const {

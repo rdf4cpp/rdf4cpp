@@ -4,7 +4,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
 #include <rdf4cpp/rdf/query/Solution.hpp>
-#include <rdf4cpp/rdf/storage/tuple/SolutionSequenceBackend.hpp>
+#include <rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.hpp>
 
 #include <iostream>
 #include <set>
@@ -14,9 +14,9 @@ namespace rdf4cpp::rdf::query {
 
 class SolutionSequence {
 protected:
-    std::shared_ptr<storage::tuple::SolutionSequenceBackend> backend_;
+    std::shared_ptr<storage::tuple::ISolutionSequenceBackend> backend_;
 
-    explicit SolutionSequence(std::shared_ptr<storage::tuple::SolutionSequenceBackend> backend) : backend_(std::move(backend)) {}
+    explicit SolutionSequence(std::shared_ptr<storage::tuple::ISolutionSequenceBackend> backend) : backend_(std::move(backend)) {}
 
 public:
     // TODO: constructors
@@ -30,15 +30,11 @@ public:
 
     [[nodiscard]] size_t variable_count() const;
 
-    using const_iterator = storage::tuple::SolutionSequenceBackend::const_iterator;
+    using const_iterator = storage::tuple::ISolutionSequenceBackend::const_iterator;
 
-    [[nodiscard]] const_iterator begin() const {
-        return backend_->begin();
-    }
+    [[nodiscard]] const_iterator begin() const;
 
-    [[nodiscard]] const_iterator end() const {
-        return backend_->end();
-    }
+    [[nodiscard]] const_iterator end() const;
 };
 
 }  // namespace rdf4cpp::rdf::query

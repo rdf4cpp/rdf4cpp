@@ -69,24 +69,15 @@ public:
         requires std::forward_iterator<Iter>
         explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)){};
 
-        const_iterator(const const_iterator &r) : _impl(r._impl->clone()){};
+        const_iterator(const const_iterator &r);
 
-        const value_type &operator*() const {
-            return _impl->deref();
-        }
+        const value_type &operator*() const;
 
-        const_iterator &operator++() {
-            _impl->next(1);
-            return *this;
-        }
+        const_iterator &operator++();
 
-        bool operator==(const const_iterator &r) const {
-            return _impl->type() == r._impl->type() and _impl->equal(r._impl->address());
-        }
+        bool operator==(const const_iterator &r) const;
 
-        bool operator!=(const const_iterator &r) const {
-            return not(*this == r);
-        }
+        bool operator!=(const const_iterator &r) const;
     };
 
     [[nodiscard]] virtual const_iterator begin() const = 0;

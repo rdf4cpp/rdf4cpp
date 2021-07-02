@@ -4,7 +4,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
 #include <rdf4cpp/rdf/query/SolutionSequence.hpp>
-#include <rdf4cpp/rdf/storage/tuple/DefaultSolutionSequence.hpp>
+#include <rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.hpp>
 #include <rdf4cpp/rdf/storage/tuple/IDatasetBackend.hpp>
 
 #include <algorithm>
