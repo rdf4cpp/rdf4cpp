@@ -62,7 +62,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/node/RDFNodeType.cpp
         src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequence.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/SolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp

@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
 #include <rdf4cpp/rdf/query/Solution.hpp>
+#include <rdf4cpp/rdf/storage/tuple/SolutionSequenceBackend.hpp>
 
 #include <iostream>
 #include <set>
@@ -11,41 +12,33 @@
 
 namespace rdf4cpp::rdf::query {
 
-
 class SolutionSequence {
-    // TODO: make pure virtual and add Iterator to DefaultDatasetBackend
-    std::set<Quad> const *quads_;
-    QuadPattern pattern_;
+protected:
+    std::shared_ptr<storage::tuple::SolutionSequenceBackend> backend_;
 
-    mutable Solution solution;
-    std::set<Quad>::const_iterator iter_;
-    std::set<Quad>::const_iterator end_;
-
+    explicit SolutionSequence(std::shared_ptr<storage::tuple::SolutionSequenceBackend> backend) : backend_(std::move(backend)) {}
 
 public:
-    SolutionSequence(const std::set<Quad> &quads, QuadPattern pattern);
+    // TODO: constructors
+    template<typename BackendImpl, typename... Args>
+    static inline SolutionSequence new_instance(Args... args) {
+        return SolutionSequence(
+                std::make_shared<BackendImpl>(args...));
+    }
 
     const QuadPattern &pattern();
 
     [[nodiscard]] size_t variable_count() const;
 
-    SolutionSequence &begin();
+    using const_iterator = storage::tuple::SolutionSequenceBackend::const_iterator;
 
+    [[nodiscard]] const_iterator begin() const {
+        return backend_->begin();
+    }
 
-    bool end();
-
-    const Solution &operator*() const;
-
-    SolutionSequence &operator++();
-
-    operator bool() const;
-
-private:
-    bool ended() const;
-
-    void forward_to_solution();
-
-    bool is_solution() const;
+    [[nodiscard]] const_iterator end() const {
+        return backend_->end();
+    }
 };
 
 }  // namespace rdf4cpp::rdf::query

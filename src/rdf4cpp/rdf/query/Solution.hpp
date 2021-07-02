@@ -25,9 +25,10 @@ public:
 
     Node operator[](const Variable &variable) const;
 
-    Node operator[](size_t pos) const;
+    const Node &operator[](size_t pos) const;
+    Node &operator[](size_t pos);
 
-    [[nodiscard]] Variable variable(size_t pos) const;
+    [[nodiscard]] const Variable &variable(size_t pos) const;
 
     [[nodiscard]] size_t variable_count() const;
 

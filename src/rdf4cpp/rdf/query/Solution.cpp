@@ -27,17 +27,19 @@ Node Solution::operator[](const Variable &variable) const {
         return {};
     }
 }
-Node Solution::operator[](size_t pos) const {
-    if (pos < partial_mapping.size())
-        return partial_mapping[pos].second;
-    else
-        return {};
+const Node &Solution::operator[](size_t pos) const {
+    assert(pos < partial_mapping.size());
+    return partial_mapping[pos].second;
 }
-Variable Solution::variable(size_t pos) const {
-    if (pos < partial_mapping.size())
-        return partial_mapping[pos].first;
-    else
-        return {};
+
+Node &Solution::operator[](size_t pos) {
+    assert(pos < partial_mapping.size());
+    return partial_mapping[pos].second;
+}
+
+const Variable &Solution::variable(size_t pos) const {
+    assert(pos < partial_mapping.size());
+    return partial_mapping[pos].first;
 }
 size_t Solution::variable_count() const {
     return partial_mapping.size();
