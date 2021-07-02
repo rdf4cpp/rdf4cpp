@@ -149,6 +149,7 @@ void import_rdf_file(const std::string &path, Dataset *dataset) {
 }
 
 void Dataset::add_ttl_file(const std::string &path) {
+    // TODO: this is provisional until a native parser is implemented
     import_rdf_file(path, this);
 }
 

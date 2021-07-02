@@ -24,6 +24,7 @@ NodeStorage NodeStorage::new_instance() {
     return NodeStorage(new DefaultNodeStorageBackend());
 }
 std::optional<NodeStorage> NodeStorage::lookup_instance(NodeStorageID id) {
+    // TODO: would be better if we returned a reference here, i.e. std::optional<std::reference_wrapper<NodeStorage>>
     INodeStorageBackend *backend = lookup_backend_instance(id);
     if (backend != nullptr) {
         backend->inc_use_count();

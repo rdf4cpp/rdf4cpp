@@ -8,6 +8,7 @@
 
 namespace rdf4cpp::rdf::query {
 class TriplePattern {
+    // TODO: adjust API to Quad
 protected:
     using Variable = rdf4cpp::rdf::query::Variable;
 

@@ -8,6 +8,7 @@
 
 namespace rdf4cpp::rdf::query {
 class QuadPattern {
+    // TODO: adjust API to Quad
 protected:
     using Entries_t = std::array<Node, 4>;
 

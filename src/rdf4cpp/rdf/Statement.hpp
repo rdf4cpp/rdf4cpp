@@ -6,6 +6,7 @@
 namespace rdf4cpp::rdf {
 
 class Statement : public query::TriplePattern {
+    // TODO: adjust API to Quad
 public:
     Statement() = default;
 

@@ -11,9 +11,9 @@ const Node &TriplePattern::predicate() const { return entries_[1]; }
 Node &TriplePattern::object() { return entries_[2]; }
 const Node &TriplePattern::object() const { return entries_[2]; }
 bool TriplePattern::valid() const {
-    return ((subject().is_iri() or subject().is_variable()) and
+    return ((subject().is_iri() or subject().is_variable() or subject().is_bnode()) and
             (predicate().is_iri() or predicate().is_variable()) and
-            (object().is_iri() or object().is_literal() or object().is_variable()));
+            (object().is_iri() or object().is_literal() or object().is_variable() or subject().is_bnode()));
 }
 TriplePattern::iterator TriplePattern::begin() { return entries_.begin(); }
 TriplePattern::const_iterator TriplePattern::begin() const { return entries_.begin(); }

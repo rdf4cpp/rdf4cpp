@@ -1,6 +1,7 @@
 #include "NTriplesWriter.hpp"
 
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
+#include <rdf4cpp/rdf/writer/NNodeWriter.hpp>
 
 #include <sstream>
 
@@ -15,9 +16,9 @@ std::ostream &operator<<(std::ostream &os, const NTriplesWriter &writer) {
     using namespace query;
     auto solutions = writer.graph_.backend()->match(QuadPattern(writer.graph_.name(), Variable("s"), Variable("p"), Variable("o")));
     for (const auto &solution : solutions) {
-        os << solution[0] << " "
-           << solution[1] << " "
-           << solution[2] << " .\n";
+        os << NNodeWriter(solution[0]) << " "
+           << NNodeWriter(solution[1]) << " "
+           << NNodeWriter(solution[2]) << " .\n";
     }
     return os;
 }

@@ -11,6 +11,7 @@ std::strong_ordering LiteralBackend::operator<=>(const LiteralBackend &other) co
 }
 
 std::string LiteralBackend::quote_lexical() const {
+    // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
     return "\"" + lexical + "\"";
 }
 bool LiteralBackend::operator==(const LiteralBackend &) const noexcept {
