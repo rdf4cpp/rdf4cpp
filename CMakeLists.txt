@@ -15,8 +15,8 @@ endif()
 
 if (NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET AND
         NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
-    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+    set(CMAKE_CXX_VISIBILITY_PRESET default)
+    set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
 endif ()
 
 ## Let rdf4cpp_SHARED_LIBS override BUILD_SHARED_LIBS
@@ -25,32 +25,64 @@ if (DEFINED rdf4cpp_SHARED_LIBS)
     set(BUILD_SHARED_LIBS "${rdf4cpp_SHARED_LIBS}")
 endif ()
 
+# find packages
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
+# TODO: check version of serd
+find_library(serd
+        NAMES serd-0
+        NO_CACHE)
+
 ## Create the main rdf4cpp library target
 
 add_library(rdf4cpp
-        src/rdf4cpp/rdf/node/RDFNode.cpp
-        src/rdf4cpp/utils/sec/Result.cpp
+        src/rdf4cpp/rdf/BlankNode.cpp
+        src/rdf4cpp/rdf/Dataset.cpp
+        src/rdf4cpp/rdf/Graph.cpp
+        src/rdf4cpp/rdf/IRI.cpp
+        src/rdf4cpp/rdf/Literal.cpp
+        src/rdf4cpp/rdf/Node.cpp
+        src/rdf4cpp/rdf/Quad.cpp
+        src/rdf4cpp/rdf/query/Solution.cpp
+        src/rdf4cpp/rdf/query/SolutionSequence.cpp
+        src/rdf4cpp/rdf/query/QuadPattern.cpp
+        src/rdf4cpp/rdf/query/TriplePattern.cpp
+        src/rdf4cpp/rdf/query/Variable.cpp
+        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/storage/node/BackendNodeHandle.cpp
+        src/rdf4cpp/rdf/storage/node/BNodeBackend.cpp
+        src/rdf4cpp/rdf/storage/node/DefaultNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/IRIBackend.cpp
+        src/rdf4cpp/rdf/storage/node/LiteralBackend.cpp
+        src/rdf4cpp/rdf/storage/node/NodeID.cpp
+        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
+        src/rdf4cpp/rdf/storage/node/RDFNodeType.cpp
+        src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
+        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
+        src/rdf4cpp/rdf/writer/NNodeWriter.cpp
+        src/rdf4cpp/utils/error/InvalidIRIError.cpp
+        src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
+        src/rdf4cpp/utils/PlainIRI.cpp
         src/rdf4cpp/utils/sec/Err.cpp
         src/rdf4cpp/utils/sec/Ok.cpp
-        src/rdf4cpp/rdf/node/IRIResource.cpp
-        src/rdf4cpp/rdf/node/BlankNode.cpp
-        src/rdf4cpp/rdf/node/Literal.cpp
-        src/rdf4cpp/library.cpp
-        src/rdf4cpp/utils/IRI.cpp
-        src/rdf4cpp/utils/error/InvalidIRIError.cpp
+        src/rdf4cpp/utils/sec/Result.cpp
+        src/rdf4cpp/utils/StringValidator.cpp
         src/rdf4cpp/utils/utf8/UTF8String.cpp
-        src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
         src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
         src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
-        src/rdf4cpp/utils/StringValidator.cpp
-        src/rdf4cpp/rdf/graph/node_manager/NodeID.cpp
-        src/rdf4cpp/rdf/graph/node_manager/LiteralBackend.cpp
-        src/rdf4cpp/rdf/graph/node_manager/BNodeBackend.cpp
-        src/rdf4cpp/rdf/graph/node_manager/IRIBackend.cpp
-        src/rdf4cpp/rdf/graph/node_manager/VariableBackend.cpp
-        src/rdf4cpp/rdf/graph/node_manager/NodeManager.cpp
-        src/rdf4cpp/rdf/graph/node_manager/BackendNodeHandle.cpp
-        src/rdf4cpp/rdf/node/Variable.cpp
+        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
+        )
+target_link_libraries(rdf4cpp PRIVATE
+        Threads::Threads
+        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 set_target_properties(rdf4cpp PROPERTIES
@@ -86,6 +118,8 @@ endif ()
 
 ### old here
 
-add_executable(rdf4cpp_exec src/rdf4cpp/library.cpp)
+add_executable(rdf4cpp_exec delete_me_later_please.cpp)
 target_link_libraries(rdf4cpp_exec PRIVATE
-        rdf4cpp::rdf4cpp)
+        rdf4cpp::rdf4cpp
+        )
+
