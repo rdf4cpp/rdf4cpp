@@ -43,6 +43,22 @@ void mover2(const rdf4cpp::utils::sec::Result<int, std::string> &test) {
 int main() {
     using namespace rdf4cpp::rdf;
 
+    Literal float_1_1("1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"});
+
+    std::cout << float_1_1 << std::endl;
+    std::any any_float_ = float_1_1.value();
+    std::cout << any_cast<datatypes::xsd::Float>(any_float_) << std::endl;
+    datatypes::xsd::Float float_ = float_1_1.value<datatypes::xsd::Float>();  // we know the type at compile time
+    std::cout << float_ << std::endl;
+
+    // update value
+    float_ *= any_cast<datatypes::xsd::Float>(any_float_) * 3;
+    std::cout << float_ << std::endl;
+    // make a new literal with new value
+    Literal updated_float{float_};
+    std::cout << updated_float << std::endl;
+
+
 //    storage::node::NodeStorage::new_instance<storage::node::DefaultNodeStorageBackend>();
 
     using namespace storage::node;
