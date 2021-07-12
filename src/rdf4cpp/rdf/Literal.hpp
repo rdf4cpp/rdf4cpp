@@ -21,10 +21,21 @@ public:
     Literal(const std::string &lexical_form, const std::string &lang,
             NodeStorage &node_storage = NodeStorage::primary_instance());
 
-    template<datatypes::DatatypeConcept T>
-    explicit Literal(T compatible_type,
-                     NodeStorage &node_storage = NodeStorage::primary_instance())
-        : Literal((std::string) compatible_type, std::string{T::datatype_iri}, node_storage) {}
+    /**
+     * Constructs a literal from a compatible type
+     * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
+     * @param compatible_value instance for which the literal is created
+     * @param node_storage NodeStorage used
+     * @return literal instance representing compatible_value
+     */
+    template<class T>
+    inline static Literal make(T compatible_value,
+                               NodeStorage &node_storage = NodeStorage::primary_instance()) {
+        // TODO: template instantiation should fail if not defined for a type
+        return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
+                       std::string{datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri},
+                       node_storage);
+    }
 
     [[nodiscard]] const std::string &lexical_form() const;
 
@@ -46,15 +57,19 @@ public:
 
     /**
      * Constructs a datatype specific container from Literal.
-     * @return
+     * @return std::any wrapped value. might be empty if type is not registered.
      */
     [[nodiscard]] std::any value() const;
     // TODO: support arithmetics with XSD data types
 
+    /**
+     * Get the value of an literal. T must be the registered datatype for the datatype iri.
+     * @tparam T datatype of the returned instance
+     * @return T instance with the value from this
+     */
     template<typename T>
-        requires (std::is_constructible_v<T, std::string> || std::is_constructible_v<T, const std::string &> || std::is_constructible_v<T, std::string &&>)
     T value() const {
-        return T{this->lexical_form()};
+        return datatypes::RegisteredDatatype<std::decay_t<T>>::from_string(this->lexical_form());
     }
 
     friend class Node;

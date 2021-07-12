@@ -3,110 +3,177 @@
 
 #include <algorithm>
 #include <any>
+#include <sstream>
 #include <vector>
 
 namespace rdf4cpp::rdf::datatypes {
 
 /**
- * Concept required from classes deriving DatatypeBase. Guarantees full compatibility with Literal.
+ * Concept describing RegisteredDatatype.
+ * @see RegisteredDatatype
  */
 template<typename T>
-concept DatatypeConcept =
-        ((std::is_constructible_v<T, std::string> || std::is_constructible_v<T, const std::string &> || std::is_constructible_v<T, std::string &&>) &&  //
-         requires(T a) {
-             { T::datatype_iri } -> std::convertible_to<std::string>;
-             { static_cast<std::string>(a) } -> std::convertible_to<std::string>;
-         });
+concept register_datatype_c =
+        requires(T a, std::string s, typename T::datatype v) {
+    { T::datatype_iri } -> std::convertible_to<std::string>;
+    { T::from_string(s) } -> std::convertible_to<typename T::type>;
+    { T::to_string(v) } -> std::convertible_to<std::string>;
+}
+&&std::default_initializable<T>;
 
 /**
  * Registry for Literal datatype implementations.
- * Datatypes must be registered for automatic conversation from a typed Literal with Literal::value() const.
- * Datatypes that derived from DatatypeBase are automatically registered.
+ * Data types are registered by defining implementing and specializing members of RegisteredDatatype.
+ * @see RegisteredDatatype
  */
 class DatatypeRegistry {
 public:
     /**
      * Constructs an instance of a type from a string.
      */
-    using factory_function_ptr = std::any (*)(std::string);
+    using factory_fptr_t = std::any (*)(const std::string &);
+    using to_string_fptr_t = std::string (*)(const std::any &);
 
-    using registered_datatypes_t = std::vector<std::pair<std::string, factory_function_ptr>>;
+    struct DatatypeEntry {
+        std::string name;
+        factory_fptr_t factory_fptr;
+        to_string_fptr_t to_string_fptr;
+    };
+
+    using registered_datatypes_t = std::vector<DatatypeEntry>;
 
 private:
-    static inline std::vector<std::pair<std::string, factory_function_ptr>> &get_mutable() {
-        static std::vector<std::pair<std::string, factory_function_ptr>> registry_;
+    static inline registered_datatypes_t &get_mutable() {
+        static registered_datatypes_t registry_;
         return registry_;
     }
 
 public:
     /**
      * Auto-register a datatype that fulfills DatatypeConcept
-     * @tparam datatype type that is registered.
+     * @tparam datatype_info type that is registered.
      */
-    template<DatatypeConcept datatype>
-    static inline void add() {
-        DatatypeRegistry::add(datatype::datatype_iri, [](std::string string_repr) -> std::any { return std::any(datatype{std::move(string_repr)}); });
-    }
+    template<typename datatype_info>
+    inline static void add();
 
     /**
      * Register an datatype manually
      * @param datatype_iri datatypes iri
-     * @param factory_function factory function to construct an instance from a string
+     * @param factory_fptr factory function to construct an instance from a string
+     * @param to_string_fptr converts type instance to its string representation
      */
-    static inline void add(std::string datatype_iri, factory_function_ptr factory_function) {
+    static inline void add(std::string datatype_iri, factory_fptr_t factory_fptr, to_string_fptr_t to_string_fptr) {
         auto &registry = DatatypeRegistry::get_mutable();
-        auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &pair) { return pair.first == datatype_iri; });
+        auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &entry) { return entry.name == datatype_iri; });
         if (found == registry.end()) {
-            registry.emplace_back(datatype_iri, factory_function);
+            registry.push_back({datatype_iri, factory_fptr, to_string_fptr});
             std::sort(registry.begin(), registry.end(),
-                      [](const auto &left, const auto &right) { return left.first < right.first; });
+                      [](const auto &left, const auto &right) { return left.name < right.name; });
         } else {
-            found->second = factory_function;
+            found->factory_fptr = factory_fptr;
+            found->to_string_fptr = to_string_fptr;
         }
     }
 
     /**
      * Retrieve all registered datatypes.
-     * @return vector of pairs mapping datatype IRI std::string to factory_function_ptr
+     * @return vector of pairs mapping datatype IRI std::string to factory_fptr_t
      */
     static inline const registered_datatypes_t &registered_datatypes() {
         return DatatypeRegistry::get_mutable();
     }
 
     /**
-     * Get a factory_function_ptr for a datatype IRI std::string. The factory_function_ptr can be used like `std::any type_instance = factory_function_ptr("types string repressentation")`.
+     * Get a factory_fptr_t for a datatype IRI std::string. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string repressentation")`.
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
-    static inline factory_function_ptr lookup(const std::string &datatype_iri) {
+    static inline factory_fptr_t get_factory(const std::string &datatype_iri) {
         const auto &registry = registered_datatypes();
         auto found = std::lower_bound(registry.begin(), registry.end(),
-                                      std::pair<std::string, factory_function_ptr>{datatype_iri, nullptr},
-                                      [](const auto &left, const auto &right) { return left.first < right.first; });
-        if (found != registry.end() and found->first == datatype_iri) {
-            return found->second;
+                                      DatatypeEntry{datatype_iri, nullptr, nullptr},
+                                      [](const auto &left, const auto &right) { return left.name < right.name; });
+        if (found != registry.end() and found->name == datatype_iri) {
+            return found->factory_fptr;
+        } else {
+            return nullptr;
+        }
+    }
+
+    /**
+     * Get a to_string function for a datatype IRI std::string. The factory_fptr_t can be used like `std::string str_repr = to_string_fptr(any_typed_arg)`.
+     * @param datatype_iri datatype IRI std::string
+     * @return function pointer or nullptr
+     */
+    static inline to_string_fptr_t get_to_string(const std::string &datatype_iri) {
+        const auto &registry = registered_datatypes();
+        auto found = std::lower_bound(registry.begin(), registry.end(),
+                                      DatatypeEntry{datatype_iri, nullptr, nullptr},
+                                      [](const auto &left, const auto &right) { return left.name < right.name; });
+        if (found != registry.end() and found->name == datatype_iri) {
+            return found->to_string_fptr;
         } else {
             return nullptr;
         }
     }
 };
 
+
 /**
- * Datatypes can have DatatypeBase as <a href="https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern">CRTP</a> base class. If they have, they are registered automatically.
- * @tparam Derived The derived class is known at compile time to the base class.
+ * To register a datatype, datatype_iri and from_string must be defined for RegisteredDatatype<datatype_t>.
+ * If datatype_t does not overload operator<<, static std::string to_string(const datatype_t &value) must be specialized..
+ * @tparam datatype_t The derived class is known at compile time to the base class.
  */
-template<typename Derived>
-class DatatypeBase {
+template<typename datatype_t>
+struct RegisteredDatatype {
+    /**
+     * Datatype iri
+     */
+    inline static const char *datatype_iri;
+    /**
+     * Factory function that parses a string representing datatype_t and builds an instance of datatype_t
+     * @return instance of datatype_t
+     */
+    inline static datatype_t from_string(const std::string &);
+    /**
+     * Returns string representation of a datatype_t.
+     * @param value an datatype_t instance
+     * @return <div>value</div>'s canonical string representation
+     */
+    inline static std::string to_string(const datatype_t &value) {
+        std::stringstream str_s;
+        str_s << value;
+        return str_s.str();
+    }
+
+    /**
+     * Exposes template parameter datatype_t.
+     */
+    typedef datatype_t datatype;
+
+private:
     static inline std::nullptr_t init();
     inline static const auto dummy = init();
 
     // Force `dummy` to be instantiated, even though it's unused.
     static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};
 };
-template<typename Derived>
-std::nullptr_t DatatypeBase<Derived>::init() {
-    DatatypeRegistry::add<Derived>();
+template<typename datatype_t>
+std::nullptr_t RegisteredDatatype<datatype_t>::init() {
+    DatatypeRegistry::add<RegisteredDatatype<datatype_t>>();
     return nullptr;
+}
+
+template<typename datatype_info>
+inline void DatatypeRegistry::add() {
+    DatatypeRegistry::add(
+            datatype_info::datatype_iri,
+            [](const std::string &string_repr) -> std::any {
+                return std::any(datatype_info::from_string(string_repr));
+            },
+            [](const std::any &value) -> std::string {
+                return datatype_info::to_string(std::any_cast<typename datatype_info::datatype>(value));
+            });
 }
 }  // namespace rdf4cpp::rdf::datatypes
 

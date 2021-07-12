@@ -52,9 +52,9 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     return os;
 }
 std::any Literal::value() const {
-    datatypes::DatatypeRegistry::factory_function_ptr pFunction = datatypes::DatatypeRegistry::lookup(this->datatype().identifier());
-    if (pFunction)
-        return pFunction(lexical_form());
+    datatypes::DatatypeRegistry::factory_fptr_t factory = datatypes::DatatypeRegistry::get_factory(this->datatype().identifier());
+    if (factory != nullptr)
+        return factory(lexical_form());
     else
         return {};
 }
