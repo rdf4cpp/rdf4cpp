@@ -9,19 +9,6 @@
 namespace rdf4cpp::rdf::datatypes {
 
 /**
- * Concept describing RegisteredDatatype.
- * @see RegisteredDatatype
- */
-template<typename T>
-concept register_datatype_c =
-        requires(T a, std::string s, typename T::datatype v) {
-    { T::datatype_iri } -> std::convertible_to<std::string>;
-    { T::from_string(s) } -> std::convertible_to<typename T::type>;
-    { T::to_string(v) } -> std::convertible_to<std::string>;
-}
-&&std::default_initializable<T>;
-
-/**
  * Registry for Literal datatype implementations.
  * Data types are registered by defining implementing and specializing members of RegisteredDatatype.
  * @see RegisteredDatatype
@@ -43,7 +30,7 @@ public:
     using registered_datatypes_t = std::vector<DatatypeEntry>;
 
 private:
-    static inline registered_datatypes_t &get_mutable() {
+    inline static registered_datatypes_t &get_mutable() {
         static registered_datatypes_t registry_;
         return registry_;
     }
@@ -62,7 +49,7 @@ public:
      * @param factory_fptr factory function to construct an instance from a string
      * @param to_string_fptr converts type instance to its string representation
      */
-    static inline void add(std::string datatype_iri, factory_fptr_t factory_fptr, to_string_fptr_t to_string_fptr) {
+    inline static void add(std::string datatype_iri, factory_fptr_t factory_fptr, to_string_fptr_t to_string_fptr) {
         auto &registry = DatatypeRegistry::get_mutable();
         auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &entry) { return entry.name == datatype_iri; });
         if (found == registry.end()) {
@@ -79,7 +66,7 @@ public:
      * Retrieve all registered datatypes.
      * @return vector of pairs mapping datatype IRI std::string to factory_fptr_t
      */
-    static inline const registered_datatypes_t &registered_datatypes() {
+    inline static const registered_datatypes_t &registered_datatypes() {
         return DatatypeRegistry::get_mutable();
     }
 
@@ -88,7 +75,7 @@ public:
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
-    static inline factory_fptr_t get_factory(const std::string &datatype_iri) {
+    inline static factory_fptr_t get_factory(const std::string &datatype_iri) {
         const auto &registry = registered_datatypes();
         auto found = std::lower_bound(registry.begin(), registry.end(),
                                       DatatypeEntry{datatype_iri, nullptr, nullptr},
@@ -105,7 +92,7 @@ public:
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
-    static inline to_string_fptr_t get_to_string(const std::string &datatype_iri) {
+    inline static to_string_fptr_t get_to_string(const std::string &datatype_iri) {
         const auto &registry = registered_datatypes();
         auto found = std::lower_bound(registry.begin(), registry.end(),
                                       DatatypeEntry{datatype_iri, nullptr, nullptr},
@@ -120,9 +107,9 @@ public:
 
 
 /**
- * To register a datatype, datatype_iri and from_string must be defined for RegisteredDatatype<datatype_t>.
- * If datatype_t does not overload operator<<, static std::string to_string(const datatype_t &value) must be specialized..
- * @tparam datatype_t The derived class is known at compile time to the base class.
+ * To register a datatype, datatype_iri and from_string must be defined for `RegisteredDatatype<datatype_t>`.
+ * If datatype_t does not overload `operator<<`, to_string(const datatype_t &value) must be specialized.
+ * @tparam datatype_t datatype that is being registered
  */
 template<typename datatype_t>
 struct RegisteredDatatype {
@@ -131,8 +118,11 @@ private:
      * static_assert would always trigger if it wasn't dependent on a template parameter.
      * With this helper template, it only triggers if the function is instantiated.
      */
-    template <typename> using always_false = std::false_type;
-    template <typename T> static constexpr bool always_false_v = always_false<T>::value;
+    template<typename>
+    using always_false = std::false_type;
+    template<typename T>
+    static constexpr bool always_false_v = always_false<T>::value;
+
 public:
     /**
      * Datatype iri
@@ -145,7 +135,7 @@ public:
      * Factory function that parses a string representing datatype_t and builds an instance of datatype_t
      * @return instance of datatype_t
      */
-    inline static datatype_t from_string(const std::string &){
+    inline static datatype_t from_string(const std::string &) {
         //If this implementation is used the user forgot to provide their own.
         static_assert(always_false_v<datatype_t>, "'from_string' is not implemented for this type!");
     }
@@ -166,7 +156,7 @@ public:
     typedef datatype_t datatype;
 
 private:
-    static inline std::nullptr_t init();
+    inline static std::nullptr_t init();
     inline static const auto dummy = init();
 
     // Force `dummy` to be instantiated, even though it's unused.

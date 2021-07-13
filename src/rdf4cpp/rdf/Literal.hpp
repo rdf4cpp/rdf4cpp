@@ -31,7 +31,6 @@ public:
     template<class T>
     inline static Literal make(T compatible_value,
                                NodeStorage &node_storage = NodeStorage::primary_instance()) {
-        // TODO: template instantiation should fail if not defined for a type
         return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
                        datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(),
                        node_storage);
