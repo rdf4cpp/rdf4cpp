@@ -16,7 +16,7 @@ using Float = float; //!< Implements <a href="http://www.w3.org/2001/XMLSchema#f
 
 namespace rdf4cpp::rdf::datatypes {
 template<>
-inline const char *RegisteredDatatype<xsd::Float>::datatype_iri = "http://www.w3.org/2001/XMLSchema#float";
+inline std::string RegisteredDatatype<xsd::Float>::datatype_iri() noexcept { return "http://www.w3.org/2001/XMLSchema#float";}
 template<>
 inline float RegisteredDatatype<xsd::Float>::from_string(const std::string &s) {
     return std::stof(s);

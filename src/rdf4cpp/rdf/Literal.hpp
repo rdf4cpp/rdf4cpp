@@ -33,7 +33,7 @@ public:
                                NodeStorage &node_storage = NodeStorage::primary_instance()) {
         // TODO: template instantiation should fail if not defined for a type
         return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
-                       std::string{datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri},
+                       datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(),
                        node_storage);
     }
 

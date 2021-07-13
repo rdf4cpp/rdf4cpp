@@ -2,6 +2,7 @@
 #define RDF4CPP_XSD_HPP
 
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Int.hpp>
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**

@@ -126,17 +126,21 @@ public:
  */
 template<typename datatype_t>
 struct RegisteredDatatype {
-    /**
-     * Datatype iri
-     */
-    inline static const char *datatype_iri;
-
+private:
     /**
      * static_assert would always trigger if it wasn't dependent on a template parameter.
      * With this helper template, it only triggers if the function is instantiated.
      */
     template <typename> using always_false = std::false_type;
     template <typename T> static constexpr bool always_false_v = always_false<T>::value;
+public:
+    /**
+     * Datatype iri
+     */
+    inline static std::string datatype_iri() noexcept {
+        static_assert(always_false_v<datatype_t>, "'datatype_iri' is not defined!");
+        return {};
+    }
     /**
      * Factory function that parses a string representing datatype_t and builds an instance of datatype_t
      * @return instance of datatype_t
@@ -177,7 +181,7 @@ std::nullptr_t RegisteredDatatype<datatype_t>::init() {
 template<typename datatype_info>
 inline void DatatypeRegistry::add() {
     DatatypeRegistry::add(
-            datatype_info::datatype_iri,
+            datatype_info::datatype_iri(),
             [](const std::string &string_repr) -> std::any {
                 return std::any(datatype_info::from_string(string_repr));
             },
