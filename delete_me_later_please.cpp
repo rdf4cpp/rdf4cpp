@@ -49,6 +49,7 @@ int main() {
     std::any any_float_ = float_1_1.value();
     std::cout << any_cast<float>(any_float_) << std::endl;
     auto float_ = float_1_1.value<float>();  // we know the type at compile time
+    //auto int_ = float_1_1.value<int>();  // if a type is not implemented a static assert is triggered
     std::cout << float_ << std::endl;
 
     // update value
