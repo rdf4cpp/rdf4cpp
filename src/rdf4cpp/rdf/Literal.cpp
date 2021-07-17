@@ -51,6 +51,13 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << (std::string) literal;
     return os;
 }
+std::any Literal::value() const {
+    datatypes::DatatypeRegistry::factory_fptr_t factory = datatypes::DatatypeRegistry::get_factory(this->datatype().identifier());
+    if (factory != nullptr)
+        return factory(lexical_form());
+    else
+        return {};
+}
 
 
 }  // namespace rdf4cpp::rdf
