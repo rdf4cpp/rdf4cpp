@@ -71,8 +71,4 @@ int main() {
         auto v = (query::Variable) nodes[1];
         std::cout << v << std::endl;
     }
-
-    std::cout << "fails in debug (is actually variable): auto b = (BlankNode) nodes[1];" << std::endl;
-
-    [[maybe_unused]] auto v = (BlankNode) nodes[1];
 }
