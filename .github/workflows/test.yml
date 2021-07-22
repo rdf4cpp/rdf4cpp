@@ -1,4 +1,4 @@
-name: Test
+name: Tests and Examples
 on: [ 'push' ]
 jobs:
   test:
@@ -52,10 +52,24 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
       - name: Check out sources
         uses: actions/checkout@v2
-      - name: Run tests
+      - name: Build Tests
         run: |
           cmake -G Ninja -B build -Drdf4cpp_BUILD_TESTS=ON
           cd build
           ninja tests_hello_test
+      - name: Run tests
+        run: |
+          cd build
           tests/tests_hello_test
+      - name: Build Examples
+        run: |
+            cmake -G Ninja -B build -Drdf4cpp_BUILD_EXAMPLES=ON
+            cd build
+            ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
+      - name: Run Examples
+        run: |
+          cd build
+          examples/graphs_and_datasets_example
+          examples/literal_datatypes_example
+          examples/rdf_nodes_example
 
