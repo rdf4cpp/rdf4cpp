@@ -116,10 +116,8 @@ if (rdf4cpp_BUILD_TESTS)
 endif ()
 
 
-### old here
-
-add_executable(rdf4cpp_exec delete_me_later_please.cpp)
-target_link_libraries(rdf4cpp_exec PRIVATE
-        rdf4cpp::rdf4cpp
-        )
-
+OPTION(rdf4cpp_BUILD_EXAMPLES "Build the examples for rdf4cpp." OFF)
+if (rdf4cpp_BUILD_EXAMPLES)
+    message("Examples are configured to be build.")
+    add_subdirectory(examples)
+endif ()

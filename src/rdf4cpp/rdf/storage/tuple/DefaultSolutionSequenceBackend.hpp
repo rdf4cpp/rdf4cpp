@@ -45,7 +45,6 @@ public:
         bool operator==(const const_iterator &r) const;
 
         bool operator!=(const const_iterator &r) const;
-        ;
     };
 };
 

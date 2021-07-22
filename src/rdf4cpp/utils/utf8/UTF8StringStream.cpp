@@ -11,8 +11,9 @@ rdf4cpp::utils::utf8::UTF8StringStream::create(std::ifstream utf8_stream) {
     return rdf4cpp::utils::utf8::UTF8StringStream(std::move(utf8_stream));
 }
 
-rdf4cpp::utils::utf8::UTF8StringStream::UTF8StringStream(std::ifstream utf8_stream) {
-    std::move(utf8_stream);
+rdf4cpp::utils::utf8::UTF8StringStream::UTF8StringStream([[maybe_unused]]std::ifstream utf8_stream) {
+    // TODO: implement
+//    std::move(utf8_stream);
 }
 
 bool rdf4cpp::utils::utf8::UTF8StringStream::has_next() const {

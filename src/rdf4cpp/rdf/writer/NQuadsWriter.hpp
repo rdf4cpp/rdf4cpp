@@ -19,7 +19,6 @@ public:
     operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const NQuadsWriter &writer);
-    ;
 };
 }  // namespace rdf4cpp::rdf::writer
 #endif  //RDF4CPP_NQUADSWRITER_HPP
