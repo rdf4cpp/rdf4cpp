@@ -77,7 +77,7 @@ rdf4cpp::utils::sec::Result<rdf4cpp::utils::utf8::UTF8String, rdf4cpp::utils::er
             }else{
                 // not valid
                 return rdf4cpp::utils::sec::Err<UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError>(
-                        rdf4cpp::utils::error::InvalidUTF8StringError("Invalid UTF-8 Character at position "+pos)
+                        rdf4cpp::utils::error::InvalidUTF8StringError("Invalid UTF-8 Character at position "+std::to_string(pos))
                 );
             }
         }
@@ -85,7 +85,7 @@ rdf4cpp::utils::sec::Result<rdf4cpp::utils::utf8::UTF8String, rdf4cpp::utils::er
             if(!(c <= 0xBF && c >= 0x80)){
                 // not valid
                 return rdf4cpp::utils::sec::Err<UTF8String, rdf4cpp::utils::error::InvalidUTF8StringError>(
-                        rdf4cpp::utils::error::InvalidUTF8StringError("Invalid UTF-8 Character at position "+pos)
+                        rdf4cpp::utils::error::InvalidUTF8StringError("Invalid UTF-8 Character at position "+std::to_string(pos))
                         );
             }
             size--;

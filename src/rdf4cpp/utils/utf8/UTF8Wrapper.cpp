@@ -22,3 +22,5 @@ bool rdf4cpp::utils::utf8::UTF8Wrapper::is_valid_utf8_char(std::string &utf8_cha
         return false;
     }
 }
+rdf4cpp::utils::utf8::UTF8Wrapper::~UTF8Wrapper() {
+}

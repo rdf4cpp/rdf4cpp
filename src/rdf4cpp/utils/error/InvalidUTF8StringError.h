@@ -8,6 +8,7 @@
 #include <string>
 
 namespace rdf4cpp::utils::error {
+    // TODO: If InvalidUTF8StringError inherits from std::exception it must not add additional fields.
     class InvalidUTF8StringError : public std::exception {
     public:
         explicit InvalidUTF8StringError(std::string message);

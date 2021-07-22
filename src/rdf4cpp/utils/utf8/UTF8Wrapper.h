@@ -28,6 +28,8 @@ namespace rdf4cpp::utils::utf8 {
 
 
         static bool is_valid_utf8_char(std::string &utf8_char);
+
+        virtual ~UTF8Wrapper();
     };
 }
 
