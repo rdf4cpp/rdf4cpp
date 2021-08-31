@@ -18,17 +18,19 @@ public:
     explicit BlankNode(const std::string &identifier,
                        NodeStorage &node_storage = NodeStorage::primary_instance());
 
+    /**
+     * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
+     * @return string identifier
+     */
     [[nodiscard]] const std::string &identifier() const;
 
-    [[nodiscard]] operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
-    [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_bnode() const;
     [[nodiscard]] bool is_iri() const;
-    [[nodiscard]] RDFNodeType type() const;
     friend class Node;
 };
 }  // namespace rdf4cpp::rdf

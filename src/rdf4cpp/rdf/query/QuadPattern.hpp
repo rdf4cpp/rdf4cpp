@@ -48,7 +48,7 @@ public:
 
     auto operator<=>(const QuadPattern &rhs) const = default;
 
-    operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern);
 };

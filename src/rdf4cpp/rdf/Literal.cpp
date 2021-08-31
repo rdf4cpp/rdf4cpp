@@ -40,12 +40,10 @@ Literal::operator std::string() const {
         return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->n_string();
     }
 }
-bool Literal::is_blank_node() const { return false; }
 bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
 bool Literal::is_bnode() const { return false; }
 bool Literal::is_iri() const { return false; }
-Node::RDFNodeType Literal::type() const { return RDFNodeType::Literal; }
 Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << (std::string) literal;

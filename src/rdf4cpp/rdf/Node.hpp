@@ -11,9 +11,6 @@
 #include <optional>
 #include <string>
 
-/**
- * In this namespace the implementations of core RDF Concepts are defined. Class names are equal to terms defined in <a href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#resources-and-statements">RDF 1.1 Concepts and Abstract Syntax"</a>.
- */
 namespace rdf4cpp::rdf {
 class Literal;
 class BlankNode;
@@ -51,13 +48,10 @@ public:
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      * @return string representation in N-format
      */
-    [[nodiscard]] operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     /**
      * @see operator std::string() const
-     * @param os
-     * @param node
-     * @return
      */
     friend std::ostream &operator<<(std::ostream &os, const Node &node);
 
@@ -117,8 +111,20 @@ public:
      */
     [[nodiscard]] bool null() const noexcept;
 
+    /**
+     * Exposes the const BackendNodeHandle.
+     *
+     * This function is unsafe! Make sure this is not null() const.
+     * @return its BackendNodeHandle.
+     */
     [[nodiscard]] const BackendNodeHandle &backend_handle() const noexcept;
 
+    /**
+     * Exposes the BackendNodeHandle.
+     *
+     * This function is unsafe! Make sure this is not null() const.
+     * @return its BackendNodeHandle.
+     */
     [[nodiscard]] BackendNodeHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp::rdf

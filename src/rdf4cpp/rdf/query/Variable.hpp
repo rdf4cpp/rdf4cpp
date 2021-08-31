@@ -20,7 +20,7 @@ public:
 
     [[nodiscard]] const std::string &name() const;
 
-    [[nodiscard]] operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);
 

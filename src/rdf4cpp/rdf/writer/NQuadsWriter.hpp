@@ -16,7 +16,7 @@ class NQuadsWriter {
 public:
     explicit NQuadsWriter(Dataset dataset);
 
-    operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const NQuadsWriter &writer);
 };

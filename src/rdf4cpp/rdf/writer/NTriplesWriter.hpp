@@ -13,7 +13,7 @@ class NTriplesWriter {
 public:
     explicit NTriplesWriter(Graph graph);
 
-    operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const NTriplesWriter &writer);
 };

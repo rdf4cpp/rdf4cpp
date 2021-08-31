@@ -16,7 +16,7 @@ public:
     auto operator<=>(const IRIBackend &) const = default;
     std::strong_ordering operator<=>(IRIBackend const *other) const;
 
-    std::string identifier() const;
+    const std::string &identifier() const;
 
     [[nodiscard]] std::string n_string() const;
 };
