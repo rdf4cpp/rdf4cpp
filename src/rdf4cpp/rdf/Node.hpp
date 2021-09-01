@@ -71,7 +71,7 @@ public:
      * Checks weather the node is a BlankNode. If yes, it is safe to convert it with `auto bnode = (BlankNode) rdf_node;`
      * @return if this is a BlankNode
      */
-    [[nodiscard]] bool is_bnode() const;
+    [[nodiscard]] bool is_blank_node() const;
 
     /**
      * Checks weather the node is a IRI. If yes, it is safe to convert it with `auto iri = (Literal) rdf_node;`
@@ -84,7 +84,7 @@ public:
     std::strong_ordering operator<=>(const Node &other) const;
 
     /**
-     * Conversion to BlankNode is only safe if `(is_bnode() == true)`
+     * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
      * @return a copy of type BlankNode
      */
     explicit operator BlankNode() const;

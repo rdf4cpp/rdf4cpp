@@ -42,7 +42,7 @@ Literal::operator std::string() const {
 }
 bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
-bool Literal::is_bnode() const { return false; }
+bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
 Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {

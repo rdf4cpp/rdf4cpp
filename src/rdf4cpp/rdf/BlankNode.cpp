@@ -15,7 +15,7 @@ BlankNode::operator std::string() const {
 
 bool BlankNode::is_literal() const { return false; }
 bool BlankNode::is_variable() const { return false; }
-bool BlankNode::is_bnode() const { return true; }
+bool BlankNode::is_blank_node() const { return true; }
 bool BlankNode::is_iri() const { return false; }
 std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
     os << (std::string) node;

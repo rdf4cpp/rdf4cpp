@@ -78,7 +78,7 @@ public:
 
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;
-    [[nodiscard]] bool is_bnode() const;
+    [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
 
     /**

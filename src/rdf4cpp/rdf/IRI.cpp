@@ -12,7 +12,7 @@ IRI::operator std::string() const { return handle_.iri_backend().n_string(); }
 
 bool IRI::is_literal() const { return false; }
 bool IRI::is_variable() const { return false; }
-bool IRI::is_bnode() const { return false; }
+bool IRI::is_blank_node() const { return false; }
 bool IRI::is_iri() const { return true; }
 
 

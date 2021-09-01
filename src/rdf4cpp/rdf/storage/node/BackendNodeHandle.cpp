@@ -14,7 +14,7 @@ bool BackendNodeHandle::is_iri() const noexcept {
 bool BackendNodeHandle::is_literal() const noexcept {
     return type() == RDFNodeType::Literal;
 }
-bool BackendNodeHandle::is_bnode() const noexcept {
+bool BackendNodeHandle::is_blank_node() const noexcept {
     return type() == RDFNodeType::BNode;
 }
 bool BackendNodeHandle::is_variable() const noexcept {
