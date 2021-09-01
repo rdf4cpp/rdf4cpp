@@ -72,17 +72,17 @@ public:
     std::pair<IRIBackend *, NodeID> get_iri(const std::string &iri);
 
     /**
-     *
-     * @param identifier name name without _: or ?
-     * @param anonymous true if string repr. it starts with ? and false if it starts with ?
-     * @return
+     * Create or lookup a Variable
+     * @param identifier name name without `_:` or `?`
+     * @param anonymous true if string repr. it starts with `?` and false if it starts with `?`
+     * @return a pointer to the VariableBackend and its NodeID
      */
     std::pair<VariableBackend *, NodeID> get_variable(const std::string &identifier, bool anonymous = false);
 
     /**
-     *
-     * @param name name without _:
-     * @return
+     * Create or lookup a BlankNode
+     * @param identifier name without `_:`
+     * @return a pointer to the BNodeBackend and its NodeID
      */
     std::pair<BNodeBackend *, NodeID> get_bnode(const std::string &identifier);
 

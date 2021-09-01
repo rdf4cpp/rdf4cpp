@@ -36,8 +36,8 @@ bool Node::is_literal() const {
 bool Node::is_variable() const {
     return handle_.is_variable();
 }
-bool Node::is_bnode() const {
-    return handle_.is_bnode();
+bool Node::is_blank_node() const {
+    return handle_.is_blank_node();
 }
 bool Node::is_iri() const {
     return handle_.is_iri();
@@ -82,7 +82,7 @@ bool Node::operator==(const Node &other) const {
     }
 }
 Node::operator BlankNode() const {
-    assert(is_bnode());
+    assert(is_blank_node());
     return BlankNode{handle_};
 }
 Node::operator IRI() const {

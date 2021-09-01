@@ -3,8 +3,7 @@
 
 #include <rdf4cpp/rdf/Statement.hpp>
 #include <rdf4cpp/rdf/query/TriplePattern.hpp>
-#include <rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.hpp>
-#include <rdf4cpp/rdf/storage/tuple/IDatasetBackend.hpp>
+#include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
 
 #include <memory>
 #include <utility>
@@ -15,14 +14,14 @@ class Dataset;
 
 class Graph {
     friend class Dataset;
-    using IDatasetBackend = ::rdf4cpp::rdf::storage::tuple::IDatasetBackend;
+    using DatasetStorage = ::rdf4cpp::rdf::storage::tuple::DatasetStorage;
+    
     using NodeStorage = storage::node::NodeStorage;
 
+    DatasetStorage dataset_storage;
+    IRI graph_name = IRI::default_graph(dataset_storage.node_storage());
 
-    std::shared_ptr<IDatasetBackend> dataset_backend_;
-    IRI graph_name = IRI::default_graph(dataset_backend_->node_storage());
-
-    Graph(std::shared_ptr<IDatasetBackend> dataset_backend, const IRI &graph_name);
+    Graph(DatasetStorage dataset_backend, const IRI &graph_name);
 
 public:
     // TODO: allow to change default backend impl.
@@ -42,12 +41,11 @@ public:
 
     [[nodiscard]] const IRI &name() const;
 
-    std::shared_ptr<IDatasetBackend> &backend();
+    DatasetStorage &backend();
 
-    [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
+    [[nodiscard]] const DatasetStorage &backend() const;
 
     // TODO: support union (+) and difference (-); open question: which graph name should be assigned?
-    // TODO: add size
     // TODO: add empty
 };
 }  // namespace rdf4cpp::rdf

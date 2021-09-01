@@ -15,7 +15,7 @@ public:
     // TODO: correct escaping in Literals and IRIs
     explicit NNodeWriter(Node node);
 
-    operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const NNodeWriter &writer);
 };

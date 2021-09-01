@@ -3,8 +3,8 @@
 
 #include <rdf4cpp/rdf/Graph.hpp>
 #include <rdf4cpp/rdf/Quad.hpp>
+#include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
 #include <rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.hpp>
-#include <rdf4cpp/rdf/storage/tuple/IDatasetBackend.hpp>
 
 #include <memory>
 #include <utility>
@@ -15,13 +15,13 @@ namespace rdf4cpp::rdf {
 class Graph;
 
 class Dataset {
-    using IDatasetBackend = ::rdf4cpp::rdf::storage::tuple::IDatasetBackend;
+    using DatasetStorage = ::rdf4cpp::rdf::storage::tuple::DatasetStorage;
     using NodeStorage = storage::node::NodeStorage;
     friend class Graph;
 
-    std::shared_ptr<IDatasetBackend> dataset_backend_;
+    DatasetStorage dataset_storage;
 
-    explicit Dataset(std::shared_ptr<IDatasetBackend> datasetBackend);
+    explicit Dataset(DatasetStorage dataset_storage);
 
 public:
     // TODO: allow to change default backend impl.
@@ -49,7 +49,7 @@ public:
      */
     void add_ttl_file(const std::string &path);
 
-    using const_interator = IDatasetBackend::const_iterator;
+    using const_interator = DatasetStorage::const_iterator;
 
     using iterator = const_interator;
 
@@ -57,12 +57,11 @@ public:
 
     [[nodiscard]] iterator end() const;
 
-    std::shared_ptr<IDatasetBackend> &backend();
+    DatasetStorage &backend();
 
-    [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend() const;
+    [[nodiscard]] const DatasetStorage &backend() const;
 
     // TODO: support union (+) and difference (-)
-    // TODO: add size
     // TODO: add empty
 };
 

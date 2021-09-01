@@ -19,7 +19,7 @@ public:
 
     [[nodiscard]] bool is_iri() const noexcept;
     [[nodiscard]] bool is_literal() const noexcept;
-    [[nodiscard]] bool is_bnode() const noexcept;
+    [[nodiscard]] bool is_blank_node() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
 
     [[nodiscard]] bool empty() const noexcept;

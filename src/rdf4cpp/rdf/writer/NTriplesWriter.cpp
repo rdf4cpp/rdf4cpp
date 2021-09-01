@@ -14,7 +14,7 @@ NTriplesWriter::operator std::string() const {
 }
 std::ostream &operator<<(std::ostream &os, const NTriplesWriter &writer) {
     using namespace query;
-    auto solutions = writer.graph_.backend()->match(QuadPattern(writer.graph_.name(), Variable("s"), Variable("p"), Variable("o")));
+    auto solutions = writer.graph_.backend().match(QuadPattern(writer.graph_.name(), Variable("s"), Variable("p"), Variable("o")));
     for (const auto &solution : solutions) {
         os << NNodeWriter(solution[0]) << " "
            << NNodeWriter(solution[1]) << " "

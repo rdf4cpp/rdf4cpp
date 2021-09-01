@@ -12,7 +12,7 @@ std::strong_ordering IRIBackend::operator<=>(const IRIBackend *other) const {
 std::string IRIBackend::n_string() const {
     return "<" + iri + ">";
 }
-std::string IRIBackend::identifier() const {
+const std::string &IRIBackend::identifier() const {
     return iri;
 }
 }  // namespace rdf4cpp::rdf::storage::node

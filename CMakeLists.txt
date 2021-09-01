@@ -61,6 +61,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/RDFNodeType.cpp
         src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
+        src/rdf4cpp/rdf/storage/tuple/DatasetStorage.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
