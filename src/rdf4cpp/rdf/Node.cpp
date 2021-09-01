@@ -13,6 +13,38 @@ Node::Node(Node::NodeID id) : handle_(id) {}
 
 Node::Node(const Node::BackendNodeHandle &id) : handle_(id) {}
 
+Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
+    if (this->backend_handle().node_storage() == node_storage)
+        return *this;
+    else {
+        NodeID node_id = [&]() {
+            switch (this->backend_handle().type()) {
+
+                case RDFNodeType::Variable: {
+                    auto variable = static_cast<query::Variable>(*this);
+                    return node_storage.get_variable(variable.name(), variable.is_anonymous()).second;
+                }
+                case RDFNodeType::BNode: {
+                    auto bnode = static_cast<BlankNode>(*this);
+                    return node_storage.get_bnode(bnode.identifier()).second;
+                }
+                case RDFNodeType::IRI: {
+                    auto iri = static_cast<IRI>(*this);
+                    return node_storage.get_iri(iri.identifier()).second;
+                }
+                case RDFNodeType::Literal: {
+                    auto literal = static_cast<Literal>(*this);
+                    if (literal.backend_handle().literal_backend().datatype_id().node_id() == storage::node::NodeID::rdf_langstring_iri.first)
+                        return node_storage.get_lang_literal(literal.lexical_form(), literal.language_tag()).second;
+                    else
+                        return node_storage.get_typed_literal(literal.lexical_form(), literal.datatype().identifier()).second;
+                }
+            }
+        }();
+        return Node(node_id);
+    }
+}
+
 Node::operator std::string() const {
     switch (handle_.type()) {
 

@@ -48,9 +48,11 @@ public:
 
     auto operator<=>(const TriplePattern &rhs) const = default;
 
-    operator std::string () const;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern);
+
+    [[nodiscard]] TriplePattern to_node_storage(storage::node::NodeStorage &node_storage) const;
 };
 }  // namespace rdf4cpp::rdf::query
 

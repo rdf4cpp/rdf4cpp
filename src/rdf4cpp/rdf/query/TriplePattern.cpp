@@ -27,4 +27,14 @@ std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern) {
     os << (std::string) pattern;
     return os;
 }
+TriplePattern TriplePattern::to_node_storage(storage::node::NodeStorage &node_storage) const {
+    TriplePattern tp;
+    auto it = tp.begin();
+    for (const auto &item : (*this))
+        if (item.backend_handle().node_storage() == node_storage)
+            *(it++) = item;
+        else
+            *(it++) = item.to_node_storage(node_storage);
+    return tp;
+}
 }  // namespace rdf4cpp::rdf::query

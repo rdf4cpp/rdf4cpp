@@ -36,4 +36,14 @@ std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
     os << (std::string) pattern;
     return os;
 }
+QuadPattern QuadPattern::to_node_storage(storage::node::NodeStorage &node_storage) const {
+    QuadPattern qp;
+    auto it = qp.begin();
+    for (const auto &item : (*this))
+        if (item.backend_handle().node_storage() == node_storage)
+            *(it++) = item;
+        else
+            *(it++) = item.to_node_storage(node_storage);
+    return qp;
+}
 }  // namespace rdf4cpp::rdf::query

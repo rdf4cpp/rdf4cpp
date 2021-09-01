@@ -54,6 +54,17 @@ public:
      * @return A Quad if valid otherwise std::optional is empty
      */
     static std::optional<Quad> create_validated(Node subject, Node predicate, Node object);
+
+    [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const {
+        Quad qu;
+        auto it = qu.begin();
+        for (const auto &item : (*this))
+            if (item.backend_handle().node_storage() == node_storage)
+                *(it++) = item;
+            else
+                *(it++) = item.to_node_storage(node_storage);
+        return qu;
+    }
 };
 }  // namespace rdf4cpp::rdf
 

@@ -93,6 +93,10 @@ public:
     static BNodeBackend *lookup_bnode(NodeID id);
 
     static VariableBackend *lookup_variable(NodeID id);
+
+    bool operator==(const NodeStorage &other) const {
+        return this->id() == other.id();
+    }
 };
 
 }  // namespace rdf4cpp::rdf::storage::node

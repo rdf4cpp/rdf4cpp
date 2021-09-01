@@ -25,8 +25,8 @@ class Dataset {
 
 public:
     // TODO: allow to change default backend impl.
+    // TODO: factory method to use non-default dataset backends
     explicit Dataset(NodeStorage node_storage = NodeStorage::primary_instance());
-
 
     void add(const Quad &quad);
 

@@ -36,6 +36,8 @@ protected:
     explicit Node(const BackendNodeHandle &id);
 
 public:
+    [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
+
     // TODO: revisit comparison implementation
     // TODO: support comparison between NodeStorages
     /**

@@ -51,6 +51,8 @@ public:
     [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern);
+
+    [[nodiscard]] QuadPattern to_node_storage(storage::node::NodeStorage &node_storage) const;
 };
 }  // namespace rdf4cpp::rdf::query
 
