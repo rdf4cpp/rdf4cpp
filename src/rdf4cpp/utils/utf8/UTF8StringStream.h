@@ -27,7 +27,7 @@ namespace rdf4cpp::utils::utf8 {
         std::optional<std::string> next() override;
 
     private:
-        [[maybe_unused]] size_t pos = 0;
+        size_t pos = 0;
         std::ifstream utf8_stream{nullptr};
 
         explicit UTF8StringStream(std::ifstream utf8_stream);

@@ -39,6 +39,8 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
                     else
                         return node_storage.get_typed_literal(literal.lexical_form(), literal.datatype().identifier()).second;
                 }
+                default:
+                    return NodeID{};
             }
         }();
         return Node(node_id);
