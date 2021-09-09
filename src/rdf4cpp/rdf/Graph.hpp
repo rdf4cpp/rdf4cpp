@@ -24,7 +24,7 @@ class Graph {
 
 public:
     template<typename BackendImpl, typename... Args>
-    static Graph new_instance(Args... args) {
+    static inline Graph new_instance(Args... args) {
         DatasetStorage dataset_backend = DatasetStorage::new_instance<BackendImpl>(args...);
         return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
     }

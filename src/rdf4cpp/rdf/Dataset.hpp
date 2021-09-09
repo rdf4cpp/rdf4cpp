@@ -25,7 +25,7 @@ class Dataset {
 
 public:
     template<typename BackendImpl, typename... Args>
-    static Dataset new_instance(Args... args) {
+    static inline Dataset new_instance(Args... args) {
         return {DatasetStorage::new_instance<BackendImpl>(args...)};
     }
 

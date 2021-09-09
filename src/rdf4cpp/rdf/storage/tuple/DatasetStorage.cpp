@@ -40,5 +40,12 @@ DatasetStorage::const_iterator DatasetStorage::end() const {
 node::NodeStorage &DatasetStorage::node_storage() const {
     return backend_->node_storage();
 }
+const std::shared_ptr<IDatasetBackend> &DatasetStorage::backend_impl() const {
+    return backend_;
+}
+
+std::shared_ptr<IDatasetBackend> &DatasetStorage::backend_impl() {
+    return backend_;
+}
 
 }  // namespace rdf4cpp::rdf::storage::tuple
