@@ -68,6 +68,7 @@ jobs:
             cd build
             ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
       - name: Coverage
+        if: runner.cxx == 'g++-10'
         run: |
          ctest -S .github/workflows/ctest.cmake
          gcovr -r ./ --coveralls -o coverage.json
