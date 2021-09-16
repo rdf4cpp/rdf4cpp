@@ -69,7 +69,7 @@ jobs:
             ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
       - name: Coverage
         run: |
-         ctest -S ./github/workflows/ctest.cmake
+         ctest -S .github/workflows/ctest.cmake
          gcovr -r ./ --coveralls -o coverage.json
       - name: Run Examples
         run: |
