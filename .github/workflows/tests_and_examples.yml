@@ -42,7 +42,8 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build g++-10 clang-10 libserd-dev
+          sudo apt install cmake ninja-build g++-10 clang-10 libserd-dev python3 python3-pip
+          sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/${{ matrix.config.cc }} 90

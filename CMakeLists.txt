@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.17)
 project(rdf4cpp VERSION 0.0.1)
-
+include(CTest)
 
 ## C++ compiler flags
 
@@ -111,7 +111,7 @@ if (rdf4cpp_INCLUDE_PACKAGING)
 endif ()
 
 OPTION(rdf4cpp_BUILD_TESTS "Build the tests for rdf4cpp." OFF)
-if (rdf4cpp_BUILD_TESTS)
+if (rdf4cpp_BUILD_TESTS OR BUILD_TESTING)
     message("Tests are configured to be build.")
     add_subdirectory(tests)
 endif ()
