@@ -67,8 +67,8 @@ jobs:
             cmake -G Ninja -B build -Drdf4cpp_BUILD_EXAMPLES=ON
             cd build
             ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
-      -name: Coverage
-       run: |
+      - name: Coverage
+        run: |
          ctest -S ./github/workflows/ctest.cmake
          gcovr -r ./ --coveralls -o coverage.json
       - name: Run Examples
