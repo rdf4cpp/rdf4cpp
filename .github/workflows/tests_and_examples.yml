@@ -4,6 +4,8 @@ jobs:
   test:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -19,8 +21,6 @@ jobs:
           - {
             name: "ubuntu-latest g++-10",
             os: ubuntu-latest,
-            env:
-              COVERALLS_REPO_TOKEN = ${{ secrets.COVERALLS_TOKEN }}
             cc: "gcc-10",
             cxx: "g++-10",
           }
