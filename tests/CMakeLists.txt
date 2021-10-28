@@ -14,9 +14,7 @@ add_executable(tests_hello_test hello_test/main.cpp)
 target_link_libraries(tests_hello_test
         doctest
         rdf4cpp
-        gcov
         )
-add_test(test_test tests_hello_test COMMAND tests_hello_test)
 
 set_property(TARGET tests_hello_test PROPERTY CXX_STANDARD 20)
 
