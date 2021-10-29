@@ -67,7 +67,7 @@ public:
 
         template<class Iter>
         requires std::forward_iterator<Iter>
-        explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)){};
+        explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)){}
 
         const_iterator(const const_iterator &r);
 

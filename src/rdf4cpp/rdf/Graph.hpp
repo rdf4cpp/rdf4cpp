@@ -15,7 +15,6 @@ class Dataset;
 class Graph {
     friend class Dataset;
     using DatasetStorage = ::rdf4cpp::rdf::storage::tuple::DatasetStorage;
-    
     using NodeStorage = storage::node::NodeStorage;
 
     DatasetStorage dataset_storage;
@@ -24,7 +23,12 @@ class Graph {
     Graph(DatasetStorage dataset_backend, const IRI &graph_name);
 
 public:
-    // TODO: allow to change default backend impl.
+    template<typename BackendImpl, typename... Args>
+    static inline Graph new_instance(Args... args) {
+        DatasetStorage dataset_backend = DatasetStorage::new_instance<BackendImpl>(args...);
+        return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
+    }
+
     explicit Graph(NodeStorage node_storage = NodeStorage::primary_instance());
 
     explicit Graph(const IRI &graph_name, NodeStorage node_storage = NodeStorage::primary_instance());

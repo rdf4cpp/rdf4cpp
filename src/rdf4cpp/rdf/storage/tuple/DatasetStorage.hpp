@@ -41,6 +41,9 @@ public:
     [[nodiscard]] const_iterator end() const;
 
     [[nodiscard]] node::NodeStorage &node_storage() const;
+
+    [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend_impl() const;
+    [[nodiscard]] std::shared_ptr<IDatasetBackend> &backend_impl();
 };
 }  // namespace rdf4cpp::rdf::storage::tuple
 
