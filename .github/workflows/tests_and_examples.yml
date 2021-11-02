@@ -1,21 +1,23 @@
 name: Tests and Examples
-on: [ 'push' ]
+on: [ 'push', 'pull_request' ]
 jobs:
   test:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
         config:
-#          - {
-#            name: "windows-latest",
-#            os: windows-latest,
-#          }
-#          - {
-#            name: "macos-latest",
-#            os: macos-latest,
-#          }
+          #          - {
+          #            name: "windows-latest",
+          #            os: windows-latest,
+          #          }
+          #          - {
+          #            name: "macos-latest",
+          #            os: macos-latest,
+          #          }
           - {
             name: "ubuntu-latest g++-10",
             os: ubuntu-latest,
@@ -42,7 +44,8 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build g++-10 clang-10 libserd-dev
+          sudo apt install cmake ninja-build g++-10 clang-10 libserd-dev python3 python3-pip curl
+          sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/${{ matrix.config.cc }} 90
@@ -63,13 +66,22 @@ jobs:
           tests/tests_hello_test
       - name: Build Examples
         run: |
-            cmake -G Ninja -B build -Drdf4cpp_BUILD_EXAMPLES=ON
-            cd build
-            ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
+          cmake -G Ninja -B build -Drdf4cpp_BUILD_EXAMPLES=ON
+          cd build
+          ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
+      - name: Coverage
+        if: matrix.config.cxx == 'g++-10'
+        run: |
+          cmake -B build_coverage -Drdf4cpp_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS=--coverage
+          cd build_coverage
+          make tests_hello_test
+          tests/tests_hello_test
+          cd ../
+          gcovr --coveralls --filter 'src/' -o coverage.json -r ./
+          curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
       - name: Run Examples
         run: |
           cd build
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
           examples/rdf_nodes_example
-
