@@ -14,6 +14,9 @@ static void test(Node sub, Node pred, Node obj, bool result){
     CHECK(tpattern.object() == obj);
     if (result) CHECK(tpattern.valid());
     else CHECK(not tpattern.valid());
+
+    //CHECK(tpattern.begin() == &sub);
+    //CHECK(tpattern.end() == &obj);
 }
 
 TEST_CASE("TriplePattern - Check for variable as subject") {

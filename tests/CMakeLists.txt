@@ -10,7 +10,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(DocTest)
 
 # add the executable for all tests
-add_executable(tests_hello_test hello_test/main.cpp query_test/variable_test.cpp query_test/tpattern.cpp query_test/qpattern.cpp)
+add_executable(tests_hello_test hello_test/main.cpp query_test/variable_test.cpp query_test/tpattern_test.cpp query_test/qpattern_test.cpp)
 target_link_libraries(tests_hello_test
         doctest
         rdf4cpp

@@ -16,6 +16,9 @@ static void test(Node graph, Node sub, Node pred, Node obj, bool result){
     CHECK(qpattern.object() == obj);
     if(result) CHECK(qpattern.valid());
     else CHECK(not qpattern.valid());
+
+    //CHECK(qpattern.begin() == &graph);
+    //CHECK(qpattern.end() == &obj);
 }
 
 TEST_CASE("Check for variable as graph"){
