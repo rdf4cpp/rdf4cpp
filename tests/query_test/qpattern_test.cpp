@@ -10,20 +10,120 @@ static void test(Node graph, Node sub, Node pred, Node obj, bool result){
 
     auto qpattern = query::QuadPattern {graph, sub, pred, obj};
 
-    CHECK(qpattern.graph() == graph);
-    CHECK(qpattern.subject() == sub);
-    CHECK(qpattern.predicate() == pred);
-    CHECK(qpattern.object() == obj);
-    if(result) CHECK(qpattern.valid());
-    else CHECK(not qpattern.valid());
+    SUBCASE("Check validity & output"){
+        CHECK(qpattern.graph() == graph);
+        CHECK(qpattern.subject() == sub);
+        CHECK(qpattern.predicate() == pred);
+        CHECK(qpattern.object() == obj);
 
-    //CHECK(qpattern.begin() == &graph);
-    //CHECK(qpattern.end() == &obj);
+        CHECK(qpattern.valid());
+
+        if(qpattern.valid()) std::cout << qpattern << std::endl;
+    }
+
+    SUBCASE("Check iterators"){
+        auto b_itr = qpattern.begin();
+        CHECK(*b_itr++ == graph);
+        CHECK(*b_itr++ == sub);
+        CHECK(*b_itr++ == pred);
+        CHECK(*b_itr++ == obj);
+
+        auto e_itr = qpattern.end();
+        CHECK(*(--e_itr) == obj);
+        CHECK(*(--e_itr) == pred);
+        CHECK(*(--e_itr)== sub);
+        CHECK(*(--e_itr) == graph);
+    }
+
+    SUBCASE("Check reverse-iterators"){
+        auto rb_itr = qpattern.rbegin();
+        CHECK(*rb_itr++ == obj);
+        CHECK(*rb_itr++ == pred);
+        CHECK(*rb_itr++ == sub);
+        CHECK(*rb_itr++ == graph);
+
+        auto re_itr = qpattern.rend();
+        CHECK(*(--re_itr) == graph);
+        CHECK(*(--re_itr) == sub);
+        CHECK(*(--re_itr)== pred);
+        CHECK(*(--re_itr) == obj);
+    }
 }
 
-TEST_CASE("Check for variable as graph"){
+TEST_CASE("QuadPattern - Check for iterators and const-iterators"){
 
-    auto variable1 = query::Variable {"G"};
+    auto variable1 = query::Variable {"g"};
+    auto graph = Node{variable1};
+
+    auto variable2 = query::Variable {"s"};
+    auto sub = Node{variable2};
+
+    auto variable3 = query::Variable {"p"};
+    auto pred = Node{variable3};
+
+    auto variable4 = query::Variable {"o"};
+    auto obj = Node{variable4};
+
+    auto variable5 = query::Variable {"g1"};
+    auto graph1 = Node{variable5};
+
+    auto variable6 = query::Variable {"s1"};
+    auto sub1 = Node{variable6};
+
+    auto variable7 = query::Variable {"p1"};
+    auto pred1 = Node{variable7};
+
+    auto variable8 = query::Variable {"o1"};
+    auto obj1 = Node{variable8};
+
+    auto qpattern = query::QuadPattern {graph, sub, pred, obj};
+
+    query::QuadPattern::iterator itr;
+    for(itr = qpattern.begin(); itr != qpattern.end(); itr++){
+        if(*itr == graph) *itr = graph1;
+        else if(*itr == sub) *itr = sub1;
+        else if(*itr == pred) *itr = pred1;
+        else if(*itr == obj) *itr = obj1;
+    }
+
+    query::QuadPattern::const_reverse_iterator rb_const_itr;
+    query::QuadPattern::const_reverse_iterator re_const_itr;
+
+    SUBCASE("Check const-reverse-iterators"){
+        rb_const_itr = qpattern.rbegin();
+        CHECK(*rb_const_itr++ == obj1);
+        CHECK(*rb_const_itr++ == pred1);
+        CHECK(*rb_const_itr++ == sub1);
+        CHECK(*rb_const_itr++ == graph1);
+
+        re_const_itr = qpattern.rend();
+        CHECK(*(--re_const_itr) == graph1);
+        CHECK(*(--re_const_itr) == sub1);
+        CHECK(*(--re_const_itr)== pred1);
+        CHECK(*(--re_const_itr) == obj1);
+    }
+
+    query::QuadPattern::const_iterator b_const_itr;
+    query::QuadPattern::const_iterator e_const_itr;
+
+    SUBCASE("Check const-iterators"){
+        b_const_itr = qpattern.begin();
+        CHECK(*b_const_itr++ == graph1);
+        CHECK(*b_const_itr++ == sub1);
+        CHECK(*b_const_itr++ == pred1);
+        CHECK(*b_const_itr++ == obj1);
+
+        e_const_itr = qpattern.end();
+        CHECK(*(--e_const_itr) == obj1);
+        CHECK(*(--e_const_itr) == pred1);
+        CHECK(*(--e_const_itr)== sub1);
+        CHECK(*(--e_const_itr)== graph1);
+    }
+}
+
+TEST_CASE("QuadPattern - Check for variable as graph"){
+
+    auto variable1 = query::Variable {"g"};
     auto graph = Node{variable1};
 
     SUBCASE("Check for variable as subject") {
@@ -57,7 +157,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -89,7 +189,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -128,7 +228,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -160,7 +260,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -199,7 +299,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, false);
@@ -231,7 +331,7 @@ TEST_CASE("Check for variable as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, false);
@@ -240,7 +340,7 @@ TEST_CASE("Check for variable as graph"){
     }
 }
 
-TEST_CASE("Check for iri as graph"){
+TEST_CASE("QuadPattern - Check for iri as graph"){
 
     auto iri1 = IRI {"http://looneytunes-graph.com"};
     auto graph = Node{iri1};
@@ -276,7 +376,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -308,7 +408,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -347,7 +447,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -379,7 +479,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, true);
@@ -418,7 +518,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, false);
@@ -450,7 +550,7 @@ TEST_CASE("Check for iri as graph"){
             }
 
             SUBCASE("Check for literal as object"){
-                auto literal = Literal{"xxxx","http://looneytunes-graph.com/en"};
+                auto literal = Literal{"Bugs Bunny"};
                 auto obj = Node{literal};
 
                 test(graph, sub, pred, obj, false);

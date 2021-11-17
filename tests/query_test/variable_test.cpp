@@ -4,9 +4,9 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
-TEST_CASE("Check for single node with anonymous default") {
+using namespace rdf4cpp::rdf;
 
-    using namespace rdf4cpp::rdf;
+TEST_CASE("Variable - Check for single node with anonymous default") {
 
     auto variable = query::Variable {"x"};
 
@@ -19,9 +19,7 @@ TEST_CASE("Check for single node with anonymous default") {
     CHECK(variable.type() == storage::node::RDFNodeType::Variable);
 }
 
-TEST_CASE("Check for single node with anonymous true") {
-
-    using namespace rdf4cpp::rdf;
+TEST_CASE("Variable - Check for single node with anonymous true") {
 
     auto variable = query::Variable {"x", true};
 
@@ -34,9 +32,7 @@ TEST_CASE("Check for single node with anonymous true") {
     CHECK(variable.type() == storage::node::RDFNodeType::Variable);
 }
 
-TEST_CASE("Check for single node with anonymous false") {
-
-    using namespace rdf4cpp::rdf;
+TEST_CASE("Variable - Check for single node with anonymous false") {
 
     auto variable = query::Variable {"x", false};
 
