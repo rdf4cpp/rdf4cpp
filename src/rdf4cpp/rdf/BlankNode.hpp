@@ -35,5 +35,11 @@ public:
 };
 }  // namespace rdf4cpp::rdf
 
+template<>
+struct std::hash<rdf4cpp::rdf::BlankNode> {
+    inline size_t operator()(rdf4cpp::rdf::BlankNode const &v) const noexcept {
+        return std::hash<rdf4cpp::rdf::Node>()(v);
+    }
+};
 
 #endif  //RDF4CPP_BLANKNODE_HPP

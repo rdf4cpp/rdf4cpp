@@ -41,4 +41,11 @@ public:
 };
 }  // namespace rdf4cpp::rdf::storage::node
 
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::BackendNodeHandle> {
+    inline size_t operator()(rdf4cpp::rdf::storage::node::BackendNodeHandle const &v) const noexcept {
+        return v.id().raw();
+    }
+};
+
 #endif  //RDF4CPP_BACKENDNODEHANDLE_HPP

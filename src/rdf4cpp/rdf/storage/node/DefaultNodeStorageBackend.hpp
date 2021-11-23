@@ -5,18 +5,24 @@
 
 #include <map>
 #include <memory>
+#include <shared_mutex>
+#include <mutex>
 
 namespace rdf4cpp::rdf::storage::node {
 
 // TODO: make Backend Node Types reference countable
 class DefaultNodeStorageBackend : public INodeStorageBackend {
 
+    mutable std::shared_mutex literal_mutex_;
     std::map<NodeIDValue, std::unique_ptr<LiteralBackend>, std::less<>> literal_storage;
     std::map<LiteralBackend *, NodeIDValue, std::less<>> literal_storage_reverse;
+    mutable std::shared_mutex bnode_mutex_;
     std::map<NodeIDValue, std::unique_ptr<BNodeBackend>, std::less<>> bnode_storage;
     std::map<BNodeBackend *, NodeIDValue, std::less<>> bnode_storage_reverse;
+    mutable std::shared_mutex iri_mutex_;
     std::map<NodeIDValue, std::unique_ptr<IRIBackend>, std::less<>> iri_storage;
     std::map<IRIBackend *, NodeIDValue, std::less<>> iri_storage_reverse;
+    mutable std::shared_mutex variable_mutex_;
     std::map<NodeIDValue, std::unique_ptr<VariableBackend>, std::less<>> variable_storage;
     std::map<VariableBackend *, NodeIDValue, std::less<>> variable_storage_reverse;
 
