@@ -81,6 +81,10 @@ public:
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
 
+    bool operator==(const Literal &other) const;
+
+    std::strong_ordering operator<=>(const Literal &other) const;
+
     /**
      * Constructs a datatype specific container from Literal.
      * @return std::any wrapped value. might be empty if type is not registered.
