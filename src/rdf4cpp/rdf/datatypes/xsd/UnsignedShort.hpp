@@ -3,7 +3,7 @@
 //
 
 /**
- * @file Registers xsd:unsignedshort with DatatypeRegistry
+ * @file Registers xsd:unsignedShort with DatatypeRegistry
  */
 
 #ifndef RDF4CPP_XSD_UNSIGNEDSHORT_HPP

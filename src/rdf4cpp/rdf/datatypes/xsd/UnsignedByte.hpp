@@ -12,7 +12,8 @@
 #include <cstdint>
 #include <ostream>
 #include <rdf4cpp/rdf/datatypes/DatatypeRegistry.hpp>
-        namespace rdf4cpp::rdf::datatypes::xsd {
+
+namespace rdf4cpp::rdf::datatypes::xsd {
     using UnsignedByte = uint8_t;  //!< Implements <a href="http://www.w3.org/2001/XMLSchema#unsignedByte">xsd:unsignedByte</a>
 }
 
