@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
 
 #include <compare>
+#include <memory>
 #include <string>
 
 namespace rdf4cpp::rdf::storage::node {
@@ -12,12 +13,15 @@ class BNodeBackend {
     std::string identifier_;
 
 public:
-    explicit BNodeBackend(std::string identifier);
-    auto operator<=>(const BNodeBackend &) const = default;
-    std::strong_ordering operator<=>(BNodeBackend const *other) const;
-    [[nodiscard]] std::string n_string() const;
-    [[nodiscard]] const std::string &indentifier() const;
+    explicit BNodeBackend(std::string identifier) noexcept;
+    auto operator<=>(const BNodeBackend &) const noexcept = default;
+    std::strong_ordering operator<=>(std::unique_ptr<BNodeBackend> const &other) const noexcept;
+    [[nodiscard]] std::string n_string() const noexcept;
+    [[nodiscard]] const std::string &indentifier() const noexcept;
 };
+
+std::strong_ordering operator<=>(std::unique_ptr<BNodeBackend> const &self, std::unique_ptr<BNodeBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node
+
 
 #endif  //RDF4CPP_BNODEBACKEND_HPP

@@ -53,5 +53,11 @@ public:
 };
 }  // namespace rdf4cpp::rdf
 
+template<>
+struct std::hash<rdf4cpp::rdf::IRI> {
+    inline size_t operator()(rdf4cpp::rdf::IRI const &v) const noexcept {
+        return std::hash<rdf4cpp::rdf::Node>()(v);
+    }
+};
 
 #endif  //RDF4CPP_IRI_HPP

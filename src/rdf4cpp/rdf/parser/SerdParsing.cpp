@@ -130,22 +130,14 @@ namespace rdf4cpp::rdf {
 void import_rdf_file(const std::string &path, Dataset *dataset) {
     SerdHandle serd_handle;
     serd_handle.datset = dataset;
-    FILE *file = fopen(path.c_str(), "r");
-    SerdReader *reader = serd_reader_new(
-            SERD_TURTLE,
-            &serd_handle,
-            NULL,
-            reinterpret_cast<SerdBaseSink>(on_base),
-            reinterpret_cast<SerdPrefixSink>(on_prefix),
-            reinterpret_cast<SerdStatementSink>(on_statement),
-            reinterpret_cast<SerdEndSink>(on_end));
-    serd_reader_start_stream(reader, file, NULL, true);
-    SerdStatus status = SERD_SUCCESS;
-    while (status == SERD_SUCCESS)
-        status = serd_reader_read_chunk(reader);
-    serd_reader_end_stream(reader);
+            SerdReader *reader = serd_reader_new(SERD_TURTLE, (void *) &serd_handle,
+                                         nullptr,
+                                         reinterpret_cast<SerdBaseSink>(on_base),
+                                         reinterpret_cast<SerdPrefixSink>(on_prefix),
+                                         reinterpret_cast<SerdStatementSink>(on_statement),
+                                         reinterpret_cast<SerdEndSink>(on_end));
+    serd_reader_read_file(reader, reinterpret_cast<const uint8_t *>(path.c_str()));
     serd_reader_free(reader);
-    fclose(file);
 }
 
 void Dataset::add_ttl_file(const std::string &path) {

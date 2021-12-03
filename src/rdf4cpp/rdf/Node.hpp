@@ -141,6 +141,13 @@ public:
 };
 }  // namespace rdf4cpp::rdf
 
+template<>
+struct std::hash<rdf4cpp::rdf::Node> {
+    inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
+        return std::hash<rdf4cpp::rdf::storage::node::BackendNodeHandle>()(v.backend_handle());
+    }
+};
+
 #include <ostream>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
