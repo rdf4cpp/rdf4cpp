@@ -14,8 +14,8 @@ std::string LiteralBackend::quote_lexical() const noexcept {
     // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
     return "\"" + lexical + "\"";
 }
-bool LiteralBackend::operator==(const LiteralBackend &) const noexcept {
-    return std::tie(this->datatype_id_.node_id(), this->lexical, this->lang_tag) == std::tie(this->datatype_id_.node_id(), this->lexical, this->lang_tag);
+bool LiteralBackend::operator==(const LiteralBackend &other) const noexcept {
+    return std::tie(this->datatype_id_.node_id(), this->lexical, this->lang_tag) == std::tie(other.datatype_id_.node_id(), other.lexical, other.lang_tag);
 }
 std::strong_ordering LiteralBackend::operator<=>(const std::unique_ptr<LiteralBackend> &other) const noexcept {
     if (other)
