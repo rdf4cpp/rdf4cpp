@@ -83,6 +83,16 @@ public:
 
     bool operator==(const Node &other) const;
 
+    friend bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept;
+
+    friend bool operator==(const std::unique_ptr<Node> &lhs, Node const &rhs) noexcept;
+
+    friend bool operator==(const std::unique_ptr<Node> &lhs, const std::unique_ptr<Node> &rhs) noexcept;
+
+    friend bool operator==(const Node *lhs, const std::unique_ptr<Node> &rhs) noexcept;
+
+    friend bool operator==(const std::unique_ptr<Node> &lhs, const Node *rhs) noexcept;
+
     std::strong_ordering operator<=>(const Node &other) const;
 
     /**
@@ -130,6 +140,13 @@ public:
     [[nodiscard]] BackendNodeHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp::rdf
+
+template<>
+struct std::hash<rdf4cpp::rdf::Node> {
+    inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
+        return std::hash<rdf4cpp::rdf::storage::node::BackendNodeHandle>()(v.backend_handle());
+    }
+};
 
 #include <ostream>
 #include <rdf4cpp/rdf/BlankNode.hpp>

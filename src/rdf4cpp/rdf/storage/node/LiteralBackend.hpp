@@ -4,8 +4,8 @@
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
 
 #include <compare>
+#include <memory>
 #include <string>
-
 namespace rdf4cpp::rdf::storage::node {
 
 class LiteralBackend {
@@ -14,27 +14,21 @@ class LiteralBackend {
     std::string lang_tag;
 
 public:
-    [[nodiscard]] std::string quote_lexical() const;
-    LiteralBackend(std::string lexical, const NodeID &dataType, std::string langTag = "");
+    [[nodiscard]] std::string quote_lexical() const noexcept;
+    LiteralBackend(std::string lexical, const NodeID &dataType, std::string langTag = "") noexcept;
     std::strong_ordering operator<=>(const LiteralBackend &) const noexcept;
-    std::strong_ordering operator<=>(LiteralBackend const *other) const {
-        return this <=> other;
-    }
+    std::strong_ordering operator<=>(std::unique_ptr<LiteralBackend> const &other) const noexcept;
 
     bool operator==(const LiteralBackend &) const noexcept;
 
-    [[nodiscard]] const std::string &lexical_form() const {
-        return lexical;
-    }
+    [[nodiscard]] const std::string &lexical_form() const noexcept;
 
-    [[nodiscard]] const NodeID &datatype_id() const {
-        return datatype_id_;
-    }
+    [[nodiscard]] const NodeID &datatype_id() const noexcept;
 
-    [[nodiscard]] const std::string &language_tag() const {
-        return lang_tag;
-    }
+    [[nodiscard]] const std::string &language_tag() const noexcept;
 };
+
+std::strong_ordering operator<=>(std::unique_ptr<LiteralBackend> const &self, std::unique_ptr<LiteralBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node
 
 #endif  //RDF4CPP_LITERALBACKEND_HPP

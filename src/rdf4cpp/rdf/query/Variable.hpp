@@ -36,4 +36,11 @@ public:
 };
 }  // namespace rdf4cpp::rdf::query
 
+template<>
+struct std::hash<rdf4cpp::rdf::query::Variable> {
+    inline size_t operator()(rdf4cpp::rdf::query::Variable const &v) const noexcept {
+        return std::hash<rdf4cpp::rdf::Node>()(v);
+    }
+};
+
 #endif  //RDF4CPP_VARIABLE_HPP

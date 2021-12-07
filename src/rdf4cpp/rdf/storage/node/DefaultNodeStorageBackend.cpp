@@ -1,5 +1,7 @@
 #include "DefaultNodeStorageBackend.hpp"
 
+#include <functional>
+
 namespace rdf4cpp::rdf::storage::node {
 
 std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_string_literal(const std::string &lexical_form) {
@@ -25,83 +27,136 @@ std::pair<BNodeBackend *, NodeID> DefaultNodeStorageBackend::get_bnode(const std
     return lookup_or_insert_bnode(BNodeBackend{identifier});
 }
 IRIBackend *DefaultNodeStorageBackend::lookup_iri(NodeIDValue id) const {
-    return iri_storage.at(id).get();
+    std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
+    return iri_storage.at(id);
 }
 LiteralBackend *DefaultNodeStorageBackend::lookup_literal(NodeIDValue id) const {
-    return literal_storage.at(id).get();
+    std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
+    return literal_storage.at(id);
 }
 BNodeBackend *DefaultNodeStorageBackend::lookup_bnode(NodeIDValue id) const {
-    return bnode_storage.at(id).get();
+    std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
+
+    return bnode_storage.at(id);
 }
 VariableBackend *DefaultNodeStorageBackend::lookup_variable(NodeIDValue id) const {
-    return variable_storage.at(id).get();
+    std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
+    return variable_storage.at(id);
 }
 
 std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::lookup_or_insert_literal(LiteralBackend literal) {
+    std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
     auto found = literal_storage_reverse.find(literal);
     NodeID id;
     if (found == literal_storage_reverse.end()) {
-        // TODO make sure node_id literal type is set correctly
-        id = {manager_id, RDFNodeType::Literal, next_literal_id++, LiteralType::STRING};
-        auto literal_ptr = std::make_unique<LiteralBackend>(std::move(literal));
-        found = literal_storage_reverse.insert(found, {literal_ptr.get(), id.node_id()});
-        literal_storage.insert({id.node_id(), std::move(literal_ptr)});
+        shared_lock.unlock();
+        std::unique_lock<std::shared_mutex> unique_lock{literal_mutex_};
+        // update found (might have changed in the meantime)
+        found = literal_storage_reverse.find(literal);
+        if (found == literal_storage_reverse.end()) {
+            // TODO make sure node_id literal type is set correctly
+            id = {manager_id, RDFNodeType::Literal, next_literal_id++, LiteralType::STRING};
+            auto [found2, inserted_successfully] = literal_storage_reverse.emplace(std::make_unique<LiteralBackend>(std::move(literal)), id.node_id());
+            assert(inserted_successfully);
+            found = found2;
+            literal_storage.insert({id.node_id(), found->first.get()});
+        } else {
+            unique_lock.unlock();
+            id = {manager_id, RDFNodeType::Literal, found->second};
+        }
     } else {
+        shared_lock.unlock();
         id = {manager_id, RDFNodeType::Literal, found->second};
     }
 
-    return {found->first, id};
+    return {found->first.get(), id};
 }
 
 std::pair<IRIBackend *, NodeID> DefaultNodeStorageBackend::lookup_or_insert_iri(IRIBackend iri) {
+    std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
     auto found = iri_storage_reverse.find(iri);
     NodeID id;
     if (found == iri_storage_reverse.end()) {
-        id = {manager_id, RDFNodeType::IRI, next_iri_id++};
-        auto iri_ptr = std::make_unique<IRIBackend>(std::move(iri));
-        found = iri_storage_reverse.insert(found, {iri_ptr.get(), id.node_id()});
-        iri_storage.insert({id.node_id(), std::move(iri_ptr)});
-    }
-    {
+        shared_lock.unlock();
+        std::unique_lock<std::shared_mutex> unique_lock{iri_mutex_};
+        // update found (might have changed in the meantime)
+        found = iri_storage_reverse.find(iri);
+        if (found == iri_storage_reverse.end()) {
+            id = {manager_id, RDFNodeType::IRI, next_iri_id++};
+            auto [found2, inserted_successfully] = iri_storage_reverse.emplace(std::make_unique<IRIBackend>(std::move(iri)), id.node_id());
+            assert(inserted_successfully);
+            found = found2;
+            iri_storage.insert({id.node_id(), found->first.get()});
+        } else {
+            unique_lock.unlock();
+            id = {manager_id, RDFNodeType::IRI, found->second};
+        }
+    } else {
+        shared_lock.unlock();
         id = {manager_id, RDFNodeType::IRI, found->second};
     }
-    return {found->first, id};
+    return {found->first.get(), id};
 }
 std::pair<BNodeBackend *, NodeID> DefaultNodeStorageBackend::lookup_or_insert_bnode(BNodeBackend bnode) {
+    std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
     auto found = bnode_storage_reverse.find(bnode);
     NodeID id;
 
     if (found == bnode_storage_reverse.end()) {
-        id = {manager_id, RDFNodeType::BNode, next_bnode_id++};
-
-        auto bnode_ptr = std::make_unique<BNodeBackend>(std::move(bnode));
-        found = bnode_storage_reverse.insert(found, {bnode_ptr.get(), id.node_id()});
-        bnode_storage.insert({id.node_id(), std::move(bnode_ptr)});
+        shared_lock.unlock();
+        std::unique_lock<std::shared_mutex> unique_lock{bnode_mutex_};
+        // update found (might have changed in the meantime)
+        found = bnode_storage_reverse.find(bnode);
+        if (found == bnode_storage_reverse.end()) {
+            id = {manager_id, RDFNodeType::BNode, next_bnode_id++};
+            auto [found2, inserted_successfully] = bnode_storage_reverse.emplace(std::make_unique<BNodeBackend>(std::move(bnode)), id.node_id());
+            assert(inserted_successfully);
+            found = found2;
+            bnode_storage.insert({id.node_id(), found->first.get()});
+        } else {
+            unique_lock.unlock();
+            id = {manager_id, RDFNodeType::BNode, found->second};
+        }
     } else {
+        shared_lock.unlock();
         id = {manager_id, RDFNodeType::BNode, found->second};
     }
 
-    return {found->first, id};
+    return {found->first.get(), id};
 }
 std::pair<VariableBackend *, NodeID> DefaultNodeStorageBackend::lookup_or_insert_variable(VariableBackend variable) {
+    std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
     auto found = variable_storage_reverse.find(variable);
     NodeID id;
     if (found == variable_storage_reverse.end()) {
-        id = {manager_id, RDFNodeType::Variable, next_variable_id++};
-
-        auto variable_ptr = std::make_unique<VariableBackend>(std::move(variable));
-        found = variable_storage_reverse.insert(found, {variable_ptr.get(), id.node_id()});
-        variable_storage.insert({id.node_id(), std::move(variable_ptr)});
+        shared_lock.unlock();
+        std::unique_lock<std::shared_mutex> unique_lock{variable_mutex_};
+        // update found (might have changed in the meantime)
+        found = variable_storage_reverse.find(variable);
+        if (found == variable_storage_reverse.end()) {
+            id = {manager_id, RDFNodeType::Variable, next_variable_id++};
+            auto [found2, inserted_successfully] = variable_storage_reverse.emplace(std::make_unique<VariableBackend>(std::move(variable)), id.node_id());
+            assert(inserted_successfully);
+            found = found2;
+            variable_storage.insert({id.node_id(), found->first.get()});
+        } else {
+            unique_lock.unlock();
+            id = {manager_id, RDFNodeType::Variable, found->second};
+        }
     } else {
+        shared_lock.unlock();
         id = {manager_id, RDFNodeType::Variable, found->second};
     }
-    return {found->first, id};
+    return {found->first.get(), id};
 }
 DefaultNodeStorageBackend::DefaultNodeStorageBackend() : INodeStorageBackend() {
     // TODO: that should be done by (Abstract)NodeContextBackend
     // some iri's like xsd:string are there by default
-    for (const auto &[id, iri] : NodeID::predefined_iris)
-        iri_storage.insert({id, std::make_unique<IRIBackend>(iri)});
+    for (const auto &[id, iri] : NodeID::predefined_iris) {
+        auto [iter, inserted_successfully] = iri_storage_reverse.emplace(std::make_unique<IRIBackend>(iri), id);
+        assert(inserted_successfully);
+        iri_storage.insert({id, iter->first.get()});
+    }
 }
 
 }  // namespace rdf4cpp::rdf::storage::node
