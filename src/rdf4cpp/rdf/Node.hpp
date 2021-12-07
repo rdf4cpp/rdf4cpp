@@ -58,6 +58,11 @@ public:
     friend std::ostream &operator<<(std::ostream &os, const Node &node);
 
     /**
+     * @see operator std::string() const
+     */
+    friend std::ostream &operator<<(std::ostream &os, const Node * const node);
+
+    /**
      * Checks weather the node is a Literal. If yes, it is safe to convert it with `auto literal = (Literal) rdf_node;`
      * @return if this is a Literal
      */
