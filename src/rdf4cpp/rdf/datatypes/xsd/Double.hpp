@@ -22,7 +22,7 @@ template<>
 inline std::string RegisteredDatatype<xsd::Double>::datatype_iri() noexcept { return "http://www.w3.org/2001/XMLSchema#double"; }
 template<>
 inline double RegisteredDatatype<xsd::Double>::from_string(const std::string &s) {
-    return std::stof(s);
+    return std::stod(s);
 }
 }  // namespace rdf4cpp::rdf::datatypes
 

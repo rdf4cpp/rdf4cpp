@@ -1,0 +1,8 @@
+//
+// Created by kaimal on 02.12.21.
+//
+
+#ifndef RDF4CPP_NEGATIVEINTEGER_HPP
+#define RDF4CPP_NEGATIVEINTEGER_HPP
+
+#endif  //RDF4CPP_NEGATIVEINTEGER_HPP

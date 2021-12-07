@@ -81,7 +81,7 @@ add_library(rdf4cpp
         src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
         src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
-        src/rdf4cpp/rdf/datatypes/xsd/Double.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedByte.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedInt.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedShort.hpp)
+        src/rdf4cpp/rdf/datatypes/xsd/Double.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedByte.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedInt.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedShort.hpp src/rdf4cpp/rdf/datatypes/xsd/Long.hpp src/rdf4cpp/rdf/datatypes/xsd/UnsignedLong.hpp src/rdf4cpp/rdf/datatypes/xsd/Boolean.hpp src/rdf4cpp/rdf/datatypes/xsd/Decimal.hpp src/rdf4cpp/rdf/datatypes/xsd/Integer.hpp src/rdf4cpp/rdf/datatypes/xsd/PositiveInteger.hpp src/rdf4cpp/rdf/datatypes/xsd/NegativeInteger.hpp src/rdf4cpp/rdf/datatypes/xsd/Date.hpp)
 target_link_libraries(rdf4cpp PRIVATE
         Threads::Threads
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>

@@ -25,7 +25,7 @@ inline std::string RegisteredDatatype<xsd::Byte>::datatype_iri() noexcept { retu
 template<>
 inline xsd::Byte RegisteredDatatype<xsd::Byte>::from_string(const std::string &s) {
     auto int8_val = std::stoi(s);
-    if(int8_val < -128 || int8_val > 127) throw "Invalid";
+    if(int8_val < -128 || int8_val > 127) throw std::runtime_error("XSD Parsing Error");
     return int8_val;
 }
 }  // namespace rdf4cpp::rdf::datatypes

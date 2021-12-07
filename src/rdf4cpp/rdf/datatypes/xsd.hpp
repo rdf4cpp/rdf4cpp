@@ -9,6 +9,9 @@
 #include <rdf4cpp/rdf/datatypes/xsd/UnsignedByte.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/UnsignedInt.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/UnsignedShort.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Long.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/UnsignedLong.hpp>
 
 /**
  * Namespace where datatypes from XSD are implemented.

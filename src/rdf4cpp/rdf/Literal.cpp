@@ -45,14 +45,14 @@ bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
 
-/*std::strong_ordering Literal::operator<=>(const Literal &other) const {
+std::strong_ordering Literal::operator<=>(const Literal &other) const {
     auto type = handle_.literal_backend().datatype_id().type();
     if (auto comp_id = this->handle_ <=> other.handle_; comp_id == std::partial_ordering::equivalent) {
         return std::strong_ordering::equal;
     } else if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
         return comp_type;
     } else {  // same type, different id.
-        switch (this->) {
+        switch (this->handle_.type()) {
             case RDFNodeType::IRI:
                 return this->handle_.iri_backend() <=> other.handle_.iri_backend();
             case RDFNodeType::BNode:
@@ -68,22 +68,13 @@ bool Literal::is_iri() const { return false; }
 bool Literal::operator==(const Literal &other) const {
     if (this->handle_ == other.handle_) {
         return true;
-    } else if (this->handle_.type() != other.handle_.type()) {
+    } else if (this->handle_.literal_backend().datatype_id() != other.handle_.literal_backend().datatype_id()) {
         return false;
     } else {
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() == other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() == other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() == other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() == other.handle_.variable_backend();
-        }
-        return false;
+        if(this->handle_.type() == RDFNodeType::Literal) return this->handle_.literal_backend() == other.handle_.literal_backend();
+        else return false;
     }
-}*/
+}
 
 Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {

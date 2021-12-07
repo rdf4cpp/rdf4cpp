@@ -24,7 +24,7 @@ inline std::string RegisteredDatatype<xsd::UnsignedByte>::datatype_iri() noexcep
 template<>
 inline xsd::UnsignedByte RegisteredDatatype<xsd::UnsignedByte>::from_string(const std::string &s) {
     auto int8_val = std::stoi(s);
-    if(int8_val < 0 || int8_val > 255) throw "Invalid";
+    if(int8_val < 0 || int8_val > 255) throw std::runtime_error("XSD Parsing Error");
     return int8_val;
 }
 }  // namespace rdf4cpp::rdf::datatypes

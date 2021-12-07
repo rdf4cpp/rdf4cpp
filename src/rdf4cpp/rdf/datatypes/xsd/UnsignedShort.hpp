@@ -24,7 +24,7 @@ inline std::string RegisteredDatatype<xsd::UnsignedShort>::datatype_iri() noexce
 template<>
 inline xsd::UnsignedShort RegisteredDatatype<xsd::UnsignedShort>::from_string(const std::string &s) {
     auto int16_val = std::stoi(s);
-    if(int16_val < 0 || int16_val > 65535) throw "Invalid";
+    if(int16_val < 0 || int16_val > 65535) throw std::runtime_error("XSD Parsing Error");
     return int16_val;
 }
 }  // namespace rdf4cpp::rdf::datatypes
