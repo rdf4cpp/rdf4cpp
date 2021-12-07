@@ -157,9 +157,6 @@ bool Node::null() const noexcept {
 std::ostream &operator<<(std::ostream &os, const Node &node) {
     return os << (std::string) node;
 }
-std::ostream &operator<<(std::ostream &os, const Node *const node) {
-    return os << (std::string) (*node);
-}
 const Node::BackendNodeHandle &Node::backend_handle() const noexcept {
     return handle_;
 }
