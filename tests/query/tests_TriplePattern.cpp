@@ -1,12 +1,18 @@
-//
-// Created by kaimal on 14.11.21.
-//
+
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
 using namespace rdf4cpp::rdf;
 
-static void test(Node sub, Node pred, Node obj, bool result){
+/**
+ * This function validates the triple pattern
+ *
+ * @param  sub Node which represents subject
+ * @param  pred Node which represents predicate
+ * @param  obj Node which represents object
+ * @param  result the expected value (valid or not valid) of the triple pattern
+ */
+static void validate_triple_pattern(Node sub, Node pred, Node obj, bool result){
 
     auto tpattern = query::TriplePattern {sub, pred, obj};
 
@@ -119,60 +125,60 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
             auto variable3 = query::Variable {"o"};
             auto obj = Node{variable3};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri = IRI {"http://example.com/A"};
             auto obj = Node{iri};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for iri as predicate"){
-        auto iri = IRI {"http://looneytunes-graph.com#made_debut_appearance_in"};
+        auto iri = IRI {"http://example.com/B"};
         auto pred = Node{iri};
 
         SUBCASE("Check for variable as object"){
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for blanknode as predicate"){
@@ -183,28 +189,28 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode1 = BlankNode{};
             auto obj = Node{bnode1};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate"){
@@ -215,28 +221,28 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal2 = Literal{"Bugs Bunny"};
+            auto literal2 = Literal{"str1"};
             auto obj = Node{literal2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
 
@@ -255,60 +261,60 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
             auto variable3 = query::Variable {"o"};
             auto obj = Node{variable3};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode2 = BlankNode{};
             auto obj = Node{bnode2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri = IRI {"http://example.com/A"};
             auto obj = Node{iri};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for iri as predicate"){
-        auto iri = IRI {"http://looneytunes-graph.com#made_debut_appearance_in"};
+        auto iri = IRI {"http://example.com/B"};
         auto pred = Node{iri};
 
         SUBCASE("Check for variable as object"){
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode2 = BlankNode{};
             auto obj = Node{bnode2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for blanknode as predicate"){
@@ -319,28 +325,28 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode3 = BlankNode{};
             auto obj = Node{bnode3};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate"){
@@ -351,28 +357,28 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode2 = BlankNode{};
             auto obj = Node{bnode2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri1 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri1 = IRI {"http://example.com/A"};
             auto obj = Node{iri1};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal2 = Literal{"Bugs Bunny"};
+            auto literal2 = Literal{"str1"};
             auto obj = Node{literal2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
 
@@ -380,7 +386,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
 
 TEST_CASE("TriplePattern - Check for iri as subject") {
 
-    auto iri1 = IRI {"http://looneytunes-graph.com#Bugs_Bunny"};
+    auto iri1 = IRI {"http://example.com/C"};
     auto sub = Node{iri1};
 
     SUBCASE("Check for variable as predicate"){
@@ -391,60 +397,60 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
             auto variable3 = query::Variable {"o"};
             auto obj = Node{variable3};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri = IRI {"http://example.com/A"};
             auto obj = Node{iri};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for iri as predicate"){
-        auto iri2 = IRI {"http://looneytunes-graph.com#made_debut_appearance_in"};
+        auto iri2 = IRI {"http://example.com/B"};
         auto pred = Node{iri2};
 
         SUBCASE("Check for variable as object"){
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri3 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri3 = IRI {"http://example.com/A"};
             auto obj = Node{iri3};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, true);
+            validate_triple_pattern(sub, pred, obj, true);
         }
     }
     SUBCASE("Check for blanknode as predicate"){
@@ -455,28 +461,28 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode2 = BlankNode{};
             auto obj = Node{bnode2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri2 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri2 = IRI {"http://example.com/A"};
             auto obj = Node{iri2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate"){
@@ -487,28 +493,28 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri2 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri2 = IRI {"http://example.com/A"};
             auto obj = Node{iri2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal2 = Literal{"Bugs Bunny"};
+            auto literal2 = Literal{"str1"};
             auto obj = Node{literal2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
 
@@ -516,7 +522,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
 
 TEST_CASE("TriplePattern - Check for literal as subject") {
 
-    auto literal1 = Literal{"Bugs Bunny"};
+    auto literal1 = Literal{"str1"};
     auto sub = Node{literal1};
 
     SUBCASE("Check for variable as predicate"){
@@ -527,60 +533,60 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri = IRI {"http://example.com/A"};
             auto obj = Node{iri};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for iri as predicate"){
-        auto iri2 = IRI {"http://looneytunes-graph.com#made_debut_appearance_in"};
+        auto iri2 = IRI {"http://example.com/B"};
         auto pred = Node{iri2};
 
         SUBCASE("Check for variable as object"){
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri3 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri3 = IRI {"http://example.com/A"};
             auto obj = Node{iri3};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for blanknode as predicate"){
@@ -591,28 +597,28 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode2 = BlankNode{};
             auto obj = Node{bnode2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri2 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri2 = IRI {"http://example.com/A"};
             auto obj = Node{iri2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal = Literal{"Bugs Bunny"};
+            auto literal = Literal{"str1"};
             auto obj = Node{literal};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate"){
@@ -623,28 +629,28 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
             auto variable2 = query::Variable {"o"};
             auto obj = Node{variable2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for blank node as object"){
             auto bnode = BlankNode{};
             auto obj = Node{bnode};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for iri as object"){
-            auto iri2 = IRI {"http://looneytunes-graph.com#A_Wild_Hare"};
+            auto iri2 = IRI {"http://example.com/A"};
             auto obj = Node{iri2};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
 
         SUBCASE("Check for literal as object"){
-            auto literal3 = Literal{"Bugs Bunny"};
+            auto literal3 = Literal{"str1"};
             auto obj = Node{literal3};
 
-            test(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, false);
         }
     }
 

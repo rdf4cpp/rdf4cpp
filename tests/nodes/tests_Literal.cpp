@@ -1,6 +1,4 @@
-//
-// Created by kaimal on 18.11.21.
-//
+
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
