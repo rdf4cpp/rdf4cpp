@@ -5,6 +5,7 @@
 #ifndef RDF4CPP_XSD_FLOAT_HPP
 #define RDF4CPP_XSD_FLOAT_HPP
 
+
 #include <ostream>
 #include <rdf4cpp/rdf/datatypes/DatatypeRegistry.hpp>
 
