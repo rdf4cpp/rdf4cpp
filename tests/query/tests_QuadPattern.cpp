@@ -15,21 +15,22 @@ using namespace rdf4cpp::rdf;
  * @param  result the expected value (valid or not valid) of the quad pattern
  */
 
-static void validate_quad_pattern(Node graph, Node sub, Node pred, Node obj, bool result){
+static void validate_quad_pattern(Node graph, Node sub, Node pred, Node obj, bool result) {
 
-    auto qpattern = query::QuadPattern {graph, sub, pred, obj};
+    auto qpattern = query::QuadPattern{graph, sub, pred, obj};
 
-    SUBCASE("Check validity & output"){
+    SUBCASE("Check validity & output") {
         CHECK(qpattern.graph() == graph);
         CHECK(qpattern.subject() == sub);
         CHECK(qpattern.predicate() == pred);
         CHECK(qpattern.object() == obj);
-        
-        if(result) CHECK(qpattern.valid());
-        else CHECK(not qpattern.valid());
+
+        if (result) CHECK(qpattern.valid());
+        else
+            CHECK(not qpattern.valid());
 
         //checks whether a valid quadpattern have a valid string output
-        if(qpattern.valid()) std::cout << qpattern << std::endl;
+        if (qpattern.valid()) std::cout << qpattern << std::endl;
     }
 
     SUBCASE("Check iterators"){
