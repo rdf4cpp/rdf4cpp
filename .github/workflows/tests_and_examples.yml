@@ -74,8 +74,11 @@ jobs:
         run: |
           cmake -B build_coverage -Drdf4cpp_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS=--coverage
           cd build_coverage
-          make tests_hello_test
-          tests/tests_hello_test
+          make tests_Variable tests_Literal tests_TriplePattern tests_QuadPattern 
+          tests/tests_Variable
+          tests/tests_Literal
+          tests/tests_TriplePattern
+          tests/tests_QuadPattern
           cd ../
           gcovr --coveralls --filter 'src/' -o coverage.json -r ./
           curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
