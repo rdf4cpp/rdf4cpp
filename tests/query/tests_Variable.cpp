@@ -7,7 +7,7 @@ using namespace rdf4cpp::rdf;
 
 TEST_CASE("Variable - Check for single node with anonymous default") {
 
-    auto variable = query::Variable {"x"};
+    auto variable = query::Variable{"x"};
 
     CHECK(not variable.is_anonymous());
     CHECK(not variable.is_blank_node());
@@ -20,7 +20,7 @@ TEST_CASE("Variable - Check for single node with anonymous default") {
 
 TEST_CASE("Variable - Check for single node with anonymous true") {
 
-    auto variable = query::Variable {"x", true};
+    auto variable = query::Variable{"x", true};
 
     CHECK(variable.is_anonymous());
     CHECK(not variable.is_blank_node());
@@ -33,7 +33,7 @@ TEST_CASE("Variable - Check for single node with anonymous true") {
 
 TEST_CASE("Variable - Check for single node with anonymous false") {
 
-    auto variable = query::Variable {"x", false};
+    auto variable = query::Variable{"x", false};
 
     CHECK(not variable.is_anonymous());
     CHECK(not variable.is_blank_node());
