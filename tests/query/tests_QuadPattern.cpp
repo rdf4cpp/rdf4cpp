@@ -33,7 +33,7 @@ static void validate_quad_pattern(Node graph, Node sub, Node pred, Node obj, boo
         if (qpattern.valid()) std::cout << qpattern << std::endl;
     }
 
-    SUBCASE("Check iterators"){
+    SUBCASE("Check iterators") {
         auto b_itr = qpattern.begin();
         CHECK(*b_itr++ == graph);
         CHECK(*b_itr++ == sub);
@@ -43,11 +43,11 @@ static void validate_quad_pattern(Node graph, Node sub, Node pred, Node obj, boo
         auto e_itr = qpattern.end();
         CHECK(*(--e_itr) == obj);
         CHECK(*(--e_itr) == pred);
-        CHECK(*(--e_itr)== sub);
+        CHECK(*(--e_itr) == sub);
         CHECK(*(--e_itr) == graph);
     }
 
-    SUBCASE("Check reverse-iterators"){
+    SUBCASE("Check reverse-iterators") {
         auto rb_itr = qpattern.rbegin();
         CHECK(*rb_itr++ == obj);
         CHECK(*rb_itr++ == pred);
@@ -57,51 +57,54 @@ static void validate_quad_pattern(Node graph, Node sub, Node pred, Node obj, boo
         auto re_itr = qpattern.rend();
         CHECK(*(--re_itr) == graph);
         CHECK(*(--re_itr) == sub);
-        CHECK(*(--re_itr)== pred);
+        CHECK(*(--re_itr) == pred);
         CHECK(*(--re_itr) == obj);
     }
 }
 
-TEST_CASE("QuadPattern - Check for iterators and const-iterators"){
+TEST_CASE("QuadPattern - Check for iterators and const-iterators") {
 
-    auto variable1 = query::Variable {"g"};
+    auto variable1 = query::Variable{"g"};
     auto graph = Node{variable1};
 
-    auto variable2 = query::Variable {"s"};
+    auto variable2 = query::Variable{"s"};
     auto sub = Node{variable2};
 
-    auto variable3 = query::Variable {"p"};
+    auto variable3 = query::Variable{"p"};
     auto pred = Node{variable3};
 
-    auto variable4 = query::Variable {"o"};
+    auto variable4 = query::Variable{"o"};
     auto obj = Node{variable4};
 
-    auto variable5 = query::Variable {"g1"};
+    auto variable5 = query::Variable{"g1"};
     auto graph1 = Node{variable5};
 
-    auto variable6 = query::Variable {"s1"};
+    auto variable6 = query::Variable{"s1"};
     auto sub1 = Node{variable6};
 
-    auto variable7 = query::Variable {"p1"};
+    auto variable7 = query::Variable{"p1"};
     auto pred1 = Node{variable7};
 
-    auto variable8 = query::Variable {"o1"};
+    auto variable8 = query::Variable{"o1"};
     auto obj1 = Node{variable8};
 
-    auto qpattern = query::QuadPattern {graph, sub, pred, obj};
+    auto qpattern = query::QuadPattern{graph, sub, pred, obj};
 
     query::QuadPattern::iterator itr;
-    for(itr = qpattern.begin(); itr != qpattern.end(); itr++){
-        if(*itr == graph) *itr = graph1;
-        else if(*itr == sub) *itr = sub1;
-        else if(*itr == pred) *itr = pred1;
-        else if(*itr == obj) *itr = obj1;
+    for (itr = qpattern.begin(); itr != qpattern.end(); itr++) {
+        if (*itr == graph) *itr = graph1;
+        else if (*itr == sub)
+            *itr = sub1;
+        else if (*itr == pred)
+            *itr = pred1;
+        else if (*itr == obj)
+            *itr = obj1;
     }
 
     query::QuadPattern::const_reverse_iterator rb_const_itr;
     query::QuadPattern::const_reverse_iterator re_const_itr;
 
-    SUBCASE("Check const-reverse-iterators"){
+    SUBCASE("Check const-reverse-iterators") {
         rb_const_itr = qpattern.rbegin();
         CHECK(*rb_const_itr++ == obj1);
         CHECK(*rb_const_itr++ == pred1);
@@ -111,14 +114,14 @@ TEST_CASE("QuadPattern - Check for iterators and const-iterators"){
         re_const_itr = qpattern.rend();
         CHECK(*(--re_const_itr) == graph1);
         CHECK(*(--re_const_itr) == sub1);
-        CHECK(*(--re_const_itr)== pred1);
+        CHECK(*(--re_const_itr) == pred1);
         CHECK(*(--re_const_itr) == obj1);
     }
 
     query::QuadPattern::const_iterator b_const_itr;
     query::QuadPattern::const_iterator e_const_itr;
 
-    SUBCASE("Check const-iterators"){
+    SUBCASE("Check const-iterators") {
         b_const_itr = qpattern.begin();
         CHECK(*b_const_itr++ == graph1);
         CHECK(*b_const_itr++ == sub1);
@@ -128,143 +131,143 @@ TEST_CASE("QuadPattern - Check for iterators and const-iterators"){
         e_const_itr = qpattern.end();
         CHECK(*(--e_const_itr) == obj1);
         CHECK(*(--e_const_itr) == pred1);
-        CHECK(*(--e_const_itr)== sub1);
-        CHECK(*(--e_const_itr)== graph1);
+        CHECK(*(--e_const_itr) == sub1);
+        CHECK(*(--e_const_itr) == graph1);
     }
 }
 
-TEST_CASE("QuadPattern - Check for variable as graph"){
+TEST_CASE("QuadPattern - Check for variable as graph") {
 
-    auto variable1 = query::Variable {"g"};
+    auto variable1 = query::Variable{"g"};
     auto graph = Node{variable1};
 
     SUBCASE("Check for variable as subject") {
 
-        auto variable2 = query::Variable {"s"};
+        auto variable2 = query::Variable{"s"};
         auto sub = Node{variable2};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable3 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable3 = query::Variable{"p"};
             auto pred = Node{variable3};
 
-            SUBCASE("Check for variable as object"){
-                auto variable4 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable4 = query::Variable{"o"};
                 auto obj = Node{variable4};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri = IRI{"http://example.com/A"};
                 auto obj = Node{iri};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri1 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri1 = IRI{"http://example.com/B"};
             auto pred = Node{iri1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -274,131 +277,131 @@ TEST_CASE("QuadPattern - Check for variable as graph"){
     }
     SUBCASE("Check for iri as subject") {
 
-        auto iri1 = IRI {"http://example.com/C"};
+        auto iri1 = IRI{"http://example.com/C"};
         auto sub = Node{iri1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -408,131 +411,131 @@ TEST_CASE("QuadPattern - Check for variable as graph"){
     }
     SUBCASE("Check for blank node as subject") {
 
-        auto bnode = BlankNode {};
+        auto bnode = BlankNode{};
         auto sub = Node{bnode};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri1 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri1 = IRI{"http://example.com/A"};
                 auto obj = Node{iri1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri1 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri1 = IRI{"http://example.com/B"};
             auto pred = Node{iri1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -545,128 +548,128 @@ TEST_CASE("QuadPattern - Check for variable as graph"){
         auto literal1 = Literal{"str1"};
         auto sub = Node{literal1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri = IRI{"http://example.com/A"};
                 auto obj = Node{iri};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode1 = BlankNode{};
             auto pred = Node{bnode1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal2 = Literal{"name"};
             auto pred = Node{literal2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal3 = Literal{"str1"};
                 auto obj = Node{literal3};
 
@@ -676,138 +679,138 @@ TEST_CASE("QuadPattern - Check for variable as graph"){
     }
 }
 
-TEST_CASE("QuadPattern - Check for iri as graph"){
+TEST_CASE("QuadPattern - Check for iri as graph") {
 
-    auto iri1 = IRI {"http://example.com"};
+    auto iri1 = IRI{"http://example.com"};
     auto graph = Node{iri1};
 
     SUBCASE("Check for variable as subject") {
 
-        auto variable1 = query::Variable {"s"};
+        auto variable1 = query::Variable{"s"};
         auto sub = Node{variable1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -817,131 +820,131 @@ TEST_CASE("QuadPattern - Check for iri as graph"){
     }
     SUBCASE("Check for iri as subject") {
 
-        auto iri2 = IRI {"http://example.com/C"};
+        auto iri2 = IRI{"http://example.com/C"};
         auto sub = Node{iri2};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri3 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri3 = IRI{"http://example.com/B"};
             auto pred = Node{iri3};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri4 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri4 = IRI{"http://example.com/A"};
                 auto obj = Node{iri4};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, true);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -951,131 +954,131 @@ TEST_CASE("QuadPattern - Check for iri as graph"){
     }
     SUBCASE("Check for blank node as subject") {
 
-        auto bnode1 = BlankNode {};
+        auto bnode1 = BlankNode{};
         auto sub = Node{bnode1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable1 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable1 = query::Variable{"o"};
                 auto obj = Node{variable1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -1088,128 +1091,128 @@ TEST_CASE("QuadPattern - Check for iri as graph"){
         auto literal1 = Literal{"str1"};
         auto sub = Node{literal1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri = IRI{"http://example.com/A"};
                 auto obj = Node{iri};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode1 = BlankNode{};
             auto pred = Node{bnode1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal2 = Literal{"name"};
             auto pred = Node{literal2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal3 = Literal{"str1"};
                 auto obj = Node{literal3};
 
@@ -1219,138 +1222,138 @@ TEST_CASE("QuadPattern - Check for iri as graph"){
     }
 }
 
-TEST_CASE("QuadPattern - Check for blanknode as graph"){
+TEST_CASE("QuadPattern - Check for blanknode as graph") {
 
     auto bnode = BlankNode{};
     auto graph = Node{bnode};
 
     SUBCASE("Check for variable as subject") {
 
-        auto variable1 = query::Variable {"s"};
+        auto variable1 = query::Variable{"s"};
         auto sub = Node{variable1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -1360,131 +1363,131 @@ TEST_CASE("QuadPattern - Check for blanknode as graph"){
     }
     SUBCASE("Check for iri as subject") {
 
-        auto iri2 = IRI {"http://example.com/C"};
+        auto iri2 = IRI{"http://example.com/C"};
         auto sub = Node{iri2};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri3 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri3 = IRI{"http://example.com/B"};
             auto pred = Node{iri3};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri4 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri4 = IRI{"http://example.com/A"};
                 auto obj = Node{iri4};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -1494,131 +1497,131 @@ TEST_CASE("QuadPattern - Check for blanknode as graph"){
     }
     SUBCASE("Check for blank node as subject") {
 
-        auto bnode1 = BlankNode {};
+        auto bnode1 = BlankNode{};
         auto sub = Node{bnode1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable1 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable1 = query::Variable{"o"};
                 auto obj = Node{variable1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -1631,128 +1634,128 @@ TEST_CASE("QuadPattern - Check for blanknode as graph"){
         auto literal1 = Literal{"str1"};
         auto sub = Node{literal1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri = IRI{"http://example.com/A"};
                 auto obj = Node{iri};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode1 = BlankNode{};
             auto pred = Node{bnode1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal = Literal{"str1"};
                 auto obj = Node{literal};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal2 = Literal{"name"};
             auto pred = Node{literal2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode1 = BlankNode{};
                 auto obj = Node{bnode1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal3 = Literal{"str1"};
                 auto obj = Node{literal3};
 
@@ -1762,138 +1765,138 @@ TEST_CASE("QuadPattern - Check for blanknode as graph"){
     }
 }
 
-TEST_CASE("QuadPattern - Check for literal as graph"){
+TEST_CASE("QuadPattern - Check for literal as graph") {
 
     auto literal = Literal{"http://example.com", "en"};
     auto graph = Node{literal};
 
     SUBCASE("Check for variable as subject") {
 
-        auto variable1 = query::Variable {"s"};
+        auto variable1 = query::Variable{"s"};
         auto sub = Node{variable1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable2 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable2 = query::Variable{"p"};
             auto pred = Node{variable2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable3 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable3 = query::Variable{"o"};
                 auto obj = Node{variable3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -1903,131 +1906,131 @@ TEST_CASE("QuadPattern - Check for literal as graph"){
     }
     SUBCASE("Check for iri as subject") {
 
-        auto iri2 = IRI {"http://example.com/C"};
+        auto iri2 = IRI{"http://example.com/C"};
         auto sub = Node{iri2};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri3 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri3 = IRI{"http://example.com/B"};
             auto pred = Node{iri3};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri4 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri4 = IRI{"http://example.com/A"};
                 auto obj = Node{iri4};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -2037,131 +2040,131 @@ TEST_CASE("QuadPattern - Check for literal as graph"){
     }
     SUBCASE("Check for blank node as subject") {
 
-        auto bnode1 = BlankNode {};
+        auto bnode1 = BlankNode{};
         auto sub = Node{bnode1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable1 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable1 = query::Variable{"o"};
                 auto obj = Node{variable1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode2 = BlankNode{};
             auto pred = Node{bnode2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode3 = BlankNode{};
                 auto obj = Node{bnode3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal1 = Literal{"str1"};
                 auto obj = Node{literal1};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal1 = Literal{"name"};
             auto pred = Node{literal1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
@@ -2174,128 +2177,128 @@ TEST_CASE("QuadPattern - Check for literal as graph"){
         auto literal1 = Literal{"str1"};
         auto sub = Node{literal1};
 
-        SUBCASE("Check for variable as predicate"){
-            auto variable1 = query::Variable {"p"};
+        SUBCASE("Check for variable as predicate") {
+            auto variable1 = query::Variable{"p"};
             auto pred = Node{variable1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri = IRI{"http://example.com/A"};
                 auto obj = Node{iri};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for iri as predicate"){
-            auto iri2 = IRI {"http://example.com/B"};
+        SUBCASE("Check for iri as predicate") {
+            auto iri2 = IRI{"http://example.com/B"};
             auto pred = Node{iri2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri3 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri3 = IRI{"http://example.com/A"};
                 auto obj = Node{iri3};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for blanknode as predicate"){
+        SUBCASE("Check for blanknode as predicate") {
             auto bnode1 = BlankNode{};
             auto pred = Node{bnode1};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode2 = BlankNode{};
                 auto obj = Node{bnode2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal2 = Literal{"str1"};
                 auto obj = Node{literal2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
         }
-        SUBCASE("Check for literal as predicate"){
+        SUBCASE("Check for literal as predicate") {
             auto literal2 = Literal{"name"};
             auto pred = Node{literal2};
 
-            SUBCASE("Check for variable as object"){
-                auto variable2 = query::Variable {"o"};
+            SUBCASE("Check for variable as object") {
+                auto variable2 = query::Variable{"o"};
                 auto obj = Node{variable2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for blank node as object"){
+            SUBCASE("Check for blank node as object") {
                 auto bnode = BlankNode{};
                 auto obj = Node{bnode};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for iri as object"){
-                auto iri2 = IRI {"http://example.com/A"};
+            SUBCASE("Check for iri as object") {
+                auto iri2 = IRI{"http://example.com/A"};
                 auto obj = Node{iri2};
 
                 validate_quad_pattern(graph, sub, pred, obj, false);
             }
 
-            SUBCASE("Check for literal as object"){
+            SUBCASE("Check for literal as object") {
                 auto literal3 = Literal{"str1"};
                 auto obj = Node{literal3};
 
@@ -2304,4 +2307,3 @@ TEST_CASE("QuadPattern - Check for literal as graph"){
         }
     }
 }
-
