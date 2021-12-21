@@ -57,26 +57,20 @@ jobs:
         uses: actions/checkout@v2
       - name: Build Tests
         run: |
-          cmake -G Ninja -B build -Drdf4cpp_BUILD_TESTS=ON
-          cd build
-          ninja tests_hello_test
+          cmake -G Ninja -B build_tests -Drdf4cpp_BUILD_TESTS=ON
+          cmake --build build_tests
       - name: Run tests
         run: |
-          cd build
-          tests/tests_hello_test
+          ctest --test-dir build_tests
       - name: Build Examples
         run: |
-          cmake -G Ninja -B build -Drdf4cpp_BUILD_EXAMPLES=ON
-          cd build
-          ninja graphs_and_datasets_example literal_datatypes_example rdf_nodes_example
+          cmake -G Ninja -B build_examples -Drdf4cpp_BUILD_EXAMPLES=ON
+          cmake --build build_examples
       - name: Coverage
         if: matrix.config.cxx == 'g++-10'
         run: |
-          cmake -B build_coverage -Drdf4cpp_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS=--coverage
-          cd build_coverage
-          make tests_Variable tests_Literal tests_TriplePattern tests_QuadPattern 
-          ctest
-          cd ../
+          cmake -B build_coverage -D  rdf4cpp_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS=--coverage
+          cmake --build build_coverage
           gcovr --coveralls --filter 'src/' -o coverage.json -r ./
           curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
       - name: Run Examples
