@@ -22,10 +22,11 @@ static void validate_triple_pattern(Node sub, Node pred, Node obj, bool result) 
         CHECK(tpattern.subject() == sub);
         CHECK(tpattern.predicate() == pred);
         CHECK(tpattern.object() == obj);
+        std::cout << obj << std::endl;
 
-        if (result) CHECK(tpattern.valid());
+        if (result) CHECK_MESSAGE(tpattern.valid(), (std::string) tpattern);
         else
-            CHECK(not tpattern.valid());
+            CHECK_MESSAGE(not tpattern.valid(), (std::string) tpattern);
 
         //checks whether a valid triplepattern have a valid string output
         if (tpattern.valid()) std::cout << tpattern << std::endl;
@@ -133,10 +134,10 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b1"};
             auto obj = Node{bnode};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -165,10 +166,10 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b1"};
             auto obj = Node{bnode};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -186,7 +187,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
     }
     SUBCASE("Check for blanknode as predicate") {
-        auto bnode = BlankNode{};
+        auto bnode = BlankNode{"b0"};
         auto pred = Node{bnode};
 
         SUBCASE("Check for variable as object") {
@@ -197,7 +198,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode1 = BlankNode{};
+            auto bnode1 = BlankNode{"b1"};
             auto obj = Node{bnode1};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -229,7 +230,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -253,7 +254,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
 
 TEST_CASE("TriplePattern - Check for blank node as subject") {
 
-    auto bnode1 = BlankNode{};
+    auto bnode1 = BlankNode{"b1"};
     auto sub = Node{bnode1};
 
     SUBCASE("Check for variable as predicate") {
@@ -268,10 +269,10 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode2 = BlankNode{};
+            auto bnode2 = BlankNode{"b2"};
             auto obj = Node{bnode2};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -300,10 +301,10 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode2 = BlankNode{};
+            auto bnode2 = BlankNode{"b2"};
             auto obj = Node{bnode2};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -321,7 +322,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
     }
     SUBCASE("Check for blanknode as predicate") {
-        auto bnode2 = BlankNode{};
+        auto bnode2 = BlankNode{"b2"};
         auto pred = Node{bnode2};
 
         SUBCASE("Check for variable as object") {
@@ -332,7 +333,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode3 = BlankNode{};
+            auto bnode3 = BlankNode{"b3"};
             auto obj = Node{bnode3};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -364,7 +365,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode2 = BlankNode{};
+            auto bnode2 = BlankNode{"b2"};
             auto obj = Node{bnode2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -403,10 +404,10 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -435,10 +436,10 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
-            validate_triple_pattern(sub, pred, obj, false);
+            validate_triple_pattern(sub, pred, obj, true);
         }
 
         SUBCASE("Check for iri as object") {
@@ -456,7 +457,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
     }
     SUBCASE("Check for blanknode as predicate") {
-        auto bnode1 = BlankNode{};
+        auto bnode1 = BlankNode{"b1"};
         auto pred = Node{bnode1};
 
         SUBCASE("Check for variable as object") {
@@ -467,7 +468,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode2 = BlankNode{};
+            auto bnode2 = BlankNode{"b2"};
             auto obj = Node{bnode2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -499,7 +500,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -538,7 +539,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -570,7 +571,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -591,7 +592,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
     }
     SUBCASE("Check for blanknode as predicate") {
-        auto bnode1 = BlankNode{};
+        auto bnode1 = BlankNode{"b1"};
         auto pred = Node{bnode1};
 
         SUBCASE("Check for variable as object") {
@@ -602,7 +603,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode2 = BlankNode{};
+            auto bnode2 = BlankNode{"b2"};
             auto obj = Node{bnode2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -634,7 +635,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for blank node as object") {
-            auto bnode = BlankNode{};
+            auto bnode = BlankNode{"b0"};
             auto obj = Node{bnode};
 
             validate_triple_pattern(sub, pred, obj, false);

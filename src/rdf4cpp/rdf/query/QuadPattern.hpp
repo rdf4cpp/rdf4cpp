@@ -7,6 +7,14 @@
 #include <ostream>
 
 namespace rdf4cpp::rdf::query {
+/**
+ * <div>QuadPattern</div> is modeled around SPARQL qual patterns.
+ *
+ * One important difference is that pattern matching with <div>BlankNode</div>s is allowed subject and object.
+ * For the equivalent of SPARQL anonymous variables, use Variable and set anonymous to true.
+ *
+ * @see <https://www.w3.org/TR/sparql11-query/#defn_TriplePattern>
+ */
 class QuadPattern {
     // TODO: adjust API to Quad
 protected:

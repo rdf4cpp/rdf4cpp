@@ -7,6 +7,14 @@
 #include <ostream>
 
 namespace rdf4cpp::rdf::query {
+/**
+ * <div>TriplePattern</div> is modeled around SPARQL Triple patterns.
+ *
+ * One important difference is that pattern matching with <div>BlankNode</div>s is allowed for subject and object.
+ * For the equivalent of a SPARQL anonymous variables, use Variable and set anonymous to true.
+ *
+ * @see <https://www.w3.org/TR/2013/REC-sparql11-update-20130321/#def_datasetQuadPattern>
+ */
 class TriplePattern {
     // TODO: adjust API to Quad
 protected:

@@ -112,6 +112,8 @@ endif ()
 OPTION(rdf4cpp_BUILD_TESTS "Build the tests for rdf4cpp." OFF)
 if (rdf4cpp_BUILD_TESTS)
     message("Tests are configured to be build.")
+    include(CTest)
+    enable_testing()
     add_subdirectory(tests)
 endif ()
 

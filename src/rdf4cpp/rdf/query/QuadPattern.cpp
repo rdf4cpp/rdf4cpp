@@ -5,9 +5,9 @@ QuadPattern::operator std::string() const {
     return (graph().is_iri() and ((IRI) graph()).identifier() == "")  // Graph
                    ? std::string{}
                    : (((std::string) graph()) + " ") +
-                             (std::string) subject() + " " +  // Subject
-                             (std::string) predicate() +      // Predicate
-                             (std::string) object() + " . ";  // Object
+                             (std::string) subject() + " " +    // Subject
+                             (std::string) predicate() + " " +  // Predicate
+                             (std::string) object() + " . ";    // Object
 }
 QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) : entries_({graph, subject, predicate, object}) {}
 Node &QuadPattern::graph() { return entries_[0]; }
@@ -19,10 +19,10 @@ const Node &QuadPattern::predicate() const { return entries_[2]; }
 Node &QuadPattern::object() { return entries_[3]; }
 const Node &QuadPattern::object() const { return entries_[3]; }
 bool QuadPattern::valid() const {
-    return ((graph().is_iri() or graph().is_variable()) and
-            (subject().is_iri() or subject().is_variable()) and
-            (predicate().is_iri() or predicate().is_variable()) and
-            (object().is_iri() or object().is_literal() or object().is_variable()));
+    return not(graph().null() or subject().null() or predicate().null() or object().null()) and
+           ((graph().is_iri() or graph().is_variable()) and
+            (not subject().is_literal()) and
+            (predicate().is_iri() or predicate().is_variable()));
 }
 QuadPattern::iterator QuadPattern::begin() { return entries_.begin(); }
 QuadPattern::const_iterator QuadPattern::begin() const { return entries_.begin(); }
