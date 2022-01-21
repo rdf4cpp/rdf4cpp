@@ -8,36 +8,40 @@ namespace rdf4cpp::rdf {
 Literal::Literal(const Node::NodeID &id) : Node(id) {}
 Literal::Literal() : Node() {}
 Literal::Literal(const std::string &lexical_form, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_string_literal(lexical_form).second}) {}
+    : Node(BackendNodeHandle{node_storage.get_string_literal_id(lexical_form)}) {}
 Literal::Literal(const std::string &lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
     : Node(BackendNodeHandle{
-              node_storage.get_typed_literal(
+              node_storage.get_typed_literal_id(
                                   lexical_form,
                                   datatype.handle_.id())
-                      .second}) {}
+                      }) {}
 Literal::Literal(const std::string &lexical_form, const std::string &lang, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_lang_literal(lexical_form, lang).second}) {}
+    : Node(BackendNodeHandle{node_storage.get_lang_literal_id(lexical_form, lang)}) {}
 
 
 IRI Literal::datatype() const {
-    NodeID datatype_id = handle_.literal_backend().datatype_id();
+    NodeID datatype_id = handle_.literal_backend().datatype_id;
     return IRI(datatype_id);
 }
 
 std::string_view Literal::lexical_form() const {
-    return handle_.literal_backend().lexical_form();
+    return handle_.literal_backend().lexical_form;
 }
 
 std::string_view Literal::language_tag() const {
-    return handle_.literal_backend().language_tag();
+    return handle_.literal_backend().language_tag;
 }
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
+    auto quote_lexical = [](std::string_view lexical) -> std::string {
+        // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
+        return "\"" + std::string{lexical} + "\"";
+    };
     const auto &literal = handle_.literal_backend();
-    if (literal.datatype_id().node_id() == NodeID::rdf_langstring_iri.first) {
-        return literal.quote_lexical() + "@" + std::string{literal.language_tag()};
+    if (literal.datatype_id.node_id() == NodeID::rdf_langstring_iri.first) {
+        return quote_lexical(literal.lexical_form) + "@" + std::string{literal.language_tag};
     } else {
-        return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->n_string();
+        return quote_lexical(literal.lexical_form) + "^^" + NodeStorage::get_iri_handle(literal.datatype_id).n_string();
     }
 }
 bool Literal::is_literal() const { return true; }

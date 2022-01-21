@@ -10,12 +10,6 @@ std::strong_ordering VariableBackend::operator<=>(std::unique_ptr<VariableBacken
     else
         return std::strong_ordering::greater;
 }
-std::string VariableBackend::n_string() const noexcept {
-    if (anonymous_)
-        return "_:" + name_;
-    else
-        return "?" + name_;
-}
 bool VariableBackend::is_anonymous() const noexcept {
     return anonymous_;
 }

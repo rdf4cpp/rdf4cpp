@@ -4,13 +4,13 @@ namespace rdf4cpp::rdf {
 BlankNode::BlankNode(const Node::NodeID &id) : Node(id) {}
 BlankNode::BlankNode() : Node{} {}
 BlankNode::BlankNode(const std::string &identifier, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_bnode(identifier).second}) {}
+    : Node(BackendNodeHandle{node_storage.get_bnode_id(identifier)}) {}
 BlankNode::BlankNode(Node::BackendNodeHandle handle) : Node(handle) {}
 
-std::string_view BlankNode::identifier() const { return handle_.bnode_backend().identifier(); }
+std::string_view BlankNode::identifier() const { return handle_.bnode_backend().identifier; }
 
 BlankNode::operator std::string() const {
-    return handle_.bnode_backend().n_string();
+    return "_:" + std::string{handle_.bnode_backend().identifier};
 }
 
 bool BlankNode::is_literal() const { return false; }

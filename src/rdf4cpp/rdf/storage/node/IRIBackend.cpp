@@ -9,9 +9,6 @@ std::strong_ordering IRIBackend::operator<=>(std::unique_ptr<IRIBackend> const &
     else
         return std::strong_ordering::greater;
 }
-std::string IRIBackend::n_string() const noexcept {
-    return "<" + iri + ">";
-}
 std::string_view IRIBackend::identifier() const noexcept {
     return iri;
 }

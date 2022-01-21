@@ -22,22 +22,22 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
 
                 case RDFNodeType::Variable: {
                     auto variable = static_cast<query::Variable>(*this);
-                    return node_storage.get_variable(variable.name(), variable.is_anonymous()).second;
+                    return node_storage.get_variable_id(variable.name(), variable.is_anonymous());
                 }
                 case RDFNodeType::BNode: {
                     auto bnode = static_cast<BlankNode>(*this);
-                    return node_storage.get_bnode(bnode.identifier()).second;
+                    return node_storage.get_bnode_id(bnode.identifier());
                 }
                 case RDFNodeType::IRI: {
                     auto iri = static_cast<IRI>(*this);
-                    return node_storage.get_iri(iri.identifier()).second;
+                    return node_storage.get_variable_id(iri.identifier());
                 }
                 case RDFNodeType::Literal: {
                     auto literal = static_cast<Literal>(*this);
-                    if (literal.backend_handle().literal_backend().datatype_id().node_id() == storage::node::NodeID::rdf_langstring_iri.first)
-                        return node_storage.get_lang_literal(literal.lexical_form(), literal.language_tag()).second;
+                    if (literal.backend_handle().literal_backend().datatype_id.node_id() == storage::node::NodeID::rdf_langstring_iri.first)
+                        return node_storage.get_lang_literal_id(literal.lexical_form(), literal.language_tag());
                     else
-                        return node_storage.get_typed_literal(literal.lexical_form(), literal.datatype().identifier()).second;
+                        return node_storage.get_typed_literal_id(literal.lexical_form(), literal.datatype().identifier());
                 }
                 default:
                     return NodeID{};
@@ -77,7 +77,7 @@ bool Node::is_iri() const {
     return handle_.is_iri();
 }
 
-std::strong_ordering Node::operator<=>(const Node &other) const {
+std::partial_ordering Node::operator<=>(const Node &other) const {
     [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
         return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) <=> std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
     } else {  // different NodeStorage

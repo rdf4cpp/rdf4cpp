@@ -93,7 +93,7 @@ public:
 
     friend bool operator==(const std::unique_ptr<Node> &lhs, const Node *rhs) noexcept;
 
-    std::strong_ordering operator<=>(const Node &other) const;
+    std::partial_ordering operator<=>(const Node &other) const;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`

@@ -10,6 +10,14 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
+struct LiteralBackendHandle {
+    NodeID datatype_id;
+    std::string_view lexical_form;
+    std::string_view language_tag;
+
+    auto operator<=>( LiteralBackendHandle const&) const noexcept = default;
+};
+
 class LiteralBackend {
     NodeID datatype_id_;
     std::string lexical;
@@ -28,7 +36,14 @@ public:
     [[nodiscard]] const NodeID &datatype_id() const noexcept;
 
     [[nodiscard]] std::string_view language_tag() const noexcept;
+
+    explicit operator LiteralBackendHandle() const noexcept {
+        return {.datatype_id = datatype_id(),
+                .lexical_form = lexical_form(),
+                .language_tag = language_tag()};
+    }
 };
+
 
 std::strong_ordering operator<=>(std::unique_ptr<LiteralBackend> const &self, std::unique_ptr<LiteralBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node

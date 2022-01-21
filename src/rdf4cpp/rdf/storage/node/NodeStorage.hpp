@@ -64,15 +64,25 @@ public:
 
     [[nodiscard]] NodeStorageID id() const noexcept;
 
-    std::pair<LiteralBackend *, NodeID> get_string_literal(std::string_view lexical_form);
+    [[nodiscard]]  NodeID get_string_literal_id(std::string_view lexical_form) {
+        return backend_->get_string_literal_id(lexical_form);
+    }
 
-    std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, std::string_view datatype);
+    [[nodiscard]]  NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) {
+        return backend_->get_typed_literal_id(lexical_form, datatype);
+    }
 
-    std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id);
+    [[nodiscard]]  NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id) {
+        return backend_->get_typed_literal_id(lexical_form, datatype_id);
+    }
 
-    std::pair<LiteralBackend *, NodeID> get_lang_literal(std::string_view lexical_form, std::string_view lang);
+    [[nodiscard]]  NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang) {
+        return backend_->get_lang_literal_id(lexical_form, lang);
+    }
 
-    std::pair<IRIBackend *, NodeID> get_iri(std::string_view iri);
+    [[nodiscard]]  NodeID get_iri_id(std::string_view iri) {
+        return backend_->get_iri_id(iri);
+    }
 
     /**
      * Create or lookup a Variable
@@ -80,22 +90,38 @@ public:
      * @param anonymous true if string repr. it starts with `?` and false if it starts with `?`
      * @return a pointer to the VariableBackend and its NodeID
      */
-    std::pair<VariableBackend *, NodeID> get_variable(std::string_view identifier, bool anonymous = false);
+    [[nodiscard]]  NodeID get_variable_id(std::string_view identifier, bool anonymous = false) {
+        return backend_->get_variable_id(identifier, anonymous);
+    }
 
     /**
      * Create or lookup a BlankNode
      * @param identifier name without `_:`
      * @return a pointer to the BNodeBackend and its NodeID
      */
-    std::pair<BNodeBackend *, NodeID> get_bnode(std::string_view identifier);
+    [[nodiscard]]  NodeID get_bnode_id(std::string_view identifier) {
+        return backend_->get_bnode_id(identifier);
+    }
 
-    static IRIBackend *lookup_iri(NodeID id);
+    [[nodiscard]] static IRIBackendHandle get_iri_handle(NodeID id){
+        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+        return backend->get_iri_handle(id.node_id());
+    }
 
-    static LiteralBackend *lookup_literal(NodeID id);
+    [[nodiscard]] static LiteralBackendHandle get_literal_handle(NodeID id) {
+        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+        return backend->get_literal_handle(id.node_id());
+    }
 
-    static BNodeBackend *lookup_bnode(NodeID id);
+    [[nodiscard]] static BNodeBackendHandle get_bnode_handle(NodeID id) {
+        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+        return backend->get_bnode_handle(id.node_id());
+    }
 
-    static VariableBackend *lookup_variable(NodeID id);
+    [[nodiscard]] static VariableBackendHandle get_variable_handle(NodeID id)  {
+        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+        return backend->get_variable_handle(id.node_id());
+    }
 
     bool operator==(const NodeStorage &other) const {
         return this->id() == other.id();

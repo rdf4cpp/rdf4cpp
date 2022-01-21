@@ -120,45 +120,4 @@ size_t NodeStorage::nodes_in_use() const noexcept {
 NodeStorageID NodeStorage::id() const noexcept {
     return backend_->manager_id;
 }
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_string_literal(std::string_view lexical_form) {
-    return backend_->get_string_literal(lexical_form);
-}
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(std::string_view lexical_form, std::string_view datatype) {
-    return backend_->get_typed_literal(lexical_form, datatype);
-}
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) {
-    return backend_->get_typed_literal(lexical_form, datatype_id);
-}
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_lang_literal(std::string_view lexical_form, std::string_view lang) {
-    return backend_->get_lang_literal(lexical_form, lang);
-}
-std::pair<IRIBackend *, NodeID> NodeStorage::get_iri(std::string_view iri) {
-    return backend_->get_iri(iri);
-}
-std::pair<VariableBackend *, NodeID> NodeStorage::get_variable(std::string_view identifier, bool anonymous) {
-    return backend_->get_variable(identifier, anonymous);
-}
-std::pair<BNodeBackend *, NodeID> NodeStorage::get_bnode(std::string_view identifier) {
-    return backend_->get_bnode(identifier);
-}
-IRIBackend *NodeStorage::lookup_iri(NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    // TODO: check against nullptr
-    return backend->lookup_iri(id.node_id());
-}
-LiteralBackend *NodeStorage::lookup_literal(NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    // TODO: check against nullptr
-    return backend->lookup_literal(id.node_id());
-}
-BNodeBackend *NodeStorage::lookup_bnode(NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    // TODO: check against nullptr
-    return backend->lookup_bnode(id.node_id());
-}
-VariableBackend *NodeStorage::lookup_variable(NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    // TODO: check against nullptr
-    return backend->lookup_variable(id.node_id());
-}
 }  // namespace rdf4cpp::rdf::storage::node

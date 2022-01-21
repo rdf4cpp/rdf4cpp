@@ -28,10 +28,10 @@ public:
 
     [[nodiscard]] NodeID id() const noexcept;
 
-    [[nodiscard]] IRIBackend &iri_backend() const;
-    [[nodiscard]] LiteralBackend &literal_backend() const;
-    [[nodiscard]] BNodeBackend &bnode_backend() const;
-    [[nodiscard]] VariableBackend &variable_backend() const;
+    [[nodiscard]] IRIBackendHandle iri_backend() const;
+    [[nodiscard]] LiteralBackendHandle literal_backend() const;
+    [[nodiscard]] BNodeBackendHandle bnode_backend() const;
+    [[nodiscard]] VariableBackendHandle variable_backend() const;
 
     bool operator==(const BackendNodeHandle &other) const = default;
 

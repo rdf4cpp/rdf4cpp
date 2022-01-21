@@ -10,9 +10,6 @@ std::strong_ordering BNodeBackend::operator<=>(std::unique_ptr<BNodeBackend> con
     else
         return std::strong_ordering::greater;
 }
-std::string BNodeBackend::n_string() const noexcept {
-    return "_:" + identifier_;
-}
 std::string_view BNodeBackend::identifier() const noexcept {
     return identifier_;
 }

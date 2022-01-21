@@ -37,27 +37,23 @@ public:
 
     ~DefaultNodeStorageBackend() override = default;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_string_literal(std::string_view lexical_form) override;
+    [[nodiscard]] NodeID get_string_literal_id(std::string_view lexical_form) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, std::string_view datatype) override;
+    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) override;
+    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_lang_literal(std::string_view lexical_form, std::string_view lang) override;
+    [[nodiscard]] NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang) override;
 
-    [[nodiscard]] std::pair<IRIBackend *, NodeID> get_iri(std::string_view iri) override;
+    [[nodiscard]] NodeID get_iri_id(std::string_view iri) override;
 
-    [[nodiscard]] std::pair<VariableBackend *, NodeID> get_variable(std::string_view identifier, bool anonymous) override;
+    [[nodiscard]] NodeID get_variable_id(std::string_view identifier, bool anonymous) override;
 
-    [[nodiscard]] std::pair<BNodeBackend *, NodeID> get_bnode(std::string_view identifier) override;
-
-    [[nodiscard]] IRIBackend *lookup_iri(NodeIDValue id) const override;
-
-    [[nodiscard]] LiteralBackend *lookup_literal(NodeIDValue id) const override;
-
-    [[nodiscard]] BNodeBackend *lookup_bnode(NodeIDValue id) const override;
-
-    [[nodiscard]] VariableBackend *lookup_variable(NodeIDValue id) const override;
+    [[nodiscard]] NodeID get_bnode_id(std::string_view identifier) override;
+    IRIBackendHandle get_iri_handle(NodeIDValue id) const override;
+    LiteralBackendHandle get_literal_handle(NodeIDValue id) const override;
+    BNodeBackendHandle get_bnode_handle(NodeIDValue id) const override;
+    VariableBackendHandle get_variable_handle(NodeIDValue id) const override;
 
 private:
     std::pair<LiteralBackend *, NodeID> lookup_or_insert_literal(LiteralBackend literal);

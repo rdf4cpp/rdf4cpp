@@ -19,6 +19,7 @@ public:
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
+     //TODO: use string_view
     explicit Literal(const std::string &lexical_form,
                      NodeStorage &node_storage = NodeStorage::primary_instance());
     /**

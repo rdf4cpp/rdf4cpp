@@ -26,17 +26,17 @@ bool BackendNodeHandle::empty() const noexcept {
 NodeID BackendNodeHandle::id() const noexcept {
     return node_id_;
 }
-IRIBackend &BackendNodeHandle::iri_backend() const {
-    return *NodeStorage::lookup_iri(node_id_);
+IRIBackendHandle BackendNodeHandle::iri_backend() const {
+    return NodeStorage::get_iri_handle(node_id_);
 }
-LiteralBackend &BackendNodeHandle::literal_backend() const {
-    return *NodeStorage::lookup_literal(node_id_);
+LiteralBackendHandle BackendNodeHandle::literal_backend() const {
+    return NodeStorage::get_literal_handle(node_id_);
 }
-BNodeBackend &BackendNodeHandle::bnode_backend() const {
-    return *NodeStorage::lookup_bnode(node_id_);
+BNodeBackendHandle BackendNodeHandle::bnode_backend() const {
+    return NodeStorage::get_bnode_handle(node_id_);
 }
-VariableBackend &BackendNodeHandle::variable_backend() const {
-    return *NodeStorage::lookup_variable(node_id_);
+VariableBackendHandle BackendNodeHandle::variable_backend() const {
+    return NodeStorage::get_variable_handle(node_id_);
 }
 NodeStorage BackendNodeHandle::node_storage() const {
     return *NodeStorage::lookup_instance(node_id_.manager_id());
