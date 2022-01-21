@@ -2,6 +2,7 @@
 #define RDF4CPP_LITERALBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/BackendNodeHandles.hpp>
 
 #include <compare>
 #include <memory>
@@ -10,13 +11,7 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-struct LiteralBackendHandle {
-    NodeID datatype_id;
-    std::string_view lexical_form;
-    std::string_view language_tag;
 
-    auto operator<=>( LiteralBackendHandle const&) const noexcept = default;
-};
 
 class LiteralBackend {
     NodeID datatype_id_;

@@ -2,6 +2,7 @@
 #define RDF4CPP_VARIABLEBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/BackendNodeHandles.hpp>
 
 #include <compare>
 #include <memory>
@@ -10,18 +11,7 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-struct VariableBackendHandle {
-    std::string_view name;
-    bool is_anonymous;
-    [[nodiscard]] std::string n_string() const noexcept {
-        if (is_anonymous)
-            return "_:" + std::string{name};
-        else
-            return "?" + std::string{name};
-    }
 
-    auto operator<=>( VariableBackendHandle const&) const noexcept = default;
-};
 
 class VariableBackend {
     std::string name_;

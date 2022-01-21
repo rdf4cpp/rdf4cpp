@@ -2,6 +2,7 @@
 #define RDF4CPP_BNODEBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/BackendNodeHandles.hpp>
 
 #include <compare>
 #include <memory>
@@ -9,14 +10,6 @@
 #include <string_view>
 
 namespace rdf4cpp::rdf::storage::node {
-
-struct BNodeBackendHandle {
-    std::string_view identifier;
-    [[nodiscard]] std::string n_string() const noexcept {
-        return "_:" + std::string{identifier};
-    }
-    auto operator<=>( BNodeBackendHandle const&) const noexcept = default;
-};
 
 class BNodeBackend {
     std::string identifier_;

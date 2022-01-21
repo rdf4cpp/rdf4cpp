@@ -2,6 +2,7 @@
 #define RDF4CPP_IRIBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/BackendNodeHandles.hpp>
 
 #include <compare>
 #include <memory>
@@ -10,15 +11,7 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-struct IRIBackendHandle {
-    std::string_view identifier;
 
-    [[nodiscard]] std::string n_string() const noexcept {
-        return "<" + std::string{identifier} + ">";
-    }
-
-    auto operator<=>( IRIBackendHandle const&) const noexcept = default;
-};
 
 class IRIBackend {
     std::string iri;

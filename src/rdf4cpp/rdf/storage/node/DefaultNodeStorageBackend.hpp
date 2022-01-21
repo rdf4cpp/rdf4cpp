@@ -50,10 +50,14 @@ public:
     [[nodiscard]] NodeID get_variable_id(std::string_view identifier, bool anonymous) override;
 
     [[nodiscard]] NodeID get_bnode_id(std::string_view identifier) override;
-    IRIBackendHandle get_iri_handle(NodeIDValue id) const override;
-    LiteralBackendHandle get_literal_handle(NodeIDValue id) const override;
-    BNodeBackendHandle get_bnode_handle(NodeIDValue id) const override;
-    VariableBackendHandle get_variable_handle(NodeIDValue id) const override;
+
+    [[nodiscard]] IRIBackendHandle get_iri_handle(NodeIDValue id) const override;
+
+    [[nodiscard]] LiteralBackendHandle get_literal_handle(NodeIDValue id) const override;
+
+    [[nodiscard]] BNodeBackendHandle get_bnode_handle(NodeIDValue id) const override;
+
+    [[nodiscard]] VariableBackendHandle get_variable_handle(NodeIDValue id) const override;
 
 private:
     std::pair<LiteralBackend *, NodeID> lookup_or_insert_literal(LiteralBackend literal);
