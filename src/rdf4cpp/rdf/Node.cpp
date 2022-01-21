@@ -78,44 +78,49 @@ bool Node::is_iri() const {
 }
 
 std::strong_ordering Node::operator<=>(const Node &other) const {
-    if (auto comp_id = this->handle_ <=> other.handle_; comp_id == std::partial_ordering::equivalent) {
-        return std::strong_ordering::equal;
-    } else if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
-        return comp_type;
-    } else {  // same type, different id.
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() <=> other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
+    [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
+        return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) <=> std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
+    } else {  // different NodeStorage
+        if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
+            return comp_type;
+        } else {  // same type, different id.
+            switch (this->handle_.type()) {
+                case RDFNodeType::IRI:
+                    return this->handle_.iri_backend() <=> other.handle_.iri_backend();
+                case RDFNodeType::BNode:
+                    return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
+                case RDFNodeType::Literal:
+                    return this->handle_.literal_backend() <=> other.handle_.literal_backend();
+                case RDFNodeType::Variable:
+                    return this->handle_.variable_backend() <=> other.handle_.variable_backend();
+            }
+            return std::strong_ordering::less;
         }
-        return std::strong_ordering::less;
     }
 }
+
 bool Node::operator==(const Node &other) const {
-    if (this->handle_ == other.handle_) {
-        return true;
-    } else if (this->handle_.type() != other.handle_.type()) {
-        return false;
-    } else {
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() == other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() == other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() == other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() == other.handle_.variable_backend();
+    [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
+        return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) == std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
+    } else {  // different NodeStorage
+        if (this->handle_.type() != other.handle_.type()) {
+            return false;
+        } else {  // same type, different id.
+            switch (this->handle_.type()) {
+                case RDFNodeType::IRI:
+                    return this->handle_.iri_backend() == other.handle_.iri_backend();
+                case RDFNodeType::BNode:
+                    return this->handle_.bnode_backend() == other.handle_.bnode_backend();
+                case RDFNodeType::Literal:
+                    return this->handle_.literal_backend() == other.handle_.literal_backend();
+                case RDFNodeType::Variable:
+                    return this->handle_.variable_backend() == other.handle_.variable_backend();
+            }
+            return false;
         }
-        return false;
     }
 }
- bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept {
+bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept {
     return lhs == *rhs;
 }
 
