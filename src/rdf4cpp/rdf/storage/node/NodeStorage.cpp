@@ -23,6 +23,23 @@ void NodeStorage::primary_instance(const NodeStorage &node_context) {
 NodeStorage NodeStorage::new_instance() {
     return NodeStorage(new DefaultNodeStorageBackend());
 }
+NodeStorage NodeStorage::register_backend(INodeStorageBackend *backend_instance) {
+    if (backend_instance == nullptr)
+        throw std::runtime_error("Backend instance must not be null.");
+
+    auto &stored_instance = node_context_instances[backend_instance->manager_id.value];
+
+    if (stored_instance != backend_instance and stored_instance != nullptr)
+        throw std::runtime_error("A NodeStorage with manager_id " + std::to_string(backend_instance->manager_id.value) + " is already registered.");
+
+    node_context_instances[backend_instance->manager_id.value] = backend_instance;
+    return NodeStorage(backend_instance);
+}
+void NodeStorage::unregister_backend(INodeStorageBackend *backend_instance) {
+    if (backend_instance == nullptr)
+        throw std::runtime_error("Backend instance must not be null.");
+    node_context_instances[backend_instance->manager_id.value] = nullptr;
+}
 std::optional<NodeStorage> NodeStorage::lookup_instance(NodeStorageID id) {
     // TODO: would be better if we returned a reference here, i.e. std::optional<std::reference_wrapper<NodeStorage>>
     INodeStorageBackend *backend = lookup_backend_instance(id);

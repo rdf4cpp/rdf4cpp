@@ -37,7 +37,6 @@ public:
 
     static void primary_instance(const NodeStorage &node_context);
 
-
     template<typename BackendImpl, typename... Args>
     static inline NodeStorage new_instance(Args... args) {
         return NodeStorage(new BackendImpl(args...));
@@ -46,6 +45,10 @@ public:
     static NodeStorage new_instance();
 
     static std::optional<NodeStorage> lookup_instance(NodeStorageID id);
+
+    static NodeStorage register_backend(INodeStorageBackend *backend_instance);
+
+    static void unregister_backend(INodeStorageBackend *backend_instance);
 
 
     ~NodeStorage();
