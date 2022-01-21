@@ -4,15 +4,27 @@ namespace rdf4cpp::rdf::storage::node {
 NodeStorage NodeStorage::default_instance_ = {};
 INodeStorageBackend *NodeStorage::lookup_backend_instance(NodeStorageID id) {
     std::call_once(default_init_once_flag, []() {
-        default_instance_ = new_instance();
-        default_node_context_id = default_instance_.id();
+        if (node_context_instances[0] == nullptr) {
+            default_instance_ = new_instance();
+            default_node_context_id = default_instance_.id();
+            node_context_instances[0] = default_instance_.backend_;
+        } else {
+            default_instance_ = NodeStorage(node_context_instances[0]);
+            default_node_context_id = node_context_instances[0]->manager_id;
+        }
     });
     return node_context_instances[id.value];
 }
 NodeStorage &NodeStorage::primary_instance() {
     std::call_once(default_init_once_flag, []() {
-        default_instance_ = new_instance();
-        default_node_context_id = default_instance_.id();
+        if (node_context_instances[0] == nullptr) {
+            default_instance_ = new_instance();
+            default_node_context_id = default_instance_.id();
+            node_context_instances[0] = default_instance_.backend_;
+        } else {
+            default_instance_ = NodeStorage(node_context_instances[0]);
+            default_node_context_id = node_context_instances[0]->manager_id;
+        }
     });
     return default_instance_;
 }

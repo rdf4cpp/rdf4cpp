@@ -13,7 +13,7 @@ std::strong_ordering BNodeBackend::operator<=>(std::unique_ptr<BNodeBackend> con
 std::string BNodeBackend::n_string() const noexcept {
     return "_:" + identifier_;
 }
-std::string_view BNodeBackend::indentifier() const noexcept {
+std::string_view BNodeBackend::identifier() const noexcept {
     return identifier_;
 }
 std::strong_ordering operator<=>(const std::unique_ptr<BNodeBackend> &self, const std::unique_ptr<BNodeBackend> &other) noexcept {

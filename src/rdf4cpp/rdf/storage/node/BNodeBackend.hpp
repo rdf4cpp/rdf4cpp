@@ -18,7 +18,7 @@ public:
     auto operator<=>(const BNodeBackend &) const noexcept = default;
     std::strong_ordering operator<=>(std::unique_ptr<BNodeBackend> const &other) const noexcept;
     [[nodiscard]] std::string n_string() const noexcept;
-    [[nodiscard]] std::string_view indentifier() const noexcept;
+    [[nodiscard]] std::string_view identifier() const noexcept;
 };
 
 std::strong_ordering operator<=>(std::unique_ptr<BNodeBackend> const &self, std::unique_ptr<BNodeBackend> const &other) noexcept;
