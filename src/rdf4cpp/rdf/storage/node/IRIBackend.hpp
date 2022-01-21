@@ -6,18 +6,19 @@
 #include <compare>
 #include <memory>
 #include <string>
+#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node {
 class IRIBackend {
     std::string iri;
 
 public:
-    explicit IRIBackend(std::string iri) noexcept;
+    explicit IRIBackend(std::string_view iri) noexcept;
     // TODO: handle normalization in comparison
     auto operator<=>(const IRIBackend &) const = default;
     std::strong_ordering operator<=>(std::unique_ptr<IRIBackend> const &other) const noexcept;
 
-    const std::string &identifier() const noexcept;
+    [[nodiscard]] std::string_view identifier() const noexcept;
 
     [[nodiscard]] std::string n_string() const noexcept;
 };

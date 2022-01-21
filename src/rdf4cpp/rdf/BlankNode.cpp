@@ -7,7 +7,7 @@ BlankNode::BlankNode(const std::string &identifier, Node::NodeStorage &node_stor
     : Node(BackendNodeHandle{node_storage.get_bnode(identifier).second}) {}
 BlankNode::BlankNode(Node::BackendNodeHandle handle) : Node(handle) {}
 
-const std::string &BlankNode::identifier() const { return handle_.bnode_backend().indentifier(); }
+std::string_view BlankNode::identifier() const { return handle_.bnode_backend().indentifier(); }
 
 BlankNode::operator std::string() const {
     return handle_.bnode_backend().n_string();

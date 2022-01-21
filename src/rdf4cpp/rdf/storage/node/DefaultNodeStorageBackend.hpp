@@ -37,19 +37,19 @@ public:
 
     ~DefaultNodeStorageBackend() override = default;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_string_literal(const std::string &lexical_form) override;
+    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_string_literal(std::string_view lexical_form) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const std::string &datatype) override;
+    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, std::string_view datatype) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const NodeID &datatype_id) override;
+    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) override;
 
-    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_lang_literal(const std::string &lexical_form, const std::string &lang) override;
+    [[nodiscard]] std::pair<LiteralBackend *, NodeID> get_lang_literal(std::string_view lexical_form, std::string_view lang) override;
 
-    [[nodiscard]] std::pair<IRIBackend *, NodeID> get_iri(const std::string &iri) override;
+    [[nodiscard]] std::pair<IRIBackend *, NodeID> get_iri(std::string_view iri) override;
 
-    [[nodiscard]] std::pair<VariableBackend *, NodeID> get_variable(const std::string &identifier, bool anonymous) override;
+    [[nodiscard]] std::pair<VariableBackend *, NodeID> get_variable(std::string_view identifier, bool anonymous) override;
 
-    [[nodiscard]] std::pair<BNodeBackend *, NodeID> get_bnode(const std::string &identifier) override;
+    [[nodiscard]] std::pair<BNodeBackend *, NodeID> get_bnode(std::string_view identifier) override;
 
     [[nodiscard]] IRIBackend *lookup_iri(NodeIDValue id) const override;
 

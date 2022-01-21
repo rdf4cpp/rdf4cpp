@@ -39,7 +39,7 @@ int main() {
 
     Literal lit1("xxxx");
     Literal lit2("xxxx", iri_pred);
-    Literal lit3("xxxx", "http://example.com/pred2");
+    Literal lit3("xxxx", IRI("http://example.com/pred2"));
     Literal lit4("xxxx", "de");
     Literal lit5{"xxxx", "de"};
 

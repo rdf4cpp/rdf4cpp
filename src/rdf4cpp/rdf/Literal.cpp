@@ -24,18 +24,18 @@ IRI Literal::datatype() const {
     return IRI(datatype_id);
 }
 
-const std::string &Literal::lexical_form() const {
+std::string_view Literal::lexical_form() const {
     return handle_.literal_backend().lexical_form();
 }
 
-const std::string &Literal::language_tag() const {
+std::string_view Literal::language_tag() const {
     return handle_.literal_backend().language_tag();
 }
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
     const auto &literal = handle_.literal_backend();
     if (literal.datatype_id().node_id() == NodeID::rdf_langstring_iri.first) {
-        return literal.quote_lexical() + "@" + literal.language_tag();
+        return literal.quote_lexical() + "@" + std::string{literal.language_tag()};
     } else {
         return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->n_string();
     }

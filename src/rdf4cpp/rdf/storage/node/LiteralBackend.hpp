@@ -6,6 +6,8 @@
 #include <compare>
 #include <memory>
 #include <string>
+#include <string_view>
+
 namespace rdf4cpp::rdf::storage::node {
 
 class LiteralBackend {
@@ -15,17 +17,17 @@ class LiteralBackend {
 
 public:
     [[nodiscard]] std::string quote_lexical() const noexcept;
-    LiteralBackend(std::string lexical, const NodeID &dataType, std::string langTag = "") noexcept;
+    LiteralBackend(std::string_view lexical, const NodeID &dataType, std::string_view langTag = "") noexcept;
     std::strong_ordering operator<=>(const LiteralBackend &) const noexcept;
     std::strong_ordering operator<=>(std::unique_ptr<LiteralBackend> const &other) const noexcept;
 
     bool operator==(const LiteralBackend &) const noexcept;
 
-    [[nodiscard]] const std::string &lexical_form() const noexcept;
+    [[nodiscard]] std::string_view lexical_form() const noexcept;
 
     [[nodiscard]] const NodeID &datatype_id() const noexcept;
 
-    [[nodiscard]] const std::string &language_tag() const noexcept;
+    [[nodiscard]] std::string_view language_tag() const noexcept;
 };
 
 std::strong_ordering operator<=>(std::unique_ptr<LiteralBackend> const &self, std::unique_ptr<LiteralBackend> const &other) noexcept;

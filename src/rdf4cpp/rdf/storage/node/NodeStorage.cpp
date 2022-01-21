@@ -91,25 +91,25 @@ size_t NodeStorage::nodes_in_use() const noexcept {
 NodeStorageID NodeStorage::id() const noexcept {
     return backend_->manager_id;
 }
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_string_literal(const std::string &lexical_form) {
+std::pair<LiteralBackend *, NodeID> NodeStorage::get_string_literal(std::string_view lexical_form) {
     return backend_->get_string_literal(lexical_form);
 }
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(const std::string &lexical_form, const std::string &datatype) {
+std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(std::string_view lexical_form, std::string_view datatype) {
     return backend_->get_typed_literal(lexical_form, datatype);
 }
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(const std::string &lexical_form, const NodeID &datatype_id) {
+std::pair<LiteralBackend *, NodeID> NodeStorage::get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) {
     return backend_->get_typed_literal(lexical_form, datatype_id);
 }
-std::pair<LiteralBackend *, NodeID> NodeStorage::get_lang_literal(const std::string &lexical_form, const std::string &lang) {
+std::pair<LiteralBackend *, NodeID> NodeStorage::get_lang_literal(std::string_view lexical_form, std::string_view lang) {
     return backend_->get_lang_literal(lexical_form, lang);
 }
-std::pair<IRIBackend *, NodeID> NodeStorage::get_iri(const std::string &iri) {
+std::pair<IRIBackend *, NodeID> NodeStorage::get_iri(std::string_view iri) {
     return backend_->get_iri(iri);
 }
-std::pair<VariableBackend *, NodeID> NodeStorage::get_variable(const std::string &identifier, bool anonymous) {
+std::pair<VariableBackend *, NodeID> NodeStorage::get_variable(std::string_view identifier, bool anonymous) {
     return backend_->get_variable(identifier, anonymous);
 }
-std::pair<BNodeBackend *, NodeID> NodeStorage::get_bnode(const std::string &identifier) {
+std::pair<BNodeBackend *, NodeID> NodeStorage::get_bnode(std::string_view identifier) {
     return backend_->get_bnode(identifier);
 }
 IRIBackend *NodeStorage::lookup_iri(NodeID id) {

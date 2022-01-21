@@ -36,19 +36,19 @@ public:
     INodeStorageBackend();
     virtual ~INodeStorageBackend() = 0;
 
-    virtual std::pair<LiteralBackend *, NodeID> get_string_literal(const std::string &lexical_form) = 0;
+    virtual std::pair<LiteralBackend *, NodeID> get_string_literal(std::string_view lexical_form) = 0;
 
-    virtual std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const std::string &datatype) = 0;
+    virtual std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, std::string_view datatype) = 0;
 
-    virtual std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const NodeID &datatype_id) = 0;
+    virtual std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) = 0;
 
-    virtual std::pair<LiteralBackend *, NodeID> get_lang_literal(const std::string &lexical_form, const std::string &lang) = 0;
+    virtual std::pair<LiteralBackend *, NodeID> get_lang_literal(std::string_view lexical_form, std::string_view lang) = 0;
 
-    virtual std::pair<IRIBackend *, NodeID> get_iri(const std::string &iri) = 0;
+    virtual std::pair<IRIBackend *, NodeID> get_iri(std::string_view iri) = 0;
 
-    virtual std::pair<VariableBackend *, NodeID> get_variable(const std::string &identifier, bool anonymous) = 0;
+    virtual std::pair<VariableBackend *, NodeID> get_variable(std::string_view identifier, bool anonymous) = 0;
 
-    virtual std::pair<BNodeBackend *, NodeID> get_bnode(const std::string &identifier) = 0;
+    virtual std::pair<BNodeBackend *, NodeID> get_bnode(std::string_view identifier) = 0;
 
     [[nodiscard]] virtual IRIBackend *lookup_iri(NodeIDValue id) const = 0;
 

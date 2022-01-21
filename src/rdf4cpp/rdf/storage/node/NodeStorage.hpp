@@ -61,15 +61,15 @@ public:
 
     [[nodiscard]] NodeStorageID id() const noexcept;
 
-    std::pair<LiteralBackend *, NodeID> get_string_literal(const std::string &lexical_form);
+    std::pair<LiteralBackend *, NodeID> get_string_literal(std::string_view lexical_form);
 
-    std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const std::string &datatype);
+    std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, std::string_view datatype);
 
-    std::pair<LiteralBackend *, NodeID> get_typed_literal(const std::string &lexical_form, const NodeID &datatype_id);
+    std::pair<LiteralBackend *, NodeID> get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id);
 
-    std::pair<LiteralBackend *, NodeID> get_lang_literal(const std::string &lexical_form, const std::string &lang);
+    std::pair<LiteralBackend *, NodeID> get_lang_literal(std::string_view lexical_form, std::string_view lang);
 
-    std::pair<IRIBackend *, NodeID> get_iri(const std::string &iri);
+    std::pair<IRIBackend *, NodeID> get_iri(std::string_view iri);
 
     /**
      * Create or lookup a Variable
@@ -77,14 +77,14 @@ public:
      * @param anonymous true if string repr. it starts with `?` and false if it starts with `?`
      * @return a pointer to the VariableBackend and its NodeID
      */
-    std::pair<VariableBackend *, NodeID> get_variable(const std::string &identifier, bool anonymous = false);
+    std::pair<VariableBackend *, NodeID> get_variable(std::string_view identifier, bool anonymous = false);
 
     /**
      * Create or lookup a BlankNode
      * @param identifier name without `_:`
      * @return a pointer to the BNodeBackend and its NodeID
      */
-    std::pair<BNodeBackend *, NodeID> get_bnode(const std::string &identifier);
+    std::pair<BNodeBackend *, NodeID> get_bnode(std::string_view identifier);
 
     static IRIBackend *lookup_iri(NodeID id);
 

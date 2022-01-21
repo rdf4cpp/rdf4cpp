@@ -4,26 +4,26 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_string_literal(const std::string &lexical_form) {
+std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_string_literal(std::string_view lexical_form) {
     return lookup_or_insert_literal(LiteralBackend{lexical_form, NodeID{manager_id, RDFNodeType::IRI, NodeID::xsd_string_iri.first}});
 }
-std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_typed_literal(const std::string &lexical_form, const std::string &datatype) {
+std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_typed_literal(std::string_view lexical_form, std::string_view datatype) {
     return lookup_or_insert_literal(LiteralBackend{lexical_form, lookup_or_insert_iri(IRIBackend{datatype}).second});
 }
-std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_typed_literal(const std::string &lexical_form, const NodeID &datatype_id) {
+std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_typed_literal(std::string_view lexical_form, const NodeID &datatype_id) {
     return lookup_or_insert_literal(LiteralBackend{lexical_form, datatype_id});
 }
-std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_lang_literal(const std::string &lexical_form, const std::string &lang) {
+std::pair<LiteralBackend *, NodeID> DefaultNodeStorageBackend::get_lang_literal(std::string_view lexical_form, std::string_view lang) {
     return lookup_or_insert_literal(LiteralBackend{lexical_form, NodeID{manager_id, RDFNodeType::IRI, NodeID::rdf_langstring_iri.first}, lang});
 }
-std::pair<IRIBackend *, NodeID> DefaultNodeStorageBackend::get_iri(const std::string &iri) {
+std::pair<IRIBackend *, NodeID> DefaultNodeStorageBackend::get_iri(std::string_view iri) {
     // TODO: normalize?
     return lookup_or_insert_iri(IRIBackend{iri});
 }
-std::pair<VariableBackend *, NodeID> DefaultNodeStorageBackend::get_variable(const std::string &identifier, bool anonymous) {
+std::pair<VariableBackend *, NodeID> DefaultNodeStorageBackend::get_variable(std::string_view identifier, bool anonymous) {
     return lookup_or_insert_variable(VariableBackend{identifier, anonymous});
 }
-std::pair<BNodeBackend *, NodeID> DefaultNodeStorageBackend::get_bnode(const std::string &identifier) {
+std::pair<BNodeBackend *, NodeID> DefaultNodeStorageBackend::get_bnode(std::string_view identifier) {
     return lookup_or_insert_bnode(BNodeBackend{identifier});
 }
 IRIBackend *DefaultNodeStorageBackend::lookup_iri(NodeIDValue id) const {

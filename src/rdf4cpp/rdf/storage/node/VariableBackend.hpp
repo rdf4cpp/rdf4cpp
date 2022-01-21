@@ -6,6 +6,7 @@
 #include <compare>
 #include <memory>
 #include <string>
+#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node {
 
@@ -14,7 +15,7 @@ class VariableBackend {
     bool anonymous_;
 
 public:
-    explicit VariableBackend(std::string name, bool anonymous = false) noexcept;
+    explicit VariableBackend(std::string_view name, bool anonymous = false) noexcept;
     auto operator<=>(const VariableBackend &) const noexcept = default;
     std::strong_ordering operator<=>(std::unique_ptr<VariableBackend> const &other) const noexcept;
 
@@ -22,7 +23,7 @@ public:
 
     [[nodiscard]] bool is_anonymous() const noexcept;
 
-    [[nodiscard]] const std::string &name() const noexcept;
+    [[nodiscard]] std::string_view name() const noexcept;
 };
 
 std::strong_ordering operator<=>(std::unique_ptr<VariableBackend> const &self, std::unique_ptr<VariableBackend> const &other) noexcept;

@@ -11,7 +11,7 @@ bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID
     return this->handle_.variable_backend().is_anonymous();
 }
-const std::string &Variable::name() const {
+std::string_view Variable::name() const {
     return this->handle_.variable_backend().name();
 }
 Variable::operator std::string() const {

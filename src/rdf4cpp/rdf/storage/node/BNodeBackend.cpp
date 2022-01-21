@@ -2,8 +2,8 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-BNodeBackend::BNodeBackend(std::string identifier) noexcept
-    : identifier_(std::move(identifier)) {}
+BNodeBackend::BNodeBackend(std::string_view identifier) noexcept
+    : identifier_(identifier) {}
 std::strong_ordering BNodeBackend::operator<=>(std::unique_ptr<BNodeBackend> const &other) const noexcept {
     if (other != nullptr)
         return *this <=> *other;
@@ -13,7 +13,7 @@ std::strong_ordering BNodeBackend::operator<=>(std::unique_ptr<BNodeBackend> con
 std::string BNodeBackend::n_string() const noexcept {
     return "_:" + identifier_;
 }
-const std::string &BNodeBackend::indentifier() const noexcept {
+std::string_view BNodeBackend::indentifier() const noexcept {
     return identifier_;
 }
 std::strong_ordering operator<=>(const std::unique_ptr<BNodeBackend> &self, const std::unique_ptr<BNodeBackend> &other) noexcept {

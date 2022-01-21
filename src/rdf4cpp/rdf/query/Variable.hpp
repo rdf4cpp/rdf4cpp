@@ -18,7 +18,7 @@ public:
 
     [[nodiscard]] bool is_anonymous() const;
 
-    [[nodiscard]] const std::string &name() const;
+    [[nodiscard]] std::string_view name() const;
 
     [[nodiscard]] explicit operator std::string() const;
 

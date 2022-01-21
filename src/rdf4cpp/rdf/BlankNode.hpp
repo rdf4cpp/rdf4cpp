@@ -22,7 +22,7 @@ public:
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
-    [[nodiscard]] const std::string &identifier() const;
+    [[nodiscard]] std::string_view identifier() const;
 
     [[nodiscard]] explicit operator std::string() const;
 

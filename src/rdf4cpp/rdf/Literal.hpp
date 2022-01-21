@@ -49,7 +49,7 @@ public:
     inline static Literal make(T compatible_value,
                                NodeStorage &node_storage = NodeStorage::primary_instance()) {
         return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
-                       datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(),
+                       IRI(datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(), node_storage),
                        node_storage);
     }
 
@@ -58,7 +58,7 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-    [[nodiscard]] const std::string &lexical_form() const;
+    [[nodiscard]] std::string_view lexical_form() const;
 
     /**
      * Returns the datatype IRI of this.
@@ -70,7 +70,7 @@ public:
      * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
      * @return language tag
      */
-    [[nodiscard]] const std::string &language_tag() const;
+    [[nodiscard]] std::string_view language_tag() const;
 
     [[nodiscard]] explicit operator std::string() const;
 

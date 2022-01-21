@@ -2,8 +2,8 @@
 
 namespace rdf4cpp::rdf::storage::node {
 
-VariableBackend::VariableBackend(std::string name, bool anonymous) noexcept
-    : name_(std::move(name)), anonymous_(anonymous) {}
+VariableBackend::VariableBackend(std::string_view name, bool anonymous) noexcept
+    : name_(name), anonymous_(anonymous) {}
 std::strong_ordering VariableBackend::operator<=>(std::unique_ptr<VariableBackend> const &other) const noexcept {
     if (other != nullptr)
         return *this <=> *other;
@@ -19,7 +19,7 @@ std::string VariableBackend::n_string() const noexcept {
 bool VariableBackend::is_anonymous() const noexcept {
     return anonymous_;
 }
-const std::string &VariableBackend::name() const noexcept {
+std::string_view VariableBackend::name() const noexcept {
     return name_;
 }
 std::strong_ordering operator<=>(const std::unique_ptr<VariableBackend> &self, const std::unique_ptr<VariableBackend> &other) noexcept {
