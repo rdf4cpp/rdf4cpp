@@ -7,15 +7,15 @@ namespace rdf4cpp::rdf {
 
 Literal::Literal(const Node::NodeID &id) : Node(id) {}
 Literal::Literal() : Node() {}
-Literal::Literal(const std::string &lexical_form, Node::NodeStorage &node_storage)
+Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
     : Node(BackendNodeHandle{node_storage.get_string_literal_id(lexical_form)}) {}
-Literal::Literal(const std::string &lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
+Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
     : Node(BackendNodeHandle{
               node_storage.get_typed_literal_id(
                                   lexical_form,
                                   datatype.handle_.id())
                       }) {}
-Literal::Literal(const std::string &lexical_form, const std::string &lang, Node::NodeStorage &node_storage)
+Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
     : Node(BackendNodeHandle{node_storage.get_lang_literal_id(lexical_form, lang)}) {}
 
 

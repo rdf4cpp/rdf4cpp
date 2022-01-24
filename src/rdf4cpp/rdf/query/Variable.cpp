@@ -3,7 +3,7 @@
 namespace rdf4cpp::rdf::query {
 Variable::Variable() : Node() {}
 Variable::Variable(const Node::NodeID &id) : Node(id) {}
-Variable::Variable(const std::string &identifier, bool anonymous, NodeStorage &node_storage)
+Variable::Variable(std::string_view identifier, bool anonymous, NodeStorage &node_storage)
     : Node(BackendNodeHandle{node_storage.get_variable_id(identifier, anonymous)}) {}
 Variable::Variable(Node::BackendNodeHandle handle) : Node(handle) {}
 

@@ -15,7 +15,7 @@ private:
 
 public:
     BlankNode();
-    explicit BlankNode(const std::string &identifier,
+    explicit BlankNode(std::string_view identifier,
                        NodeStorage &node_storage = NodeStorage::primary_instance());
 
     /**

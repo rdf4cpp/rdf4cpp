@@ -23,7 +23,7 @@ public:
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    explicit IRI(const std::string &iri,
+    explicit IRI(std::string_view iri,
                  NodeStorage &node_storage = NodeStorage::primary_instance());
 
     /**

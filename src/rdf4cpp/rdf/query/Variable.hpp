@@ -13,7 +13,7 @@ protected:
 public:
     Variable();
 
-    explicit Variable(const std::string &name, bool anonymous = false,
+    explicit Variable(std::string_view name, bool anonymous = false,
                       NodeStorage &node_storage = NodeStorage::primary_instance());
 
     [[nodiscard]] bool is_anonymous() const;

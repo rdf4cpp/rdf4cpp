@@ -20,7 +20,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      */
      //TODO: use string_view
-    explicit Literal(const std::string &lexical_form,
+    explicit Literal(std::string_view lexical_form,
                      NodeStorage &node_storage = NodeStorage::primary_instance());
     /**
      * Constructs a Literal from a lexical form and a datatype.
@@ -28,7 +28,7 @@ public:
      * @param datatype the datatype
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(const std::string &lexical_form, const IRI &datatype,
+    Literal(std::string_view lexical_form, const IRI &datatype,
             NodeStorage &node_storage = NodeStorage::primary_instance());
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
@@ -36,7 +36,7 @@ public:
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(const std::string &lexical_form, const std::string &lang,
+    Literal(std::string_view lexical_form, std::string_view lang,
             NodeStorage &node_storage = NodeStorage::primary_instance());
 
     /**

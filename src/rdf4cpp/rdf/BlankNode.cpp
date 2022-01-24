@@ -3,7 +3,7 @@
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode(const Node::NodeID &id) : Node(id) {}
 BlankNode::BlankNode() : Node{} {}
-BlankNode::BlankNode(const std::string &identifier, Node::NodeStorage &node_storage)
+BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storage)
     : Node(BackendNodeHandle{node_storage.get_bnode_id(identifier)}) {}
 BlankNode::BlankNode(Node::BackendNodeHandle handle) : Node(handle) {}
 
