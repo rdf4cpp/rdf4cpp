@@ -26,11 +26,11 @@ struct __attribute__((__packed__)) LiteralID {
     // TODO: inline literal types < 42 bits into the literalID
     uint64_t value : 42;
 
-    explicit LiteralID(uint64_t value);
+    explicit LiteralID(uint64_t value)  noexcept;
 
-    auto operator<=>(const LiteralID &) const = default;
+    auto operator<=>(const LiteralID &) const  noexcept= default;
 
-    bool operator==(const LiteralID &) const = default;
+    bool operator==(const LiteralID &) const  noexcept= default;
 
     LiteralID &operator++() noexcept;
 
@@ -46,17 +46,17 @@ struct __attribute__((__packed__)) NodeIDValue {
         } literal_;
     };
 
-    NodeIDValue(uint64_t value);
-    NodeIDValue(LiteralID literalId, LiteralType literalType);
+    NodeIDValue(uint64_t value)  noexcept;
+    NodeIDValue(LiteralID literalId, LiteralType literalType)  noexcept;
 
 
-    [[nodiscard]] LiteralID literal_id() const;
+    [[nodiscard]] LiteralID literal_id() const  noexcept;
 
-    [[nodiscard]] LiteralType literal_type() const;
+    [[nodiscard]] LiteralType literal_type() const  noexcept;
 
-    std::strong_ordering operator<=>(const NodeIDValue &other) const;
+    std::strong_ordering operator<=>(const NodeIDValue &other) const  noexcept;
 
-    bool operator==(const NodeIDValue &other) const;
+    bool operator==(const NodeIDValue &other) const  noexcept;
 
     NodeIDValue &operator++() noexcept;
 
@@ -66,8 +66,8 @@ struct __attribute__((__packed__)) NodeIDValue {
 struct __attribute__((__packed__)) NodeStorageID {
     uint16_t value : 10;
 
-    auto operator<=>(const NodeStorageID &) const = default;
-    bool operator==(const NodeStorageID &) const = default;
+    auto operator<=>(const NodeStorageID &) const noexcept = default;
+    bool operator==(const NodeStorageID &) const noexcept = default;
 };
 
 class NodeID {
@@ -95,35 +95,35 @@ private:
     };
 
 public:
-    NodeID();
-    explicit NodeID(size_t raw);
+    NodeID() noexcept;
+    explicit NodeID(size_t raw) noexcept;
 
-    NodeID(NodeStorageID manager_id, RDFNodeType type, NodeIDValue node_id, uint8_t tagging_bits = uint8_t(0));
+    NodeID(NodeStorageID manager_id, RDFNodeType type, NodeIDValue node_id, uint8_t tagging_bits = uint8_t(0)) noexcept;
 
-    NodeID(NodeStorageID manager_id, RDFNodeType type, LiteralID literal_id, LiteralType literal_type, uint8_t tagging_bits = uint8_t(0));
+    NodeID(NodeStorageID manager_id, RDFNodeType type, LiteralID literal_id, LiteralType literal_type, uint8_t tagging_bits = uint8_t(0)) noexcept;
 
-    [[nodiscard]] NodeStorageID manager_id() const;
+    [[nodiscard]] NodeStorageID manager_id() const noexcept;
 
-    [[nodiscard]] uint8_t free_tagging_bits() const;
+    [[nodiscard]] uint8_t free_tagging_bits() const noexcept;
     void free_tagging_bits(uint8_t new_value);
 
-    [[nodiscard]] const NodeIDValue &node_id() const;
+    [[nodiscard]] const NodeIDValue &node_id() const noexcept;
 
-    [[nodiscard]] uint64_t raw() const;
+    [[nodiscard]] uint64_t raw() const noexcept;
 
-    [[nodiscard]] RDFNodeType type() const;
+    [[nodiscard]] RDFNodeType type() const noexcept;
 
-    [[nodiscard]] bool is_type(RDFNodeType type_) const;
+    [[nodiscard]] bool is_type(RDFNodeType type_) const noexcept;
 
-    [[nodiscard]] bool empty() const;
+    [[nodiscard]] bool empty() const noexcept;
 
     // TODO: support basic xsd literal datatypes for comparison
-    std::partial_ordering operator<=>(const NodeID &other) const;
+    std::partial_ordering operator<=>(const NodeID &other) const noexcept;
 
-    bool operator==(const NodeID &other) const;
+    bool operator==(const NodeID &other) const noexcept;
 
     // TODO: operator std::string and operator<< overload
-    [[nodiscard]] std::string as_string() const;
+    [[nodiscard]] std::string as_string() const noexcept;
 };
 
 

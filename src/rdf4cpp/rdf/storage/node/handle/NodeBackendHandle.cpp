@@ -2,7 +2,7 @@
 
 namespace rdf4cpp::rdf::storage::node::handle {
 
-NodeBackendHandle::NodeBackendHandle(identifier::NodeID node_id) : node_id_(node_id) {
+NodeBackendHandle::NodeBackendHandle(identifier::NodeID node_id) noexcept : node_id_(node_id) {
 }
 
 identifier::RDFNodeType NodeBackendHandle::type() const noexcept {
@@ -26,19 +26,19 @@ bool NodeBackendHandle::empty() const noexcept {
 identifier::NodeID NodeBackendHandle::id() const noexcept {
     return node_id_;
 }
-IRIBackendView NodeBackendHandle::iri_backend() const {
+IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
     return NodeStorage::get_iri_handle(node_id_);
 }
-LiteralBackendView NodeBackendHandle::literal_backend() const {
+LiteralBackendView NodeBackendHandle::literal_backend() const noexcept {
     return NodeStorage::get_literal_handle(node_id_);
 }
-BNodeBackendView NodeBackendHandle::bnode_backend() const {
+BNodeBackendView NodeBackendHandle::bnode_backend() const noexcept {
     return NodeStorage::get_bnode_handle(node_id_);
 }
-VariableBackendView NodeBackendHandle::variable_backend() const {
+VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
     return NodeStorage::get_variable_handle(node_id_);
 }
-NodeStorage NodeBackendHandle::node_storage() const {
+NodeStorage NodeBackendHandle::node_storage() const noexcept {
     return *NodeStorage::lookup_instance(node_id_.manager_id());
 }
 

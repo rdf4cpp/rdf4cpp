@@ -32,8 +32,8 @@ protected:
     using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
     NodeBackendHandle handle_;
 
-    explicit Node(NodeID id);
-    explicit Node(const NodeBackendHandle &id);
+    explicit Node(NodeID id) noexcept;
+    explicit Node(const NodeBackendHandle &id) noexcept;
 
 public:
     [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
@@ -44,7 +44,7 @@ public:
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
      */
-    Node() = default;
+    Node() noexcept = default;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -61,27 +61,27 @@ public:
      * Checks weather the node is a Literal. If yes, it is safe to convert it with `auto literal = (Literal) rdf_node;`
      * @return if this is a Literal
      */
-    [[nodiscard]] bool is_literal() const;
+    [[nodiscard]] bool is_literal() const noexcept;
 
     /**
      * Checks weather the node is a Variable. If yes, it is safe to convert it with `auto variable = (Variable) rdf_node;`
      * @return if this is a Variable
      */
-    [[nodiscard]] bool is_variable() const;
+    [[nodiscard]] bool is_variable() const noexcept;
 
     /**
      * Checks weather the node is a BlankNode. If yes, it is safe to convert it with `auto bnode = (BlankNode) rdf_node;`
      * @return if this is a BlankNode
      */
-    [[nodiscard]] bool is_blank_node() const;
+    [[nodiscard]] bool is_blank_node() const noexcept;
 
     /**
      * Checks weather the node is a IRI. If yes, it is safe to convert it with `auto iri = (Literal) rdf_node;`
      * @return if this is a IRI
      */
-    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_iri() const noexcept;
 
-    bool operator==(const Node &other) const;
+    bool operator==(const Node &other) const noexcept;
 
     friend bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept;
 
@@ -93,7 +93,7 @@ public:
 
     friend bool operator==(const std::unique_ptr<Node> &lhs, const Node *rhs) noexcept;
 
-    std::partial_ordering operator<=>(const Node &other) const;
+    std::partial_ordering operator<=>(const Node &other) const noexcept;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`

@@ -9,9 +9,9 @@
 
 namespace rdf4cpp::rdf {
 
-Node::Node(Node::NodeID id) : handle_(id) {}
+Node::Node(Node::NodeID id) noexcept : handle_(id) {}
 
-Node::Node(const Node::NodeBackendHandle &id) : handle_(id) {}
+Node::Node(const Node::NodeBackendHandle &id) noexcept : handle_(id) {}
 
 Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
     if (this->backend_handle().node_storage() == node_storage)
@@ -64,20 +64,20 @@ Node::operator std::string() const {
     return "";
 }
 
-bool Node::is_literal() const {
+bool Node::is_literal() const noexcept {
     return handle_.is_literal();
 }
-bool Node::is_variable() const {
+bool Node::is_variable() const noexcept {
     return handle_.is_variable();
 }
-bool Node::is_blank_node() const {
+bool Node::is_blank_node() const noexcept {
     return handle_.is_blank_node();
 }
-bool Node::is_iri() const {
+bool Node::is_iri() const noexcept {
     return handle_.is_iri();
 }
 
-std::partial_ordering Node::operator<=>(const Node &other) const {
+std::partial_ordering Node::operator<=>(const Node &other) const noexcept {
     [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
         return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) <=> std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
     }
@@ -100,7 +100,7 @@ std::partial_ordering Node::operator<=>(const Node &other) const {
     }
 }
 
-bool Node::operator==(const Node &other) const {
+bool Node::operator==(const Node &other) const noexcept {
     [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
         return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) == std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
     }

@@ -18,8 +18,8 @@ class NodeBackendHandle {
     identifier::NodeID node_id_;
 
 public:
-    NodeBackendHandle() = default;
-    explicit NodeBackendHandle(identifier::NodeID node_id);
+    NodeBackendHandle() noexcept = default;
+    explicit NodeBackendHandle(identifier::NodeID node_id) noexcept;
 
     [[nodiscard]] identifier::RDFNodeType type() const noexcept;
 
@@ -30,18 +30,18 @@ public:
 
     [[nodiscard]] bool empty() const noexcept;
 
-    [[nodiscard]] NodeStorage node_storage() const;
+    [[nodiscard]] NodeStorage node_storage() const noexcept;
 
     [[nodiscard]] identifier::NodeID id() const noexcept;
 
-    [[nodiscard]] IRIBackendView iri_backend() const;
-    [[nodiscard]] LiteralBackendView literal_backend() const;
-    [[nodiscard]] BNodeBackendView bnode_backend() const;
-    [[nodiscard]] VariableBackendView variable_backend() const;
+    [[nodiscard]] IRIBackendView iri_backend() const noexcept;
+    [[nodiscard]] LiteralBackendView literal_backend() const noexcept;
+    [[nodiscard]] BNodeBackendView bnode_backend() const noexcept;
+    [[nodiscard]] VariableBackendView variable_backend() const noexcept;
 
-    bool operator==(const NodeBackendHandle &other) const = default;
+    bool operator==(const NodeBackendHandle &other) const noexcept = default;
 
-    auto operator<=>(const NodeBackendHandle &other) const = default;
+    auto operator<=>(const NodeBackendHandle &other) const noexcept = default;
 };
 }  // namespace rdf4cpp::rdf::storage::node::handle
 
