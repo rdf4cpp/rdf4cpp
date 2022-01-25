@@ -5,7 +5,6 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/Literal.hpp>
 #include <rdf4cpp/rdf/query/Variable.hpp>
-#include <rdf4cpp/rdf/storage/node/IRIBackend.hpp>
 
 namespace rdf4cpp::rdf {
 

@@ -1,7 +1,6 @@
 #include "Literal.hpp"
 
 #include <rdf4cpp/rdf/IRI.hpp>
-#include <rdf4cpp/rdf/storage/node/LiteralBackend.hpp>
 
 namespace rdf4cpp::rdf {
 
