@@ -11,7 +11,7 @@ class BlankNode : public Node {
 
 private:
     BlankNode(const NodeID &id);
-    explicit BlankNode(BackendNodeHandle handle);
+    explicit BlankNode(NodeBackendHandle handle);
 
 public:
     BlankNode();

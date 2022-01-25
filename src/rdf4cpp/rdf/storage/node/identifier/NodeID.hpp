@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_NODEID_HPP
 #define RDF4CPP_NODEID_HPP
 
-#include <rdf4cpp/rdf/storage/node/RDFNodeType.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
 
 #include <bitset>
 #include <cassert>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace rdf4cpp::rdf::storage::node {
+namespace rdf4cpp::rdf::storage::node::identifier {
 
 enum class LiteralType : uint16_t {
     // TODO: support different literal types
@@ -127,6 +127,6 @@ public:
 };
 
 
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::identifier
 
 #endif  //RDF4CPP_NODEID_HPP

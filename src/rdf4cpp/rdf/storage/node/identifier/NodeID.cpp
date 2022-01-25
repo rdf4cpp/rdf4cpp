@@ -1,6 +1,8 @@
 #include "NodeID.hpp"
 
-namespace rdf4cpp::rdf::storage::node {
+#include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
+
+namespace rdf4cpp::rdf::storage::node::identifier {
 LiteralID::LiteralID(uint64_t value) : value(value) {}
 LiteralID &LiteralID::operator++() noexcept {
     value++;
@@ -102,11 +104,11 @@ std::string NodeID::as_string() const {
                " literal_id=" + std::to_string(node_id().literal_id().value);
     else
         str += "node_id=" + std::to_string(node_id().value);
-    str += " type=" + node::as_string(type());
+    str += " type=" + node::identifier::as_string(type());
     str += " manager_id=" + std::to_string(manager_id().value);
     str += " free_tagging_bits=" + std::to_string(free_tagging_bits()) + " >";
     return str;
 }
 
 
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::identifier

@@ -12,7 +12,7 @@ namespace rdf4cpp::rdf {
 class IRI : public Node {
 public:
     IRI(const NodeID &id);
-    explicit IRI(Node::BackendNodeHandle handle);
+    explicit IRI(Node::NodeBackendHandle handle);
 
 
 public:

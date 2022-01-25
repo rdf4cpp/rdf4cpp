@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-namespace rdf4cpp::rdf::storage::node {
+namespace rdf4cpp::rdf::storage::node::identifier {
 
 enum class RDFNodeType : uint8_t {
     Variable = 0,
@@ -15,7 +15,7 @@ enum class RDFNodeType : uint8_t {
 
 std::string as_string(RDFNodeType rdf_node_type);
 
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::identifier
 
 
 #endif  //RDF4CPP_RDFNODETYPE_HPP

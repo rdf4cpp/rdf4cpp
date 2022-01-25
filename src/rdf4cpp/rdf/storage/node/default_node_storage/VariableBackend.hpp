@@ -1,17 +1,15 @@
 #ifndef RDF4CPP_VARIABLEBACKEND_HPP
 #define RDF4CPP_VARIABLEBACKEND_HPP
 
-#include <rdf4cpp/rdf/storage/node/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/BackendNodeHandles.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <compare>
 #include <memory>
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node {
-
-
+namespace rdf4cpp::rdf::storage::node::default_node_storage {
 
 class VariableBackend {
     std::string name_;
@@ -26,13 +24,10 @@ public:
 
     [[nodiscard]] std::string_view name() const noexcept;
 
-    explicit operator VariableBackendHandle() const noexcept {
-        return {.name = name(),
-                .is_anonymous = is_anonymous()};
-    }
+    explicit operator handle::VariableBackendView() const noexcept;
 };
 
 std::strong_ordering operator<=>(std::unique_ptr<VariableBackend> const &self, std::unique_ptr<VariableBackend> const &other) noexcept;
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
 
 #endif  //RDF4CPP_VARIABLEBACKEND_HPP

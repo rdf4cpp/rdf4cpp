@@ -1,13 +1,13 @@
 #ifndef RDF4CPP_NODESTORAGE_HPP
 #define RDF4CPP_NODESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/node/BNodeBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/DefaultNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/IRIBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/LiteralBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/VariableBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/default_node_storage/DefaultNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <memory>
 #include <mutex>
@@ -18,6 +18,11 @@ namespace rdf4cpp::rdf::storage::node {
 class INodeStorageBackend;
 
 class NodeStorage {
+public:
+    using NodeID = identifier::NodeID;
+    using NodeStorageID = identifier::NodeStorageID;
+
+private:
     friend INodeStorageBackend;
     INodeStorageBackend *backend_{};
 
@@ -62,27 +67,17 @@ public:
 
     [[nodiscard]] size_t nodes_in_use() const noexcept;
 
-    [[nodiscard]] NodeStorageID id() const noexcept;
+    [[nodiscard]] identifier::NodeStorageID id() const noexcept;
 
-    [[nodiscard]]  NodeID get_string_literal_id(std::string_view lexical_form) {
-        return backend_->get_string_literal_id(lexical_form);
-    }
+    [[nodiscard]] NodeID get_string_literal_id(std::string_view lexical_form);
 
-    [[nodiscard]]  NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) {
-        return backend_->get_typed_literal_id(lexical_form, datatype);
-    }
+    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype);
 
-    [[nodiscard]]  NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id) {
-        return backend_->get_typed_literal_id(lexical_form, datatype_id);
-    }
+    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id);
 
-    [[nodiscard]]  NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang) {
-        return backend_->get_lang_literal_id(lexical_form, lang);
-    }
+    [[nodiscard]] NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang);
 
-    [[nodiscard]]  NodeID get_iri_id(std::string_view iri) {
-        return backend_->get_iri_id(iri);
-    }
+    [[nodiscard]] NodeID get_iri_id(std::string_view iri);
 
     /**
      * Create or lookup a Variable
@@ -90,42 +85,24 @@ public:
      * @param anonymous true if string repr. it starts with `?` and false if it starts with `?`
      * @return a pointer to the VariableBackend and its NodeID
      */
-    [[nodiscard]]  NodeID get_variable_id(std::string_view identifier, bool anonymous = false) {
-        return backend_->get_variable_id(identifier, anonymous);
-    }
+    [[nodiscard]] NodeID get_variable_id(std::string_view identifier, bool anonymous = false);
 
     /**
      * Create or lookup a BlankNode
      * @param identifier name without `_:`
      * @return a pointer to the BNodeBackend and its NodeID
      */
-    [[nodiscard]]  NodeID get_bnode_id(std::string_view identifier) {
-        return backend_->get_bnode_id(identifier);
-    }
+    [[nodiscard]] NodeID get_bnode_id(std::string_view identifier);
 
-    [[nodiscard]] static IRIBackendHandle get_iri_handle(NodeID id){
-        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-        return backend->get_iri_handle(id.node_id());
-    }
+    [[nodiscard]] static handle::IRIBackendView get_iri_handle(NodeID id);
 
-    [[nodiscard]] static LiteralBackendHandle get_literal_handle(NodeID id) {
-        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-        return backend->get_literal_handle(id.node_id());
-    }
+    [[nodiscard]] static handle::LiteralBackendView get_literal_handle(NodeID id);
 
-    [[nodiscard]] static BNodeBackendHandle get_bnode_handle(NodeID id) {
-        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-        return backend->get_bnode_handle(id.node_id());
-    }
+    [[nodiscard]] static handle::BNodeBackendView get_bnode_handle(NodeID id);
 
-    [[nodiscard]] static VariableBackendHandle get_variable_handle(NodeID id)  {
-        INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-        return backend->get_variable_handle(id.node_id());
-    }
+    [[nodiscard]] static handle::VariableBackendView get_variable_handle(NodeID id);
 
-    bool operator==(const NodeStorage &other) const {
-        return this->id() == other.id();
-    }
+    bool operator==(const NodeStorage &other) const;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node

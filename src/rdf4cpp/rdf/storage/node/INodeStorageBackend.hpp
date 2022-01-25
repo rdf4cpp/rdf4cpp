@@ -1,11 +1,11 @@
 #ifndef RDF4CPP_INODESTORAGEBACKEND_HPP
 #define RDF4CPP_INODESTORAGEBACKEND_HPP
 
-#include <rdf4cpp/rdf/storage/node/BNodeBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/IRIBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/LiteralBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/VariableBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <cstddef>
 
@@ -15,12 +15,12 @@ class NodeStorage;
 
 class INodeStorageBackend {
     friend NodeStorage;
-    static NodeStorageID register_node_context(INodeStorageBackend *);
+    static identifier::NodeStorageID register_node_context(INodeStorageBackend *);
 
 protected:
     size_t use_count_ = 1;
     size_t nodes_in_use_ = 0;
-    NodeStorageID manager_id;
+    identifier::NodeStorageID manager_id;
 
     void inc_use_count() noexcept;
     void dec_use_count() noexcept;
@@ -30,6 +30,7 @@ protected:
     [[nodiscard]] bool is_unreferenced() const noexcept;
 
 public:
+    using NodeID = identifier::NodeID;
     [[nodiscard]] size_t use_count() const noexcept;
 
     [[nodiscard]] size_t nodes_in_use() const noexcept;
@@ -50,13 +51,13 @@ public:
 
     [[nodiscard]] virtual NodeID get_bnode_id(std::string_view identifier) = 0;
 
-    [[nodiscard]] virtual IRIBackendHandle get_iri_handle(NodeIDValue id) const = 0;
+    [[nodiscard]] virtual handle::IRIBackendView get_iri_handle(identifier::NodeIDValue id) const = 0;
 
-    [[nodiscard]] virtual LiteralBackendHandle get_literal_handle(NodeIDValue id) const = 0;
+    [[nodiscard]] virtual handle::LiteralBackendView get_literal_handle(identifier::NodeIDValue id) const = 0;
 
-    [[nodiscard]] virtual BNodeBackendHandle get_bnode_handle(NodeIDValue id) const = 0;
+    [[nodiscard]] virtual handle::BNodeBackendView get_bnode_handle(identifier::NodeIDValue id) const = 0;
 
-    [[nodiscard]] virtual VariableBackendHandle get_variable_handle(NodeIDValue id) const = 0;
+    [[nodiscard]] virtual handle::VariableBackendView get_variable_handle(identifier::NodeIDValue id) const = 0;
 };
 
 

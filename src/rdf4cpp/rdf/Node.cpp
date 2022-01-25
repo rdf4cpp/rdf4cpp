@@ -11,7 +11,7 @@ namespace rdf4cpp::rdf {
 
 Node::Node(Node::NodeID id) : handle_(id) {}
 
-Node::Node(const Node::BackendNodeHandle &id) : handle_(id) {}
+Node::Node(const Node::NodeBackendHandle &id) : handle_(id) {}
 
 Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
     if (this->backend_handle().node_storage() == node_storage)
@@ -34,7 +34,7 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
                 }
                 case RDFNodeType::Literal: {
                     auto literal = static_cast<Literal>(*this);
-                    if (literal.backend_handle().literal_backend().datatype_id.node_id() == storage::node::NodeID::rdf_langstring_iri.first)
+                    if (literal.backend_handle().literal_backend().datatype_id.node_id() == storage::node::identifier::NodeID::rdf_langstring_iri.first)
                         return node_storage.get_lang_literal_id(literal.lexical_form(), literal.language_tag());
                     else
                         return node_storage.get_typed_literal_id(literal.lexical_form(), literal.datatype().identifier());
@@ -80,7 +80,8 @@ bool Node::is_iri() const {
 std::partial_ordering Node::operator<=>(const Node &other) const {
     [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
         return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) <=> std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
-    } else {  // different NodeStorage
+    }
+    else {  // different NodeStorage
         if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
             return comp_type;
         } else {  // same type, different id.
@@ -102,7 +103,8 @@ std::partial_ordering Node::operator<=>(const Node &other) const {
 bool Node::operator==(const Node &other) const {
     [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
         return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) == std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
-    } else {  // different NodeStorage
+    }
+    else {  // different NodeStorage
         if (this->handle_.type() != other.handle_.type()) {
             return false;
         } else {  // same type, different id.
@@ -162,10 +164,10 @@ bool Node::null() const noexcept {
 std::ostream &operator<<(std::ostream &os, const Node &node) {
     return os << (std::string) node;
 }
-const Node::BackendNodeHandle &Node::backend_handle() const noexcept {
+const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;
 }
-Node::BackendNodeHandle &Node::backend_handle() noexcept {
+Node::NodeBackendHandle &Node::backend_handle() noexcept {
     return handle_;
 }
 

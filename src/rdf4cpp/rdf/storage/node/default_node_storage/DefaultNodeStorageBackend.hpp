@@ -3,16 +3,25 @@
 
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 
+#include <rdf4cpp/rdf/storage/node/default_node_storage/BNodeBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/default_node_storage/IRIBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/default_node_storage/LiteralBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/default_node_storage/VariableBackend.hpp>
+
 #include <map>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
 
-namespace rdf4cpp::rdf::storage::node {
+namespace rdf4cpp::rdf::storage::node::default_node_storage {
 
 // TODO: make Backend Node Types reference countable
 class DefaultNodeStorageBackend : public INodeStorageBackend {
+public:
+    using NodeIDValue = identifier::NodeIDValue;
+    using LiteralID = identifier::LiteralID;
 
+private:
     mutable std::shared_mutex literal_mutex_;
     std::map<NodeIDValue, LiteralBackend *, std::less<>> literal_storage;
     std::map<std::unique_ptr<LiteralBackend>, NodeIDValue, std::less<>> literal_storage_reverse;
@@ -51,13 +60,13 @@ public:
 
     [[nodiscard]] NodeID get_bnode_id(std::string_view identifier) override;
 
-    [[nodiscard]] IRIBackendHandle get_iri_handle(NodeIDValue id) const override;
+    [[nodiscard]] handle::IRIBackendView get_iri_handle(NodeIDValue id) const override;
 
-    [[nodiscard]] LiteralBackendHandle get_literal_handle(NodeIDValue id) const override;
+    [[nodiscard]] handle::LiteralBackendView get_literal_handle(NodeIDValue id) const override;
 
-    [[nodiscard]] BNodeBackendHandle get_bnode_handle(NodeIDValue id) const override;
+    [[nodiscard]] handle::BNodeBackendView get_bnode_handle(NodeIDValue id) const override;
 
-    [[nodiscard]] VariableBackendHandle get_variable_handle(NodeIDValue id) const override;
+    [[nodiscard]] handle::VariableBackendView get_variable_handle(NodeIDValue id) const override;
 
 private:
     std::pair<LiteralBackend *, NodeID> lookup_or_insert_literal(LiteralBackend literal);
@@ -69,5 +78,5 @@ private:
     std::pair<VariableBackend *, NodeID> lookup_or_insert_variable(VariableBackend variable);
 };
 
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
 #endif  //RDF4CPP_DEFAULTNODESTORAGEBACKEND_HPP

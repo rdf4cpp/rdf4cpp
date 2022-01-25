@@ -8,9 +8,9 @@ INodeStorageBackend::~INodeStorageBackend() {
     // unregister the object on destruction
     NodeStorage::node_context_instances[manager_id.value] = nullptr;
 }
-NodeStorageID INodeStorageBackend::register_node_context(INodeStorageBackend *node_context_backend) {
+identifier::NodeStorageID INodeStorageBackend::register_node_context(INodeStorageBackend *node_context_backend) {
     // TODO: make sure an error it throw when we run out of manager spots.
-    NodeStorageID manager_id{static_cast<uint16_t>(std::distance(NodeStorage::node_context_instances.begin(), std::find(NodeStorage::node_context_instances.begin(), NodeStorage::node_context_instances.end(), nullptr)))};
+    identifier::NodeStorageID manager_id{static_cast<uint16_t>(std::distance(NodeStorage::node_context_instances.begin(), std::find(NodeStorage::node_context_instances.begin(), NodeStorage::node_context_instances.end(), nullptr)))};
     NodeStorage::node_context_instances[manager_id.value] = node_context_backend;
     return manager_id;
 }

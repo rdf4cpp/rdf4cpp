@@ -8,15 +8,14 @@ namespace rdf4cpp::rdf {
 Literal::Literal(const Node::NodeID &id) : Node(id) {}
 Literal::Literal() : Node() {}
 Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_string_literal_id(lexical_form)}) {}
+    : Node(NodeBackendHandle{node_storage.get_string_literal_id(lexical_form)}) {}
 Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{
+    : Node(NodeBackendHandle{
               node_storage.get_typed_literal_id(
-                                  lexical_form,
-                                  datatype.handle_.id())
-                      }) {}
+                      lexical_form,
+                      datatype.handle_.id())}) {}
 Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_lang_literal_id(lexical_form, lang)}) {}
+    : Node(NodeBackendHandle{node_storage.get_lang_literal_id(lexical_form, lang)}) {}
 
 
 IRI Literal::datatype() const {
@@ -48,7 +47,7 @@ bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
-Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
+Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << (std::string) literal;
     return os;

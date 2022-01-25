@@ -1,8 +1,8 @@
 #include "LiteralBackend.hpp"
 #include <tuple>
-namespace rdf4cpp::rdf::storage::node {
+namespace rdf4cpp::rdf::storage::node::default_node_storage {
 
-LiteralBackend::LiteralBackend(std::string_view lexical, const NodeID &dataType, std::string_view langTag) noexcept
+LiteralBackend::LiteralBackend(std::string_view lexical, const identifier::NodeID &dataType, std::string_view langTag) noexcept
     : datatype_id_(dataType),
       lexical(lexical),
       lang_tag(langTag) {}
@@ -26,13 +26,18 @@ std::strong_ordering LiteralBackend::operator<=>(const std::unique_ptr<LiteralBa
 std::string_view LiteralBackend::language_tag() const noexcept {
     return lang_tag;
 }
-const NodeID &LiteralBackend::datatype_id() const noexcept {
+const identifier::NodeID &LiteralBackend::datatype_id() const noexcept {
     return datatype_id_;
 }
 std::string_view LiteralBackend::lexical_form() const noexcept {
     return lexical;
+}
+LiteralBackend::operator handle::LiteralBackendView() const noexcept {
+    return {.datatype_id = datatype_id(),
+            .lexical_form = lexical_form(),
+            .language_tag = language_tag()};
 };
 std::strong_ordering operator<=>(const std::unique_ptr<LiteralBackend> &self, const std::unique_ptr<LiteralBackend> &other) noexcept {
     return *self <=> *other;
 }
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::default_node_storage

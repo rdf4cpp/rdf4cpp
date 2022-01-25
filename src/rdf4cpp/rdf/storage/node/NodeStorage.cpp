@@ -33,7 +33,7 @@ void NodeStorage::primary_instance(const NodeStorage &node_context) {
     default_node_context_id = node_context.id();
 }
 NodeStorage NodeStorage::new_instance() {
-    return NodeStorage(new DefaultNodeStorageBackend());
+    return NodeStorage(new default_node_storage::DefaultNodeStorageBackend());
 }
 NodeStorage NodeStorage::register_backend(INodeStorageBackend *backend_instance) {
     if (backend_instance == nullptr)
@@ -117,7 +117,47 @@ size_t NodeStorage::use_count() const noexcept {
 size_t NodeStorage::nodes_in_use() const noexcept {
     return backend_->nodes_in_use_;
 }
-NodeStorageID NodeStorage::id() const noexcept {
+identifier::NodeStorageID NodeStorage::id() const noexcept {
     return backend_->manager_id;
+}
+NodeStorage::NodeID NodeStorage::get_string_literal_id(std::string_view lexical_form) {
+    return backend_->get_string_literal_id(lexical_form);
+}
+NodeStorage::NodeID NodeStorage::get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) {
+    return backend_->get_typed_literal_id(lexical_form, datatype);
+}
+NodeStorage::NodeID NodeStorage::get_typed_literal_id(std::string_view lexical_form, const NodeStorage::NodeID &datatype_id) {
+    return backend_->get_typed_literal_id(lexical_form, datatype_id);
+}
+NodeStorage::NodeID NodeStorage::get_lang_literal_id(std::string_view lexical_form, std::string_view lang) {
+    return backend_->get_lang_literal_id(lexical_form, lang);
+}
+NodeStorage::NodeID NodeStorage::get_iri_id(std::string_view iri) {
+    return backend_->get_iri_id(iri);
+}
+NodeStorage::NodeID NodeStorage::get_variable_id(std::string_view identifier, bool anonymous) {
+    return backend_->get_variable_id(identifier, anonymous);
+}
+NodeStorage::NodeID NodeStorage::get_bnode_id(std::string_view identifier) {
+    return backend_->get_bnode_id(identifier);
+}
+handle::IRIBackendView NodeStorage::get_iri_handle(NodeStorage::NodeID id) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+    return backend->get_iri_handle(id.node_id());
+}
+handle::LiteralBackendView NodeStorage::get_literal_handle(NodeStorage::NodeID id) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+    return backend->get_literal_handle(id.node_id());
+}
+handle::BNodeBackendView NodeStorage::get_bnode_handle(NodeStorage::NodeID id) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+    return backend->get_bnode_handle(id.node_id());
+}
+handle::VariableBackendView NodeStorage::get_variable_handle(NodeStorage::NodeID id) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
+    return backend->get_variable_handle(id.node_id());
+}
+bool NodeStorage::operator==(const NodeStorage &other) const {
+    return this->id() == other.id();
 }
 }  // namespace rdf4cpp::rdf::storage::node

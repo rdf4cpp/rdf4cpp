@@ -50,16 +50,20 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
         src/rdf4cpp/rdf/Statement.cpp
-        src/rdf4cpp/rdf/storage/node/BackendNodeHandle.cpp
-        src/rdf4cpp/rdf/storage/node/BNodeBackend.cpp
-        src/rdf4cpp/rdf/storage/node/DefaultNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/handle/NodeBackendHandle.cpp
+        src/rdf4cpp/rdf/storage/node/handle/BNodeBackendView.cpp
+        src/rdf4cpp/rdf/storage/node/handle/IRIBackendView.cpp
+        src/rdf4cpp/rdf/storage/node/handle/LiteralBackendView.cpp
+        src/rdf4cpp/rdf/storage/node/handle/VariableBackendView.cpp
+        src/rdf4cpp/rdf/storage/node/default_node_storage/DefaultNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/default_node_storage/BNodeBackend.cpp
+        src/rdf4cpp/rdf/storage/node/default_node_storage/IRIBackend.cpp
+        src/rdf4cpp/rdf/storage/node/default_node_storage/LiteralBackend.cpp
+        src/rdf4cpp/rdf/storage/node/default_node_storage/VariableBackend.cpp
         src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/node/IRIBackend.cpp
-        src/rdf4cpp/rdf/storage/node/LiteralBackend.cpp
-        src/rdf4cpp/rdf/storage/node/NodeID.cpp
+        src/rdf4cpp/rdf/storage/node/identifier/NodeID.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
-        src/rdf4cpp/rdf/storage/node/RDFNodeType.cpp
-        src/rdf4cpp/rdf/storage/node/VariableBackend.cpp
+        src/rdf4cpp/rdf/storage/node/identifier/RDFNodeType.cpp
         src/rdf4cpp/rdf/storage/tuple/DatasetStorage.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp

@@ -10,7 +10,7 @@ namespace rdf4cpp::rdf {
 class Literal : public Node {
 protected:
     Literal(const NodeID &id);
-    explicit Literal(Node::BackendNodeHandle handle);
+    explicit Literal(Node::NodeBackendHandle handle);
 
 public:
     Literal();
@@ -19,7 +19,6 @@ public:
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
-     //TODO: use string_view
     explicit Literal(std::string_view lexical_form,
                      NodeStorage &node_storage = NodeStorage::primary_instance());
     /**

@@ -6,7 +6,7 @@
  * Long
  */
 
-#include <rdf4cpp/rdf/storage/node/BackendNodeHandle.hpp>
+#include <rdf4cpp/rdf/storage/node/handle/NodeBackendHandle.hpp>
 
 #include <optional>
 #include <string>
@@ -26,14 +26,14 @@ class Variable;
  */
 class Node {
 protected:
-    using BackendNodeHandle = rdf4cpp::rdf::storage::node::BackendNodeHandle;
-    using NodeID = rdf4cpp::rdf::storage::node::NodeID;
+    using NodeBackendHandle = rdf4cpp::rdf::storage::node::handle::NodeBackendHandle;
+    using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;
     using NodeStorage = rdf4cpp::rdf::storage::node::NodeStorage;
-    using RDFNodeType = rdf4cpp::rdf::storage::node::RDFNodeType;
-    BackendNodeHandle handle_;
+    using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
+    NodeBackendHandle handle_;
 
     explicit Node(NodeID id);
-    explicit Node(const BackendNodeHandle &id);
+    explicit Node(const NodeBackendHandle &id);
 
 public:
     [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
@@ -124,27 +124,27 @@ public:
     [[nodiscard]] bool null() const noexcept;
 
     /**
-     * Exposes the const BackendNodeHandle.
+     * Exposes the const NodeBackendHandle.
      *
      * This function is unsafe! Make sure this is not null() const.
-     * @return its BackendNodeHandle.
+     * @return its NodeBackendHandle.
      */
-    [[nodiscard]] const BackendNodeHandle &backend_handle() const noexcept;
+    [[nodiscard]] const NodeBackendHandle &backend_handle() const noexcept;
 
     /**
-     * Exposes the BackendNodeHandle.
+     * Exposes the NodeBackendHandle.
      *
      * This function is unsafe! Make sure this is not null() const.
-     * @return its BackendNodeHandle.
+     * @return its NodeBackendHandle.
      */
-    [[nodiscard]] BackendNodeHandle &backend_handle() noexcept;
+    [[nodiscard]] NodeBackendHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp::rdf
 
 template<>
 struct std::hash<rdf4cpp::rdf::Node> {
     inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::storage::node::BackendNodeHandle>()(v.backend_handle());
+        return std::hash<rdf4cpp::rdf::storage::node::handle::NodeBackendHandle>()(v.backend_handle());
     }
 };
 
