@@ -23,7 +23,7 @@ bool NodeBackendHandle::is_variable() const noexcept {
 bool NodeBackendHandle::empty() const noexcept {
     return node_id_.empty();
 }
-identifier::NodeID NodeBackendHandle::id() const noexcept {
+identifier::NodeID const &NodeBackendHandle::id() const noexcept {
     return node_id_;
 }
 IRIBackendView NodeBackendHandle::iri_backend() const noexcept {

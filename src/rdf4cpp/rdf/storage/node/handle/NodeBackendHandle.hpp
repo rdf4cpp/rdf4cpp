@@ -32,7 +32,7 @@ public:
 
     [[nodiscard]] NodeStorage node_storage() const noexcept;
 
-    [[nodiscard]] identifier::NodeID id() const noexcept;
+    [[nodiscard]] identifier::NodeID const &id() const noexcept;
 
     [[nodiscard]] IRIBackendView iri_backend() const noexcept;
     [[nodiscard]] LiteralBackendView literal_backend() const noexcept;
