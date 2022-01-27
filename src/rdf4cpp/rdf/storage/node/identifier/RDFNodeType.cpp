@@ -2,7 +2,7 @@
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 
-std::string as_string(RDFNodeType rdf_node_type) {
+std::string as_string(RDFNodeType rdf_node_type) noexcept {
     switch (rdf_node_type) {
         case RDFNodeType::Variable:
             return "variable";

@@ -40,19 +40,19 @@ NodeIDValue NodeIDValue::operator++(int) noexcept {
 }
 
 
-const std::pair<NodeIDValue, std::string> NodeID::default_graph_iri = {NodeIDValue(1), ""};
-const std::pair<NodeIDValue, std::string> NodeID::xsd_string_iri = {NodeIDValue(2), "http://www.w3.org/2001/XMLSchema#string"};
-const std::pair<NodeIDValue, std::string> NodeID::rdf_langstring_iri = {NodeIDValue(3), "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
+std::pair<NodeIDValue, std::string> const NodeID::default_graph_iri = {NodeIDValue(1), ""};
+std::pair<NodeIDValue, std::string> const NodeID::xsd_string_iri = {NodeIDValue(2), "http://www.w3.org/2001/XMLSchema#string"};
+std::pair<NodeIDValue, std::string> const NodeID::rdf_langstring_iri = {NodeIDValue(3), "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
 
-const std::vector<std::pair<NodeIDValue, std::string>> NodeID::predefined_iris = {
+std::vector<std::pair<NodeIDValue, std::string>> const NodeID::predefined_iris = {
         NodeID::default_graph_iri,
         NodeID::xsd_string_iri,
         NodeID::rdf_langstring_iri};
 
-const NodeIDValue NodeID::min_iri_id = NodeIDValue(NodeID::predefined_iris.size() + 1);
-const LiteralID NodeID::min_literal_id = LiteralID(1);
-const NodeIDValue NodeID::min_bnode_id = NodeIDValue(1);
-const NodeIDValue NodeID::min_variable_id = NodeIDValue(1);
+NodeIDValue const NodeID::min_iri_id = NodeIDValue(NodeID::predefined_iris.size() + 1);
+LiteralID const NodeID::min_literal_id = LiteralID(1);
+NodeIDValue const NodeID::min_bnode_id = NodeIDValue(1);
+NodeIDValue const NodeID::min_variable_id = NodeIDValue(1);
 
 
 NodeID::NodeID() noexcept : raw_(0) {}
@@ -71,7 +71,7 @@ void NodeID::free_tagging_bits(uint8_t new_value) {
     assert(new_value < (1 << 4));
     fields_.free_tagging_bits = new_value;
 }
-const NodeIDValue &NodeID::node_id() const noexcept {
+NodeIDValue const &NodeID::node_id() const noexcept {
     return fields_.node_id_;
 }
 uint64_t NodeID::raw() const noexcept {
@@ -84,16 +84,16 @@ bool NodeID::is_type(RDFNodeType type_) const noexcept {
     return type_ == type();
 }
 bool NodeID::empty() const noexcept {
-    return fields_.node_id_ == 0;
+    return fields_.node_id_ == NodeIDValue(0);
 }
-std::partial_ordering NodeID::operator<=>(const NodeID &other) const noexcept {
+std::partial_ordering NodeID::operator<=>(NodeID const &other) const noexcept {
     if (fields_.manager_id_ != other.fields_.manager_id_) {
         return std::partial_ordering::unordered;
     } else {
         return (std::tie(fields_.type_, fields_.node_id_) <=> std::tie(other.fields_.type_, other.fields_.node_id_));
     }
 }
-bool NodeID::operator==(const NodeID &other) const noexcept {
+bool NodeID::operator==(NodeID const &other) const noexcept {
     return std::tie(fields_.manager_id_, fields_.type_, fields_.node_id_) ==
            std::tie(other.fields_.manager_id_, other.fields_.type_, other.fields_.node_id_);
 }

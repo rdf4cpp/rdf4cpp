@@ -26,11 +26,13 @@ struct __attribute__((__packed__)) LiteralID {
     // TODO: inline literal types < 42 bits into the literalID
     uint64_t value : 42;
 
-    explicit LiteralID(uint64_t value)  noexcept;
+    LiteralID() = default;
 
-    auto operator<=>(const LiteralID &) const  noexcept= default;
+    explicit LiteralID(uint64_t value) noexcept;
 
-    bool operator==(const LiteralID &) const  noexcept= default;
+    auto operator<=>(LiteralID const &) const noexcept = default;
+
+    bool operator==(LiteralID const &) const noexcept = default;
 
     LiteralID &operator++() noexcept;
 
@@ -46,17 +48,19 @@ struct __attribute__((__packed__)) NodeIDValue {
         } literal_;
     };
 
-    NodeIDValue(uint64_t value)  noexcept;
-    NodeIDValue(LiteralID literalId, LiteralType literalType)  noexcept;
+    NodeIDValue() = default;
 
+    explicit NodeIDValue(uint64_t value) noexcept;
 
-    [[nodiscard]] LiteralID literal_id() const  noexcept;
+    NodeIDValue(LiteralID literalId, LiteralType literalType) noexcept;
 
-    [[nodiscard]] LiteralType literal_type() const  noexcept;
+    [[nodiscard]] LiteralID literal_id() const noexcept;
 
-    std::strong_ordering operator<=>(const NodeIDValue &other) const  noexcept;
+    [[nodiscard]] LiteralType literal_type() const noexcept;
 
-    bool operator==(const NodeIDValue &other) const  noexcept;
+    std::strong_ordering operator<=>(NodeIDValue const &other) const noexcept;
+
+    bool operator==(NodeIDValue const &other) const noexcept;
 
     NodeIDValue &operator++() noexcept;
 
@@ -66,22 +70,22 @@ struct __attribute__((__packed__)) NodeIDValue {
 struct __attribute__((__packed__)) NodeStorageID {
     uint16_t value : 10;
 
-    auto operator<=>(const NodeStorageID &) const noexcept = default;
-    bool operator==(const NodeStorageID &) const noexcept = default;
+    auto operator<=>(NodeStorageID const &) const noexcept = default;
+    bool operator==(NodeStorageID const &) const noexcept = default;
 };
 
 class NodeID {
 public:
-    static const std::pair<NodeIDValue, std::string> default_graph_iri;
-    static const std::pair<NodeIDValue, std::string> xsd_string_iri;
-    static const std::pair<NodeIDValue, std::string> rdf_langstring_iri;
+    static std::pair<NodeIDValue, std::string> const default_graph_iri;
+    static std::pair<NodeIDValue, std::string> const xsd_string_iri;
+    static std::pair<NodeIDValue, std::string> const rdf_langstring_iri;
 
-    static const std::vector<std::pair<NodeIDValue, std::string>> predefined_iris;
-    static const NodeIDValue min_iri_id;
+    static std::vector<std::pair<NodeIDValue, std::string>> const predefined_iris;
+    static NodeIDValue const min_iri_id;
     // TODO: that might be specified further for literals
-    static const LiteralID min_literal_id;
-    static const NodeIDValue min_bnode_id;
-    static const NodeIDValue min_variable_id;
+    static LiteralID const min_literal_id;
+    static NodeIDValue const min_bnode_id;
+    static NodeIDValue const min_variable_id;
 
 private:
     union __attribute__((__packed__)) {
@@ -96,6 +100,7 @@ private:
 
 public:
     NodeID() noexcept;
+
     explicit NodeID(size_t raw) noexcept;
 
     NodeID(NodeStorageID manager_id, RDFNodeType type, NodeIDValue node_id, uint8_t tagging_bits = uint8_t(0)) noexcept;
@@ -105,6 +110,7 @@ public:
     [[nodiscard]] NodeStorageID manager_id() const noexcept;
 
     [[nodiscard]] uint8_t free_tagging_bits() const noexcept;
+
     void free_tagging_bits(uint8_t new_value);
 
     [[nodiscard]] const NodeIDValue &node_id() const noexcept;
@@ -118,13 +124,15 @@ public:
     [[nodiscard]] bool empty() const noexcept;
 
     // TODO: support basic xsd literal datatypes for comparison
-    std::partial_ordering operator<=>(const NodeID &other) const noexcept;
+    std::partial_ordering operator<=>(NodeID const &other) const noexcept;
 
-    bool operator==(const NodeID &other) const noexcept;
+    bool operator==(NodeID const &other) const noexcept;
 
     // TODO: operator std::string and operator<< overload
     [[nodiscard]] std::string as_string() const noexcept;
 };
+
+static_assert(sizeof(NodeID) == sizeof(uint64_t));
 
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier

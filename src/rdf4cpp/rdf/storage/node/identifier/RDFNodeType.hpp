@@ -13,7 +13,7 @@ enum class RDFNodeType : uint8_t {
     Literal
 };
 
-std::string as_string(RDFNodeType rdf_node_type);
+std::string as_string(RDFNodeType rdf_node_type) noexcept;
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 
