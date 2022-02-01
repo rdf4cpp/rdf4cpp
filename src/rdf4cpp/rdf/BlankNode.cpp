@@ -1,10 +1,11 @@
 #include "BlankNode.hpp"
 
 namespace rdf4cpp::rdf {
-BlankNode::BlankNode(const Node::NodeID &id) : Node(id) {}
 BlankNode::BlankNode() : Node{} {}
 BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.get_bnode_id(identifier)}) {}
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::handle::BNodeBackendView{.identifier = identifier}),
+                             storage::node::identifier::RDFNodeType::BNode,
+                             node_storage.id()}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) : Node(handle) {}
 
 std::string_view BlankNode::identifier() const { return handle_.bnode_backend().identifier; }

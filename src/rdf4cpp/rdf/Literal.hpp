@@ -9,7 +9,6 @@
 namespace rdf4cpp::rdf {
 class Literal : public Node {
 protected:
-    Literal(const NodeID &id);
     explicit Literal(Node::NodeBackendHandle handle);
 
 public:

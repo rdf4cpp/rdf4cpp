@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_NODESTORAGE_HPP
 #define RDF4CPP_NODESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/default_node_storage/DefaultNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <memory>
@@ -69,41 +69,37 @@ public:
 
     [[nodiscard]] identifier::NodeStorageID id() const noexcept;
 
-    [[nodiscard]] NodeID get_string_literal_id(std::string_view lexical_form);
+    [[nodiscard]] identifier::NodeID find_or_make_id(handle::BNodeBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(handle::IRIBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(handle::LiteralBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(handle::VariableBackendView const &view) noexcept;
 
-    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype);
+    [[nodiscard]] identifier::NodeID find_id(handle::BNodeBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(handle::IRIBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(handle::LiteralBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(handle::VariableBackendView const &view) const noexcept;
 
-    [[nodiscard]] NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id);
+    [[nodiscard]] handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] static handle::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static handle::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static handle::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static handle::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle);
 
-    [[nodiscard]] NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang);
-
-    [[nodiscard]] NodeID get_iri_id(std::string_view iri);
-
-    /**
-     * Create or lookup a Variable
-     * @param identifier name name without `_:` or `?`
-     * @param anonymous true if string repr. it starts with `?` and false if it starts with `?`
-     * @return a pointer to the VariableBackend and its NodeID
-     */
-    [[nodiscard]] NodeID get_variable_id(std::string_view identifier, bool anonymous = false);
-
-    /**
-     * Create or lookup a BlankNode
-     * @param identifier name without `_:`
-     * @return a pointer to the BNodeBackend and its NodeID
-     */
-    [[nodiscard]] NodeID get_bnode_id(std::string_view identifier);
-
-    [[nodiscard]] static handle::IRIBackendView get_iri_handle(NodeID id);
-
-    [[nodiscard]] static handle::LiteralBackendView get_literal_handle(NodeID id);
-
-    [[nodiscard]] static handle::BNodeBackendView get_bnode_handle(NodeID id);
-
-    [[nodiscard]] static handle::VariableBackendView get_variable_handle(NodeID id);
+    bool erase_iri(identifier::NodeID id) const;
+    bool erase_literal(identifier::NodeID id) const;
+    bool erase_bnode(identifier::NodeID id) const;
+    bool erase_variable(identifier::NodeID id) const;
+    static bool erase_iri(identifier::NodeBackendHandle handle);
+    static bool erase_literal(identifier::NodeBackendHandle handle);
+    static bool erase_bnode(identifier::NodeBackendHandle handle);
+    static bool erase_variable(identifier::NodeBackendHandle handle);
 
     bool operator==(const NodeStorage &other) const;
 };
+
 
 }  // namespace rdf4cpp::rdf::storage::node
 

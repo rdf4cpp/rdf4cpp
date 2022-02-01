@@ -17,14 +17,22 @@ class IRIBackend {
 
 public:
     explicit IRIBackend(std::string_view iri) noexcept;
+    explicit IRIBackend(handle::IRIBackendView view) noexcept;
     auto operator<=>(const IRIBackend &) const = default;
-    std::strong_ordering operator<=>(std::unique_ptr<IRIBackend> const &other) const noexcept;
+    auto operator<=>(handle::IRIBackendView const &other) const noexcept {
+        return handle::IRIBackendView(*this) <=> other;
+    }
+    std::partial_ordering operator<=>(std::unique_ptr<IRIBackend> const &other) const noexcept;
 
     [[nodiscard]] std::string_view identifier() const noexcept;
 
     explicit operator handle::IRIBackendView() const noexcept;
 };
-std::strong_ordering operator<=>(std::unique_ptr<IRIBackend> const &self, std::unique_ptr<IRIBackend> const &other) noexcept;
+std::partial_ordering operator<=>(std::unique_ptr<IRIBackend> const &self, std::unique_ptr<IRIBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node::default_node_storage
-
+namespace rdf4cpp::rdf::storage::node::handle {
+inline std::partial_ordering operator<=>(IRIBackendView const &lhs, std::unique_ptr<default_node_storage::IRIBackend> const &rhs) noexcept {
+    return lhs <=> IRIBackendView(*rhs);
+}
+}  // namespace rdf4cpp::rdf::storage::node::handle
 #endif  //RDF4CPP_IRIBACKEND_HPP

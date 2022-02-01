@@ -6,8 +6,9 @@
  * Long
  */
 
-#include <rdf4cpp/rdf/storage/node/handle/NodeBackendHandle.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -26,14 +27,13 @@ class Variable;
  */
 class Node {
 protected:
-    using NodeBackendHandle = rdf4cpp::rdf::storage::node::handle::NodeBackendHandle;
+    using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
     using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;
     using NodeStorage = rdf4cpp::rdf::storage::node::NodeStorage;
     using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
     NodeBackendHandle handle_;
 
-    explicit Node(NodeID id) noexcept;
-    explicit Node(const NodeBackendHandle &id) noexcept;
+    explicit Node(NodeBackendHandle id) noexcept;
 
 public:
     [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
@@ -144,7 +144,7 @@ public:
 template<>
 struct std::hash<rdf4cpp::rdf::Node> {
     inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::storage::node::handle::NodeBackendHandle>()(v.backend_handle());
+        return std::hash<rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle>()(v.backend_handle());
     }
 };
 

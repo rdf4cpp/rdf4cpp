@@ -8,41 +8,38 @@
 
 namespace rdf4cpp::rdf {
 
-Node::Node(Node::NodeID id) noexcept : handle_(id) {}
-
-Node::Node(const Node::NodeBackendHandle &id) noexcept : handle_(id) {}
+Node::Node(Node::NodeBackendHandle id) noexcept : handle_(id) {}
 
 Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
-    if (this->backend_handle().node_storage() == node_storage)
+    if (this->backend_handle().node_storage_id() == node_storage.id())
         return *this;
     else {
         NodeID node_id = [&]() {
             switch (this->backend_handle().type()) {
 
                 case RDFNodeType::Variable: {
-                    auto variable = static_cast<query::Variable>(*this);
-                    return node_storage.get_variable_id(variable.name(), variable.is_anonymous());
+                    return node_storage.find_or_make_id(NodeStorage::find_variable_backend_view(backend_handle()));
                 }
                 case RDFNodeType::BNode: {
-                    auto bnode = static_cast<BlankNode>(*this);
-                    return node_storage.get_bnode_id(bnode.identifier());
+                    return node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(backend_handle()));
                 }
                 case RDFNodeType::IRI: {
-                    auto iri = static_cast<IRI>(*this);
-                    return node_storage.get_variable_id(iri.identifier());
+                    return node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(backend_handle()));
                 }
                 case RDFNodeType::Literal: {
-                    auto literal = static_cast<Literal>(*this);
-                    if (literal.backend_handle().literal_backend().datatype_id.node_id() == storage::node::identifier::NodeID::rdf_langstring_iri.first)
-                        return node_storage.get_lang_literal_id(literal.lexical_form(), literal.language_tag());
-                    else
-                        return node_storage.get_typed_literal_id(literal.lexical_form(), literal.datatype().identifier());
+                    // retrieve the literal_view
+                    auto literal_view = NodeStorage::find_literal_backend_view(backend_handle());
+                    // exchange the datatype in literal_view for one managed by the new node_storage (the IRI of the datatype must live within the same NodeStorage as the Literal it is used for)
+                    auto dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal_view.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
+                    literal_view.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+                    // find or make the requested node
+                    return node_storage.find_or_make_id(literal_view);
                 }
                 default:
                     return NodeID{};
             }
         }();
-        return Node(node_id);
+        return Node(NodeBackendHandle{node_id, backend_handle().type(), node_storage.id()});
     }
 }
 
@@ -77,11 +74,11 @@ bool Node::is_iri() const noexcept {
 }
 
 std::partial_ordering Node::operator<=>(const Node &other) const noexcept {
-    [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
-        return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) <=> std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
+    [[likely]] if (this->handle_.node_storage_id() == other.handle_.node_storage_id()) {  // same NodeStorage
+        return std::make_tuple(this->handle_.type(), this->handle_.node_id()) <=> std::make_tuple(other.handle_.type(), other.handle_.node_id());
     }
     else {  // different NodeStorage
-        if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
+        if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::partial_ordering::equivalent) {
             return comp_type;
         } else {  // same type, different id.
             switch (this->handle_.type()) {
@@ -100,8 +97,8 @@ std::partial_ordering Node::operator<=>(const Node &other) const noexcept {
 }
 
 bool Node::operator==(const Node &other) const noexcept {
-    [[likely]] if (this->handle_.id().manager_id() == other.handle_.id().manager_id()) {  // same NodeStorage
-        return std::make_tuple(this->handle_.id().type(), this->handle_.id().node_id()) == std::make_tuple(other.handle_.id().type(), other.handle_.id().node_id());
+    [[likely]] if (this->handle_.node_storage_id() == other.handle_.node_storage_id()) {  // same NodeStorage
+        return std::make_tuple(this->handle_.type(), this->handle_.node_id()) == std::make_tuple(other.handle_.type(), other.handle_.node_id());
     }
     else {  // different NodeStorage
         if (this->handle_.type() != other.handle_.type()) {

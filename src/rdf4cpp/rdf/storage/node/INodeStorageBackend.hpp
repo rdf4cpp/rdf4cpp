@@ -6,6 +6,7 @@
 #include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeStorageID.hpp>
 
 #include <cstddef>
 
@@ -30,36 +31,32 @@ protected:
     [[nodiscard]] bool is_unreferenced() const noexcept;
 
 public:
-    using NodeID = identifier::NodeID;
     [[nodiscard]] size_t use_count() const noexcept;
 
     [[nodiscard]] size_t nodes_in_use() const noexcept;
     INodeStorageBackend();
     virtual ~INodeStorageBackend() = 0;
 
-    [[nodiscard]] virtual NodeID get_string_literal_id(std::string_view lexical_form) = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::BNodeBackendView const &) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::IRIBackendView const &) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::LiteralBackendView const &) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::VariableBackendView const &) noexcept = 0;
 
-    [[nodiscard]] virtual NodeID get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(handle::BNodeBackendView const &) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(handle::IRIBackendView const &) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(handle::LiteralBackendView const &) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(handle::VariableBackendView const &) const noexcept = 0;
 
-    [[nodiscard]] virtual NodeID get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id) = 0;
+    [[nodiscard]] virtual handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const = 0;
 
-    [[nodiscard]] virtual NodeID get_lang_literal_id(std::string_view lexical_form, std::string_view lang) = 0;
-
-    [[nodiscard]] virtual NodeID get_iri_id(std::string_view iri) = 0;
-
-    [[nodiscard]] virtual NodeID get_variable_id(std::string_view identifier, bool anonymous) = 0;
-
-    [[nodiscard]] virtual NodeID get_bnode_id(std::string_view identifier) = 0;
-
-    [[nodiscard]] virtual handle::IRIBackendView get_iri_handle(identifier::NodeIDValue id) const = 0;
-
-    [[nodiscard]] virtual handle::LiteralBackendView get_literal_handle(identifier::NodeIDValue id) const = 0;
-
-    [[nodiscard]] virtual handle::BNodeBackendView get_bnode_handle(identifier::NodeIDValue id) const = 0;
-
-    [[nodiscard]] virtual handle::VariableBackendView get_variable_handle(identifier::NodeIDValue id) const = 0;
+    virtual bool erase_iri(identifier::NodeID id) const = 0;
+    virtual bool erase_literal(identifier::NodeID id) const = 0;
+    virtual bool erase_bnode(identifier::NodeID id) const = 0;
+    virtual bool erase_variable(identifier::NodeID id) const = 0;
 };
-
 
 }  // namespace rdf4cpp::rdf::storage::node
 

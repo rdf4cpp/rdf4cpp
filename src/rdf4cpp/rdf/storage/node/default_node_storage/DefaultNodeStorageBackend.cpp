@@ -4,151 +4,6 @@
 
 namespace rdf4cpp::rdf::storage::node::default_node_storage {
 
-identifier::NodeID DefaultNodeStorageBackend::get_string_literal_id(std::string_view lexical_form) {
-    return lookup_or_insert_literal(LiteralBackend{lexical_form, NodeID{manager_id, identifier::RDFNodeType::IRI, NodeID::xsd_string_iri.first}}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) {
-    return lookup_or_insert_literal(LiteralBackend{lexical_form, lookup_or_insert_iri(IRIBackend{datatype}).second}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_typed_literal_id(std::string_view lexical_form, const NodeID &datatype_id) {
-    return lookup_or_insert_literal(LiteralBackend{lexical_form, datatype_id}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_lang_literal_id(std::string_view lexical_form, std::string_view lang) {
-    return lookup_or_insert_literal(LiteralBackend{lexical_form, NodeID{manager_id, identifier::RDFNodeType::IRI, NodeID::rdf_langstring_iri.first}, lang}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_iri_id(std::string_view iri) {
-    // TODO: normalize?
-    return lookup_or_insert_iri(IRIBackend{iri}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_variable_id(std::string_view identifier, bool anonymous) {
-    return lookup_or_insert_variable(VariableBackend{identifier, anonymous}).second;
-}
-identifier::NodeID DefaultNodeStorageBackend::get_bnode_id(std::string_view identifier) {
-    return lookup_or_insert_bnode(BNodeBackend{identifier}).second;
-}
-handle::IRIBackendView DefaultNodeStorageBackend::get_iri_handle(NodeIDValue id) const {
-    std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
-    return handle::IRIBackendView(*iri_storage.at(id));
-}
-handle::LiteralBackendView DefaultNodeStorageBackend::get_literal_handle(NodeIDValue id) const {
-    std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
-    return handle::LiteralBackendView(*literal_storage.at(id));
-}
-handle::BNodeBackendView DefaultNodeStorageBackend::get_bnode_handle(NodeIDValue id) const {
-    std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
-
-    return handle::BNodeBackendView(*bnode_storage.at(id));
-}
-handle::VariableBackendView DefaultNodeStorageBackend::get_variable_handle(NodeIDValue id) const {
-    std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
-    return handle::VariableBackendView(*variable_storage.at(id));
-}
-
-std::pair<LiteralBackend *, identifier::NodeID> DefaultNodeStorageBackend::lookup_or_insert_literal(LiteralBackend literal) {
-    std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
-    auto found = literal_storage_reverse.find(literal);
-    NodeID id;
-    if (found == literal_storage_reverse.end()) {
-        shared_lock.unlock();
-        std::unique_lock<std::shared_mutex> unique_lock{literal_mutex_};
-        // update found (might have changed in the meantime)
-        found = literal_storage_reverse.find(literal);
-        if (found == literal_storage_reverse.end()) {
-            // TODO make sure node_id literal type is set correctly
-            id = {manager_id, identifier::RDFNodeType::Literal, next_literal_id++, identifier::LiteralType::STRING};
-            auto [found2, inserted_successfully] = literal_storage_reverse.emplace(std::make_unique<LiteralBackend>(std::move(literal)), id.node_id());
-            assert(inserted_successfully);
-            found = found2;
-            literal_storage.insert({id.node_id(), found->first.get()});
-        } else {
-            unique_lock.unlock();
-            id = {manager_id, identifier::RDFNodeType::Literal, found->second};
-        }
-    } else {
-        shared_lock.unlock();
-        id = {manager_id, identifier::RDFNodeType::Literal, found->second};
-    }
-
-    return {found->first.get(), id};
-}
-
-std::pair<IRIBackend *, identifier::NodeID> DefaultNodeStorageBackend::lookup_or_insert_iri(IRIBackend iri) {
-    std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
-    auto found = iri_storage_reverse.find(iri);
-    NodeID id;
-    if (found == iri_storage_reverse.end()) {
-        shared_lock.unlock();
-        std::unique_lock<std::shared_mutex> unique_lock{iri_mutex_};
-        // update found (might have changed in the meantime)
-        found = iri_storage_reverse.find(iri);
-        if (found == iri_storage_reverse.end()) {
-            id = {manager_id, identifier::RDFNodeType::IRI, next_iri_id++};
-            auto [found2, inserted_successfully] = iri_storage_reverse.emplace(std::make_unique<IRIBackend>(std::move(iri)), id.node_id());
-            assert(inserted_successfully);
-            found = found2;
-            iri_storage.insert({id.node_id(), found->first.get()});
-        } else {
-            unique_lock.unlock();
-            id = {manager_id, identifier::RDFNodeType::IRI, found->second};
-        }
-    } else {
-        shared_lock.unlock();
-        id = {manager_id, identifier::RDFNodeType::IRI, found->second};
-    }
-    return {found->first.get(), id};
-}
-std::pair<BNodeBackend *, identifier::NodeID> DefaultNodeStorageBackend::lookup_or_insert_bnode(BNodeBackend bnode) {
-    std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
-    auto found = bnode_storage_reverse.find(bnode);
-    NodeID id;
-
-    if (found == bnode_storage_reverse.end()) {
-        shared_lock.unlock();
-        std::unique_lock<std::shared_mutex> unique_lock{bnode_mutex_};
-        // update found (might have changed in the meantime)
-        found = bnode_storage_reverse.find(bnode);
-        if (found == bnode_storage_reverse.end()) {
-            id = {manager_id, identifier::RDFNodeType::BNode, next_bnode_id++};
-            auto [found2, inserted_successfully] = bnode_storage_reverse.emplace(std::make_unique<BNodeBackend>(std::move(bnode)), id.node_id());
-            assert(inserted_successfully);
-            found = found2;
-            bnode_storage.insert({id.node_id(), found->first.get()});
-        } else {
-            unique_lock.unlock();
-            id = {manager_id, identifier::RDFNodeType::BNode, found->second};
-        }
-    } else {
-        shared_lock.unlock();
-        id = {manager_id, identifier::RDFNodeType::BNode, found->second};
-    }
-
-    return {found->first.get(), id};
-}
-std::pair<VariableBackend *, identifier::NodeID> DefaultNodeStorageBackend::lookup_or_insert_variable(VariableBackend variable) {
-    std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
-    auto found = variable_storage_reverse.find(variable);
-    NodeID id;
-    if (found == variable_storage_reverse.end()) {
-        shared_lock.unlock();
-        std::unique_lock<std::shared_mutex> unique_lock{variable_mutex_};
-        // update found (might have changed in the meantime)
-        found = variable_storage_reverse.find(variable);
-        if (found == variable_storage_reverse.end()) {
-            id = {manager_id, identifier::RDFNodeType::Variable, next_variable_id++};
-            auto [found2, inserted_successfully] = variable_storage_reverse.emplace(std::make_unique<VariableBackend>(std::move(variable)), id.node_id());
-            assert(inserted_successfully);
-            found = found2;
-            variable_storage.insert({id.node_id(), found->first.get()});
-        } else {
-            unique_lock.unlock();
-            id = {manager_id, identifier::RDFNodeType::Variable, found->second};
-        }
-    } else {
-        shared_lock.unlock();
-        id = {manager_id, identifier::RDFNodeType::Variable, found->second};
-    }
-    return {found->first.get(), id};
-}
 DefaultNodeStorageBackend::DefaultNodeStorageBackend() : INodeStorageBackend() {
     // TODO: that should be done by (Abstract)NodeContextBackend
     // some iri's like xsd:string are there by default
@@ -157,5 +12,115 @@ DefaultNodeStorageBackend::DefaultNodeStorageBackend() : INodeStorageBackend() {
         assert(inserted_successfully);
         iri_storage.insert({id, iter->first.get()});
     }
+}
+
+template<class Backend_t, bool create_if_not_present, class View_t, class Storage_t, class ReverseStorage_t, class NextIDFromView_func = void *>
+inline identifier::NodeID lookup_or_insert_impl(View_t view, std::shared_mutex &mutex, Storage_t &storage,
+                                                ReverseStorage_t &reverse_storage,
+                                                NextIDFromView_func next_id_func = nullptr) noexcept {
+    std::shared_lock<std::shared_mutex> shared_lock{mutex};
+    auto found = reverse_storage.find(view);
+    if (found == reverse_storage.end()) {
+        if constexpr (create_if_not_present) {
+            shared_lock.unlock();
+            std::unique_lock<std::shared_mutex> unique_lock{mutex};
+            // update found (might have changed in the meantime)
+            found = reverse_storage.find(view);
+            if (found == reverse_storage.end()) {
+                identifier::NodeID id = next_id_func(view);
+                auto [found2, inserted_successfully] = reverse_storage.emplace(std::make_unique<typename ReverseStorage_t::key_type::element_type>(view), id);
+                assert(inserted_successfully);
+                found = std::move(found2);
+                storage.insert({id, found->first.get()});
+                return id;
+            } else {
+                unique_lock.unlock();
+                return found->second;
+            }
+        } else {
+            return {};
+        }
+    } else {
+        shared_lock.unlock();
+        return found->second;
+    }
+}
+
+identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::LiteralBackendView const &view) noexcept {
+    return lookup_or_insert_impl<LiteralBackend, true>(
+            view, literal_mutex_, literal_storage, literal_storage_reverse,
+            [this]([[maybe_unused]] handle::LiteralBackendView const &literal_view) {
+                // TODO: actually use LiteralType (therefore, we will need literal_view)
+                return identifier::NodeID{next_literal_id++, identifier::LiteralType::OTHER};
+            });
+}
+
+identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::IRIBackendView const &view) noexcept {
+    return lookup_or_insert_impl<IRIBackend, true>(
+            view, iri_mutex_, iri_storage, iri_storage_reverse,
+            [this]([[maybe_unused]] handle::IRIBackendView const &view) {
+                return next_iri_id++;
+            });
+}
+
+identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::BNodeBackendView const &view) noexcept {
+    return lookup_or_insert_impl<BNodeBackend, true>(
+            view, bnode_mutex_, bnode_storage, bnode_storage_reverse,
+            [this]([[maybe_unused]] handle::BNodeBackendView const &view) {
+                return next_bnode_id++;
+            });
+}
+identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::VariableBackendView const &view) noexcept {
+    return lookup_or_insert_impl<VariableBackend, true>(
+            view, variable_mutex_, variable_storage, variable_storage_reverse,
+            [this]([[maybe_unused]] handle::VariableBackendView const &view) {
+                return next_variable_id++;
+            });
+}
+
+identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::BNodeBackendView &view) const noexcept {
+    return lookup_or_insert_impl<BNodeBackend, false>(
+            view, bnode_mutex_, bnode_storage, bnode_storage_reverse);
+}
+identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::IRIBackendView &view) const noexcept {
+    return lookup_or_insert_impl<IRIBackend, false>(
+            view, iri_mutex_, iri_storage, iri_storage_reverse);
+}
+identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::LiteralBackendView &view) const noexcept {
+    return lookup_or_insert_impl<LiteralBackend, false>(
+            view, literal_mutex_, literal_storage, literal_storage_reverse);
+}
+identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::VariableBackendView &view) const noexcept {
+    return lookup_or_insert_impl<VariableBackend, false>(
+            view, variable_mutex_, variable_storage, variable_storage_reverse);
+}
+
+handle::IRIBackendView DefaultNodeStorageBackend::find_iri_backend_view(identifier::NodeID id) const {
+    std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
+    return handle::IRIBackendView(*iri_storage.at(id));
+}
+handle::LiteralBackendView DefaultNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
+    std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
+    return handle::LiteralBackendView(*literal_storage.at(id));
+}
+handle::BNodeBackendView DefaultNodeStorageBackend::find_bnode_backend_view(identifier::NodeID id) const {
+    std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
+    return handle::BNodeBackendView(*bnode_storage.at(id));
+}
+handle::VariableBackendView DefaultNodeStorageBackend::find_variable_backend_view(identifier::NodeID id) const {
+    std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
+    return handle::VariableBackendView(*variable_storage.at(id));
+}
+bool DefaultNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+}
+bool DefaultNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+}
+bool DefaultNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+}
+bool DefaultNodeStorageBackend::erase_variable([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
 }
 }  // namespace rdf4cpp::rdf::storage::node::default_node_storage

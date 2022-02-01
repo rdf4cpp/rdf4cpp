@@ -7,11 +7,10 @@
 namespace rdf4cpp::rdf::query {
 class Variable : public Node {
 protected:
-    Variable(const NodeID &id);
     explicit Variable(Node::NodeBackendHandle handle);
 
 public:
-    Variable();
+    Variable() noexcept;
 
     explicit Variable(std::string_view name, bool anonymous = false,
                       NodeStorage &node_storage = NodeStorage::primary_instance());

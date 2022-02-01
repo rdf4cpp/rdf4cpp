@@ -10,7 +10,6 @@ namespace rdf4cpp::rdf {
 class BlankNode : public Node {
 
 private:
-    BlankNode(const NodeID &id);
     explicit BlankNode(NodeBackendHandle handle);
 
 public:

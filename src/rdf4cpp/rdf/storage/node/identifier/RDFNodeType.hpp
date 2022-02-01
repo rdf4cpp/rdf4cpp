@@ -5,7 +5,9 @@
 #include <string>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
-
+/**
+ * Specifies weather an RDF node is a Variable, BlankNode, IRI or Literal.
+ */
 enum class RDFNodeType : uint8_t {
     Variable = 0,
     BNode,

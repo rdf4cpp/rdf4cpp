@@ -11,10 +11,9 @@ const Node &TriplePattern::predicate() const { return entries_[1]; }
 Node &TriplePattern::object() { return entries_[2]; }
 const Node &TriplePattern::object() const { return entries_[2]; }
 bool TriplePattern::valid() const {
-    return not (subject().null() or predicate().null() or object().null())
-           and
-            (not subject().is_literal()) and
-            (predicate().is_iri() or predicate().is_variable());
+    return not(subject().null() or predicate().null() or object().null()) and
+           (not subject().is_literal()) and
+           (predicate().is_iri() or predicate().is_variable());
 }
 TriplePattern::iterator TriplePattern::begin() { return entries_.begin(); }
 TriplePattern::const_iterator TriplePattern::begin() const { return entries_.begin(); }
@@ -32,7 +31,7 @@ TriplePattern TriplePattern::to_node_storage(storage::node::NodeStorage &node_st
     TriplePattern tp;
     auto it = tp.begin();
     for (const auto &item : (*this))
-        if (item.backend_handle().node_storage() == node_storage)
+        if (item.backend_handle().node_storage_id() == node_storage.id())
             *(it++) = item;
         else
             *(it++) = item.to_node_storage(node_storage);

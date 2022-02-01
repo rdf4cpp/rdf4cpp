@@ -120,44 +120,90 @@ size_t NodeStorage::nodes_in_use() const noexcept {
 identifier::NodeStorageID NodeStorage::id() const noexcept {
     return backend_->manager_id;
 }
-NodeStorage::NodeID NodeStorage::get_string_literal_id(std::string_view lexical_form) {
-    return backend_->get_string_literal_id(lexical_form);
-}
-NodeStorage::NodeID NodeStorage::get_typed_literal_id(std::string_view lexical_form, std::string_view datatype) {
-    return backend_->get_typed_literal_id(lexical_form, datatype);
-}
-NodeStorage::NodeID NodeStorage::get_typed_literal_id(std::string_view lexical_form, const NodeStorage::NodeID &datatype_id) {
-    return backend_->get_typed_literal_id(lexical_form, datatype_id);
-}
-NodeStorage::NodeID NodeStorage::get_lang_literal_id(std::string_view lexical_form, std::string_view lang) {
-    return backend_->get_lang_literal_id(lexical_form, lang);
-}
-NodeStorage::NodeID NodeStorage::get_iri_id(std::string_view iri) {
-    return backend_->get_iri_id(iri);
-}
-NodeStorage::NodeID NodeStorage::get_variable_id(std::string_view identifier, bool anonymous) {
-    return backend_->get_variable_id(identifier, anonymous);
-}
-NodeStorage::NodeID NodeStorage::get_bnode_id(std::string_view identifier) {
-    return backend_->get_bnode_id(identifier);
-}
-handle::IRIBackendView NodeStorage::get_iri_handle(NodeStorage::NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    return backend->get_iri_handle(id.node_id());
-}
-handle::LiteralBackendView NodeStorage::get_literal_handle(NodeStorage::NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    return backend->get_literal_handle(id.node_id());
-}
-handle::BNodeBackendView NodeStorage::get_bnode_handle(NodeStorage::NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    return backend->get_bnode_handle(id.node_id());
-}
-handle::VariableBackendView NodeStorage::get_variable_handle(NodeStorage::NodeID id) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(id.manager_id());
-    return backend->get_variable_handle(id.node_id());
-}
+
 bool NodeStorage::operator==(const NodeStorage &other) const {
     return this->id() == other.id();
 }
+identifier::NodeID NodeStorage::find_or_make_id(const handle::BNodeBackendView &view) noexcept {
+    return backend_->find_or_make_id(view);
+}
+identifier::NodeID NodeStorage::find_or_make_id(const handle::IRIBackendView &view) noexcept {
+    return backend_->find_or_make_id(view);
+}
+identifier::NodeID NodeStorage::find_or_make_id(const handle::LiteralBackendView &view) noexcept {
+    return backend_->find_or_make_id(view);
+}
+identifier::NodeID NodeStorage::find_or_make_id(const handle::VariableBackendView &view) noexcept {
+    return backend_->find_or_make_id(view);
+}
+identifier::NodeID NodeStorage::find_id(const handle::BNodeBackendView &view) const noexcept {
+    return backend_->find_id(view);
+}
+identifier::NodeID NodeStorage::find_id(const handle::IRIBackendView &view) const noexcept {
+    return backend_->find_id(view);
+}
+identifier::NodeID NodeStorage::find_id(const handle::LiteralBackendView &view) const noexcept {
+    return backend_->find_id(view);
+}
+identifier::NodeID NodeStorage::find_id(const handle::VariableBackendView &view) const noexcept {
+    return backend_->find_id(view);
+}
+handle::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeID id) const {
+    return backend_->find_iri_backend_view(id);
+}
+handle::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeID id) const {
+    return backend_->find_literal_backend_view(id);
+}
+handle::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeID id) const {
+    return backend_->find_bnode_backend_view(id);
+}
+handle::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeID id) const {
+    return backend_->find_variable_backend_view(id);
+}
+handle::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->find_iri_backend_view(handle.node_id());
+}
+handle::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->find_literal_backend_view(handle.node_id());
+}
+handle::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->find_bnode_backend_view(handle.node_id());
+}
+handle::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->find_variable_backend_view(handle.node_id());
+}
+bool NodeStorage::erase_iri(identifier::NodeID id) const {
+    return backend_->erase_iri(id);
+}
+bool NodeStorage::erase_literal(identifier::NodeID id) const {
+    return backend_->erase_literal(id);
+}
+bool NodeStorage::erase_bnode(identifier::NodeID id) const {
+    return backend_->erase_bnode(id);
+}
+bool NodeStorage::erase_variable(identifier::NodeID id) const {
+    return backend_->erase_variable(id);
+}
+bool NodeStorage::erase_iri(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->erase_iri(handle.node_id());
+}
+bool NodeStorage::erase_literal(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->erase_literal(handle.node_id());
+}
+bool NodeStorage::erase_bnode(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->erase_bnode(handle.node_id());
+}
+bool NodeStorage::erase_variable(identifier::NodeBackendHandle handle) {
+    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
+    return backend->erase_literal(handle.node_id());
+}
+
+
 }  // namespace rdf4cpp::rdf::storage::node

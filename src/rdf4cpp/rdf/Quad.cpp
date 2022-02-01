@@ -4,7 +4,7 @@ namespace rdf4cpp::rdf {
 Quad::Quad(Node subject, Node predicate, Node object) : QuadPattern(IRI::default_graph(), subject, predicate, object) {}
 Quad::Quad(Node graph, Node subject, Node predicate, Node object) : QuadPattern(graph, subject, predicate, object) {}
 bool Quad::valid() const {
-    return ((graph().is_iri() or graph().is_blank_node()) and not graph().null() and
+    return ((graph().is_iri() or (graph().is_blank_node() and not graph().null())) and
             (subject().is_iri() or subject().is_blank_node()) and not subject().null() and
             (predicate().is_iri()) and not predicate().null() and
             (object().is_iri() or object().is_literal() or object().is_blank_node()) and not object().null());

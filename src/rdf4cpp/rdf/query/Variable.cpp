@@ -1,10 +1,11 @@
 #include "Variable.hpp"
 
 namespace rdf4cpp::rdf::query {
-Variable::Variable() : Node() {}
-Variable::Variable(const Node::NodeID &id) : Node(id) {}
+Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
 Variable::Variable(std::string_view identifier, bool anonymous, NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.get_variable_id(identifier, anonymous)}) {}
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::handle::VariableBackendView{.name = identifier, .is_anonymous = anonymous}),
+                             storage::node::identifier::RDFNodeType::Variable,
+                             node_storage.id()}) {}
 Variable::Variable(Node::NodeBackendHandle handle) : Node(handle) {}
 
 bool Variable::is_anonymous() const {
