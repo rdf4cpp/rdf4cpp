@@ -19,7 +19,7 @@ class INodeStorageBackend;
 
 /**
  * NodeStorage provides an interface to the internal storage <div>Node</div>s.
- * Each NodeStorge has a INodeStorageBackend, which is uniquely identified by a identifier::NodeStorageID.
+ * Each NodeStorage has a INodeStorageBackend, which is uniquely identified by a identifier::NodeStorageID.
  * There can be at most 1024 different INodeStorageBackend instances at once.
  * If no NodeStorage with the identifier::NodeStorageID of a certain INodeStorageBackend exists anymore, the corresponding INodeStorageBackend is destructed.
  * This does not apply to the default_instance.
@@ -150,7 +150,8 @@ public:
      */
 
     /**
-     * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed. For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
+     * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed.
+     * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
      * @return current number of instances of this NodeStorage
      */
     [[nodiscard]] size_t use_count() const noexcept;
