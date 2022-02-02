@@ -1,6 +1,6 @@
 #include "BNodeBackend.hpp"
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 BNodeBackend::BNodeBackend(std::string_view identifier) noexcept
     : identifier_(identifier) {}
@@ -20,4 +20,4 @@ BNodeBackend::operator handle::BNodeBackendView() const noexcept {
 std::partial_ordering operator<=>(const std::unique_ptr<BNodeBackend> &self, const std::unique_ptr<BNodeBackend> &other) noexcept {
     return *self <=> *other;
 }
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

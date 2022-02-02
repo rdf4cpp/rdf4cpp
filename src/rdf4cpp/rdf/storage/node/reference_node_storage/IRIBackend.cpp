@@ -1,6 +1,6 @@
 #include "IRIBackend.hpp"
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 IRIBackend::IRIBackend(std::string_view iri) noexcept : iri(iri) {}
 IRIBackend::IRIBackend(handle::IRIBackendView view) noexcept : iri(view.identifier) {}
@@ -19,4 +19,4 @@ IRIBackend::operator handle::IRIBackendView() const noexcept {
 std::partial_ordering operator<=>(const std::unique_ptr<IRIBackend> &self, const std::unique_ptr<IRIBackend> &other) noexcept {
     return *self <=> *other;
 }
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

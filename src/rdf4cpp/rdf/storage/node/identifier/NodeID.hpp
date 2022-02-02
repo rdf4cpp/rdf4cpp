@@ -95,6 +95,15 @@ public:
         --value_;
         return new_node_id;
     }
+
+    /**
+     * null NodeID that MUST NOT identify any resource.
+     * @return
+     */
+    [[nodiscard]] constexpr bool null() const noexcept {
+        // TODO: make sure null() NodeIDs are nowhere used to identify valid nodes.
+        return value_ == 0;
+    }
 };
 
 static_assert(sizeof(NodeID) == 6);

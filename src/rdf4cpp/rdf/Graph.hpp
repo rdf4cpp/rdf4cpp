@@ -29,9 +29,9 @@ public:
         return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
     }
 
-    explicit Graph(NodeStorage node_storage = NodeStorage::primary_instance());
+    explicit Graph(NodeStorage node_storage = NodeStorage::default_instance());
 
-    explicit Graph(const IRI &graph_name, NodeStorage node_storage = NodeStorage::primary_instance());
+    explicit Graph(const IRI &graph_name, NodeStorage node_storage = NodeStorage::default_instance());
 
     void add(const Statement &statement);
 

@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 
 class IRIBackend {
@@ -29,9 +29,9 @@ public:
     explicit operator handle::IRIBackendView() const noexcept;
 };
 std::partial_ordering operator<=>(std::unique_ptr<IRIBackend> const &self, std::unique_ptr<IRIBackend> const &other) noexcept;
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 namespace rdf4cpp::rdf::storage::node::handle {
-inline std::partial_ordering operator<=>(IRIBackendView const &lhs, std::unique_ptr<default_node_storage::IRIBackend> const &rhs) noexcept {
+inline std::partial_ordering operator<=>(IRIBackendView const &lhs, std::unique_ptr<reference_node_storage::IRIBackend> const &rhs) noexcept {
     return lhs <=> IRIBackendView(*rhs);
 }
 }  // namespace rdf4cpp::rdf::storage::node::handle

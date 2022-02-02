@@ -13,7 +13,7 @@ public:
     Variable() noexcept;
 
     explicit Variable(std::string_view name, bool anonymous = false,
-                      NodeStorage &node_storage = NodeStorage::primary_instance());
+                      NodeStorage &node_storage = NodeStorage::default_instance());
 
     [[nodiscard]] bool is_anonymous() const;
 

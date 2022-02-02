@@ -1,6 +1,6 @@
 #include "VariableBackend.hpp"
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 VariableBackend::VariableBackend(std::string_view name, bool anonymous) noexcept
     : name_(name), anonymous_(anonymous) {}
@@ -24,4 +24,4 @@ VariableBackend::operator handle::VariableBackendView() const noexcept {
 std::partial_ordering operator<=>(const std::unique_ptr<VariableBackend> &self, const std::unique_ptr<VariableBackend> &other) noexcept {
     return *self <=> *other;
 }
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

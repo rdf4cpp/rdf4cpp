@@ -19,7 +19,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      */
     explicit Literal(std::string_view lexical_form,
-                     NodeStorage &node_storage = NodeStorage::primary_instance());
+                     NodeStorage &node_storage = NodeStorage::default_instance());
     /**
      * Constructs a Literal from a lexical form and a datatype.
      * @param lexical_form the lexical form
@@ -27,7 +27,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      */
     Literal(std::string_view lexical_form, const IRI &datatype,
-            NodeStorage &node_storage = NodeStorage::primary_instance());
+            NodeStorage &node_storage = NodeStorage::default_instance());
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
@@ -35,7 +35,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      */
     Literal(std::string_view lexical_form, std::string_view lang,
-            NodeStorage &node_storage = NodeStorage::primary_instance());
+            NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Constructs a literal from a compatible type
@@ -46,7 +46,7 @@ public:
      */
     template<class T>
     inline static Literal make(T compatible_value,
-                               NodeStorage &node_storage = NodeStorage::primary_instance()) {
+                               NodeStorage &node_storage = NodeStorage::default_instance()) {
         return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
                        IRI(datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(), node_storage),
                        node_storage);

@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 class VariableBackend {
     std::string name_;
@@ -32,10 +32,10 @@ public:
 };
 
 std::partial_ordering operator<=>(std::unique_ptr<VariableBackend> const &self, std::unique_ptr<VariableBackend> const &other) noexcept;
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
 namespace rdf4cpp::rdf::storage::node::handle {
-inline std::partial_ordering operator<=>(VariableBackendView const &lhs, std::unique_ptr<default_node_storage::VariableBackend> const &rhs) noexcept {
+inline std::partial_ordering operator<=>(VariableBackendView const &lhs, std::unique_ptr<reference_node_storage::VariableBackend> const &rhs) noexcept {
     return lhs <=> VariableBackendView(*rhs);
 }
 }  // namespace rdf4cpp::rdf::storage::node::handle

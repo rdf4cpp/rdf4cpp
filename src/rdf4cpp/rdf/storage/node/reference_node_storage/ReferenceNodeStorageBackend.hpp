@@ -1,22 +1,21 @@
-#ifndef RDF4CPP_DEFAULTNODESTORAGEBACKEND_HPP
-#define RDF4CPP_DEFAULTNODESTORAGEBACKEND_HPP
+#ifndef RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
+#define RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 
-#include <rdf4cpp/rdf/storage/node/default_node_storage/BNodeBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/default_node_storage/IRIBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/default_node_storage/LiteralBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/default_node_storage/VariableBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
 
 #include <map>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-// TODO: make Backend Node Types reference countable
-class DefaultNodeStorageBackend : public INodeStorageBackend {
+class ReferenceNodeStorageBackend : public INodeStorageBackend {
 public:
     using NodeID = identifier::NodeID;
     using LiteralID = identifier::LiteralID;
@@ -41,10 +40,9 @@ private:
     NodeID next_variable_id = NodeID::min_variable_id;
 
 public:
-    // TODO: thread safety
-    DefaultNodeStorageBackend();
+    ReferenceNodeStorageBackend();
 
-    ~DefaultNodeStorageBackend() override = default;
+    ~ReferenceNodeStorageBackend() override = default;
 
     [[nodiscard]] identifier::NodeID find_or_make_id(handle::BNodeBackendView const &) noexcept override;
     [[nodiscard]] identifier::NodeID find_or_make_id(handle::IRIBackendView const &) noexcept override;
@@ -67,5 +65,5 @@ public:
     bool erase_variable(identifier::NodeID id) const override;
 };
 
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
-#endif  //RDF4CPP_DEFAULTNODESTORAGEBACKEND_HPP
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
+#endif  //RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP

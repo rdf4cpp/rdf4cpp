@@ -29,7 +29,7 @@ public:
         return {DatasetStorage::new_instance<BackendImpl>(args...)};
     }
 
-    explicit Dataset(NodeStorage node_storage = NodeStorage::primary_instance());
+    explicit Dataset(NodeStorage node_storage = NodeStorage::default_instance());
 
     void add(const Quad &quad);
 

@@ -18,8 +18,9 @@ void INodeStorageBackend::inc_use_count() noexcept {
     ++use_count_;
 }
 void INodeStorageBackend::dec_use_count() noexcept {
-    --use_count_;
-    // TODO destruct?
+    size_t i = use_count_.fetch_add(-1);
+    if (i == 0 and nodes_in_use_ == 0)
+        delete this;
 }
 void INodeStorageBackend::inc_nodes_in_use() noexcept {
     ++nodes_in_use_;

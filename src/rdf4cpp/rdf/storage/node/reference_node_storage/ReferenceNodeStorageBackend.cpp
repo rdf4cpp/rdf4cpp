@@ -1,10 +1,10 @@
-#include "DefaultNodeStorageBackend.hpp"
+#include "ReferenceNodeStorageBackend.hpp"
 
 #include <functional>
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-DefaultNodeStorageBackend::DefaultNodeStorageBackend() : INodeStorageBackend() {
+ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend() {
     // TODO: that should be done by (Abstract)NodeContextBackend
     // some iri's like xsd:string are there by default
     for (const auto &[id, iri] : NodeID::predefined_iris) {
@@ -46,7 +46,7 @@ inline identifier::NodeID lookup_or_insert_impl(View_t view, std::shared_mutex &
     }
 }
 
-identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::LiteralBackendView const &view) noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(handle::LiteralBackendView const &view) noexcept {
     return lookup_or_insert_impl<LiteralBackend, true>(
             view, literal_mutex_, literal_storage, literal_storage_reverse,
             [this]([[maybe_unused]] handle::LiteralBackendView const &literal_view) {
@@ -55,7 +55,7 @@ identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::LiteralBac
             });
 }
 
-identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::IRIBackendView const &view) noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(handle::IRIBackendView const &view) noexcept {
     return lookup_or_insert_impl<IRIBackend, true>(
             view, iri_mutex_, iri_storage, iri_storage_reverse,
             [this]([[maybe_unused]] handle::IRIBackendView const &view) {
@@ -63,14 +63,14 @@ identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::IRIBackend
             });
 }
 
-identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::BNodeBackendView const &view) noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(handle::BNodeBackendView const &view) noexcept {
     return lookup_or_insert_impl<BNodeBackend, true>(
             view, bnode_mutex_, bnode_storage, bnode_storage_reverse,
             [this]([[maybe_unused]] handle::BNodeBackendView const &view) {
                 return next_bnode_id++;
             });
 }
-identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::VariableBackendView const &view) noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(handle::VariableBackendView const &view) noexcept {
     return lookup_or_insert_impl<VariableBackend, true>(
             view, variable_mutex_, variable_storage, variable_storage_reverse,
             [this]([[maybe_unused]] handle::VariableBackendView const &view) {
@@ -78,49 +78,49 @@ identifier::NodeID DefaultNodeStorageBackend::find_or_make_id(handle::VariableBa
             });
 }
 
-identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::BNodeBackendView &view) const noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_id(const handle::BNodeBackendView &view) const noexcept {
     return lookup_or_insert_impl<BNodeBackend, false>(
             view, bnode_mutex_, bnode_storage, bnode_storage_reverse);
 }
-identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::IRIBackendView &view) const noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_id(const handle::IRIBackendView &view) const noexcept {
     return lookup_or_insert_impl<IRIBackend, false>(
             view, iri_mutex_, iri_storage, iri_storage_reverse);
 }
-identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::LiteralBackendView &view) const noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_id(const handle::LiteralBackendView &view) const noexcept {
     return lookup_or_insert_impl<LiteralBackend, false>(
             view, literal_mutex_, literal_storage, literal_storage_reverse);
 }
-identifier::NodeID DefaultNodeStorageBackend::find_id(const handle::VariableBackendView &view) const noexcept {
+identifier::NodeID ReferenceNodeStorageBackend::find_id(const handle::VariableBackendView &view) const noexcept {
     return lookup_or_insert_impl<VariableBackend, false>(
             view, variable_mutex_, variable_storage, variable_storage_reverse);
 }
 
-handle::IRIBackendView DefaultNodeStorageBackend::find_iri_backend_view(identifier::NodeID id) const {
+handle::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID id) const {
     std::shared_lock<std::shared_mutex> shared_lock{iri_mutex_};
     return handle::IRIBackendView(*iri_storage.at(id));
 }
-handle::LiteralBackendView DefaultNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
+handle::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
     std::shared_lock<std::shared_mutex> shared_lock{literal_mutex_};
     return handle::LiteralBackendView(*literal_storage.at(id));
 }
-handle::BNodeBackendView DefaultNodeStorageBackend::find_bnode_backend_view(identifier::NodeID id) const {
+handle::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID id) const {
     std::shared_lock<std::shared_mutex> shared_lock{bnode_mutex_};
     return handle::BNodeBackendView(*bnode_storage.at(id));
 }
-handle::VariableBackendView DefaultNodeStorageBackend::find_variable_backend_view(identifier::NodeID id) const {
+handle::VariableBackendView ReferenceNodeStorageBackend::find_variable_backend_view(identifier::NodeID id) const {
     std::shared_lock<std::shared_mutex> shared_lock{variable_mutex_};
     return handle::VariableBackendView(*variable_storage.at(id));
 }
-bool DefaultNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
 }
-bool DefaultNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
 }
-bool DefaultNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
 }
-bool DefaultNodeStorageBackend::erase_variable([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in DefaultNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_variable([[maybe_unused]] identifier::NodeID id) const {
+    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
 }
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

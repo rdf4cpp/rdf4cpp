@@ -2,7 +2,7 @@
 
 namespace rdf4cpp::rdf::storage::node {
 NodeStorage NodeStorage::default_instance_ = {};
-INodeStorageBackend *NodeStorage::lookup_backend_instance(NodeStorageID id) {
+INodeStorageBackend *NodeStorage::lookup_backend_instance(identifier::NodeStorageID id) {
     std::call_once(default_init_once_flag, []() {
         if (node_context_instances[0] == nullptr) {
             default_instance_ = new_instance();
@@ -15,7 +15,7 @@ INodeStorageBackend *NodeStorage::lookup_backend_instance(NodeStorageID id) {
     });
     return node_context_instances[id.value];
 }
-NodeStorage &NodeStorage::primary_instance() {
+NodeStorage &NodeStorage::default_instance() {
     std::call_once(default_init_once_flag, []() {
         if (node_context_instances[0] == nullptr) {
             default_instance_ = new_instance();
@@ -28,12 +28,12 @@ NodeStorage &NodeStorage::primary_instance() {
     });
     return default_instance_;
 }
-void NodeStorage::primary_instance(const NodeStorage &node_context) {
+void NodeStorage::default_instance(const NodeStorage &node_context) {
     default_instance_ = node_context;
     default_node_context_id = node_context.id();
 }
 NodeStorage NodeStorage::new_instance() {
-    return NodeStorage(new default_node_storage::DefaultNodeStorageBackend());
+    return NodeStorage(new reference_node_storage::ReferenceNodeStorageBackend());
 }
 NodeStorage NodeStorage::register_backend(INodeStorageBackend *backend_instance) {
     if (backend_instance == nullptr)
@@ -52,7 +52,7 @@ void NodeStorage::unregister_backend(INodeStorageBackend *backend_instance) {
         throw std::runtime_error("Backend instance must not be null.");
     node_context_instances[backend_instance->manager_id.value] = nullptr;
 }
-std::optional<NodeStorage> NodeStorage::lookup_instance(NodeStorageID id) {
+std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) {
     // TODO: would be better if we returned a reference here, i.e. std::optional<std::reference_wrapper<NodeStorage>>
     INodeStorageBackend *backend = lookup_backend_instance(id);
     if (backend != nullptr) {
@@ -121,9 +121,6 @@ identifier::NodeStorageID NodeStorage::id() const noexcept {
     return backend_->manager_id;
 }
 
-bool NodeStorage::operator==(const NodeStorage &other) const {
-    return this->id() == other.id();
-}
 identifier::NodeID NodeStorage::find_or_make_id(const handle::BNodeBackendView &view) noexcept {
     return backend_->find_or_make_id(view);
 }

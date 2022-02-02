@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::default_node_storage {
+namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 class LiteralBackend {
     identifier::NodeID datatype_id_;
@@ -39,10 +39,10 @@ public:
 
 
 std::partial_ordering operator<=>(std::unique_ptr<LiteralBackend> const &self, std::unique_ptr<LiteralBackend> const &other) noexcept;
-}  // namespace rdf4cpp::rdf::storage::node::default_node_storage
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
 namespace rdf4cpp::rdf::storage::node::handle {
-inline std::partial_ordering operator<=>(LiteralBackendView const &lhs, std::unique_ptr<default_node_storage::LiteralBackend> const &rhs) noexcept {
+inline std::partial_ordering operator<=>(LiteralBackendView const &lhs, std::unique_ptr<reference_node_storage::LiteralBackend> const &rhs) noexcept {
     return lhs <=> LiteralBackendView(*rhs);
 }
 }  // namespace rdf4cpp::rdf::storage::node::handle

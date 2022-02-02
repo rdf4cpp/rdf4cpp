@@ -23,7 +23,7 @@ public:
      * @param node_storage optional custom node_storage used to store the IRI
      */
     explicit IRI(std::string_view iri,
-                 NodeStorage &node_storage = NodeStorage::primary_instance());
+                 NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Get the IRI string of this.
@@ -48,7 +48,7 @@ public:
      * @param node_storage  optional custom node_storage where the returned IRI lives
      * @return default graph IRI
      */
-    static IRI default_graph(NodeStorage &node_storage = NodeStorage::primary_instance());
+    static IRI default_graph(NodeStorage &node_storage = NodeStorage::default_instance());
 };
 }  // namespace rdf4cpp::rdf
 
