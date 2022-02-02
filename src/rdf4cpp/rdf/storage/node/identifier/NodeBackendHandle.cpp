@@ -84,10 +84,17 @@ NodeID NodeBackendHandle::node_id() const noexcept {
 uint8_t NodeBackendHandle::free_tagging_bits() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits;
 }
+void NodeBackendHandle::set_free_tagging_bits(uint8_t new_value) {
+    assert(new_value < (1 << 4));
+    unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits = new_value;
+}
 NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).storage_id();
 }
 NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, uint8_t tagging_bits) noexcept
     : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, tagging_bits})) {}
+uint64_t NodeBackendHandle::raw() const noexcept {
+    return raw_;
+}
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
