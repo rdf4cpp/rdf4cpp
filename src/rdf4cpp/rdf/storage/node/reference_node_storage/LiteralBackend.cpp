@@ -1,5 +1,8 @@
 #include "LiteralBackend.hpp"
+
+#include <sstream>
 #include <tuple>
+
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 LiteralBackend::LiteralBackend(std::string_view lexical, identifier::NodeID dataType, std::string_view langTag) noexcept
@@ -13,8 +16,32 @@ std::partial_ordering LiteralBackend::operator<=>(LiteralBackend const &other) c
 }
 
 std::string LiteralBackend::quote_lexical() const noexcept {
-    // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
-    return "\"" + lexical + "\"";
+    // TODO: covers only the most common cases. There might still be character that are not allowed in N-Triple strings
+    std::ostringstream out{};
+    out << "\"";
+
+    for (auto const &character : lexical) {
+        switch (character) {
+            case '\n': {
+                out << R"(\n)";
+                break;
+            }
+            case '\r': {
+                out << R"(\r)";
+                break;
+            }
+            case '"': {
+                out << R"(\")";
+                break;
+            }
+                [[likely]] default : {
+                    out << character;
+                    break;
+                }
+        }
+    }
+    out << "\"";
+    return out.str();
 }
 bool LiteralBackend::operator==(LiteralBackend const &other) const noexcept {
     return std::tie(this->datatype_id_, this->lexical, this->lang_tag) == std::tie(other.datatype_id_, other.lexical, other.lang_tag);
