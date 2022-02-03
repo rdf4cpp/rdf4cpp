@@ -53,7 +53,6 @@ void NodeStorage::unregister_backend(INodeStorageBackend *backend_instance) {
     node_context_instances[backend_instance->manager_id.value] = nullptr;
 }
 std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) {
-    // TODO: would be better if we returned a reference here, i.e. std::optional<std::reference_wrapper<NodeStorage>>
     INodeStorageBackend *backend = lookup_backend_instance(id);
     if (backend != nullptr) {
         backend->inc_use_count();

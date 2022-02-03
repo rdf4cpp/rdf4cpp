@@ -18,13 +18,9 @@ struct __attribute__((__packed__)) NodeStorageID {
 
     /**
      * Constructor
-     * @param value NodeStorageID. MUST be smaller than 2^10. Bounds are not checked.
+     * @param value NodeStorageID. MUST be in range [0,2^10-1]. Bounds are not checked.
      */
     constexpr explicit NodeStorageID(uint16_t value) noexcept : value(value) {}
-
-    constexpr auto operator<=>(NodeStorageID const &) const noexcept = default;
-
-    constexpr bool operator==(NodeStorageID const &) const noexcept = default;
 
     constexpr NodeStorageID &operator++() noexcept {
         ++value;
@@ -47,6 +43,10 @@ struct __attribute__((__packed__)) NodeStorageID {
         --value;
         return new_literal_id;
     }
+
+    constexpr auto operator<=>(NodeStorageID const &) const noexcept = default;
+
+    constexpr bool operator==(NodeStorageID const &) const noexcept = default;
 };
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 

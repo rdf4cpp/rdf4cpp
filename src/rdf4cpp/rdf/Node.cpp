@@ -155,7 +155,7 @@ Node::operator query::Variable() const {
     return query::Variable(handle_);
 }
 bool Node::null() const noexcept {
-    return handle_.empty();
+    return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
     return os << (std::string) node;

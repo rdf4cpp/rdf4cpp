@@ -61,8 +61,8 @@ bool NodeBackendHandle::is_blank_node() const noexcept {
 bool NodeBackendHandle::is_variable() const noexcept {
     return type() == RDFNodeType::Variable;
 }
-bool NodeBackendHandle::empty() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_ == NodeID(0);
+bool NodeBackendHandle::null() const noexcept {
+    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_.null();
 }
 
 handle::IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
