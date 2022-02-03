@@ -38,6 +38,9 @@ private:
          * The actual 48 bit identifier.
          */
         uint64_t value_ : 48;
+        /**
+         * Combined Literal ID consisting of LiteralID and literal_type.
+         */
         FullLiteralID literal_;
     };
 
@@ -45,15 +48,28 @@ public:
     constexpr NodeID() = default;
 
     /**
-     * Constructor
+     * Constructs a LiteralID from a single unsigned integer.
      * @param value literal ID. MUST be smaller than 2^48. Bounds are not checked.
      */
     constexpr explicit NodeID(uint64_t value) noexcept : value_(value) { assert(value < (1UL << 48)); }
 
+    /**
+     * Constructor to be used for NodeIDs of Literals.
+     * @param literal_id the LiteralID
+     * @param literal_type the LiteralType
+     */
     constexpr NodeID(LiteralID literal_id, LiteralType literal_type) noexcept : literal_{literal_id.value, literal_type} {}
 
+    /**
+     * Get LiteralID. This method does not check if the NodeID actually represents a literal.
+     * @return
+     */
     [[nodiscard]] constexpr LiteralID literal_id() const noexcept { return LiteralID{literal_.literal_id}; }
 
+    /**
+     * Get LiteralType. This method does not check if the NodeID actually represents a literal.
+     * @return
+     */
     [[nodiscard]] constexpr LiteralType literal_type() const noexcept { return literal_.literal_type; }
     [[nodiscard]] constexpr uint64_t value() const noexcept { return value_; }
     //    void value(uint64_t val) { assert(val < (1UL << 48)); value_ = val; }
@@ -101,31 +117,11 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool null() const noexcept {
-        // TODO: make sure null() NodeIDs are nowhere used to identify valid nodes.
         return value_ == 0;
     }
 };
 
 static_assert(sizeof(NodeID) == 6);
-
-struct TypedNodeID : public NodeID {
-private:
-    RDFNodeType node_type_;
-
-public:
-    constexpr TypedNodeID() : NodeID(), node_type_{} {}
-
-    /**
-     * Constructor
-     * @param value literal ID. MUST be smaller than 2^48. Bounds are not checked.
-     */
-    constexpr explicit TypedNodeID(uint64_t value, RDFNodeType node_type) noexcept : NodeID(value), node_type_(node_type) {}
-
-
-    TypedNodeID(LiteralID literalId, LiteralType literalType) noexcept : NodeID(literalId, literalType), node_type_(RDFNodeType::Literal) {}
-
-    constexpr RDFNodeType node_type() const noexcept { return node_type_; }
-};
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 
