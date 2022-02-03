@@ -15,6 +15,9 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
+/**
+ * Thread-safe reference implementation of a INodeStorageBackend. Deleting nodes is not supported.
+ */
 class ReferenceNodeStorageBackend : public INodeStorageBackend {
 public:
     using NodeID = identifier::NodeID;

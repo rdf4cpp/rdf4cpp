@@ -16,7 +16,7 @@ std::partial_ordering LiteralBackend::operator<=>(LiteralBackend const &other) c
 }
 
 std::string LiteralBackend::quote_lexical() const noexcept {
-    // TODO: covers only the most common cases. There might still be character that are not allowed in N-Triple strings
+    // TODO: covers only the most common cases. There might still be characters that are not allowed in N-Triple strings
     std::ostringstream out{};
     out << "\"";
 
