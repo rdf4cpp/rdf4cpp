@@ -79,7 +79,7 @@ public:
      */
     [[nodiscard]] size_t nodes_in_use() const noexcept;
 
-     /**
+    /**
       * Backend for NodeStorage::find_or_make_id(handle::BNodeBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a BlankNode stored at the implementation of INodeStorageBackend.
@@ -129,9 +129,29 @@ public:
       */
     [[nodiscard]] virtual identifier::NodeID find_id(handle::VariableBackendView const &view) const noexcept = 0;
 
+    /**
+     * Backend for NodeStorage::find_iri_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
+     * @param id identifier of the requested Node
+     * @return handle::IRIBackendView describing the requested Node
+     */
     [[nodiscard]] virtual handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const = 0;
+    /**
+     * Backend for NodeStorage::find_literal_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
+     * @param id identifier of the requested Node
+     * @return handle::LiteralBackendView describing the requested Node
+     */
     [[nodiscard]] virtual handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const = 0;
+    /**
+     * Backend for NodeStorage::find_bnode_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
+     * @param id identifier of the requested Node
+     * @return handle::BNodeBackendView describing the requested Node
+     */
     [[nodiscard]] virtual handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const = 0;
+    /**
+     * Backend for NodeStorage::find_variable_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
+     * @param id identifier of the requested Node
+     * @return handle::VariableBackendView describing the requested Node
+     */
     [[nodiscard]] virtual handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const = 0;
 
     /**
