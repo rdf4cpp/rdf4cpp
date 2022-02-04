@@ -9,6 +9,7 @@ INodeStorageBackend *NodeStorage::lookup_backend_instance(identifier::NodeStorag
             default_node_context_id = default_instance_.id();
             node_context_instances[0] = default_instance_.backend_;
         } else {
+            node_context_instances[0]->inc_use_count();
             default_instance_ = NodeStorage(node_context_instances[0]);
             default_node_context_id = node_context_instances[0]->manager_id;
         }
@@ -22,6 +23,7 @@ NodeStorage &NodeStorage::default_instance() {
             default_node_context_id = default_instance_.id();
             node_context_instances[0] = default_instance_.backend_;
         } else {
+            node_context_instances[0]->inc_use_count();
             default_instance_ = NodeStorage(node_context_instances[0]);
             default_node_context_id = node_context_instances[0]->manager_id;
         }
@@ -79,13 +81,11 @@ NodeStorage::NodeStorage(NodeStorage &&other) noexcept {
 
     other.backend_ = nullptr;
 }
-NodeStorage::NodeStorage(const NodeStorage &node_context) noexcept : backend_(node_context.backend_) {
-    if (this->backend_ != nullptr) node_context.backend_->inc_use_count();
+NodeStorage::NodeStorage(const NodeStorage &other) noexcept : backend_(other.backend_) {
+    this->backend_->inc_use_count();
 }
 NodeStorage &NodeStorage::operator=(const NodeStorage &other) noexcept {
-    if (this == &other)
-        return *this;
-    else if (this->backend_ != other.backend_) {
+    if (this != &other and this->backend_ != other.backend_) {
         if (this->backend_ != nullptr)
             this->backend_->dec_use_count();
         this->backend_ = other.backend_;
@@ -95,19 +95,21 @@ NodeStorage &NodeStorage::operator=(const NodeStorage &other) noexcept {
     return *this;
 }
 NodeStorage &NodeStorage::operator=(NodeStorage &&other) noexcept {
-    if (this->backend_ != other.backend_) {
-        if (this->backend_ != nullptr)
-            this->backend_->dec_use_count();
-        this->backend_ = other.backend_;
-        if (this->backend_ != nullptr)
-            this->backend_->inc_use_count();
-    } else {
-        if (other.backend_ != nullptr) {
-            other.backend_->dec_use_count();
+    if (this != &other) {
+        if (this->backend_ != other.backend_) {
+            if (this->backend_ != nullptr)
+                this->backend_->dec_use_count();
+            this->backend_ = other.backend_;
+            if (this->backend_ != nullptr)
+                this->backend_->inc_use_count();
+        } else {
+            if (other.backend_ != nullptr) {
+                other.backend_->dec_use_count();
+            }
         }
-    }
 
-    other.backend_ = nullptr;
+        other.backend_ = nullptr;
+    }
     return *this;
 }
 size_t NodeStorage::use_count() const noexcept {
