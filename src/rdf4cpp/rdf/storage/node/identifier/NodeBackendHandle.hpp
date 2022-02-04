@@ -1,13 +1,13 @@
 #ifndef RDF4CPP_NODEBACKENDHANDLE_HPP
 #define RDF4CPP_NODEBACKENDHANDLE_HPP
 
-#include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeStorageID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
+#include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
 
 #include <compare>
@@ -106,26 +106,26 @@ public:
      * MUST only be called if this is not null and is_iri() const is true.
      * @return
      */
-    [[nodiscard]] handle::IRIBackendView iri_backend() const noexcept;
+    [[nodiscard]] view::IRIBackendView iri_backend() const noexcept;
     /**
      * Retrieve LiteralBackendView with information details about the Literal identified by this NodeBackendHandle.
      * MUST only be called if this is not null and is_literal() const is true.
      * @return
      */
-    [[nodiscard]] handle::LiteralBackendView literal_backend() const noexcept;
+    [[nodiscard]] view::LiteralBackendView literal_backend() const noexcept;
     /**
      * Retrieve BNodeBackendView with information details about the BlankNode identified by this NodeBackendHandle.
      * MUST only be called if this is not null and is_bnode() const is true.
      * @return
      */
-    [[nodiscard]] handle::BNodeBackendView bnode_backend() const noexcept;
+    [[nodiscard]] view::BNodeBackendView bnode_backend() const noexcept;
 
     /**
      * Retrieve VariableBackendView with information details about the Variable identified by this NodeBackendHandle.
      * MUST only be called if this is not null and is_variable() const is true.
      * @return
      */
-    [[nodiscard]] handle::VariableBackendView variable_backend() const noexcept;
+    [[nodiscard]] view::VariableBackendView variable_backend() const noexcept;
 };
 static_assert(sizeof(NodeBackendHandle) == sizeof(uint64_t));
 }  // namespace rdf4cpp::rdf::storage::node::identifier

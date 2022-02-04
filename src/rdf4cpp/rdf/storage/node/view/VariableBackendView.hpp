@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::handle {
+namespace rdf4cpp::rdf::storage::node::view {
 
 struct VariableBackendView {
     std::string_view name;
@@ -20,5 +20,5 @@ struct VariableBackendView {
     auto operator<=>(VariableBackendView const &) const noexcept = default;
 };
 
-}  // namespace rdf4cpp::rdf::storage::node::handle
+}  // namespace rdf4cpp::rdf::storage::node::view
 #endif  //RDF4CPP_VARIABLEBACKENDHANDLE_HPP

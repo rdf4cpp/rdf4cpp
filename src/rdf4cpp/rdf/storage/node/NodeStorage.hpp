@@ -1,13 +1,13 @@
 #ifndef RDF4CPP_NODESTORAGE_HPP
 #define RDF4CPP_NODESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
 #include <memory>
 #include <mutex>
@@ -170,103 +170,103 @@ public:
 
 
     /**
-     * Lookup the identifier::NodeID for the given handle::BNodeBackendView. If it doesn't exist in the backend yet, it is added.
+     * Lookup the identifier::NodeID for the given view::BNodeBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view BlankNode description (MUST be valid)
      * @return identifier::NodeID identifying the requested BlankNode.
      */
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::BNodeBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::IRIBackendView. If it doesn't exist in the backend yet, it is added.
+     * Lookup the identifier::NodeID for the given view::IRIBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view IRI description (MUST be valid)
      * @return identifier::NodeID identifying the requested IRI.
      */
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::IRIBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::LiteralBackendView. If it doesn't exist in the backend yet, it is added.
+     * Lookup the identifier::NodeID for the given view::LiteralBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view Literal description (MUST be valid)
      * @return identifier::NodeID identifying the requested Literal.
      */
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::LiteralBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::VariableBackendView. If it doesn't exist in the backend yet, it is added.
+     * Lookup the identifier::NodeID for the given view::VariableBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view Variable description (MUST be valid)
      * @return identifier::NodeID identifying the requested Variable.
      */
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::VariableBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &view) noexcept;
 
     /**
-     * Lookup the identifier::NodeID for the given handle::BNodeBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
+     * Lookup the identifier::NodeID for the given view::BNodeBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view BlankNode description (MUST be valid)
      * @return identifier::NodeID identifying the requested BlankNode.
      */
-    [[nodiscard]] identifier::NodeID find_id(handle::BNodeBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::IRIBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
+     * Lookup the identifier::NodeID for the given view::IRIBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view IRI description (MUST be valid)
      * @return identifier::NodeID identifying the requested IRI.
      */
-    [[nodiscard]] identifier::NodeID find_id(handle::IRIBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::LiteralBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
+     * Lookup the identifier::NodeID for the given view::LiteralBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view Literal description (MUST be valid)
      * @return identifier::NodeID identifying the requested Literal.
      */
-    [[nodiscard]] identifier::NodeID find_id(handle::LiteralBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept;
     /**
-     * Lookup the identifier::NodeID for the given handle::VariableBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
+     * Lookup the identifier::NodeID for the given view::VariableBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view Variable description (MUST be valid)
      * @return identifier::NodeID identifying the requested Variable.
      */
-    [[nodiscard]] identifier::NodeID find_id(handle::VariableBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept;
 
     /**
-     * Lookup the handle::IRIBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
+     * Lookup the view::IRIBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
-     * @return handle::IRIBackendView describing the requested resource.
+     * @return view::IRIBackendView describing the requested resource.
      */
-    [[nodiscard]] handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
     /**
-     * Lookup the handle::LiteralBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
+     * Lookup the view::LiteralBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
-     * @return handle::LiteralBackendView describing the requested resource.
+     * @return view::LiteralBackendView describing the requested resource.
      */
-    [[nodiscard]] handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
     /**
-     * Lookup the handle::BNodeBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
+     * Lookup the view::BNodeBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
-     * @return handle::BNodeBackendView describing the requested resource.
+     * @return view::BNodeBackendView describing the requested resource.
      */
-    [[nodiscard]] handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
     /**
-     * Lookup the handle::VariableBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
+     * Lookup the view::VariableBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
-     * @return handle::VariableBackendView describing the requested resource.
+     * @return view::VariableBackendView describing the requested resource.
      */
-    [[nodiscard]] handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
     /**
-     * Lookup the handle::IRIBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or handle.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::IRIBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
      * @param handle NodeBackendHandle of the requested resource
-     * @return handle::IRIBackendView describing the requested resource.
+     * @return view::IRIBackendView describing the requested resource.
      */
-    [[nodiscard]] static handle::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle);
     /**
-     * Lookup the handle::LiteralBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or handle.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::LiteralBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
      * @param handle NodeBackendHandle of the requested resource
-     * @return handle::LiteralBackendView describing the requested resource.
+     * @return view::LiteralBackendView describing the requested resource.
      */
-    [[nodiscard]] static handle::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle);
     /**
-     * Lookup the handle::BNodeBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or handle.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::BNodeBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
      * @param handle NodeBackendHandle of the requested resource
-     * @return handle::BNodeBackendView describing the requested resource.
+     * @return view::BNodeBackendView describing the requested resource.
      */
-    [[nodiscard]] static handle::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle);
     /**
-     * Lookup the handle::VariableBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or handle.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::VariableBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
      * @param handle NodeBackendHandle of the requested resource
-     * @return handle::VariableBackendView describing the requested resource.
+     * @return view::VariableBackendView describing the requested resource.
      */
-    [[nodiscard]] static handle::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle);
 
     /**
      * <p>Use with caution!</p>
@@ -305,7 +305,7 @@ public:
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.
      * This includes also Literals which use this IRI as datatype.  </p>
-     * <p>If handle.node_storage_id() doesn't exist, the method will throw.</p>
+     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
      * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
@@ -314,7 +314,7 @@ public:
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.
-     * <p>If handle.node_storage_id() doesn't exist, the method will throw.</p>
+     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
      * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
@@ -323,7 +323,7 @@ public:
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>If handle.node_storage_id() doesn't exist, the method will throw.</p>
+     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
      * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
@@ -332,7 +332,7 @@ public:
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>If handle.node_storage_id() doesn't exist, the method will throw.</p>
+     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
      * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased

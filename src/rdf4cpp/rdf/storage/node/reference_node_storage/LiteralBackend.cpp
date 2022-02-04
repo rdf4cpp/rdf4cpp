@@ -9,7 +9,7 @@ LiteralBackend::LiteralBackend(std::string_view lexical, identifier::NodeID data
     : datatype_id_(dataType),
       lexical(lexical),
       lang_tag(langTag) {}
-LiteralBackend::LiteralBackend(handle::LiteralBackendView view) noexcept : datatype_id_(view.datatype_id), lexical(view.lexical_form), lang_tag(view.language_tag){};
+LiteralBackend::LiteralBackend(view::LiteralBackendView view) noexcept : datatype_id_(view.datatype_id), lexical(view.lexical_form), lang_tag(view.language_tag){};
 
 std::partial_ordering LiteralBackend::operator<=>(LiteralBackend const &other) const noexcept {
     return std::tie(this->datatype_id_, this->lexical, this->lang_tag) <=> std::tie(other.datatype_id_, other.lexical, other.lang_tag);
@@ -61,7 +61,7 @@ const identifier::NodeID &LiteralBackend::datatype_id() const noexcept {
 std::string_view LiteralBackend::lexical_form() const noexcept {
     return lexical;
 }
-LiteralBackend::operator handle::LiteralBackendView() const noexcept {
+LiteralBackend::operator view::LiteralBackendView() const noexcept {
     return {.datatype_id = datatype_id(),
             .lexical_form = lexical_form(),
             .language_tag = language_tag()};

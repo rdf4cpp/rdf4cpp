@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::handle {
+namespace rdf4cpp::rdf::storage::node::view {
 
 struct IRIBackendView {
     std::string_view identifier;
@@ -18,5 +18,5 @@ struct IRIBackendView {
 
     auto operator<=>(IRIBackendView const &) const noexcept = default;
 };
-}  // namespace rdf4cpp::rdf::storage::node::handle
+}  // namespace rdf4cpp::rdf::storage::node::view
 #endif  //RDF4CPP_IRIBACKENDHANDLE_HPP

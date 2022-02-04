@@ -65,16 +65,16 @@ bool NodeBackendHandle::null() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_.null();
 }
 
-handle::IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
+view::IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
     return NodeStorage::find_iri_backend_view(*this);
 }
-handle::LiteralBackendView NodeBackendHandle::literal_backend() const noexcept {
+view::LiteralBackendView NodeBackendHandle::literal_backend() const noexcept {
     return NodeStorage::find_literal_backend_view(*this);
 }
-handle::BNodeBackendView NodeBackendHandle::bnode_backend() const noexcept {
+view::BNodeBackendView NodeBackendHandle::bnode_backend() const noexcept {
     return NodeStorage::find_bnode_backend_view(*this);
 }
-handle::VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
+view::VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
     return NodeStorage::find_variable_backend_view(*this);
 }
 

@@ -47,20 +47,20 @@ public:
 
     ~ReferenceNodeStorageBackend() override = default;
 
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::BNodeBackendView const &) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::IRIBackendView const &) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::LiteralBackendView const &) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(handle::VariableBackendView const &) noexcept override;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &) noexcept override;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &) noexcept override;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &) noexcept override;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &) noexcept override;
 
-    [[nodiscard]] identifier::NodeID find_id(handle::BNodeBackendView const &) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(handle::IRIBackendView const &) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(handle::LiteralBackendView const &) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(handle::VariableBackendView const &) const noexcept override;
+    [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &) const noexcept override;
+    [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &) const noexcept override;
+    [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &) const noexcept override;
+    [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &) const noexcept override;
 
-    [[nodiscard]] handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
 
     bool erase_iri(identifier::NodeID id) const override;
     bool erase_literal(identifier::NodeID id) const override;

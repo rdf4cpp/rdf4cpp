@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::handle {
+namespace rdf4cpp::rdf::storage::node::view {
 
 struct LiteralBackendView {
     identifier::NodeID datatype_id;
@@ -16,6 +16,6 @@ struct LiteralBackendView {
 
     auto operator<=>(LiteralBackendView const &) const noexcept = default;
 };
-}  // namespace rdf4cpp::rdf::storage::node::handle
+}  // namespace rdf4cpp::rdf::storage::node::view
 
 #endif  //RDF4CPP_LITERALBACKENDHANDLE_HPP

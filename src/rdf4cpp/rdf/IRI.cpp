@@ -5,7 +5,7 @@ namespace rdf4cpp::rdf {
 IRI::IRI(Node::NodeBackendHandle handle) : Node(handle) {}
 IRI::IRI() : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::IRI, {}}) {}
 IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::handle::IRIBackendView{.identifier = iri}),
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::IRIBackendView{.identifier = iri}),
                              storage::node::identifier::RDFNodeType::IRI,
                              node_storage.id()}) {}
 

@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_INODESTORAGEBACKEND_HPP
 #define RDF4CPP_INODESTORAGEBACKEND_HPP
 
-#include <rdf4cpp/rdf/storage/node/handle/BNodeBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/IRIBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/LiteralBackendView.hpp>
-#include <rdf4cpp/rdf/storage/node/handle/VariableBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeStorageID.hpp>
+#include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
+#include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
 #include <atomic>
 #include <cstddef>
@@ -80,79 +80,79 @@ public:
     [[nodiscard]] size_t nodes_in_use() const noexcept;
 
     /**
-      * Backend for NodeStorage::find_or_make_id(handle::BNodeBackendView const &)
+      * Backend for NodeStorage::find_or_make_id(view::BNodeBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a BlankNode stored at the implementation of INodeStorageBackend.
       */
-    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::BNodeBackendView const &view) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept = 0;
     /**
-      * Backend for NodeStorage::find_or_make_id(handle::IRIBackendView const &)
+      * Backend for NodeStorage::find_or_make_id(view::IRIBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a IRI stored at the implementation of INodeStorageBackend.
       */
-    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::IRIBackendView const &view) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept = 0;
     /**
-      * Backend for NodeStorage::find_or_make_id(handle::LiteralBackendView const &)
+      * Backend for NodeStorage::find_or_make_id(view::LiteralBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a BlankNode stored at the implementation of INodeStorageBackend.
       */
-    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::LiteralBackendView const &view) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept = 0;
     /**
-      * Backend for NodeStorage::find_or_make_id(handle::VariableBackendView const &)
+      * Backend for NodeStorage::find_or_make_id(view::VariableBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a Variable stored at the implementation of INodeStorageBackend.
       */
-    [[nodiscard]] virtual identifier::NodeID find_or_make_id(handle::VariableBackendView const &view) noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_or_make_id(view::VariableBackendView const &view) noexcept = 0;
 
     /**
-      * Backend for NodeStorage::find_id(handle::BNodeBackendView const &) const
+      * Backend for NodeStorage::find_id(view::BNodeBackendView const &) const
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a BlankNode stored at the implementation of INodeStorageBackend or a null() identifier::NodeID if there is no such BlankNode stored.
       */
-    [[nodiscard]] virtual identifier::NodeID find_id(handle::BNodeBackendView const &view) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept = 0;
     /**
-      * Backend for NodeStorage::find_id(handle::IRIBackendView const &) const
+      * Backend for NodeStorage::find_id(view::IRIBackendView const &) const
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a IRI stored at the implementation of INodeStorageBackend or a null() identifier::NodeID if there is no such IRI stored.
       */
-    [[nodiscard]] virtual identifier::NodeID find_id(handle::IRIBackendView const &view) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept = 0;
     /**
-      * Backend for NodeStorage::find_id(handle::LiteralBackendView const &) const
+      * Backend for NodeStorage::find_id(view::LiteralBackendView const &) const
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a Literal stored at the implementation of INodeStorageBackend or a null() identifier::NodeID if there is no such Literal stored.
       */
-    [[nodiscard]] virtual identifier::NodeID find_id(handle::LiteralBackendView const &view) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept = 0;
     /**
-      * Backend for NodeStorage::find_id(handle::VariableBackendView const &) const
+      * Backend for NodeStorage::find_id(view::VariableBackendView const &) const
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a Variable stored at the implementation of INodeStorageBackend or a null() identifier::NodeID if there is no such Variable stored.
       */
-    [[nodiscard]] virtual identifier::NodeID find_id(handle::VariableBackendView const &view) const noexcept = 0;
+    [[nodiscard]] virtual identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept = 0;
 
     /**
      * Backend for NodeStorage::find_iri_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
-     * @return handle::IRIBackendView describing the requested Node
+     * @return view::IRIBackendView describing the requested Node
      */
-    [[nodiscard]] virtual handle::IRIBackendView find_iri_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const = 0;
     /**
      * Backend for NodeStorage::find_literal_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
-     * @return handle::LiteralBackendView describing the requested Node
+     * @return view::LiteralBackendView describing the requested Node
      */
-    [[nodiscard]] virtual handle::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const = 0;
     /**
      * Backend for NodeStorage::find_bnode_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
-     * @return handle::BNodeBackendView describing the requested Node
+     * @return view::BNodeBackendView describing the requested Node
      */
-    [[nodiscard]] virtual handle::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const = 0;
     /**
      * Backend for NodeStorage::find_variable_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
-     * @return handle::VariableBackendView describing the requested Node
+     * @return view::VariableBackendView describing the requested Node
      */
-    [[nodiscard]] virtual handle::VariableBackendView find_variable_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const = 0;
 
     /**
      * Backend for NodeStorage::erase_iri(identifier::NodeID id) const. Must throw if not implemented.

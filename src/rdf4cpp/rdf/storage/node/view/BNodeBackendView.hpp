@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::node::handle {
+namespace rdf4cpp::rdf::storage::node::view {
 
 struct BNodeBackendView {
     std::string_view identifier;
@@ -17,6 +17,6 @@ struct BNodeBackendView {
     [[nodiscard]] std::string n_string() const noexcept;
     auto operator<=>(BNodeBackendView const &) const noexcept = default;
 };
-}  // namespace rdf4cpp::rdf::storage::node::handle
+}  // namespace rdf4cpp::rdf::storage::node::view
 
 #endif  //RDF4CPP_BNODEBACKENDHANDLE_HPP
