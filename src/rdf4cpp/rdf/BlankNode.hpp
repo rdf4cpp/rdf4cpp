@@ -10,19 +10,18 @@ namespace rdf4cpp::rdf {
 class BlankNode : public Node {
 
 private:
-    BlankNode(const NodeID &id);
-    explicit BlankNode(BackendNodeHandle handle);
+    explicit BlankNode(NodeBackendHandle handle);
 
 public:
     BlankNode();
-    explicit BlankNode(const std::string &identifier,
-                       NodeStorage &node_storage = NodeStorage::primary_instance());
+    explicit BlankNode(std::string_view identifier,
+                       NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
-    [[nodiscard]] const std::string &identifier() const;
+    [[nodiscard]] std::string_view identifier() const;
 
     [[nodiscard]] explicit operator std::string() const;
 

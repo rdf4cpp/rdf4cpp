@@ -11,8 +11,7 @@ namespace rdf4cpp::rdf {
  */
 class IRI : public Node {
 public:
-    IRI(const NodeID &id);
-    explicit IRI(Node::BackendNodeHandle handle);
+    explicit IRI(Node::NodeBackendHandle handle);
 
 
 public:
@@ -23,14 +22,14 @@ public:
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    explicit IRI(const std::string &iri,
-                 NodeStorage &node_storage = NodeStorage::primary_instance());
+    explicit IRI(std::string_view iri,
+                 NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Get the IRI string of this.
      * @return IRI string
      */
-    [[nodiscard]] const std::string &identifier() const;
+    [[nodiscard]] std::string_view identifier() const;
 
     [[nodiscard]] explicit operator std::string() const;
 
@@ -49,7 +48,7 @@ public:
      * @param node_storage  optional custom node_storage where the returned IRI lives
      * @return default graph IRI
      */
-    static IRI default_graph(NodeStorage &node_storage = NodeStorage::primary_instance());
+    static IRI default_graph(NodeStorage &node_storage = NodeStorage::default_instance());
 };
 }  // namespace rdf4cpp::rdf
 

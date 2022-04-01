@@ -20,7 +20,7 @@ protected:
     mutable node::NodeStorage node_storage_;
 
 public:
-    explicit IDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::primary_instance());
+    explicit IDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::default_instance());
 
     virtual ~IDatasetBackend() = 0;
     virtual void add(const Quad &quad) = 0;
@@ -67,7 +67,7 @@ public:
 
         template<class Iter>
         requires std::forward_iterator<Iter>
-        explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)){}
+        explicit const_iterator(Iter iter) : _impl(std::make_unique<const_iterator_impl<Iter>>(iter)) {}
 
         const_iterator(const const_iterator &r);
 

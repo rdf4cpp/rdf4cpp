@@ -15,7 +15,7 @@ TEST_CASE("Variable - Check for single node with anonymous default") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
 }
 
 TEST_CASE("Variable - Check for single node with anonymous true") {
@@ -28,7 +28,7 @@ TEST_CASE("Variable - Check for single node with anonymous true") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
 }
 
 TEST_CASE("Variable - Check for single node with anonymous false") {
@@ -41,5 +41,5 @@ TEST_CASE("Variable - Check for single node with anonymous false") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
 }

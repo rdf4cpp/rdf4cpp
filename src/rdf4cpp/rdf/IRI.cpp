@@ -2,11 +2,12 @@
 
 namespace rdf4cpp::rdf {
 
-IRI::IRI(const Node::NodeID &id) : Node(id) {}
-IRI::IRI(Node::BackendNodeHandle handle) : Node(handle) {}
-IRI::IRI() : Node() {}
-IRI::IRI(const std::string &iri, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_iri(iri).second}) {}
+IRI::IRI(Node::NodeBackendHandle handle) : Node(handle) {}
+IRI::IRI() : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::IRI, {}}) {}
+IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::IRIBackendView{.identifier = iri}),
+                             storage::node::identifier::RDFNodeType::IRI,
+                             node_storage.id()}) {}
 
 IRI::operator std::string() const { return handle_.iri_backend().n_string(); }
 
@@ -23,8 +24,8 @@ std::ostream &operator<<(std::ostream &os, const IRI &iri) {
     os << (std::string) iri;
     return os;
 }
-const std::string &IRI::identifier() const {
-    return handle_.iri_backend().identifier();
+std::string_view IRI::identifier() const {
+    return handle_.iri_backend().identifier;
 }
 
 }  // namespace rdf4cpp::rdf

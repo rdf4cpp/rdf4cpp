@@ -1,18 +1,19 @@
 #include "Variable.hpp"
 
 namespace rdf4cpp::rdf::query {
-Variable::Variable() : Node() {}
-Variable::Variable(const Node::NodeID &id) : Node(id) {}
-Variable::Variable(const std::string &identifier, bool anonymous, NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_variable(identifier, anonymous).second}) {}
-Variable::Variable(Node::BackendNodeHandle handle) : Node(handle) {}
+Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
+Variable::Variable(std::string_view identifier, bool anonymous, NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::VariableBackendView{.name = identifier, .is_anonymous = anonymous}),
+                             storage::node::identifier::RDFNodeType::Variable,
+                             node_storage.id()}) {}
+Variable::Variable(Node::NodeBackendHandle handle) : Node(handle) {}
 
 bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID
-    return this->handle_.variable_backend().is_anonymous();
+    return this->handle_.variable_backend().is_anonymous;
 }
-const std::string &Variable::name() const {
-    return this->handle_.variable_backend().name();
+std::string_view Variable::name() const {
+    return this->handle_.variable_backend().name;
 }
 Variable::operator std::string() const {
     return handle_.variable_backend().n_string();

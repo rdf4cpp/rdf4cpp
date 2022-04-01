@@ -18,7 +18,7 @@ public:
     /**
      * Constructs an instance of a type from a string.
      */
-    using factory_fptr_t = std::any (*)(const std::string &);
+    using factory_fptr_t = std::any (*)(std::string_view);
     using to_string_fptr_t = std::string (*)(const std::any &);
 
     struct DatatypeEntry {
@@ -75,10 +75,10 @@ public:
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
-    inline static factory_fptr_t get_factory(const std::string &datatype_iri) {
+    inline static factory_fptr_t get_factory(std::string_view datatype_iri) {
         const auto &registry = registered_datatypes();
         auto found = std::lower_bound(registry.begin(), registry.end(),
-                                      DatatypeEntry{datatype_iri, nullptr, nullptr},
+                                      DatatypeEntry{std::string{datatype_iri}, nullptr, nullptr},
                                       [](const auto &left, const auto &right) { return left.name < right.name; });
         if (found != registry.end() and found->name == datatype_iri) {
             return found->factory_fptr;
@@ -92,10 +92,10 @@ public:
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
-    inline static to_string_fptr_t get_to_string(const std::string &datatype_iri) {
+    inline static to_string_fptr_t get_to_string(std::string_view datatype_iri) {
         const auto &registry = registered_datatypes();
         auto found = std::lower_bound(registry.begin(), registry.end(),
-                                      DatatypeEntry{datatype_iri, nullptr, nullptr},
+                                      DatatypeEntry{std::string{datatype_iri}, nullptr, nullptr},
                                       [](const auto &left, const auto &right) { return left.name < right.name; });
         if (found != registry.end() and found->name == datatype_iri) {
             return found->to_string_fptr;
@@ -135,7 +135,7 @@ public:
      * Factory function that parses a string representing datatype_t and builds an instance of datatype_t
      * @return instance of datatype_t
      */
-    inline static datatype_t from_string(const std::string &) {
+    inline static datatype_t from_string(std::string_view) {
         //If this implementation is used the user forgot to provide their own.
         static_assert(always_false_v<datatype_t>, "'from_string' is not implemented for this type!");
     }
@@ -172,7 +172,7 @@ template<typename datatype_info>
 inline void DatatypeRegistry::add() {
     DatatypeRegistry::add(
             datatype_info::datatype_iri(),
-            [](const std::string &string_repr) -> std::any {
+            [](std::string_view string_repr) -> std::any {
                 return std::any(datatype_info::from_string(string_repr));
             },
             [](const std::any &value) -> std::string {

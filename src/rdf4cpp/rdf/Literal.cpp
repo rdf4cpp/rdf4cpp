@@ -1,50 +1,64 @@
 #include "Literal.hpp"
 
 #include <rdf4cpp/rdf/IRI.hpp>
-#include <rdf4cpp/rdf/storage/node/LiteralBackend.hpp>
 
 namespace rdf4cpp::rdf {
 
-Literal::Literal(const Node::NodeID &id) : Node(id) {}
-Literal::Literal() : Node() {}
-Literal::Literal(const std::string &lexical_form, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_string_literal(lexical_form).second}) {}
-Literal::Literal(const std::string &lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{
-              node_storage.get_typed_literal(
-                                  lexical_form,
-                                  datatype.handle_.id())
-                      .second}) {}
-Literal::Literal(const std::string &lexical_form, const std::string &lang, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_lang_literal(lexical_form, lang).second}) {}
+Literal::Literal() : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
+Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                     .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
+                                     .lexical_form = lexical_form,
+                                     .language_tag = ""}),
+                             storage::node::identifier::RDFNodeType::Literal,
+                             node_storage.id()}) {}
 
+Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                     .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                     .lexical_form = lexical_form,
+                                     .language_tag = ""}),
+                             storage::node::identifier::RDFNodeType::Literal,
+                             node_storage.id()}) {}
+Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                     .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+                                     .lexical_form = lexical_form,
+                                     .language_tag = lang}),
+                             storage::node::identifier::RDFNodeType::Literal,
+                             node_storage.id()}) {}
 
 IRI Literal::datatype() const {
-    NodeID datatype_id = handle_.literal_backend().datatype_id();
-    return IRI(datatype_id);
+    NodeBackendHandle iri_handle{handle_.literal_backend().datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()};
+    return IRI(iri_handle);
 }
 
-const std::string &Literal::lexical_form() const {
-    return handle_.literal_backend().lexical_form();
+std::string_view Literal::lexical_form() const {
+    return handle_.literal_backend().lexical_form;
 }
 
-const std::string &Literal::language_tag() const {
-    return handle_.literal_backend().language_tag();
+std::string_view Literal::language_tag() const {
+    return handle_.literal_backend().language_tag;
 }
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
+    auto quote_lexical = [](std::string_view lexical) -> std::string {
+        // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
+        return "\"" + std::string{lexical} + "\"";
+    };
     const auto &literal = handle_.literal_backend();
-    if (literal.datatype_id().node_id() == NodeID::rdf_langstring_iri.first) {
-        return literal.quote_lexical() + "@" + literal.language_tag();
+    if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
+        return quote_lexical(literal.lexical_form) + "@" + std::string{literal.language_tag};
     } else {
-        return literal.quote_lexical() + "^^" + NodeStorage::lookup_iri(literal.datatype_id())->n_string();
+        auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
+        return quote_lexical(literal.lexical_form) + "^^" + dtype_iri.n_string();
     }
 }
 bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
-Literal::Literal(Node::BackendNodeHandle handle) : Node(handle) {}
+Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << (std::string) literal;
     return os;

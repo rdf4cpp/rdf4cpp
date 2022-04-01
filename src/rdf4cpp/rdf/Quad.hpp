@@ -59,7 +59,7 @@ public:
         Quad qu;
         auto it = qu.begin();
         for (const auto &item : (*this))
-            if (item.backend_handle().node_storage() == node_storage)
+            if (item.backend_handle().node_storage_id() == node_storage.id())
                 *(it++) = item;
             else
                 *(it++) = item.to_node_storage(node_storage);

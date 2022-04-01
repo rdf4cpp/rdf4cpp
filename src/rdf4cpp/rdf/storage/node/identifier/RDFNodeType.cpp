@@ -1,8 +1,8 @@
 #include "RDFNodeType.hpp"
 
-namespace rdf4cpp::rdf::storage::node {
+namespace rdf4cpp::rdf::storage::node::identifier {
 
-std::string as_string(RDFNodeType rdf_node_type) {
+std::string as_string(RDFNodeType rdf_node_type) noexcept {
     switch (rdf_node_type) {
         case RDFNodeType::Variable:
             return "variable";
@@ -15,4 +15,4 @@ std::string as_string(RDFNodeType rdf_node_type) {
             return "literal";
     }
 }
-}  // namespace rdf4cpp::rdf::storage::node
+}  // namespace rdf4cpp::rdf::storage::node::identifier

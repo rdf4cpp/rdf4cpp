@@ -1,16 +1,17 @@
 #include "BlankNode.hpp"
 
 namespace rdf4cpp::rdf {
-BlankNode::BlankNode(const Node::NodeID &id) : Node(id) {}
 BlankNode::BlankNode() : Node{} {}
-BlankNode::BlankNode(const std::string &identifier, Node::NodeStorage &node_storage)
-    : Node(BackendNodeHandle{node_storage.get_bnode(identifier).second}) {}
-BlankNode::BlankNode(Node::BackendNodeHandle handle) : Node(handle) {}
+BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storage)
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier}),
+                             storage::node::identifier::RDFNodeType::BNode,
+                             node_storage.id()}) {}
+BlankNode::BlankNode(Node::NodeBackendHandle handle) : Node(handle) {}
 
-const std::string &BlankNode::identifier() const { return handle_.bnode_backend().indentifier(); }
+std::string_view BlankNode::identifier() const { return handle_.bnode_backend().identifier; }
 
 BlankNode::operator std::string() const {
-    return handle_.bnode_backend().n_string();
+    return "_:" + std::string{handle_.bnode_backend().identifier};
 }
 
 bool BlankNode::is_literal() const { return false; }

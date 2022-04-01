@@ -2,12 +2,12 @@
 namespace rdf4cpp::rdf::query {
 QuadPattern::operator std::string() const {
 
-    return (graph().is_iri() and ((IRI) graph()).identifier() == "")  // Graph
-                   ? std::string{}
-                   : (((std::string) graph()) + " ") +
-                             (std::string) subject() + " " +    // Subject
-                             (std::string) predicate() + " " +  // Predicate
-                             (std::string) object() + " . ";    // Object
+    return ((graph().is_iri() and ((IRI) graph()).null())  // Graph
+                    ? std::string{}
+                    : (((std::string) graph()) + " ")) +
+           (std::string) subject() + " " +    // Subject
+           (std::string) predicate() + " " +  // Predicate
+           (std::string) object() + " . ";    // Object
 }
 QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) : entries_({graph, subject, predicate, object}) {}
 Node &QuadPattern::graph() { return entries_[0]; }
@@ -40,7 +40,7 @@ QuadPattern QuadPattern::to_node_storage(storage::node::NodeStorage &node_storag
     QuadPattern qp;
     auto it = qp.begin();
     for (const auto &item : (*this))
-        if (item.backend_handle().node_storage() == node_storage)
+        if (item.backend_handle().node_storage_id() == node_storage.id())
             *(it++) = item;
         else
             *(it++) = item.to_node_storage(node_storage);

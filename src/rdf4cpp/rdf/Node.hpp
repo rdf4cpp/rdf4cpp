@@ -6,8 +6,9 @@
  * Long
  */
 
-#include <rdf4cpp/rdf/storage/node/BackendNodeHandle.hpp>
+#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -26,14 +27,13 @@ class Variable;
  */
 class Node {
 protected:
-    using BackendNodeHandle = rdf4cpp::rdf::storage::node::BackendNodeHandle;
-    using NodeID = rdf4cpp::rdf::storage::node::NodeID;
+    using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
+    using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;
     using NodeStorage = rdf4cpp::rdf::storage::node::NodeStorage;
-    using RDFNodeType = rdf4cpp::rdf::storage::node::RDFNodeType;
-    BackendNodeHandle handle_;
+    using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
+    NodeBackendHandle handle_;
 
-    explicit Node(NodeID id);
-    explicit Node(const BackendNodeHandle &id);
+    explicit Node(NodeBackendHandle id) noexcept;
 
 public:
     [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
@@ -44,7 +44,7 @@ public:
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
      */
-    Node() = default;
+    Node() noexcept = default;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -61,27 +61,27 @@ public:
      * Checks weather the node is a Literal. If yes, it is safe to convert it with `auto literal = (Literal) rdf_node;`
      * @return if this is a Literal
      */
-    [[nodiscard]] bool is_literal() const;
+    [[nodiscard]] bool is_literal() const noexcept;
 
     /**
      * Checks weather the node is a Variable. If yes, it is safe to convert it with `auto variable = (Variable) rdf_node;`
      * @return if this is a Variable
      */
-    [[nodiscard]] bool is_variable() const;
+    [[nodiscard]] bool is_variable() const noexcept;
 
     /**
      * Checks weather the node is a BlankNode. If yes, it is safe to convert it with `auto bnode = (BlankNode) rdf_node;`
      * @return if this is a BlankNode
      */
-    [[nodiscard]] bool is_blank_node() const;
+    [[nodiscard]] bool is_blank_node() const noexcept;
 
     /**
      * Checks weather the node is a IRI. If yes, it is safe to convert it with `auto iri = (Literal) rdf_node;`
      * @return if this is a IRI
      */
-    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_iri() const noexcept;
 
-    bool operator==(const Node &other) const;
+    bool operator==(const Node &other) const noexcept;
 
     friend bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept;
 
@@ -93,7 +93,7 @@ public:
 
     friend bool operator==(const std::unique_ptr<Node> &lhs, const Node *rhs) noexcept;
 
-    std::strong_ordering operator<=>(const Node &other) const;
+    std::partial_ordering operator<=>(const Node &other) const noexcept;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
@@ -124,27 +124,27 @@ public:
     [[nodiscard]] bool null() const noexcept;
 
     /**
-     * Exposes the const BackendNodeHandle.
+     * Exposes the const NodeBackendHandle.
      *
      * This function is unsafe! Make sure this is not null() const.
-     * @return its BackendNodeHandle.
+     * @return its NodeBackendHandle.
      */
-    [[nodiscard]] const BackendNodeHandle &backend_handle() const noexcept;
+    [[nodiscard]] const NodeBackendHandle &backend_handle() const noexcept;
 
     /**
-     * Exposes the BackendNodeHandle.
+     * Exposes the NodeBackendHandle.
      *
      * This function is unsafe! Make sure this is not null() const.
-     * @return its BackendNodeHandle.
+     * @return its NodeBackendHandle.
      */
-    [[nodiscard]] BackendNodeHandle &backend_handle() noexcept;
+    [[nodiscard]] NodeBackendHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp::rdf
 
 template<>
 struct std::hash<rdf4cpp::rdf::Node> {
     inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::storage::node::BackendNodeHandle>()(v.backend_handle());
+        return std::hash<rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle>()(v.backend_handle());
     }
 };
 

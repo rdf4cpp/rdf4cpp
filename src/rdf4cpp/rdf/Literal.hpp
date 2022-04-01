@@ -9,8 +9,7 @@
 namespace rdf4cpp::rdf {
 class Literal : public Node {
 protected:
-    Literal(const NodeID &id);
-    explicit Literal(Node::BackendNodeHandle handle);
+    explicit Literal(Node::NodeBackendHandle handle);
 
 public:
     Literal();
@@ -19,24 +18,24 @@ public:
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
-    explicit Literal(const std::string &lexical_form,
-                     NodeStorage &node_storage = NodeStorage::primary_instance());
+    explicit Literal(std::string_view lexical_form,
+                     NodeStorage &node_storage = NodeStorage::default_instance());
     /**
      * Constructs a Literal from a lexical form and a datatype.
      * @param lexical_form the lexical form
      * @param datatype the datatype
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(const std::string &lexical_form, const IRI &datatype,
-            NodeStorage &node_storage = NodeStorage::primary_instance());
+    Literal(std::string_view lexical_form, const IRI &datatype,
+            NodeStorage &node_storage = NodeStorage::default_instance());
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(const std::string &lexical_form, const std::string &lang,
-            NodeStorage &node_storage = NodeStorage::primary_instance());
+    Literal(std::string_view lexical_form, std::string_view lang,
+            NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Constructs a literal from a compatible type
@@ -47,9 +46,9 @@ public:
      */
     template<class T>
     inline static Literal make(T compatible_value,
-                               NodeStorage &node_storage = NodeStorage::primary_instance()) {
+                               NodeStorage &node_storage = NodeStorage::default_instance()) {
         return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
-                       datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(),
+                       IRI(datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(), node_storage),
                        node_storage);
     }
 
@@ -58,7 +57,7 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-    [[nodiscard]] const std::string &lexical_form() const;
+    [[nodiscard]] std::string_view lexical_form() const;
 
     /**
      * Returns the datatype IRI of this.
@@ -70,7 +69,7 @@ public:
      * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
      * @return language tag
      */
-    [[nodiscard]] const std::string &language_tag() const;
+    [[nodiscard]] std::string_view language_tag() const;
 
     [[nodiscard]] explicit operator std::string() const;
 
