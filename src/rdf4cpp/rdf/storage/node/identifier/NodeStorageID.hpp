@@ -6,8 +6,8 @@
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
- * <p>An NodeStorageID identifies a Literal of a given type (e.g. xsd:integer, xsd:string, etc.) within a given NodeStorage.</p>
- * <p>NodeStorageIDs are available in the range [0,(2^10-1)].</P>
+ * <p>A NodeStorageID identifies a NodeStorage.</p>
+ * <p><div>NodeStorageID</div>s are available in the range [0,(2^10-1)].</P>
  */
 struct __attribute__((__packed__)) NodeStorageID {
     static constexpr std::size_t width = 10;
