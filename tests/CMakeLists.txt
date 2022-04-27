@@ -5,20 +5,11 @@ include(FetchContent)
 FetchContent_Declare(
         DocTest
         GIT_REPOSITORY "https://github.com/onqtam/doctest"
-        GIT_TAG  "2.4.6"
+        GIT_TAG  "v2.4.8"
 )
 FetchContent_MakeAvailable(DocTest)
 
 # add the executable for all tests
-add_executable(tests_hello_test hello_test/main.cpp)
-target_link_libraries(tests_hello_test
-        doctest
-        rdf4cpp
-        )
-set_property(TARGET tests_hello_test PROPERTY CXX_STANDARD 20)
-add_test(NAME tests_hello_test COMMAND tests_hello_test)
-
-
 add_executable(tests_Variable query/tests_Variable.cpp)
 target_link_libraries(tests_Variable
         doctest
