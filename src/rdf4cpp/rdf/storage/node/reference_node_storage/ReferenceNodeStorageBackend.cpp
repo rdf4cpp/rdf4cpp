@@ -5,7 +5,6 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend() {
-    // TODO: that should be done by (Abstract)NodeContextBackend
     // some iri's like xsd:string are there by default
     for (const auto &[id, iri] : NodeID::predefined_iris) {
         auto [iter, inserted_successfully] = iri_storage_.data2id.emplace(std::make_unique<IRIBackend>(iri), id);
@@ -14,6 +13,16 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend
     }
 }
 
+/**
+ * Synchronized lookup (and creation) of IDs by a provided view of a Node Backend.
+ * @tparam Backend_t the Backend type. One of BNodeBackend, IRIBackend, LiteralBackend or VariableBackend
+ * @tparam create_if_not_present enables code for creating non-existing Node Backends
+ * @tparam NextIDFromView_func type of a function to generate the next ID which is assigned in case a new Node Backend is created
+ * @param view contains the data of the requested Node Backend
+ * @param storage the storage where the Node Backend is looked up
+ * @param next_id_func function to generate the next ID which is assigned in case a new Node Backend is created
+ * @return the NodeID for the looked up Node Backend. Result is null() if there was no matching Node Backend.
+ */
 template<class Backend_t, bool create_if_not_present, class NextIDFromView_func = void *>
 inline identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &view,
                                                 auto &storage,
