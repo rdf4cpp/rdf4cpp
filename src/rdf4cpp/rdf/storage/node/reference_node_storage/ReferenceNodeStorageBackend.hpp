@@ -3,15 +3,13 @@
 
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/NodeTypeStorage.hpp>
+
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
 
-#include <map>
-#include <memory>
-#include <mutex>
-#include <shared_mutex>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
@@ -24,18 +22,10 @@ public:
     using LiteralID = identifier::LiteralID;
 
 private:
-    mutable std::shared_mutex literal_mutex_;
-    std::map<NodeID, LiteralBackend *, std::less<>> literal_storage;
-    std::map<std::unique_ptr<LiteralBackend>, NodeID, std::less<>> literal_storage_reverse;
-    mutable std::shared_mutex bnode_mutex_;
-    std::map<NodeID, BNodeBackend *, std::less<>> bnode_storage;
-    std::map<std::unique_ptr<BNodeBackend>, NodeID, std::less<>> bnode_storage_reverse;
-    mutable std::shared_mutex iri_mutex_;
-    std::map<NodeID, IRIBackend *, std::less<>> iri_storage;
-    std::map<std::unique_ptr<IRIBackend>, NodeID, std::less<>> iri_storage_reverse;
-    mutable std::shared_mutex variable_mutex_;
-    std::map<NodeID, VariableBackend *, std::less<>> variable_storage;
-    std::map<std::unique_ptr<VariableBackend>, NodeID, std::less<>> variable_storage_reverse;
+    NodeTypeStorage<BNodeBackend> bnode_storage_;
+    NodeTypeStorage<IRIBackend> iri_storage_;
+    NodeTypeStorage<LiteralBackend> literal_storage_;
+    NodeTypeStorage<VariableBackend> variable_storage_;
 
     LiteralID next_literal_id = NodeID::min_literal_id;
     NodeID next_bnode_id = NodeID::min_bnode_id;

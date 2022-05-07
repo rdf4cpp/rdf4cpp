@@ -15,9 +15,10 @@ class LiteralBackend {
     identifier::NodeID datatype_id_;
     std::string lexical;
     std::string lang_tag;
+    size_t hash_;
 
 public:
-    [[nodiscard]] std::string quote_lexical() const noexcept;
+    using View = view::LiteralBackendView;
     LiteralBackend(std::string_view lexical, identifier::NodeID dataType, std::string_view langTag = "") noexcept;
     explicit LiteralBackend(view::LiteralBackendView view) noexcept;
     std::partial_ordering operator<=>(LiteralBackend const &) const noexcept;
@@ -34,12 +35,21 @@ public:
 
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
+    [[nodiscard]] size_t hash() const noexcept { return hash_; }
+
     explicit operator view::LiteralBackendView() const noexcept;
 };
 
 
 std::partial_ordering operator<=>(std::unique_ptr<LiteralBackend> const &self, std::unique_ptr<LiteralBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
+
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::reference_node_storage::LiteralBackend> {
+    size_t operator()(rdf4cpp::rdf::storage::node::reference_node_storage::LiteralBackend const &x) const noexcept {
+        return x.hash();
+    }
+};
 
 namespace rdf4cpp::rdf::storage::node::view {
 inline std::partial_ordering operator<=>(LiteralBackendView const &lhs, std::unique_ptr<reference_node_storage::LiteralBackend> const &rhs) noexcept {

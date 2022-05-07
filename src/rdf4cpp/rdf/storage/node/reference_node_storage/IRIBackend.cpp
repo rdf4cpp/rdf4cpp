@@ -2,8 +2,12 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-IRIBackend::IRIBackend(std::string_view iri) noexcept : iri(iri) {}
-IRIBackend::IRIBackend(view::IRIBackendView view) noexcept : iri(view.identifier) {}
+IRIBackend::IRIBackend(std::string_view iri) noexcept
+    : iri(iri),
+      hash_(View(*this).hash()) {}
+IRIBackend::IRIBackend(view::IRIBackendView view) noexcept
+    : iri(view.identifier),
+      hash_(View(*this).hash()) {}
 std::partial_ordering IRIBackend::operator<=>(std::unique_ptr<IRIBackend> const &other) const noexcept {
     if (other)
         return *this <=> *other;

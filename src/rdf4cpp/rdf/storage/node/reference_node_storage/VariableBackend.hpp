@@ -14,8 +14,10 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 class VariableBackend {
     std::string name_;
     bool anonymous_;
+    size_t hash_;
 
 public:
+    using View = view::VariableBackendView;
     explicit VariableBackend(std::string_view name, bool anonymous = false) noexcept;
     explicit VariableBackend(view::VariableBackendView view) noexcept;
     auto operator<=>(const VariableBackend &) const noexcept = default;
@@ -28,11 +30,20 @@ public:
 
     [[nodiscard]] std::string_view name() const noexcept;
 
+    [[nodiscard]] size_t hash() const noexcept { return hash_; }
+
     explicit operator view::VariableBackendView() const noexcept;
 };
 
 std::partial_ordering operator<=>(std::unique_ptr<VariableBackend> const &self, std::unique_ptr<VariableBackend> const &other) noexcept;
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
+
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::reference_node_storage::VariableBackend> {
+    size_t operator()(rdf4cpp::rdf::storage::node::reference_node_storage::VariableBackend const &x) const noexcept {
+        return x.hash();
+    }
+};
 
 namespace rdf4cpp::rdf::storage::node::view {
 inline std::partial_ordering operator<=>(VariableBackendView const &lhs, std::unique_ptr<reference_node_storage::VariableBackend> const &rhs) noexcept {
