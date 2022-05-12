@@ -49,6 +49,10 @@ Literal::operator std::string() const {
 
         for (auto const &character : lexical) {
             switch (character) {
+                case '\\': {
+                    out << R"(\\)";
+                    break;
+                }
                 case '\n': {
                     out << R"(\n)";
                     break;
