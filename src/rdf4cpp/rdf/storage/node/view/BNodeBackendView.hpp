@@ -16,7 +16,14 @@ struct BNodeBackendView {
      */
     [[nodiscard]] std::string n_string() const noexcept;
     auto operator<=>(BNodeBackendView const &) const noexcept = default;
+
+    [[nodiscard]] size_t hash() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::storage::node::view
+
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::view::BNodeBackendView> {
+    size_t operator()(rdf4cpp::rdf::storage::node::view::BNodeBackendView const &x) const noexcept;
+};
 
 #endif  //RDF4CPP_BNODEBACKENDHANDLE_HPP

@@ -20,7 +20,7 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  */
 class NodeBackendHandle {
 private:
-    uint64_t raw_{};
+    uint64_t raw_;
 
 public:
     NodeBackendHandle() noexcept = default;
@@ -97,7 +97,7 @@ public:
      */
     [[nodiscard]] uint64_t raw() const noexcept;
 
-    std::partial_ordering operator<=>(NodeBackendHandle const &other) const noexcept = default;
+    auto operator<=>(NodeBackendHandle const &other) const noexcept = default;
 
     bool operator==(NodeBackendHandle const &other) const noexcept = default;
 

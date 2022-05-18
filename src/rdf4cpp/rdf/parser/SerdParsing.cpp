@@ -2,11 +2,19 @@
 
 #include <serd-0/serd/serd.h>
 
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
 using Quad = rdf4cpp::rdf::Quad;
 using namespace rdf4cpp::rdf;
 
 struct SerdHandle {
-    std::map<std::string, std::string> prefixes;
+    using PrefixMap = rdf4cpp::rdf::storage::util::tsl::sparse_map<
+            std::string,
+            std::string,
+            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string>>;
+
+    PrefixMap prefixes;
     Dataset *datset;
 };
 
@@ -130,7 +138,7 @@ namespace rdf4cpp::rdf {
 void import_rdf_file(const std::string &path, Dataset *dataset) {
     SerdHandle serd_handle;
     serd_handle.datset = dataset;
-            SerdReader *reader = serd_reader_new(SERD_TURTLE, (void *) &serd_handle,
+    SerdReader *reader = serd_reader_new(SERD_TURTLE, (void *) &serd_handle,
                                          nullptr,
                                          reinterpret_cast<SerdBaseSink>(on_base),
                                          reinterpret_cast<SerdPrefixSink>(on_prefix),
