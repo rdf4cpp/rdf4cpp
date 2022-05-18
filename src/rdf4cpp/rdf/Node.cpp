@@ -144,25 +144,6 @@ bool Node::operator==(const Node &other) const noexcept {
         }
     }
 }
-bool operator==(const Node &lhs, const std::unique_ptr<Node> &rhs) noexcept {
-    return lhs == *rhs;
-}
-
-bool operator==(const std::unique_ptr<Node> &lhs, Node const &rhs) noexcept {
-    return *lhs == rhs;
-}
-
-bool operator==(const std::unique_ptr<Node> &lhs, const std::unique_ptr<Node> &rhs) noexcept {
-    return *lhs == *rhs;
-}
-
-bool operator==(const Node *lhs, const std::unique_ptr<Node> &rhs) noexcept {
-    return *lhs == *rhs;
-}
-
-bool operator==(const std::unique_ptr<Node> &lhs, const Node *rhs) noexcept {
-    return *lhs == *rhs;
-}
 
 Node::operator BlankNode() const {
     assert(is_blank_node());
