@@ -7,12 +7,13 @@
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
  * Specifies weather an RDF node is a Variable, BlankNode, IRI or Literal.
+ * The ordering BNode, IRI, Literal is the same as in SPARQL operator<.
  */
 enum class RDFNodeType : uint8_t {
-    Variable = 0,
-    BNode,
+    BNode = 0,
     IRI,
-    Literal
+    Literal,
+    Variable
 };
 
 std::string as_string(RDFNodeType rdf_node_type) noexcept;

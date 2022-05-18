@@ -46,6 +46,15 @@ set_property(TARGET tests_Literal PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Literal COMMAND tests_Literal)
 
 
+add_executable(tests_Node_comparison nodes/tests_Node_comparison.cpp)
+target_link_libraries(tests_Node_comparison
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Node_comparison PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Node_comparison COMMAND tests_Node_comparison)
+
+
 # include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 # doctest_discover_tests(tests_hello_test)
 

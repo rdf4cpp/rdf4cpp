@@ -73,48 +73,74 @@ bool Node::is_iri() const noexcept {
     return handle_.is_iri();
 }
 
-std::partial_ordering Node::operator<=>(const Node &other) const noexcept {
-    [[likely]] if (this->handle_.node_storage_id() == other.handle_.node_storage_id()) {  // same NodeStorage
-        return std::make_tuple(this->handle_.type(), this->handle_.node_id()) <=> std::make_tuple(other.handle_.type(), other.handle_.node_id());
+std::strong_ordering Node::operator<=>(const Node &other) const noexcept {
+    if (this->handle_ == other.handle_){
+        return std::strong_ordering::equivalent;
     }
-    else {  // different NodeStorage
-        if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::partial_ordering::equivalent) {
-            return comp_type;
-        } else {  // same type, different id.
-            switch (this->handle_.type()) {
-                case RDFNodeType::IRI:
-                    return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-                case RDFNodeType::BNode:
-                    return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-                case RDFNodeType::Literal:
-                    return this->handle_.literal_backend() <=> other.handle_.literal_backend();
-                case RDFNodeType::Variable:
-                    return this->handle_.variable_backend() <=> other.handle_.variable_backend();
-            }
+
+    // unbound
+    if (this->null()){
+        if (other.null()){
+            return std::strong_ordering::equivalent;
+        } else {
             return std::strong_ordering::less;
+        }
+    } else if(other.null()){
+        return std::strong_ordering::greater;
+    }
+
+    // different type
+    if (std::strong_ordering type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent){
+        return type_comp;
+    } else {
+        switch (this->handle_.type()) {
+            case RDFNodeType::IRI:
+                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
+            case RDFNodeType::BNode:
+                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
+            case RDFNodeType::Literal:
+                return this->handle_.literal_backend() <=> other.handle_.literal_backend();
+            case RDFNodeType::Variable:
+                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
+            default:{
+                assert(false); // this will never be reached because RDFNodeType has only 4 values.
+                return std::strong_ordering::less;
+            }
         }
     }
 }
 
 bool Node::operator==(const Node &other) const noexcept {
-    [[likely]] if (this->handle_.node_storage_id() == other.handle_.node_storage_id()) {  // same NodeStorage
-        return std::make_tuple(this->handle_.type(), this->handle_.node_id()) == std::make_tuple(other.handle_.type(), other.handle_.node_id());
+    if (this->handle_ == other.handle_){
+        return true;
     }
-    else {  // different NodeStorage
-        if (this->handle_.type() != other.handle_.type()) {
+
+    if (this->null()){
+        if (other.null()){
+            return true;
+        } else {
             return false;
-        } else {  // same type, different id.
-            switch (this->handle_.type()) {
-                case RDFNodeType::IRI:
-                    return this->handle_.iri_backend() == other.handle_.iri_backend();
-                case RDFNodeType::BNode:
-                    return this->handle_.bnode_backend() == other.handle_.bnode_backend();
-                case RDFNodeType::Literal:
-                    return this->handle_.literal_backend() == other.handle_.literal_backend();
-                case RDFNodeType::Variable:
-                    return this->handle_.variable_backend() == other.handle_.variable_backend();
+        }
+    } else if(other.null()){
+        return true;
+    }
+
+    if (this->handle_.type() != other.handle_.type()){
+        return false;
+    } else {
+        switch (this->handle_.type()) {
+            case RDFNodeType::IRI:
+                return this->handle_.iri_backend() == other.handle_.iri_backend();
+            case RDFNodeType::BNode:
+                return this->handle_.bnode_backend() == other.handle_.bnode_backend();
+            case RDFNodeType::Literal:
+                return this->handle_.literal_backend() == other.handle_.literal_backend();
+            case RDFNodeType::Variable:
+                return this->handle_.variable_backend() == other.handle_.variable_backend();
+            default:{
+                assert(false); // this will never be reached because RDFNodeType has only 4 values.
+                return false;
             }
-            return false;
         }
     }
 }
