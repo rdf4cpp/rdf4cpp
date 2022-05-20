@@ -1,7 +1,10 @@
 #ifndef RDF4CPP_ROBIN_HOOD_HASH_HPP
 #define RDF4CPP_ROBIN_HOOD_HASH_HPP
+
+#include <array>
 #include <cstring>
 #include <memory>
+
 namespace rdf4cpp::rdf::storage::util::robin_hood {
 
 namespace detail {

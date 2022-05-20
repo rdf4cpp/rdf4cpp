@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
+#include <array>
 #include <memory>
 #include <mutex>
 #include <optional>

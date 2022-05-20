@@ -2,6 +2,8 @@
 
 #include "rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp"
 
+#include <array>
+
 namespace rdf4cpp::rdf::storage::node::view {
 size_t LiteralBackendView::hash() const noexcept {
     return std::hash<LiteralBackendView>()(*this);

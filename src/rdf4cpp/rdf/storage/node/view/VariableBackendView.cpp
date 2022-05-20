@@ -2,6 +2,8 @@
 
 #include "rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp"
 
+#include <array>
+
 namespace rdf4cpp::rdf::storage::node::view {
 std::string VariableBackendView::n_string() const noexcept {
     if (is_anonymous)
