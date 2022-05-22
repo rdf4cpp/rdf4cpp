@@ -40,15 +40,16 @@ public:
     /**
      * Constructs a literal from a compatible type
      * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
+     * @tparam dtype_iri IRI string of the RDF datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
      * @return literal instance representing compatible_value
      */
-    template<class T>
+    template<typename T, datatypes::ConstexprString dtype_iri>
     inline static Literal make(T compatible_value,
                                NodeStorage &node_storage = NodeStorage::default_instance()) {
-        return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
-                       IRI(datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(), node_storage),
+        return Literal(datatypes::RegisteredDatatype<std::decay_t<T>, dtype_iri>::to_string(compatible_value),
+                       IRI(datatypes::RegisteredDatatype<std::decay_t<T>, dtype_iri>::datatype_iri(), node_storage),
                        node_storage);
     }
 
@@ -80,6 +81,10 @@ public:
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
 
+    bool operator==(const Literal &other) const;
+
+    std::partial_ordering operator<=>(const Literal &other) const;
+
     /**
      * Constructs a datatype specific container from Literal.
      * @return std::any wrapped value. might be empty if type is not registered.
@@ -91,9 +96,10 @@ public:
      * @tparam T datatype of the returned instance
      * @return T instance with the value from this
      */
-    template<typename T>
+    template<typename T, datatypes::ConstexprString dtype_iri>
     T value() const {
-        return datatypes::RegisteredDatatype<std::decay_t<T>>::from_string(this->lexical_form());
+        // TODO: later, add support have a default template parameter for the second template parameter based on the first
+        return datatypes::RegisteredDatatype<std::decay_t<T>, dtype_iri>::from_string(this->lexical_form());
     }
 
     friend class Node;

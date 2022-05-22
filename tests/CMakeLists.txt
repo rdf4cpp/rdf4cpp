@@ -5,11 +5,44 @@ include(FetchContent)
 FetchContent_Declare(
         DocTest
         GIT_REPOSITORY "https://github.com/onqtam/doctest"
-        GIT_TAG  "2.4.6"
+        GIT_TAG "2.4.6"
 )
 FetchContent_MakeAvailable(DocTest)
 
 # add the executable for all tests
+# Core types
+add_executable(tests_String datatype/tests_String.cpp)
+target_link_libraries(tests_String
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_String PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_String COMMAND tests_String)
+
+add_executable(tests_Boolean datatype/tests_Boolean.cpp)
+target_link_libraries(tests_Boolean
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Boolean PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Boolean COMMAND tests_Boolean)
+
+add_executable(tests_Decimal datatype/tests_Decimal.cpp)
+target_link_libraries(tests_Decimal
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Decimal PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Decimal COMMAND tests_Decimal)
+
+add_executable(tests_Integer datatype/tests_Integer.cpp)
+target_link_libraries(tests_Integer
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Integer COMMAND tests_Integer)
+
 add_executable(tests_hello_test hello_test/main.cpp)
 target_link_libraries(tests_hello_test
         doctest
@@ -17,7 +50,6 @@ target_link_libraries(tests_hello_test
         )
 set_property(TARGET tests_hello_test PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_hello_test COMMAND tests_hello_test)
-
 
 add_executable(tests_Variable query/tests_Variable.cpp)
 target_link_libraries(tests_Variable
@@ -36,7 +68,6 @@ target_link_libraries(tests_TriplePattern
 set_property(TARGET tests_TriplePattern PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_TriplePattern COMMAND tests_TriplePattern)
 
-
 add_executable(tests_QuadPattern query/tests_QuadPattern.cpp)
 target_link_libraries(tests_QuadPattern
         doctest
@@ -44,7 +75,6 @@ target_link_libraries(tests_QuadPattern
         )
 set_property(TARGET tests_QuadPattern PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_QuadPattern COMMAND tests_QuadPattern)
-
 
 add_executable(tests_Literal nodes/tests_Literal.cpp)
 target_link_libraries(tests_Literal
