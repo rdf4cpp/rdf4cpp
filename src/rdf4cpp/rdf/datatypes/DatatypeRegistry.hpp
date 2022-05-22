@@ -9,6 +9,38 @@
 namespace rdf4cpp::rdf::datatypes {
 
 /**
+ * Literal class type that wraps a constant expression string.
+ *
+ * Uses implicit conversion to allow templates to *seemingly* accept constant strings.
+ *
+ * Extended version of https://ctrpeach.io/posts/cpp20-string-literal-template-parameters/.
+ */
+template<size_t N>
+struct ConstexprString {
+    constexpr ConstexprString(const char (&str)[N]) noexcept {
+        std::copy_n(str, N, value);
+    }
+
+    char value[N];
+
+    operator std::string() const noexcept {
+        return std::string{value};
+    }
+
+    template<size_t M>
+    constexpr std::strong_ordering operator<=>(ConstexprString<M> const &other) const noexcept {
+        auto min = std::min(M, N);
+        for (size_t i = 0; i < min; ++i) {
+            std::strong_ordering cmp = this->value[i] <=> other.value[i];
+            if (cmp != std::strong_ordering::equal)
+                return cmp;
+        }
+        std::strong_ordering cmp = N <=> M;
+        return cmp;
+    }
+};
+
+/**
  * Registry for Literal datatype implementations.
  * Data types are registered by defining implementing and specializing members of RegisteredDatatype.
  * @see RegisteredDatatype
@@ -111,7 +143,7 @@ public:
  * If datatype_t does not overload `operator<<`, to_string(const datatype_t &value) must be specialized.
  * @tparam datatype_t datatype that is being registered
  */
-template<typename datatype_t>
+template<typename datatype_t, ConstexprString type_iri>
 struct RegisteredDatatype {
 private:
     /**
@@ -127,9 +159,14 @@ public:
     /**
      * Datatype iri
      */
+    constexpr static char *datatype_iri_cstr() noexcept {
+        return type_iri.value;
+    }
+    /**
+     * Datatype iri
+     */
     inline static std::string datatype_iri() noexcept {
-        static_assert(always_false_v<datatype_t>, "'datatype_iri' is not defined!");
-        return {};
+        return (std::string) type_iri;
     }
     /**
      * Factory function that parses a string representing datatype_t and builds an instance of datatype_t
@@ -145,6 +182,7 @@ public:
      * @return <div>value</div>'s canonical string representation
      */
     inline static std::string to_string(const datatype_t &value) {
+
         std::stringstream str_s;
         str_s << value;
         return str_s.str();
@@ -162,9 +200,9 @@ private:
     // Force `dummy` to be instantiated, even though it's unused.
     static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};
 };
-template<typename datatype_t>
-std::nullptr_t RegisteredDatatype<datatype_t>::init() {
-    DatatypeRegistry::add<RegisteredDatatype<datatype_t>>();
+template<typename xsd_datatype_t, ConstexprString xsd_string>
+std::nullptr_t RegisteredDatatype<xsd_datatype_t, xsd_string>::init() {
+    DatatypeRegistry::add<RegisteredDatatype<xsd_datatype_t, xsd_string>>();
     return nullptr;
 }
 
