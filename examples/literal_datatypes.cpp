@@ -22,9 +22,4 @@ int main() {
     // make a new literal with new value
     Literal updated_float = Literal::make<datatypes::xsd::Float>(float_);
     std::cout << updated_float << std::endl;
-
-    bool value = true;
-    auto lit1 = Literal::make<datatypes::xsd::Boolean>(value);
-    CHECK(lit1.value<datatypes::xsd::Boolean>() == value);
-    CHECK(lit1.lexical_form() == std::to_string(value));
 }
