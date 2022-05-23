@@ -11,8 +11,8 @@ int main() {
     std::cout << float_1_1 << std::endl;
     std::any any_float_ = float_1_1.value();
     std::cout << any_cast<float>(any_float_) << std::endl;
-    auto float_ = float_1_1.value<float>();  // we know the type at compile time
-    [[maybe_unused]] auto int_ = float_1_1.value<int>();
+    auto float_ = float_1_1.value<float, datatypes::xsd_float>();  // we know the type at compile time
+    [[maybe_unused]] auto int_ = float_1_1.value<int, datatypes::xsd_int>();
     std::cout << float_ << std::endl;
 
     // update value
@@ -20,6 +20,6 @@ int main() {
     // datatypes::xsd::Float is an alias for the built-in type float
     std::cout << float_ << std::endl;
     // make a new literal with new value
-    Literal updated_float = Literal::make(float_);
+    Literal updated_float = Literal::make<float, datatypes::xsd_float>(float_);
     std::cout << updated_float << std::endl;
 }
