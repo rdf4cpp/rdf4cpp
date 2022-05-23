@@ -3,42 +3,48 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
-using namespace rdf4cpp::rdf::datatypes;
+using namespace rdf4cpp::rdf;
 
 TEST_CASE("Datatype Integer") {
 
-    auto iri = rdf4cpp::rdf::IRI(RegisteredDatatype<xsd::Integer, xsd_integer>::datatype_iri());
+    constexpr auto correct_type_iri_cstr = "http://www.w3.org/2001/XMLSchema#integer";
 
-    auto iri_str = rdf4cpp::rdf::IRI("http://www.w3.org/2001/XMLSchema#integer");
+    CHECK(std::string(datatypes::xsd::Integer::identifier) == correct_type_iri_cstr);
 
-    CHECK(iri == iri_str);
+    auto type_iri = IRI(datatypes::xsd::Integer::identifier);
+    CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
-    int64_t value = 1;
-    auto lit1 = rdf4cpp::rdf::Literal::make<xsd::Integer, xsd_integer>(value);
-    CHECK(lit1.value<xsd::Integer, xsd_integer>() == value);
+    using type = datatypes::xsd::Integer::cpp_type;
+
+    CHECK(std::is_same_v<type, int64_t>);
+
+
+    int64_t value = 1.00;
+    auto lit1 = Literal::make<datatypes::xsd::Integer>(value);
+    CHECK(lit1.value<datatypes::xsd::Integer>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -2147483648;
-    auto lit2 = rdf4cpp::rdf::Literal::make<xsd::Integer, xsd_integer>(value);
-    CHECK(lit2.value<xsd::Integer, xsd_integer>() == value);
+    auto lit2 = Literal::make<datatypes::xsd::Integer>(value);
+    CHECK(lit2.value<datatypes::xsd::Integer>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 2147483647;
-    auto lit3 = rdf4cpp::rdf::Literal::make<xsd::Integer, xsd_integer>(value);
-    CHECK(lit3.value<xsd::Integer, xsd_integer>() == value);
+    auto lit3 = Literal::make<datatypes::xsd::Integer>(value);
+    CHECK(lit3.value<datatypes::xsd::Integer>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     //Testing Literal Constructor
     value = 1;
-    auto lit4 = rdf4cpp::rdf::Literal{std::to_string(value), iri};
-    CHECK(lit4.value<xsd::Integer, xsd_integer>() == value);
+    auto lit4 = Literal{std::to_string(value), type_iri};
+    CHECK(lit4.value<datatypes::xsd::Integer>() == value);
 
     value = 2147483647;
-    auto lit5 = rdf4cpp::rdf::Literal{std::to_string(value), iri};
-    CHECK(lit5.value<xsd::Integer, xsd_integer>() == value);
+    auto lit5 = Literal{std::to_string(value), type_iri};
+    CHECK(lit5.value<datatypes::xsd::Integer>() == value);
 
-    /*    auto lit6 = rdf4cpp::rdf::Literal{"+1", iri};
-    CHECK(lit6.value<xsd::Integer, xsd_integer>() == 1);*/
+    auto lit6 = Literal{"+1", type_iri};
+    CHECK(lit6.value<datatypes::xsd::Integer>() == 1);
 
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
@@ -46,6 +52,9 @@ TEST_CASE("Datatype Integer") {
     CHECK(lit3 == lit5);
     //CHECK(lit4 == lit6);
 
-    auto lit7 = rdf4cpp::rdf::Literal{"a23dg", iri};
-    CHECK_THROWS_WITH_AS(lit7.value(), "XSD Parsing Error", std::runtime_error);
+    // suppress warnings regarding attribute ‘nodiscard’
+    std::any no_discard_dummy = false;
+
+    auto lit7 = Literal{"a23dg", type_iri};
+    CHECK_THROWS_WITH_AS(no_discard_dummy = lit7.value(), "XSD Parsing Error", std::runtime_error);
 }

@@ -6,24 +6,32 @@
 #ifndef RDF4CPP_XSD_INTEGER_HPP
 #define RDF4CPP_XSD_INTEGER_HPP
 
-#include "Decimal.hpp"
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+
 #include <cstdint>
 #include <ostream>
-#include <rdf4cpp/rdf/datatypes/DatatypeRegistry.hpp>
 #include <regex>
 
-namespace rdf4cpp::rdf::datatypes::xsd {
-using Integer = int64_t;  //!< Implements <a href="http://www.w3.org/2001/XMLSchema#integer">xsd:integer</a>
-}
+namespace rdf4cpp::rdf::datatypes::registry {
+/*
+ * Name of the datatype. This is kept so that we won't need to type it over and over again.
+ */
+constexpr static registry::ConstexprString xsd_integer{"http://www.w3.org/2001/XMLSchema#integer"};
 
-namespace rdf4cpp::rdf::datatypes {
-constexpr const char xsd_integer[] = "http://www.w3.org/2001/XMLSchema#integer";
-
+/**
+ * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
+ */
 template<>
-inline std::string RegisteredDatatype<xsd::Integer, xsd_integer>::datatype_iri() noexcept { return "http://www.w3.org/2001/XMLSchema#integer"; }
+struct DatatypeMapping<xsd_integer> {
+    using cpp_datatype = int64_t;
+};
 
+/**
+ * Specialisation of from_string template function.
+ */
 template<>
-inline xsd::Integer RegisteredDatatype<xsd::Integer, xsd_integer>::from_string(std::string_view s) {
+inline LiteralDatatypeImpl<xsd_integer>::cpp_type LiteralDatatypeImpl<xsd_integer>::from_string(std::string_view s) {
 
     const std::regex integer_regex("[\\-+]?[0-9]+");
 
@@ -33,5 +41,13 @@ inline xsd::Integer RegisteredDatatype<xsd::Integer, xsd_integer>::from_string(s
         throw std::runtime_error("XSD Parsing Error");
     }
 }
-}  // namespace rdf4cpp::rdf::datatypes
+}  // namespace rdf4cpp::rdf::datatypes::registry
+
+
+namespace rdf4cpp::rdf::datatypes::xsd {
+/**
+ * Implementation of xsd::integer
+ */
+using Integer = registry::LiteralDatatypeImpl<registry::xsd_integer>;
+}  // namespace rdf4cpp::rdf::datatypes::xsd
 #endif  //RDF4CPP_XSD_INTEGER_HPP

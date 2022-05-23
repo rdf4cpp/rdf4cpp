@@ -19,30 +19,30 @@ TEST_CASE("Datatype Boolean") {
     CHECK(std::is_same_v<type, bool>);
 
     bool value = true;
-    auto lit1 = rdf4cpp::rdf::Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit1 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit1.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = false;
-    auto lit2 = rdf4cpp::rdf::Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit2 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit2.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit3 = rdf4cpp::rdf::Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit3 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit3.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit4 = rdf4cpp::rdf::Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit4 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit4.value<datatypes::xsd::Boolean>() == value);
 
     value = true;
-    auto lit5 = rdf4cpp::rdf::Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal{std::to_string(value), type_iri};
     CHECK(lit5.value<datatypes::xsd::Boolean>() == value);
 
     value = false;
-    auto lit6 = rdf4cpp::rdf::Literal{std::to_string(value), type_iri};
+    auto lit6 = Literal{std::to_string(value), type_iri};
     CHECK(lit6.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit6.value()) == value);
 
