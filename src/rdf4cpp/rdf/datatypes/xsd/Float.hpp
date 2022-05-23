@@ -24,7 +24,7 @@ constexpr static registry::ConstexprString xsd_float{"http://www.w3.org/2001/XML
  */
 template<>
 struct DatatypeMapping<xsd_float> {
-    using cpp_datatype = double;
+    using cpp_datatype = float;
 };
 
 /**
