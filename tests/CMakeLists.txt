@@ -43,13 +43,6 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
-add_executable(tests_hello_test hello_test/main.cpp)
-target_link_libraries(tests_hello_test
-        doctest
-        rdf4cpp
-        )
-set_property(TARGET tests_hello_test PROPERTY CXX_STANDARD 20)
-add_test(NAME tests_hello_test COMMAND tests_hello_test)
 
 add_executable(tests_Variable query/tests_Variable.cpp)
 target_link_libraries(tests_Variable
