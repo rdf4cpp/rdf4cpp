@@ -74,10 +74,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
-        src/rdf4cpp/rdf/datatypes/xsd/String.hpp
-        src/rdf4cpp/rdf/datatypes/xsd/Boolean.hpp
-        src/rdf4cpp/rdf/datatypes/xsd/Decimal.hpp
-        src/rdf4cpp/rdf/datatypes/xsd/Integer.hpp)
+)
+
 target_link_libraries(rdf4cpp PRIVATE
         Threads::Threads
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>

@@ -90,7 +90,6 @@ bool Literal::is_iri() const { return false; }
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 
 std::partial_ordering Literal::operator<=>(const Literal &other) const {
-    auto type = handle_.type();
     if (auto comp_id = this->handle_ <=> other.handle_; comp_id == std::partial_ordering::equivalent) {
         return std::strong_ordering::equal;
     } else if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
@@ -126,7 +125,7 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     return os;
 }
 std::any Literal::value() const {
-    datatypes::DatatypeRegistry::factory_fptr_t factory = datatypes::DatatypeRegistry::get_factory(this->datatype().identifier());
+    datatypes::registry::DatatypeRegistry::factory_fptr_t factory = datatypes::registry::DatatypeRegistry::get_factory(this->datatype().identifier());
     if (factory != nullptr)
         return factory(lexical_form());
     else
