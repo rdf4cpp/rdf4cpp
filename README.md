@@ -1,7 +1,7 @@
-⚠️ This repo is work-in-progress! ⚠️
+⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
 # rdf4cpp
 
-rdf4cpp aims to be a stable, modern RDF library for C++
+rdf4cpp aims to be a stable, modern RDF library for C++.
 
 ## Usage 
 check out the [examples](./examples) directory. 

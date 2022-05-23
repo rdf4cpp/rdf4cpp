@@ -15,7 +15,14 @@ struct LiteralBackendView {
     std::string_view language_tag;
 
     auto operator<=>(LiteralBackendView const &) const noexcept = default;
+    bool operator==(LiteralBackendView const &) const noexcept = default;
+
+    [[nodiscard]] size_t hash() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::storage::node::view
 
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::view::LiteralBackendView> {
+    size_t operator()(rdf4cpp::rdf::storage::node::view::LiteralBackendView const &x) const noexcept;
+};
 #endif  //RDF4CPP_LITERALBACKENDHANDLE_HPP

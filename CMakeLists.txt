@@ -73,16 +73,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
-        src/rdf4cpp/utils/error/InvalidIRIError.cpp
-        src/rdf4cpp/utils/error/InvalidUTF8StringError.cpp
-        src/rdf4cpp/utils/PlainIRI.cpp
-        src/rdf4cpp/utils/sec/Err.cpp
-        src/rdf4cpp/utils/sec/Ok.cpp
-        src/rdf4cpp/utils/sec/Result.cpp
-        src/rdf4cpp/utils/StringValidator.cpp
-        src/rdf4cpp/utils/utf8/UTF8String.cpp
-        src/rdf4cpp/utils/utf8/UTF8StringStream.cpp
-        src/rdf4cpp/utils/utf8/UTF8Wrapper.cpp
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
         src/rdf4cpp/rdf/datatypes/xsd/String.hpp
         src/rdf4cpp/rdf/datatypes/xsd/Boolean.hpp

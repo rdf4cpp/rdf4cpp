@@ -44,8 +44,36 @@ std::string_view Literal::language_tag() const {
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
     auto quote_lexical = [](std::string_view lexical) -> std::string {
-        // TODO: escape quotes (") in lexical + escape everything that needs to be escaped in N-Tripels/N-Quads
-        return "\"" + std::string{lexical} + "\"";
+        // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
+        std::ostringstream out{};
+        out << "\"";
+
+        for (auto const &character : lexical) {
+            switch (character) {
+                case '\\': {
+                    out << R"(\\)";
+                    break;
+                }
+                case '\n': {
+                    out << R"(\n)";
+                    break;
+                }
+                case '\r': {
+                    out << R"(\r)";
+                    break;
+                }
+                case '"': {
+                    out << R"(\")";
+                    break;
+                }
+                    [[likely]] default : {
+                        out << character;
+                        break;
+                    }
+            }
+        }
+        out << "\"";
+        return out.str();
     };
     const auto &literal = handle_.literal_backend();
     if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
