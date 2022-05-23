@@ -56,7 +56,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::float
  */
-using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal>;
+using Float = registry::LiteralDatatypeImpl<registry::xsd_float>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_FLOAT_HPP
