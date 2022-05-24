@@ -12,7 +12,7 @@ int main() {
     std::any any_float_ = float_1_1.value();
     std::cout << any_cast<float>(any_float_) << std::endl;
     auto float_ = float_1_1.value<datatypes::xsd::Float>();  // we know the type at compile time
-    [[maybe_unused]] auto int_ = float_1_1.value<datatypes::xsd::Integer>();
+    //[[maybe_unused]] auto int_ = float_1_1.value<datatypes::xsd::Integer>();
     std::cout << float_ << std::endl;
 
     // update value
