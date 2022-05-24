@@ -16,7 +16,7 @@ int main() {
     std::cout << float_ << std::endl;
 
     // update value
-    float_ *= any_cast<datatypes::xsd::Float>(any_float_) * 3;
+    float_ *= any_cast<datatypes::xsd::Float::cpp_type>(any_float_) * 3;
     // datatypes::xsd::Float is an alias for the built-in type float
     std::cout << float_ << std::endl;
     // make a new literal with new value
