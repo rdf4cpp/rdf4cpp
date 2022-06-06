@@ -74,6 +74,7 @@ jobs:
           sudo update-alternatives --config c++
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/${{ matrix.config.cc }} 90
           sudo update-alternatives --config cc
+          sudo pip install conan
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -107,6 +108,15 @@ jobs:
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
           examples/rdf_nodes_example
+      - name: Test conan package
+        run: |
+          # configure conan profile
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          # build and test package
+          conan remove -f rdf4cpp/$(conan inspect . --raw version) # make sure nothing is in cache
+          conan create .
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
