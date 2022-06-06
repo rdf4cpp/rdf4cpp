@@ -40,7 +40,7 @@ function(install_cpp_library TARGET_NAME INCLUDE_PATH)
             "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
             DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
 
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_PATH}/
             DESTINATION include
-            FILES_MATCHING PATTERN "*.hpp")
+            FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
 endfunction()
