@@ -17,7 +17,13 @@ FetchContent_Declare(
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(rdf4cpp)
-add_executable(example src/example.cpp)
+add_executable(test_FetchContent src/test_FetchContent.cpp)
 # With FetchContent_Declare we don't need find_package
-target_link_libraries(example rdf4cpp::rdf4cpp)
-set_property(TARGET example PROPERTY CXX_STANDARD 20)
+target_link_libraries(test_FetchContent rdf4cpp::rdf4cpp)
+
+set_target_properties(
+        test_FetchContent PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
