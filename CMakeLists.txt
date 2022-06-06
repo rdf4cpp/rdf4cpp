@@ -69,12 +69,6 @@ target_link_libraries(rdf4cpp PRIVATE
         $<IF:$<BOOL:serd-FOUND>,${serd},serd:serd> # ${VAR}-FOUND is only defined if the system library is used
         )
 
-set_target_properties(rdf4cpp PROPERTIES
-        VERSION ${rdf4cpp_VERSION}
-        SOVERSION ${rdf4cpp_VERSION_MAJOR})
-
-set_property(TARGET rdf4cpp PROPERTY CXX_STANDARD 20)
-
 if (IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
     install_cpp_library(rdf4cpp src)

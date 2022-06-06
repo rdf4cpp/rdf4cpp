@@ -8,6 +8,13 @@ function(install_cpp_library TARGET_NAME INCLUDE_PATH)
                 "you did not specify the target and the include path in the parameter!")
     endif()
 
+    set_target_properties(rdf4cpp PROPERTIES
+            VERSION ${PROJECT_VERSION}
+            SOVERSION ${PROJECT_VERSION_MAJOR}
+            CXX_STANDARD 20
+            CXX_EXTENSIONS OFF
+            CXX_STANDARD_REQUIRED ON)
+
     target_include_directories(
             ${TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
