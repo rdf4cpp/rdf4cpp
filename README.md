@@ -9,8 +9,7 @@ check out the [examples](./examples) directory.
 ## Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-Tests are build with gcc 10 and clang 10. 
-Newer version of the compilers should also work. 
+CI builds and tests rdf4cpp with gcc-{10,11}, clang-{11,12,13,14} with libstdc++-11 on ubuntu 22.04. 
 
 To load RDF data from files, you need additionally the library [serd](https://drobilla.net/software/serd). 
 It is available on most distributions package managers. 
