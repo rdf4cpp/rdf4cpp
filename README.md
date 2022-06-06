@@ -22,9 +22,8 @@ sudo apt install libserd-dev
 ## Build
 rdf4cpp uses CMake. To build it, run: 
 ```shell
-cmake -B build
-cd build
-make rdf4cpp
+cmake -B build_dir # configure and generate
+cmake --build build_dir # compile
 ```
 
 To install it to your system, run afterwards:
@@ -32,10 +31,10 @@ To install it to your system, run afterwards:
 sudo make install
 ```
 
-### Additional CMake options:
+### Additional CMake config cptions:
 
-`-Drdf4cpp_BUILD_EXAMPLES=ON/OFF [default: OFF]`: configure cmake for building examples
+`-DBUILD_EXAMPLES=ON/OFF [default: OFF]`: configure cmake for building examples
 
-`-Drdf4cpp_BUILD_TESTS=ON/OFF [default: OFF]`: configure cmake for building tests
+`-DBUILD_TESTING=ON/OFF [default: OFF]`: configure cmake for building tests
 
-`-Drdf4cpp_SHARED_LIBS=ON/OFF [default: OFF]`: build a shared library instead of a static
+`-DBUILD_SHARED_LIBS=ON/OFF [default: OFF]`: build a shared library instead of a static
