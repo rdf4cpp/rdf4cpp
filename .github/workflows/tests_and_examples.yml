@@ -31,8 +31,8 @@ jobs:
             cxx: "g++-11",
           }
           - {
-            name: "ubuntu-20.04 clang++-11 libstdc++-10",
-            os: ubuntu-20.04,
+            name: "ubuntu-22.04 clang++-11 libstdc++-11",
+            os: ubuntu-22.04,
             cc: "clang-11",
             cxx: "clang++-11",
           }
@@ -68,7 +68,7 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build libserd-dev python3 python3-pip curl
+          sudo apt install cmake ninja-build libserd-dev python3 python3-pip curl clang-11
           sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
@@ -111,12 +111,16 @@ jobs:
       - name: Test conan package
         run: |
           # configure conan profile
+          export CXX="/usr/bin/${{ matrix.config.cxx }}"
+          export CC="/usr/bin/${{ matrix.config.cc }}"
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update env.CXX="${CXX}" default
+          conan profile update env.CC="${CC}" default
           # build and test package
           conan remove -f rdf4cpp/$(conan inspect . --raw version) # make sure nothing is in cache
-          conan create .
+          conan create . -pr:b=default
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
