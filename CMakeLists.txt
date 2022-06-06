@@ -1,41 +1,25 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.1)
+project(rdf4cpp VERSION 0.0.4)
 
-## C++ compiler flags
-
-if (MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
-else ()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
-endif ()
-
-## C++ language configuration boilerplate
-
-if (NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET AND
-        NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
-    set(CMAKE_CXX_VISIBILITY_PRESET default)
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN NO)
-endif ()
-
-## Let rdf4cpp_SHARED_LIBS override BUILD_SHARED_LIBS
-
-if (DEFINED rdf4cpp_SHARED_LIBS)
-    set(BUILD_SHARED_LIBS "${rdf4cpp_SHARED_LIBS}")
-endif ()
+include(cmake/boilerplate_init.cmake)
+boilerplate_init()
 
 # find packages
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
+find_package(serd 0 QUIET)
 
-# TODO: check version of serd
-find_library(serd
-        NAMES serd-0
-        NO_CACHE)
+# find system libraries
+if (NOT serd-FOUND)
+    find_library(serd
+            NAMES serd-0
+            NO_CACHE REQUIRED)
+    message(DEBUG "serd system library used: ${serd}")
+else ()
+    message(DEBUG "serd cmake package found")
+endif ()
 
 ## Create the main rdf4cpp library target
-
 add_library(rdf4cpp
         src/rdf4cpp/rdf/BlankNode.cpp
         src/rdf4cpp/rdf/Dataset.cpp
@@ -73,48 +57,38 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
-        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
-        )
-target_link_libraries(rdf4cpp PRIVATE
-        Threads::Threads
-        $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>
+        src/rdf4cpp/rdf/parser/SerdParsing.cpp
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
+
+target_include_directories(
+        rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+
+target_link_libraries(rdf4cpp PRIVATE
+        Threads::Threads
+        $<IF:$<BOOL:serd-FOUND>,${serd},serd:serd> # ${VAR}-FOUND is only defined if the system library is used
+        )
+
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${rdf4cpp_VERSION}
         SOVERSION ${rdf4cpp_VERSION_MAJOR})
-target_include_directories(
-        rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-target_compile_features(rdf4cpp PUBLIC cxx_std_20)
 
-## Generate the export header for rdf4cpp and attach it to the target
+set_property(TARGET rdf4cpp PROPERTY CXX_STANDARD 20)
 
-include(GenerateExportHeader)
-generate_export_header(rdf4cpp EXPORT_FILE_NAME include/RDF4CPP/export.h)
-target_compile_definitions(
-        rdf4cpp PUBLIC "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:RDF4CPP_STATIC_DEFINE>")
-target_include_directories(
-        rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
-
-## Include the install rules if the user wanted them (included by default when top-level)
-
-string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" is_top_level)
-option(rdf4cpp_INCLUDE_PACKAGING "Include packaging rules for rdf4cpp" "${is_top_level}")
-if (rdf4cpp_INCLUDE_PACKAGING)
-    add_subdirectory(packaging)
+if (IS_TOP_LEVEL)
+    include(cmake/install_library.cmake)
+    install_cpp_library(rdf4cpp src)
 endif ()
 
-OPTION(rdf4cpp_BUILD_TESTS "Build the tests for rdf4cpp." OFF)
-if (rdf4cpp_BUILD_TESTS)
+if (BUILD_TESTING AND IS_TOP_LEVEL)
     message("Tests are configured to be build.")
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
 endif ()
 
-
-OPTION(rdf4cpp_BUILD_EXAMPLES "Build the examples for rdf4cpp." OFF)
-if (rdf4cpp_BUILD_EXAMPLES)
+OPTION(BUILD_EXAMPLES "Build the examples for rdf4cpp." OFF)
+if (BUILD_EXAMPLES AND IS_TOP_LEVEL)
     message("Examples are configured to be build.")
     add_subdirectory(examples)
 endif ()
