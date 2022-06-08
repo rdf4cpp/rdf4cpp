@@ -60,7 +60,7 @@ TEST_CASE("Datatype Integer") {
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
     CHECK(lit3 == lit5);
-    CHECK(lit4.value<datatypes::xsd::Integer>() == lit6.value<datatypes::xsd::Integer>());
+    CHECK(lit4.value<datatypes::xsd::Integer>() == lit6.value<datatypes::xsd::Integer>()); //literal representation will not be matched but the values will match.
 
     // suppress warnings regarding attribute ‘nodiscard’
     std::any no_discard_dummy = false;
