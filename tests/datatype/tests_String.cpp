@@ -54,6 +54,30 @@ TEST_CASE("Datatype String") {
     auto lit8 = Literal{value, type_iri};
     CHECK(lit8.value<datatypes::xsd::String>() == value);
 
+    value = "\\";
+    auto lit9 = Literal{value, type_iri};
+    CHECK(lit9.value<datatypes::xsd::String>() == value);
+
+    value = "\"";
+    auto lit10 = Literal{value, type_iri};
+    CHECK(lit10.value<datatypes::xsd::String>() == value);
+
+    value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\n Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+    auto lit11 = Literal{value, type_iri};
+    CHECK(lit11.value<datatypes::xsd::String>() == value);
+
+    value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\t Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+    auto lit12 = Literal{value, type_iri};
+    CHECK(lit12.value<datatypes::xsd::String>() == value);
+
+    value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\" Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+    auto lit13 = Literal{value, type_iri};
+    CHECK(lit13.value<datatypes::xsd::String>() == value);
+
+    value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\\ Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
+    auto lit14 = Literal{value, type_iri};
+    CHECK(lit14.value<datatypes::xsd::String>() == value);
+
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
