@@ -74,7 +74,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:src/rdf4cpp/rdf/parser/SerdParsing.cpp>
-        )
+)
+
 target_link_libraries(rdf4cpp PRIVATE
         Threads::Threads
         $<$<NOT:$<STREQUAL:"${serd}","serd-NOTFOUND">>:${serd}>

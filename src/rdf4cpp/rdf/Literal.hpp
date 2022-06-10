@@ -4,6 +4,7 @@
 #include <any>
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 
 namespace rdf4cpp::rdf {
@@ -40,15 +41,16 @@ public:
     /**
      * Constructs a literal from a compatible type
      * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
+     * @tparam dtype_iri IRI string of the RDF datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
      * @return literal instance representing compatible_value
      */
-    template<class T>
-    inline static Literal make(T compatible_value,
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    inline static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
                                NodeStorage &node_storage = NodeStorage::default_instance()) {
-        return Literal(datatypes::RegisteredDatatype<std::decay_t<T>>::to_string(compatible_value),
-                       IRI(datatypes::RegisteredDatatype<std::decay_t<T>>::datatype_iri(), node_storage),
+        return Literal(LiteralDatatype_t::to_string(compatible_value),
+                       IRI(LiteralDatatype_t::identifier, node_storage),
                        node_storage);
     }
 
@@ -80,6 +82,10 @@ public:
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
 
+    bool operator==(const Literal &other) const;
+
+    std::partial_ordering operator<=>(const Literal &other) const;
+
     /**
      * Constructs a datatype specific container from Literal.
      * @return std::any wrapped value. might be empty if type is not registered.
@@ -91,9 +97,9 @@ public:
      * @tparam T datatype of the returned instance
      * @return T instance with the value from this
      */
-    template<typename T>
-    T value() const {
-        return datatypes::RegisteredDatatype<std::decay_t<T>>::from_string(this->lexical_form());
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    typename LiteralDatatype_t::cpp_type value() const {
+        return LiteralDatatype_t::from_string(this->lexical_form());
     }
 
     friend class Node;

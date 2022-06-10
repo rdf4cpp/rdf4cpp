@@ -54,6 +54,40 @@ target_link_libraries(tests_Node_comparison
 set_property(TARGET tests_Node_comparison PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Node_comparison COMMAND tests_Node_comparison)
 
+# RDF Core Types
+add_executable(tests_String datatype/tests_String.cpp)
+target_link_libraries(tests_String
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_String PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_String COMMAND tests_String)
+
+add_executable(tests_Boolean datatype/tests_Boolean.cpp)
+target_link_libraries(tests_Boolean
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Boolean PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Boolean COMMAND tests_Boolean)
+
+
+add_executable(tests_Decimal datatype/tests_Decimal.cpp)
+target_link_libraries(tests_Decimal
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Decimal PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Decimal COMMAND tests_Decimal)
+
+add_executable(tests_Integer datatype/tests_Integer.cpp)
+target_link_libraries(tests_Integer
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Integer COMMAND tests_Integer)
+
 
 # include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 # doctest_discover_tests(tests_hello_test)
