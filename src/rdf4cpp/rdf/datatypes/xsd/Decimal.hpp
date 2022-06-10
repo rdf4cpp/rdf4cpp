@@ -1,10 +1,10 @@
+
 /**
- * @file Registers xsd:float with DatatypeRegistry
- */
+* @file Registers xsd:decimal with DatatypeRegistry
+*/
 
-#ifndef RDF4CPP_XSD_FLOAT_HPP
-#define RDF4CPP_XSD_FLOAT_HPP
-
+#ifndef RDF4CPP_XSD_DECIMAL_HPP
+#define RDF4CPP_XSD_DECIMAL_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
@@ -17,29 +17,36 @@ namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
  */
-constexpr static registry::ConstexprString xsd_float{"http://www.w3.org/2001/XMLSchema#float"};
+constexpr static registry::ConstexprString xsd_decimal{"http://www.w3.org/2001/XMLSchema#decimal"};
 
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
 template<>
-struct DatatypeMapping<xsd_float> {
-    using cpp_datatype = float;
+struct DatatypeMapping<xsd_decimal> {
+    using cpp_datatype = double;
 };
 
 /**
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_float>::cpp_type LiteralDatatypeImpl<xsd_float>::from_string(std::string_view s) {
-    return std::stof(std::string{s.data()});
+inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decimal>::from_string(std::string_view s) {
+
+    const std::regex decimal_regex("(\\+|-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)");
+
+    if (std::regex_match(s.data(), decimal_regex)) {
+        return std::strtod(s.data(), nullptr);
+    } else {
+        throw std::runtime_error("XSD Parsing Error");
+    }
 }
 
 /**
  * Specialisation of to_string template function.
  */
 template<>
-inline std::string LiteralDatatypeImpl<xsd_float>::to_string(const cpp_type &value) {
+inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
 
     std::ostringstream str_os;
     // Set Fixed -Point Notation
@@ -54,9 +61,9 @@ inline std::string LiteralDatatypeImpl<xsd_float>::to_string(const cpp_type &val
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**
- * Implementation of xsd::float
+ * Implementation of xsd::decimal
  */
-using Float = registry::LiteralDatatypeImpl<registry::xsd_float>;
+using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
-#endif  //RDF4CPP_XSD_FLOAT_HPP
+#endif  //RDF4CPP_XSD_DECIMAL_HPP
