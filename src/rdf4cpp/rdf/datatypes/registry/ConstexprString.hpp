@@ -22,10 +22,6 @@ struct ConstexprString {
         std::copy_n(str, N, value);
     }
 
-    constexpr operator std::string() const noexcept {
-        return std::string{value};
-    }
-
     constexpr operator std::string_view() const noexcept {
         return std::string_view{value};
     }

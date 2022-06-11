@@ -8,7 +8,6 @@ concept LiteralDatatype = requires(LiteralDatatypeImpl,
                                    typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
-                              { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                               { LiteralDatatypeImpl::to_string(cpp_value) } -> std::convertible_to<std::string>;
                           };

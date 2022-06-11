@@ -52,11 +52,11 @@ public:
      * @param factory_fptr factory function to construct an instance from a string
      * @param to_string_fptr converts type instance to its string representation
      */
-    inline static void add(std::string datatype_iri, factory_fptr_t factory_fptr, to_string_fptr_t to_string_fptr) {
+    inline static void add(std::string_view datatype_iri, factory_fptr_t factory_fptr, to_string_fptr_t to_string_fptr) {
         auto &registry = DatatypeRegistry::get_mutable();
         auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &entry) { return entry.datatype_iri == datatype_iri; });
         if (found == registry.end()) {
-            registry.push_back({datatype_iri, factory_fptr, to_string_fptr});
+            registry.push_back({std::string{datatype_iri}, factory_fptr, to_string_fptr});
             std::sort(registry.begin(), registry.end(),
                       [](const auto &left, const auto &right) { return left.datatype_iri < right.datatype_iri; });
         } else {
