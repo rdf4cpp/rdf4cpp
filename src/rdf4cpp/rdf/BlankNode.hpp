@@ -10,10 +10,10 @@ namespace rdf4cpp::rdf {
 class BlankNode : public Node {
 
 private:
-    explicit BlankNode(NodeBackendHandle handle);
+    explicit BlankNode(NodeBackendHandle handle) noexcept;
 
 public:
-    BlankNode();
+    BlankNode() noexcept;
     explicit BlankNode(std::string_view identifier,
                        NodeStorage &node_storage = NodeStorage::default_instance());
 

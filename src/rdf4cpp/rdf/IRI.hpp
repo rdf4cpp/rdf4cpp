@@ -11,11 +11,11 @@ namespace rdf4cpp::rdf {
  */
 class IRI : public Node {
 public:
-    explicit IRI(Node::NodeBackendHandle handle);
+    explicit IRI(Node::NodeBackendHandle handle) noexcept;
 
 
 public:
-    IRI();
+    IRI() noexcept;
 
     /**
      * Constructs an IRI object from a IRI string
