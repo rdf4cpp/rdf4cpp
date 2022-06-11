@@ -13,7 +13,7 @@ protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
 public:
-    Literal();
+    Literal() noexcept;
     /**
      * Constructs a Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form

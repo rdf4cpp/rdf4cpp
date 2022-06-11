@@ -5,7 +5,7 @@
 
 namespace rdf4cpp::rdf {
 
-Literal::Literal() : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
+Literal::Literal() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
 Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                      .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
