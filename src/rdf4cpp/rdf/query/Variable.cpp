@@ -6,7 +6,7 @@ Variable::Variable(std::string_view identifier, bool anonymous, NodeStorage &nod
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::VariableBackendView{.name = identifier, .is_anonymous = anonymous}),
                              storage::node::identifier::RDFNodeType::Variable,
                              node_storage.id()}) {}
-Variable::Variable(Node::NodeBackendHandle handle) : Node(handle) {}
+Variable::Variable(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
 
 bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID

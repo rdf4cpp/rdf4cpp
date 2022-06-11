@@ -7,7 +7,7 @@
 namespace rdf4cpp::rdf::query {
 class Variable : public Node {
 protected:
-    explicit Variable(Node::NodeBackendHandle handle);
+    explicit Variable(Node::NodeBackendHandle handle) noexcept;
 
 public:
     Variable() noexcept;

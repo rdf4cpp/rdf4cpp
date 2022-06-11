@@ -5,7 +5,7 @@
 
 namespace rdf4cpp::rdf {
 
-Literal::Literal() : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
+Literal::Literal() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
 Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                      .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
@@ -15,12 +15,7 @@ Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
                              node_storage.id()}) {}
 
 Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                     .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                     .lexical_form = lexical_form,
-                                     .language_tag = ""}),
-                             storage::node::identifier::RDFNodeType::Literal,
-                             node_storage.id()}) {}
+    : Literal(make(lexical_form, datatype, node_storage)) {}
 Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                      .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
@@ -130,6 +125,32 @@ std::any Literal::value() const {
         return factory(lexical_form());
     else
         return {};
+}
+
+Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
+    // retrieving the datatype.identifier() requires a lookup in the backend -> cache
+    std::string_view const datatype_identifier = datatype.identifier();  // string_view
+    auto const factory_func = datatypes::registry::DatatypeRegistry::get_factory(datatype_identifier);
+
+    if (factory_func) {  // this is a know datatype -> canonize the string representation
+        auto const native_type = factory_func(lexical_form);
+        // if factory_func exists, to_string_func must exist, too
+        auto const to_string_func = datatypes::registry::DatatypeRegistry::get_to_string(datatype_identifier);
+
+        return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                                 .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                                 .lexical_form = to_string_func(native_type),
+                                                 .language_tag = ""}),
+                                         storage::node::identifier::RDFNodeType::Literal,
+                                         node_storage.id()});
+    } else { // datatype is not registered, so we cannot parse the lexical_form nor canonize it
+        return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                                 .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                                 .lexical_form = lexical_form,
+                                                 .language_tag = ""}),
+                                         storage::node::identifier::RDFNodeType::Literal,
+                                         node_storage.id()});
+    }
 }
 
 

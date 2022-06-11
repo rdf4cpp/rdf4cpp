@@ -56,17 +56,13 @@ TEST_CASE("Datatype Boolean") {
     CHECK(lit4 == lit6);
 
     // suppress warnings regarding attribute ‘nodiscard’
-    std::any no_discard_dummy = false;
+    Literal no_discard_dummy;
 
-    auto lit7 = rdf4cpp::rdf::Literal{"5", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit7.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("5", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit8 = rdf4cpp::rdf::Literal{"adsfg", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit8.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("adsfg", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit9 = rdf4cpp::rdf::Literal{"5.64566", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit9.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("5.64566", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit10 = rdf4cpp::rdf::Literal{"1.7e", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit10.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("1.7e", type_iri), "XSD Parsing Error", std::runtime_error);
 }
