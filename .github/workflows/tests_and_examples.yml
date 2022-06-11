@@ -19,16 +19,34 @@ jobs:
           #            os: macos-latest,
           #          }
           - {
-            name: "ubuntu-latest g++-10",
-            os: ubuntu-latest,
+            name: "ubuntu-22.04 g++-10 libstdc++-11",
+            os: ubuntu-22.04,
             cc: "gcc-10",
             cxx: "g++-10",
           }
           - {
-            name: "ubuntu-latest clang++-10",
-            os: ubuntu-latest,
-            cc: "clang-10",
-            cxx: "clang++-10",
+            name: "ubuntu-22.04 g++-11  libstdc++-11",
+            os: ubuntu-22.04,
+            cc: "gcc-11",
+            cxx: "g++-11",
+          }
+          - {
+            name: "ubuntu-22.04 clang++-12 libstdc++-11",
+            os: ubuntu-22.04,
+            cc: "clang-12",
+            cxx: "clang++-12",
+          }
+          - {
+            name: "ubuntu-22.04 clang++-13 libstdc++-11",
+            os: ubuntu-22.04,
+            cc: "clang-13",
+            cxx: "clang++-13",
+          }
+          - {
+            name: "ubuntu-22.04 clang++-14 libstdc++-11",
+            os: ubuntu-22.04,
+            cc: "clang-14",
+            cxx: "clang++-14",
           }
     steps:
       - name: Install Windows dependencies
@@ -44,12 +62,13 @@ jobs:
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
           sudo apt update
-          sudo apt install cmake ninja-build g++-10 clang-10 libserd-dev python3 python3-pip curl
+          sudo apt install cmake ninja-build libserd-dev python3 python3-pip curl clang-11
           sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
           sudo update-alternatives --install /usr/bin/cc cc /usr/bin/${{ matrix.config.cc }} 90
           sudo update-alternatives --config cc
+          sudo pip install conan
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
@@ -58,12 +77,12 @@ jobs:
       - name: Build Tests
         if: matrix.config.cxx == 'g++-10'
         run: |
-          cmake -B build_tests -D  rdf4cpp_BUILD_TESTS=ON -DCMAKE_CXX_FLAGS=--coverage
+          cmake -G Ninja -B build_tests -DBUILD_TESTING=ON -DCMAKE_CXX_FLAGS=--coverage -DBUILD_SHARED_LIBS=On
           cmake --build build_tests
       - name: Build Tests
-        if: matrix.config.cxx == 'clang++-10'
+        if: matrix.config.cxx != 'g++-10'
         run: |
-          cmake -G Ninja -B build_tests -Drdf4cpp_BUILD_TESTS=ON
+          cmake -G Ninja -B build_tests -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=On
           cmake --build build_tests
       - name: Run tests
         run: |
@@ -75,7 +94,7 @@ jobs:
           curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
       - name: Build Examples
         run: |
-          cmake -G Ninja -B build_examples -Drdf4cpp_BUILD_EXAMPLES=ON
+          cmake -G Ninja -B build_examples -DBUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=On
           cmake --build build_examples
       - name: Run Examples
         run: |
@@ -83,3 +102,21 @@ jobs:
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
           examples/rdf_nodes_example
+      - name: Test conan package
+        run: |
+          # configure conan profile
+          export CXX="/usr/bin/${{ matrix.config.cxx }}"
+          export CC="/usr/bin/${{ matrix.config.cc }}"
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update env.CXX="${CXX}" default
+          conan profile update env.CC="${CC}" default
+          # build and test package
+          conan remove -f rdf4cpp/$(conan inspect . --raw version) # make sure nothing is in cache
+          conan create . -pr:b=default
+      - name: Test cmake FetchContent
+        run: |
+          cd test_FetchContent
+          cmake -G Ninja -B build_fetch_content -DBUILD_SHARED_LIBS=On
+          cmake --build build_fetch_content

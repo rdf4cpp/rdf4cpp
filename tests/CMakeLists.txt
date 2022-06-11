@@ -1,4 +1,4 @@
-## C++ language configuration boilerplate
+set(CMAKE_CXX_STANDARD 20)
 
 include(FetchContent)
 
@@ -88,9 +88,6 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
-
-# include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
-# doctest_discover_tests(tests_hello_test)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

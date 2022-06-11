@@ -9,8 +9,7 @@ check out the [examples](./examples) directory.
 ## Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-Tests are build with gcc 10 and clang 10. 
-Newer version of the compilers should also work. 
+CI builds and tests rdf4cpp with gcc-{10,11}, clang-{12,13,14} with libstdc++-11 on ubuntu 22.04. 
 
 To load RDF data from files, you need additionally the library [serd](https://drobilla.net/software/serd). 
 It is available on most distributions package managers. 
@@ -22,9 +21,8 @@ sudo apt install libserd-dev
 ## Build
 rdf4cpp uses CMake. To build it, run: 
 ```shell
-cmake -B build
-cd build
-make rdf4cpp
+cmake -B build_dir # configure and generate
+cmake --build build_dir # compile
 ```
 
 To install it to your system, run afterwards:
@@ -32,10 +30,10 @@ To install it to your system, run afterwards:
 sudo make install
 ```
 
-### Additional CMake options:
+### Additional CMake config cptions:
 
-`-Drdf4cpp_BUILD_EXAMPLES=ON/OFF [default: OFF]`: configure cmake for building examples
+`-DBUILD_EXAMPLES=ON/OFF [default: OFF]`: configure cmake for building examples
 
-`-Drdf4cpp_BUILD_TESTS=ON/OFF [default: OFF]`: configure cmake for building tests
+`-DBUILD_TESTING=ON/OFF [default: OFF]`: configure cmake for building tests
 
-`-Drdf4cpp_SHARED_LIBS=ON/OFF [default: OFF]`: build a shared library instead of a static
+`-DBUILD_SHARED_LIBS=ON/OFF [default: OFF]`: build a shared library instead of a static
