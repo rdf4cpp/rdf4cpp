@@ -31,12 +31,6 @@ jobs:
             cxx: "g++-11",
           }
           - {
-            name: "ubuntu-22.04 clang++-11 libstdc++-11",
-            os: ubuntu-22.04,
-            cc: "clang-11",
-            cxx: "clang++-11",
-          }
-          - {
             name: "ubuntu-22.04 clang++-12 libstdc++-11",
             os: ubuntu-22.04,
             cc: "clang-12",
