@@ -67,25 +67,19 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit7.value<datatypes::xsd::Decimal>() == lit7.value<datatypes::xsd::Decimal>());
 
     // suppress warnings regarding attribute ‘nodiscard’
-    std::any no_discard_dummy = false;
+    Literal no_discard_dummy;
 
-    auto lit10 = Literal{"NAN", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit10.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("NAN", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit11 = Literal{"INF", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit11.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("INF", type_iri), "XSD Parsing Error", std::runtime_error);
 
     value = INFINITY;
-    auto lit12 = Literal{std::to_string(value), type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit12.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(std::to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
 
     value = NAN;
-    auto lit13 = Literal{std::to_string(value), type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit13.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(std::to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit14 = Literal{"454sdsd", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit14.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("454sdsd", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    auto lit15 = Literal{"2.225E-307", type_iri};
-    CHECK_THROWS_WITH_AS(no_discard_dummy = lit15.value(), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.225E-307", type_iri), "XSD Parsing Error", std::runtime_error);
 }

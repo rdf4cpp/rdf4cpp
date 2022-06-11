@@ -39,7 +39,9 @@ public:
             NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
-     * Constructs a literal from a compatible type
+     * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
+     * No runtime lookup of the type information is required.
+     * If type information is available at compile time, you should use this version of the function.
      * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
      * @tparam dtype_iri IRI string of the RDF datatype
      * @param compatible_value instance for which the literal is created
@@ -53,6 +55,17 @@ public:
                        IRI(LiteralDatatype_t::identifier, node_storage),
                        node_storage);
     }
+
+    /**
+     * Constructs a literal from a compatible type. In this version of the function the datatype is specified at runtime.
+     * Due to the lookup of the converter functions, this function is slightly slower than its templated version.
+     * @param lexical_form
+     * @param datatype
+     * @param node_storage
+     * @return
+     */
+    inline static Literal make(std::string_view lexical_form, const IRI &datatype,
+                               NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
