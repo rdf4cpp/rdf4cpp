@@ -59,9 +59,9 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
     CHECK(lit2 == lit5);
-    CHECK(lit6 == lit7);  //This CHECK fails because the string representation of xsd:decimal is not in canonical form yet.
-    CHECK(lit6 == lit8);  //This CHECK fails because the string representation of xsd:decimal is not in canonical form yet.
-    CHECK(lit7 == lit8);  //This CHECK fails because the string representation of xsd:decimal is not in canonical form yet.
+    CHECK(lit6 == lit7);
+    CHECK(lit6 == lit8);
+    CHECK(lit7 == lit8);
     CHECK(lit6.value<datatypes::xsd::Decimal>() == lit7.value<datatypes::xsd::Decimal>());
     CHECK(lit6.value<datatypes::xsd::Decimal>() == lit8.value<datatypes::xsd::Decimal>());
     CHECK(lit7.value<datatypes::xsd::Decimal>() == lit7.value<datatypes::xsd::Decimal>());

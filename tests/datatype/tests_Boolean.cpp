@@ -18,33 +18,48 @@ TEST_CASE("Datatype Boolean") {
 
     CHECK(std::is_same_v<type, bool>);
 
+    std::string true_val{"true"};
+    std::string false_val{"false"};
+
     bool value = true;
     auto lit1 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit1.value<datatypes::xsd::Boolean>() == value);
-    CHECK(lit1.lexical_form() == std::to_string(value));
+    CHECK(lit1.lexical_form() == true_val);
 
     value = false;
     auto lit2 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit2.value<datatypes::xsd::Boolean>() == value);
-    CHECK(lit2.lexical_form() == std::to_string(value));
+    CHECK(lit2.lexical_form() == false_val);
 
     value = 1;
     auto lit3 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit3.value<datatypes::xsd::Boolean>() == value);
-    CHECK(lit3.lexical_form() == std::to_string(value));
+    CHECK(lit3.lexical_form() == true_val);
 
     value = 0;
     auto lit4 = Literal::make<datatypes::xsd::Boolean>(value);
     CHECK(lit4.value<datatypes::xsd::Boolean>() == value);
+    CHECK(lit4.lexical_form() == false_val);
 
     value = true;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal{"true", type_iri};
     CHECK(lit5.value<datatypes::xsd::Boolean>() == value);
+    CHECK(std::any_cast<bool>(lit5.value()) == value);
 
     value = false;
-    auto lit6 = Literal{std::to_string(value), type_iri};
+    auto lit6 = Literal{"false", type_iri};
     CHECK(lit6.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit6.value()) == value);
+
+    value = 1;
+    auto lit7 = Literal{"1", type_iri};
+    CHECK(lit7.value<datatypes::xsd::Boolean>() == value);
+    CHECK(lit7.lexical_form() == true_val);
+
+    value = 0;
+    auto lit8 = Literal{"0", type_iri};
+    CHECK(lit8.value<datatypes::xsd::Boolean>() == value);
+    CHECK(lit8.lexical_form() == false_val);
 
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);

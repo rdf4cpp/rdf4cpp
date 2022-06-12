@@ -49,10 +49,8 @@ template<>
 inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
 
     std::ostringstream str_os;
-    // Set Fixed -Point Notation
-    str_os << std::fixed;
-    str_os << value;
-    // Get string from output string stream
+    // Set Fixed -Point Notation for Decimal
+    str_os << std::fixed << value;
     std::string str = str_os.str();
     return str;
 }
