@@ -60,7 +60,7 @@ TEST_CASE("Datatype Integer") {
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
     CHECK(lit3 == lit5);
-    CHECK(lit4 == lit6);  //This CHECK fails because the string representation of xsd:integer is not in canonical form yet.
+    CHECK(lit4 == lit6);
     CHECK(lit4.value<datatypes::xsd::Integer>() == lit6.value<datatypes::xsd::Integer>());
 
     // suppress warnings regarding attribute ‘nodiscard’
