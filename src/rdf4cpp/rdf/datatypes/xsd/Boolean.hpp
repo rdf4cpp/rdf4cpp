@@ -37,6 +37,18 @@ inline LiteralDatatypeImpl<xsd_boolean>::cpp_type LiteralDatatypeImpl<xsd_boolea
     else
         throw std::runtime_error("XSD Parsing Error");
 }
+
+/**
+ * Specialisation of to_string template function.
+ */
+template<>
+inline std::string LiteralDatatypeImpl<xsd_boolean>::to_string(const cpp_type &value) {
+
+    std::ostringstream str_os;
+    str_os << std::boolalpha << value;
+    std::string str = str_os.str();
+    return str;
+}
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 
