@@ -10,8 +10,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 #include <cstdint>
-#include <ostream>
 #include <iomanip>
+#include <ostream>
 #include <regex>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -51,17 +51,11 @@ inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &v
 
     double int_part;
     auto fract_part = modf(value, &int_part);
-    std::string str;
-    if(fract_part == 0) {
-        std::ostringstream str_os;
-        str_os << std::fixed << std::setprecision(1) << value;
-        str = str_os.str();
-    }
-    else {
-        std::ostringstream str_os;
-        str_os << std::fixed << value;
-        str = str_os.str();
-    }
+    std::ostringstream str_os;
+    str_os << std::fixed;
+    if (fract_part == 0) str_os << std::setprecision(1);
+    str_os << value;
+    std::string str = str_os.str();
     return str;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
