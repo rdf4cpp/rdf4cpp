@@ -65,16 +65,14 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#decimal"};
         auto lit1 = Literal{"2.0", iri};
 
-        std::string value = std::to_string(lit1.value<datatypes::xsd::Decimal>());
-
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
         CHECK(not lit1.is_variable());
         CHECK(not lit1.is_iri());
-        CHECK(lit1.lexical_form() == value);
+        CHECK(lit1.lexical_form() == "2.0");
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
-        CHECK(std::string(lit1) == "\"" + value + "\"^^<http://www.w3.org/2001/XMLSchema#decimal>");
+        CHECK(std::string(lit1) == "\"2.0\"^^<http://www.w3.org/2001/XMLSchema#decimal>");
     }
     SUBCASE("boolean datatype - true") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
