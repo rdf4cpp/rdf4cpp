@@ -42,12 +42,12 @@ TEST_CASE("Datatype Boolean") {
     CHECK(lit4.lexical_form() == false_val);
 
     value = true;
-    auto lit5 = Literal{"true", type_iri};
+    auto lit5 = Literal{true_val, type_iri};
     CHECK(lit5.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit5.value()) == value);
 
     value = false;
-    auto lit6 = Literal{"false", type_iri};
+    auto lit6 = Literal{false_val, type_iri};
     CHECK(lit6.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit6.value()) == value);
 
