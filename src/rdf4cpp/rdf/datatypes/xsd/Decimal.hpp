@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <ostream>
+#include <iomanip>
 #include <regex>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -48,10 +49,19 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
 template<>
 inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
 
-    std::ostringstream str_os;
-    // Set Fixed -Point Notation for Decimal
-    str_os << std::fixed << value;
-    std::string str = str_os.str();
+    double int_part;
+    auto fract_part = modf(value, &int_part);
+    std::string str;
+    if(fract_part == 0) {
+        std::ostringstream str_os;
+        str_os << std::fixed << std::setprecision(1) << value;
+        str = str_os.str();
+    }
+    else {
+        std::ostringstream str_os;
+        str_os << std::fixed << value;
+        str = str_os.str();
+    }
     return str;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
