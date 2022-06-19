@@ -21,20 +21,18 @@ TEST_CASE("Datatype Decimal") {
     std::string rdf_dbl_1_0{"1.0"};
     std::string rdf_dbl_0_0{"0.0"};
 
-    double value = 1.00;
+    auto value = 1.00;
     auto lit1 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit1.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit1.lexical_form() == rdf_dbl_1_0);
 
-    value = 64582165456988.235046;
+    value = 64582165456988.6235896;
     auto lit2 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit2.value<datatypes::xsd::Decimal>() == value);
-    CHECK(lit2.lexical_form() == std::to_string(value));
 
-    value = -64524654389.2345650;
+    value = -64524654389.12345678;
     auto lit3 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit3.value<datatypes::xsd::Decimal>() == value);
-    CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1.0;
     auto lit4 = Literal{std::to_string(value), type_iri};
@@ -76,10 +74,19 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit12.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit12.lexical_form() == rdf_dbl_1_0);
 
+    value = 0.000000005;
+    auto lit13 = Literal::make<datatypes::xsd::Decimal>(value);
+    CHECK(lit13.value<datatypes::xsd::Decimal>() == value);
+    CHECK(lit13.lexical_form() == "0.000000005");
+
+    value = 6000000000.0;
+    auto lit14 = Literal::make<datatypes::xsd::Decimal>(value);
+    CHECK(lit14.value<datatypes::xsd::Decimal>() == value);
+    CHECK(lit14.lexical_form() == "6000000000.0");
+
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
-    CHECK(lit2 == lit5);
     CHECK(lit6 == lit7);
     CHECK(lit6 == lit8);
     CHECK(lit7 == lit8);
