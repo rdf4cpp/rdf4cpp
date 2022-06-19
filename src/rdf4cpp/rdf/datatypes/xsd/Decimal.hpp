@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <ostream>
 #include <regex>
+#include <iostream>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
@@ -49,17 +50,29 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
 template<>
 inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
 
-    double int_part;
-    auto fract_part = modf(value, &int_part);
+    double int_part, fract_part;
+    fract_part  = modf(value, &int_part);
+    bool flag = false;
     std::ostringstream str_os;
     str_os << std::fixed;
-    if (fract_part == 0) str_os << std::setprecision(1);
+    if (fract_part == 0) {
+        str_os << std::setprecision(1);
+    }
+    else if (fabs(fract_part) < 1 && fabs(fract_part) > 0) {
+        //setting maximum precision
+        str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
+        flag = true;
+    }
     str_os << value;
     std::string str = str_os.str();
+    if(flag && str.find('.') != std::string::npos)
+    {
+        // Remove trailing zeroes
+        str = str.substr(0, str.find_last_not_of('0')+1);
+    }
     return str;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
-
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**
