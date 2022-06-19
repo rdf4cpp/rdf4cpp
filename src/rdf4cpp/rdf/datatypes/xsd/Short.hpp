@@ -1,10 +1,10 @@
 
 /**
- * @file Registers xsd:int with DatatypeRegistry
+ * @file Registers xsd:short with DatatypeRegistry
  */
 
-#ifndef RDF4CPP_XSD_INT_HPP
-#define RDF4CPP_XSD_INT_HPP
+#ifndef RDF4CPP_XSD_SHORT_HPP
+#define RDF4CPP_XSD_SHORT_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
@@ -17,28 +17,28 @@ namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
  */
-constexpr static registry::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
+constexpr static registry::ConstexprString xsd_short{"http://www.w3.org/2001/XMLSchema#short"};
 
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
 template<>
-struct DatatypeMapping<xsd_int> {
-    using cpp_datatype = int32_t;
+struct DatatypeMapping<xsd_short> {
+    using cpp_datatype = int16_t;
 };
 
 /**
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_int>::cpp_type LiteralDatatypeImpl<xsd_int>::from_string(std::string_view s) {
+inline LiteralDatatypeImpl<xsd_short>::cpp_type LiteralDatatypeImpl<xsd_short>::from_string(std::string_view s) {
 
     const std::regex long_regex("[\\-+]?[0-9]+");
 
     if (std::regex_match(s.data(), long_regex)) {
-        auto int32_val = std::strtol(s.data(), nullptr, 10);
-        if (int32_val < -2147483648 || int32_val > 2147483647) throw std::runtime_error("XSD Parsing Error");
-        return int32_val;
+        auto int16_val = std::strtol(s.data(), nullptr, 10);
+        if (int16_val < -32768 || int16_val > 32767) throw std::runtime_error("XSD Parsing Error");
+        return int16_val;
     } else {
         throw std::runtime_error("XSD Parsing Error");
     }
@@ -47,9 +47,9 @@ inline LiteralDatatypeImpl<xsd_int>::cpp_type LiteralDatatypeImpl<xsd_int>::from
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**
- * Implementation of xsd::int
+ * Implementation of xsd::short
  */
-using Int = registry::LiteralDatatypeImpl<registry::xsd_int>;
+using Short = registry::LiteralDatatypeImpl<registry::xsd_short>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
-#endif  //RDF4CPP_XSD_INT_HPP
+#endif  //RDF4CPP_XSD_SHORT_HPP
