@@ -52,22 +52,25 @@ inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &v
 
     double int_part, fract_part;
     fract_part  = modf(value, &int_part);
-    bool flag = false;
+    bool remove_trailing_zeros = false;
     std::ostringstream str_os;
     str_os << std::fixed;
     if (fract_part == 0) {
+        //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
         str_os << std::setprecision(1);
     }
-    else if (fabs(fract_part) < 1 && fabs(fract_part) > 0) {
-        //setting maximum precision
+    else {
+        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to nearest possible representation
         str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
-        flag = true;
+        remove_trailing_zeros = true;
     }
     str_os << value;
     std::string str = str_os.str();
-    if(flag && str.find('.') != std::string::npos)
+
+    //Removes trailing zeros from fractional part if precision was set to maximum
+    if(remove_trailing_zeros && str.find('.') != std::string::npos)
     {
-        // Remove trailing zeroes
+        //Removes trailing zeroes
         str = str.substr(0, str.find_last_not_of('0')+1);
     }
     return str;
