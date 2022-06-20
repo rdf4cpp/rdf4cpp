@@ -28,7 +28,7 @@ TEST_CASE("Datatype UnsignedLong") {
     CHECK(lit2.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
-    value = 18446744073709551615;
+    value = std::numeric_limits<u_int64_t>::max();
     auto lit3 = Literal::make<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit3.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));

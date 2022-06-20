@@ -23,12 +23,12 @@ TEST_CASE("Datatype Long") {
     CHECK(lit1.value<datatypes::xsd::Long>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
-    value = -9223372036854775808;
+    value = std::numeric_limits<int64_t>::min();
     auto lit2 = Literal::make<datatypes::xsd::Long>(value);
     CHECK(lit2.value<datatypes::xsd::Long>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
-    value = 9223372036854775807;
+    value = std::numeric_limits<int64_t>::max();
     auto lit3 = Literal::make<datatypes::xsd::Long>(value);
     CHECK(lit3.value<datatypes::xsd::Long>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
@@ -37,7 +37,7 @@ TEST_CASE("Datatype Long") {
     auto lit4 = Literal{std::to_string(value), type_iri};
     CHECK(lit4.value<datatypes::xsd::Long>() == value);
 
-    value = -9223372036854775808;
+    value = std::numeric_limits<int64_t>::min();;
     auto lit5 = Literal{std::to_string(value), type_iri};
     CHECK(lit5.value<datatypes::xsd::Long>() == value);
 

@@ -37,12 +37,11 @@ inline LiteralDatatypeImpl<xsd_long>::cpp_type LiteralDatatypeImpl<xsd_long>::fr
 
     if (std::regex_match(s.data(), long_regex)) {
         auto long_val = std::strtol(s.data(), nullptr, 10);
-        if (long_val < -9223372036854775808 || long_val > 9223372036854775807) throw std::runtime_error("XSD Parsing Error");
+        if (long_val < std::numeric_limits<int64_t>::min() || long_val > std::numeric_limits<int64_t>::max()) throw std::runtime_error("XSD Parsing Error");
         return long_val;
     } else {
         throw std::runtime_error("XSD Parsing Error");
     }
-
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
