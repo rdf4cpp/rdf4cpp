@@ -71,7 +71,6 @@ target_link_libraries(tests_Boolean
 set_property(TARGET tests_Boolean PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Boolean COMMAND tests_Boolean)
 
-
 add_executable(tests_Decimal datatype/tests_Decimal.cpp)
 target_link_libraries(tests_Decimal
         doctest
@@ -87,6 +86,23 @@ target_link_libraries(tests_Integer
         )
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
+
+#IEEE Floating Point Number Datatypes
+add_executable(tests_Float datatype/tests_Float.cpp)
+target_link_libraries(tests_Float
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Float PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Float COMMAND tests_Float)
+
+add_executable(tests_Double datatype/tests_Double.cpp)
+target_link_libraries(tests_Double
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Double PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Double COMMAND tests_Double)
 
 
 # copy files for testing to the binary folder
