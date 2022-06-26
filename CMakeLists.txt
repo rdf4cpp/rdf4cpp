@@ -7,7 +7,7 @@ boilerplate_init()
 # find packages
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
-find_package(serd 0 QUIET)
+find_package(serd 0 EXACT QUIET)
 
 # find system libraries
 if (NOT serd-FOUND)

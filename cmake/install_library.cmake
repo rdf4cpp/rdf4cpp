@@ -21,7 +21,7 @@ function(install_cpp_library TARGET_NAME INCLUDE_PATH)
 
     write_basic_package_version_file("${TARGET_NAME}-config-version.cmake"
             VERSION ${PROJECT_VERSION}
-            COMPATIBILITY SameMajorVersion)
+            COMPATIBILITY ExactVersion)
 
     configure_package_config_file(
             "${PROJECT_SOURCE_DIR}/cmake/lib-config.cmake.in"
