@@ -20,6 +20,7 @@ class RDF4CPPConan(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*"
+    requires = ("serd/0.30.12")
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
