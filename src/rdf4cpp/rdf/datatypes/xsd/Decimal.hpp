@@ -10,8 +10,10 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 #include <cstdint>
+#include <iomanip>
 #include <ostream>
 #include <regex>
+#include <iostream>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
@@ -48,16 +50,32 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
 template<>
 inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
 
+    double int_part, fract_part;
+    fract_part  = modf(value, &int_part);
+    bool remove_trailing_zeros = false;
     std::ostringstream str_os;
-    // Set Fixed -Point Notation
     str_os << std::fixed;
+    if (fract_part == 0) {
+        //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
+        str_os << std::setprecision(1);
+    }
+    else {
+        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to nearest possible representation
+        str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
+        remove_trailing_zeros = true;
+    }
     str_os << value;
-    // Get string from output string stream
     std::string str = str_os.str();
+
+    //Removes trailing zeros from fractional part if precision was set to maximum
+    if(remove_trailing_zeros && str.find('.') != std::string::npos)
+    {
+        //Removes trailing zeroes
+        str = str.substr(0, str.find_last_not_of('0')+1);
+    }
     return str;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
-
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**

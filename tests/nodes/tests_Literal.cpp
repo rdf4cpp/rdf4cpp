@@ -108,10 +108,10 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK(lit1.is_literal());
         CHECK(not lit1.is_variable());
         CHECK(not lit1.is_iri());
-        CHECK(lit1.lexical_form() == "0");
+        CHECK(lit1.lexical_form() == "false");
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
-        CHECK(std::string(lit1) == "\"0\"^^<http://www.w3.org/2001/XMLSchema#boolean>");
+        CHECK(std::string(lit1) == "\"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>");
     }
     SUBCASE("boolean datatype - 1") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
@@ -121,10 +121,10 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK(lit1.is_literal());
         CHECK(not lit1.is_variable());
         CHECK(not lit1.is_iri());
-        CHECK(lit1.lexical_form() == "1");
+        CHECK(lit1.lexical_form() == "true");
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
-        CHECK(std::string(lit1) == "\"1\"^^<http://www.w3.org/2001/XMLSchema#boolean>");
+        CHECK(std::string(lit1) == "\"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>");
     }
 }
 
