@@ -71,7 +71,6 @@ target_link_libraries(tests_Boolean
 set_property(TARGET tests_Boolean PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Boolean COMMAND tests_Boolean)
 
-
 add_executable(tests_Decimal datatype/tests_Decimal.cpp)
 target_link_libraries(tests_Decimal
         doctest
@@ -88,6 +87,38 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
+#Time and Date Datatypes
+add_executable(tests_Date datatype/tests_Date.cpp)
+target_link_libraries(tests_Date
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Date PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Date COMMAND tests_Date)
+
+add_executable(tests_Time datatype/tests_Time.cpp)
+target_link_libraries(tests_Time
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Time PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Time COMMAND tests_Time)
+
+add_executable(tests_DateTime datatype/tests_DateTime.cpp)
+target_link_libraries(tests_DateTime
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_DateTime PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_DateTime COMMAND tests_DateTime)
+
+add_executable(tests_DateTimeStamp datatype/tests_DateTimeStamp.cpp)
+target_link_libraries(tests_DateTimeStamp
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_DateTimeStamp PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_DateTimeStamp COMMAND tests_DateTimeStamp)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
