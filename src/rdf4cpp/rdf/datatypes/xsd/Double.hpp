@@ -52,7 +52,10 @@ inline std::string LiteralDatatypeImpl<xsd_double>::to_string(const cpp_type &va
     if (isnan(value)) {
         //checks whether value is "nan", then returns rdf representation of nan
         return "NaN";
-    } else if (isinf(value)) {
+    } else if (value == -std::numeric_limits<float>::infinity()) {
+        //checks whether value is "-inf", then returns rdf representation of -inf
+        return "-INF";
+    } else if (value == std::numeric_limits<float>::infinity()) {
         //checks whether value is "inf", then returns rdf representation of inf
         return "INF";
     } else {

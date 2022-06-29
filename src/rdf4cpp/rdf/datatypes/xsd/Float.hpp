@@ -50,7 +50,10 @@ inline std::string LiteralDatatypeImpl<xsd_float>::to_string(const cpp_type &val
     if (isnan(value)) {
         //checks whether value is "nan", then returns rdf representation of nan
         return "NaN";
-    } else if (isinf(value)) {
+    } else if (value == -std::numeric_limits<float>::infinity()) {
+        //checks whether value is "-inf", then returns rdf representation of -inf
+        return "-INF";
+    } else if (value == std::numeric_limits<float>::infinity()) {
         //checks whether value is "inf", then returns rdf representation of inf
         return "INF";
     } else {

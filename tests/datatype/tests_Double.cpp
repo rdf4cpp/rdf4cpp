@@ -68,7 +68,19 @@ TEST_CASE("Datatype Double") {
     value = 2.22e-308;
     auto lit12 = Literal{"2.22e-308", type_iri};
     //CHECK(lit12.value<datatypes::xsd::Double>() == value); //Testcase Fails
-    if(lit12.value<datatypes::xsd::Double>() == value) CHECK(true); //Testcase Passes
+    if (lit12.value<datatypes::xsd::Double>() == value) CHECK(true);  //Testcase Passes
+
+    auto lit13 = Literal{"+INF", type_iri};
+    CHECK(isinf(lit13.value<datatypes::xsd::Double>()));
+
+    auto lit14 = Literal{"-INF", type_iri};
+    CHECK(isinf(lit14.value<datatypes::xsd::Double>()));
+    CHECK(lit14.value<datatypes::xsd::Double>() == -std::numeric_limits<double>::infinity());
+
+    value = -INFINITY;
+    auto lit15 = Literal::make<datatypes::xsd::Double>(value);
+    CHECK(isinf(lit15.value<datatypes::xsd::Double>()));
+    CHECK(lit15.value<datatypes::xsd::Double>() == -std::numeric_limits<double>::infinity());
 
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
@@ -77,6 +89,9 @@ TEST_CASE("Datatype Double") {
     CHECK(lit2 == lit7);
     CHECK(lit8 == lit11);
     CHECK(lit9 == lit10);
+    CHECK(lit9 == lit13);
+    CHECK(lit10 == lit13);
+    CHECK(lit14 == lit15);
 
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
