@@ -24,7 +24,7 @@ constexpr static registry::ConstexprString xsd_unsignedShort{"http://www.w3.org/
  */
 template<>
 struct DatatypeMapping<xsd_unsignedShort> {
-    using cpp_datatype = u_int16_t;
+    using cpp_datatype = uint16_t;
 };
 
 /**
@@ -37,7 +37,7 @@ inline LiteralDatatypeImpl<xsd_unsignedShort>::cpp_type LiteralDatatypeImpl<xsd_
 
     if (std::regex_match(s.data(), long_regex)) {
         auto uint16_val = std::strtol(s.data(), nullptr, 10);
-        if (uint16_val < 0 || uint16_val > 65535) throw std::runtime_error("XSD Parsing Error");
+        if (uint16_val < std::numeric_limits<uint16_t>::min() || uint16_val > std::numeric_limits<uint16_t>::max()) throw std::runtime_error("XSD Parsing Error");
         return uint16_val;
     } else {
         throw std::runtime_error("XSD Parsing Error");

@@ -37,7 +37,7 @@ inline LiteralDatatypeImpl<xsd_int>::cpp_type LiteralDatatypeImpl<xsd_int>::from
 
     if (std::regex_match(s.data(), long_regex)) {
         auto int32_val = std::strtol(s.data(), nullptr, 10);
-        if (int32_val < -2147483648 || int32_val > 2147483647) throw std::runtime_error("XSD Parsing Error");
+        if (int32_val < std::numeric_limits<int32_t>::min() || int32_val > std::numeric_limits<int32_t>::max()) throw std::runtime_error("XSD Parsing Error");
         return int32_val;
     } else {
         throw std::runtime_error("XSD Parsing Error");

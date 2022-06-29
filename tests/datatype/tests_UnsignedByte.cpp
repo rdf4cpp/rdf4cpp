@@ -16,9 +16,9 @@ TEST_CASE("Datatype UnsignedByte") {
 
     using type = datatypes::xsd::UnsignedByte::cpp_type;
 
-    CHECK(std::is_same_v<type, u_int8_t>);
+    CHECK(std::is_same_v<type, uint8_t>);
 
-    u_int8_t value = 1;
+    uint8_t value = 1;
     auto lit1 = Literal::make<datatypes::xsd::UnsignedByte>(value);
     CHECK(lit1.value<datatypes::xsd::UnsignedByte>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
@@ -50,4 +50,8 @@ TEST_CASE("Datatype UnsignedByte") {
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-1", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg.59566", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-0.00001", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("qwerty", type_iri), "XSD Parsing Error", std::runtime_error);
 }

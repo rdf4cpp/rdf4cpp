@@ -37,7 +37,7 @@ TEST_CASE("Datatype Long") {
     auto lit4 = Literal{std::to_string(value), type_iri};
     CHECK(lit4.value<datatypes::xsd::Long>() == value);
 
-    value = std::numeric_limits<int64_t>::min();;
+    value = std::numeric_limits<int64_t>::min();
     auto lit5 = Literal{std::to_string(value), type_iri};
     CHECK(lit5.value<datatypes::xsd::Long>() == value);
 
@@ -50,4 +50,10 @@ TEST_CASE("Datatype Long") {
     Literal no_discard_dummy;
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg.59566", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("\n", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("qwerty", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("1.00001", type_iri), "XSD Parsing Error", std::runtime_error);
 }

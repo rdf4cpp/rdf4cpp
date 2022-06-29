@@ -16,9 +16,9 @@ TEST_CASE("Datatype UnsignedLong") {
 
     using type = datatypes::xsd::UnsignedLong::cpp_type;
 
-    CHECK(std::is_same_v<type, u_int64_t>);
+    CHECK(std::is_same_v<type, uint64_t>);
 
-    u_int64_t value = 1;
+    uint64_t value = 1;
     auto lit1 = Literal::make<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit1.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
@@ -28,7 +28,7 @@ TEST_CASE("Datatype UnsignedLong") {
     CHECK(lit2.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
-    value = std::numeric_limits<u_int64_t>::max();
+    value = std::numeric_limits<uint64_t>::max();
     auto lit3 = Literal::make<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit3.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
@@ -41,13 +41,26 @@ TEST_CASE("Datatype UnsignedLong") {
     auto lit5 = Literal{std::to_string(value), type_iri};
     CHECK(lit5.value<datatypes::xsd::UnsignedLong>() == value);
 
+    value = std::numeric_limits<uint64_t>::min();
+    auto lit6 = Literal::make<datatypes::xsd::UnsignedLong>(value);
+    CHECK(lit6.value<datatypes::xsd::UnsignedLong>() == value);
+    CHECK(lit6.lexical_form() == std::to_string(value));
+
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit4);
     CHECK(lit2 == lit5);
+    CHECK(lit2 == lit6);
+    CHECK(lit5 == lit6);
 
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg.59566", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("qwerty", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("53.59566", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("0.01", type_iri), "XSD Parsing Error", std::runtime_error);
 }

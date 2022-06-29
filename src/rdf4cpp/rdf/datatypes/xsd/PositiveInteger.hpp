@@ -24,7 +24,7 @@ constexpr static registry::ConstexprString xsd_positiveInteger{"http://www.w3.or
  */
 template<>
 struct DatatypeMapping<xsd_positiveInteger> {
-    using cpp_datatype = int64_t;
+    using cpp_datatype = uint64_t;
 };
 
 /**

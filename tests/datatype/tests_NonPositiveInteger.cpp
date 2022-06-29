@@ -49,9 +49,11 @@ TEST_CASE("Datatype NonPositiveInteger") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("qwerty", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("1", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg.59566", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("0.01", type_iri), "XSD Parsing Error", std::runtime_error);
 }

@@ -24,7 +24,7 @@ constexpr static registry::ConstexprString xsd_unsignedByte{"http://www.w3.org/2
  */
 template<>
 struct DatatypeMapping<xsd_unsignedByte> {
-    using cpp_datatype = u_int8_t;
+    using cpp_datatype = uint8_t;
 };
 
 /**
@@ -51,9 +51,9 @@ template<>
 inline std::string LiteralDatatypeImpl<xsd_unsignedByte>::to_string(const cpp_type &value) {
 
     /**
-     * If not converted to int16_t, conversion to string generates a byte representation '\x01' which doest match the lexical representation.
+     * If not converted to uint16_t, conversion to string generates a byte representation '\x01' which doest match the lexical representation.
      */
-    int conv_val = u_int16_t(value);
+    int conv_val = uint16_t(value);
     std::stringstream str_s;
     str_s << conv_val;
     std::string str = str_s.str();
