@@ -88,6 +88,14 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
+#Encoded Binary Data
+add_executable(tests_HexBinary datatype/tests_HexBinary.cpp)
+target_link_libraries(tests_HexBinary
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_HexBinary PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_HexBinary COMMAND tests_HexBinary)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
