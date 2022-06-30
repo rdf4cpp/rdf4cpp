@@ -7,6 +7,13 @@
 #include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 /*#include <rdf4cpp/rdf/datatypes/xsd/Int.hpp>*/
+#include <rdf4cpp/rdf/datatypes/xsd/AnyURI.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Language.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/NormalizedString.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Token.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/NMTOKEN.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Name.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/NCName.hpp>
 
 /**
  * Namespace where datatypes from XSD are implemented.
