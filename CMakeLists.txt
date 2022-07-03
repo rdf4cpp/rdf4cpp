@@ -11,7 +11,7 @@ if (IS_TOP_LEVEL AND USE_CONAN)
 endif ()
 
 # find packages
-find_package(serd 0 EXACT QUIET)
+find_package(serd 0 QUIET)
 
 # find system libraries
 if (NOT serd_FOUND)
