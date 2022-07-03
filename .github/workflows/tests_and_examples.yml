@@ -61,8 +61,8 @@ jobs:
           wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-          sudo apt update
-          sudo apt install cmake ninja-build python3 python3-pip curl clang-11
+          sudo apt-get update
+          sudo apt-get install cmake ninja-build python3 python3-pip curl clang-11
           sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
@@ -118,6 +118,10 @@ jobs:
           # build and test package
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)
           conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version) -pr:b=default
+      - name: Install systemlib serd for FetchContent
+        run: |
+          # FetchContent does not handle transitive dependencies and doesn't run conan.
+          sudo apt-get install libserd-dev
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
