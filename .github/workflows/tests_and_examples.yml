@@ -61,8 +61,8 @@ jobs:
           wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null \
             | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
           sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-          sudo apt update
-          sudo apt install cmake ninja-build libserd-dev python3 python3-pip curl clang-11
+          sudo apt-get update
+          sudo apt-get install cmake ninja-build python3 python3-pip curl clang-11
           sudo pip install gcovr
           sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/${{ matrix.config.cxx }} 90
           sudo update-alternatives --config c++
@@ -74,6 +74,14 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
       - name: Check out sources
         uses: actions/checkout@v2
+      - name: Configure conan
+        env:
+          CXX: "/usr/bin/${{ matrix.config.cxx }}"
+          CC: "/usr/bin/${{ matrix.config.cc }}"
+        run: |
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
       - name: Build Tests
         if: matrix.config.cxx == 'g++-10'
         run: |
@@ -103,18 +111,17 @@ jobs:
           examples/literal_datatypes_example
           examples/rdf_nodes_example
       - name: Test conan package
+        env:
+          CXX: "/usr/bin/${{ matrix.config.cxx }}"
+          CC: "/usr/bin/${{ matrix.config.cc }}"
         run: |
-          # configure conan profile
-          export CXX="/usr/bin/${{ matrix.config.cxx }}"
-          export CC="/usr/bin/${{ matrix.config.cc }}"
-          conan user
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan profile update env.CXX="${CXX}" default
-          conan profile update env.CC="${CC}" default
           # build and test package
-          conan remove -f rdf4cpp/$(conan inspect . --raw version) # make sure nothing is in cache
-          conan create . -pr:b=default
+          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)
+          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version) -pr:b=default
+      - name: Install systemlib serd for FetchContent
+        run: |
+          # FetchContent does not handle transitive dependencies and doesn't run conan.
+          sudo apt-get install libserd-dev
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
