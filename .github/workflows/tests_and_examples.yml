@@ -117,7 +117,7 @@ jobs:
         run: |
           # build and test package
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)
-          conan create $(conan inspect . --raw name)/$(conan inspect . --raw version) -pr:b=default
+          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version) -pr:b=default
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
