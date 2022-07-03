@@ -69,7 +69,7 @@ target_include_directories(
         rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
 
 target_link_libraries(rdf4cpp PRIVATE
-        $<IF:$<BOOL:serd_FOUND>,${serd},serd:serd> # ${VAR}_FOUND is only defined if the system library is used
+        $<IF:${serd_FOUND},serd::serd,${serd}> # ${VAR}_FOUND is only defined if the system library is used
         )
 
 set_target_properties(rdf4cpp PROPERTIES
