@@ -14,7 +14,7 @@ endif ()
 find_package(serd 0 EXACT QUIET)
 
 # find system libraries
-if (NOT serd-FOUND)
+if (NOT serd_FOUND)
     find_library(serd
             NAMES serd-0
             NO_CACHE REQUIRED)
@@ -69,7 +69,7 @@ target_include_directories(
         rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
 
 target_link_libraries(rdf4cpp PRIVATE
-        $<IF:$<BOOL:serd-FOUND>,${serd},serd:serd> # ${VAR}-FOUND is only defined if the system library is used
+        $<IF:$<BOOL:serd_FOUND>,${serd},serd:serd> # ${VAR}_FOUND is only defined if the system library is used
         )
 
 set_target_properties(rdf4cpp PROPERTIES
