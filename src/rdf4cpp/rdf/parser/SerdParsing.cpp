@@ -2,7 +2,7 @@
 
 #if __has_include(<serd/serd.h>)
 #include <serd/serd.h>
-#elseif
+#else
 #include <serd-0/serd/serd.h>
 #endif
 
