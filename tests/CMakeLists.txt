@@ -80,6 +80,14 @@ target_link_libraries(tests_Decimal
 set_property(TARGET tests_Decimal PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Decimal COMMAND tests_Decimal)
 
+add_executable(tests_Float datatype/tests_Float.cpp)
+target_link_libraries(tests_Float
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Float PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Float COMMAND tests_Float)
+
 add_executable(tests_Integer datatype/tests_Integer.cpp)
 target_link_libraries(tests_Integer
         doctest

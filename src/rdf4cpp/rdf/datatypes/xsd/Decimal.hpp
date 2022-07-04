@@ -8,7 +8,9 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 
+#include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <ostream>
@@ -29,11 +31,16 @@ struct DatatypeMapping<xsd_decimal> {
     using cpp_datatype = double;
 };
 
+template<>
+struct DatatypePromotionMapping<xsd_decimal> {
+    static constexpr ConstexprString promoted_identifier = xsd_float;
+};
+
 /**
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decimal>::from_string(std::string_view s) {
+inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
 
     const std::regex decimal_regex("(\\+|-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)");
 
@@ -48,7 +55,7 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
  * Specialisation of to_string template function.
  */
 template<>
-inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
+inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
 
     double int_part, fract_part;
     fract_part  = modf(value, &int_part);
@@ -75,13 +82,21 @@ inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &v
     }
     return str;
 }
+
+template<>
+inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) {
+    return !std::isnan(value) && value != 0.0;
+}
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::decimal
  */
-using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal>;
+using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal,
+                                              registry::capabilities::Logical,
+                                              registry::capabilities::Numeric,
+                                              registry::capabilities::Promotable>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_DECIMAL_HPP

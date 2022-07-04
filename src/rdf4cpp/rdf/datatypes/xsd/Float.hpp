@@ -31,15 +31,15 @@ struct DatatypeMapping<xsd_float> {
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_float>::cpp_type LiteralDatatypeImpl<xsd_float>::from_string(std::string_view s) {
-    return std::stof(std::string{s.data()});
+inline capabilities::Default<xsd_float>::cpp_type capabilities::Default<xsd_float>::from_string(std::string_view s) {
+    return std::stof(std::string{ s });
 }
 
 /**
  * Specialisation of to_string template function.
  */
 template<>
-inline std::string LiteralDatatypeImpl<xsd_float>::to_string(const cpp_type &value) {
+inline std::string capabilities::Default<xsd_float>::to_string(const cpp_type &value) {
 
     std::ostringstream str_os;
     // Set Fixed -Point Notation
@@ -49,6 +49,11 @@ inline std::string LiteralDatatypeImpl<xsd_float>::to_string(const cpp_type &val
     std::string str = str_os.str();
     return str;
 }
+
+template<>
+inline bool capabilities::Logical<xsd_float>::effective_boolean_value(cpp_type const &value) {
+    return !std::isnan(value) && value != 0.f;
+}
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 
@@ -56,7 +61,9 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::float
  */
-using Float = registry::LiteralDatatypeImpl<registry::xsd_float>;
+using Float = registry::LiteralDatatypeImpl<registry::xsd_float,
+                                            registry::capabilities::Logical,
+                                            registry::capabilities::Numeric>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_FLOAT_HPP
