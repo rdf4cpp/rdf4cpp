@@ -28,10 +28,16 @@ TEST_CASE("Datatype Date") {
     tm.tm_mon = 4 - 1; // month of year from 0 to 11
     tm.tm_mday = 22;
     tm.tm_isdst = -1; // value should be set even if not used
+
+    setenv("TZ", "IST-05:30", 1); //sets environment timezone to IST which is
+    tzset(); //set time zone to IST -> Indian Standard Time*/
+
     auto value = mktime(&tm);
 
     auto lit1 = Literal::make<datatypes::xsd::Date>(value);
     CHECK(lit1.value<datatypes::xsd::Date>() == value);
+
+    std::cout<< lit1 <<std::endl;
 
     // Fill in values for Date
     tm.tm_sec = 0; // seconds of minutes from 0 to 61
@@ -81,7 +87,7 @@ TEST_CASE("Datatype Date") {
     tm.tm_hour = 0; // hours of day from 0 to 24
     tm.tm_year = 2022 - 1900; // year since 1900
     tm.tm_mon = 6 - 1; // month of year from 0 to 11
-    tm.tm_mday = 31;
+    tm.tm_mday = 31; //day of the month
     tm.tm_isdst = -1; // value should be set even if not used
     value = mktime(&tm);
 
