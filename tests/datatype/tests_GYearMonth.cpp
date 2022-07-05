@@ -84,6 +84,4 @@ TEST_CASE("Datatype GYearMonth") {
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-2022-04\t", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-2022-04\r", type_iri), "XSD Parsing Error", std::runtime_error);
-
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2022-04", type_iri), "XSD Parsing Error", std::runtime_error);
 }

@@ -77,8 +77,6 @@ TEST_CASE("Datatype GYear") {
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("abc", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2022", type_iri), "XSD Parsing Error", std::runtime_error);
-
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-2022\n", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("-2022\t", type_iri), "XSD Parsing Error", std::runtime_error);
