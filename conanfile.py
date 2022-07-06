@@ -2,7 +2,7 @@ import os
 import re
 
 from conans import ConanFile, CMake
-from conans.util.files import rmdir, load
+from conans import tools
 
 
 class Recipe(ConanFile):
@@ -25,7 +25,7 @@ class Recipe(ConanFile):
 
     def set_version(self):
         if not hasattr(self, 'version') or self.version is None:
-            cmake_file = load(os.path.join(self.recipe_folder, "CMakeLists.txt"))
+            cmake_file = tools.load(os.path.join(self.recipe_folder, "CMakeLists.txt"))
             self.version = re.search(r"project\([^)]*VERSION\s+(\d+\.\d+.\d+)[^)]*\)", cmake_file).group(1)
 
     def config_options(self):
@@ -48,7 +48,9 @@ class Recipe(ConanFile):
 
     def package(self):
         self._configure_cmake().install()
-        rmdir(os.path.join(self.package_folder, "cmake"))
+        tools.rmdir(os.path.join(self.package_folder, "cmake"))
+        tools.rmdir(os.path.join(self.package_folder, "share"))
+        self.copy("LICENSE", src=self.folders.base_source, dst="licenses")
 
     def package_info(self):
         self.cpp_info.libs = ["rdf4cpp"]
