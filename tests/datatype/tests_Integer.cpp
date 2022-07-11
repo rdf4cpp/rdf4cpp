@@ -18,7 +18,6 @@ TEST_CASE("Datatype Integer") {
 
     CHECK(std::is_same_v<type, int64_t>);
 
-
     int64_t value = 1.00;
     auto lit1 = Literal::make<datatypes::xsd::Integer>(value);
     CHECK(lit1.value<datatypes::xsd::Integer>() == value);
@@ -69,4 +68,8 @@ TEST_CASE("Datatype Integer") {
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.2e-308", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("qwerty", type_iri), "XSD Parsing Error", std::runtime_error);
+
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("0.00001", type_iri), "XSD Parsing Error", std::runtime_error);
 }
