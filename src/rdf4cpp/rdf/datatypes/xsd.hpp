@@ -6,6 +6,7 @@
 #include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Double.hpp>
 /*#include <rdf4cpp/rdf/datatypes/xsd/Int.hpp>*/
 
 /**
