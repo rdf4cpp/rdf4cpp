@@ -11,13 +11,16 @@ namespace rdf4cpp::rdf {
 class Literal : public Node {
 private:
     template<typename OpSelect>
-    Literal numeric_binop_impl(Literal const &other, OpSelect op_select) const;
+    Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     template<typename OpSelect>
-    Literal numeric_unop_impl(OpSelect op_select) const;
+    Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     template<typename BinOp>
-    Literal logical_binop_impl(Literal const &other, BinOp bin_op) const;
+    Literal logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    Literal logical_not_impl(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -108,17 +111,31 @@ public:
 
     std::partial_ordering operator<=>(const Literal &other) const;
 
+    Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+(Literal const &other) const;
+
+    Literal sub(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator-(Literal const &other) const;
+
+    Literal mul(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator*(Literal const &other) const;
+
+    Literal div(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator/(Literal const &other) const;
 
+    Literal pos(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+() const;
+
+    Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator-() const;
 
+    Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator&&(Literal const &other) const;
+
+    Literal logical_or(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator||(Literal const &other) const;
 
+    Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator!() const;
 
     /**

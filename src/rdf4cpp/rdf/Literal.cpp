@@ -281,7 +281,7 @@ std::tuple<datatypes::registry::DatatypeRegistry::DatatypeEntry, std::any, std::
 
 
 template<typename OpSelect>
-Literal Literal::numeric_binop_impl(Literal const &other, OpSelect op_select) const {
+Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
     auto const this_type = this->handle_.type();
     auto const other_type = other.handle_.type();
 
@@ -311,13 +311,13 @@ Literal Literal::numeric_binop_impl(Literal const &other, OpSelect op_select) co
 
     return Literal {
         result_entry.to_string_fptr(op_res),
-        IRI{ result_entry.datatype_iri, NodeStorage::default_instance() },
-        NodeStorage::default_instance() // TODO: which node storage should be used
+        IRI{ result_entry.datatype_iri, node_storage },
+        node_storage
     };
 }
 
 template<typename OpSelect>
-Literal Literal::numeric_unop_impl(OpSelect op_select) const {
+Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
     auto const this_type = this->handle_.type();
 
     if (this_type != RDFNodeType::Literal) {
@@ -335,12 +335,12 @@ Literal Literal::numeric_unop_impl(OpSelect op_select) const {
     return Literal {
         entry.to_string_fptr(op_res),
         this->datatype(),
-        NodeStorage::default_instance() // TODO: which node storage should be used
+        node_storage
     };
 }
 
 template<typename BinOp>
-Literal Literal::logical_binop_impl(Literal const &other, BinOp bin_op) const {
+Literal Literal::logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage) const {
     auto const this_type = this->handle_.type();
     auto const other_type = other.handle_.type();
 
@@ -360,54 +360,10 @@ Literal Literal::logical_binop_impl(Literal const &other, BinOp bin_op) const {
         throw std::runtime_error{ "rhs not convertible to bool" };
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(bin_op(ebv_this(this->value()), ebv_other(other.value())));
+    return Literal::make<datatypes::xsd::Boolean>(bin_op(ebv_this(this->value()), ebv_other(other.value())), node_storage);
 }
 
-Literal Literal::operator+(Literal const &other) const {
-    return this->numeric_binop_impl(other, [](auto const &num_ops) {
-        return num_ops.add_fptr;
-    });
-}
-
-Literal Literal::operator-(Literal const &other) const {
-    return this->numeric_binop_impl(other, [](auto const &num_ops) {
-        return num_ops.sub_fptr;
-    });
-}
-
-Literal Literal::operator*(Literal const &other) const {
-    return this->numeric_binop_impl(other, [](auto const &num_ops) {
-        return num_ops.mul_fptr;
-    });
-}
-
-Literal Literal::operator/(Literal const &other) const {
-    return this->numeric_binop_impl(other, [](auto const &num_ops) {
-        return num_ops.div_fptr;
-    });
-}
-
-Literal Literal::operator+() const {
-    return this->numeric_unop_impl([](auto const &num_ops) {
-        return num_ops.pos_fptr;
-    });
-}
-
-Literal Literal::operator-() const {
-    return this->numeric_unop_impl([](auto const &num_ops) {
-        return num_ops.neg_fptr;
-    });
-}
-
-Literal Literal::operator&&(Literal const &other) const {
-    return this->logical_binop_impl(other, std::logical_and{});
-}
-
-Literal Literal::operator||(Literal const &other) const {
-    return this->logical_binop_impl(other, std::logical_or{});
-}
-
-Literal Literal::operator!() const {
+Literal Literal::logical_not_impl(NodeStorage &node_storage) const {
     auto const this_type = this->handle_.type();
 
     if (this_type != RDFNodeType::Literal) {
@@ -420,7 +376,91 @@ Literal Literal::operator!() const {
         throw std::runtime_error{ "datatype not convertible to bool" };
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(!ebv_fptr(this->value()));
+    return Literal::make<datatypes::xsd::Boolean>(!ebv_fptr(this->value()), node_storage);
+}
+
+Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.add_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator+(Literal const &other) const {
+    return this->add(other);
+}
+
+Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.sub_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator-(Literal const &other) const {
+    return this->sub(other);
+}
+
+Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.mul_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator*(Literal const &other) const {
+    return this->mul(other);
+}
+
+Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.div_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator/(Literal const &other) const {
+    return this->div(other);
+}
+
+Literal Literal::pos(Node::NodeStorage &node_storage) const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.pos_fptr;
+    }, node_storage);
+}
+
+Literal Literal::operator+() const {
+    return this->pos();
+}
+
+Literal Literal::neg(Node::NodeStorage &node_storage) const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.neg_fptr;
+    }, node_storage);
+}
+
+Literal Literal::operator-() const {
+    return this->neg();
+}
+
+Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->logical_binop_impl(std::logical_and{}, other, node_storage);
+}
+
+Literal Literal::operator&&(Literal const &other) const {
+    return this->logical_and(other);
+}
+
+Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->logical_binop_impl(std::logical_or{}, other, node_storage);
+}
+
+Literal Literal::operator||(Literal const &other) const {
+    return this->logical_or(other);
+}
+
+Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
+    return this->logical_not_impl(node_storage);
+}
+
+Literal Literal::operator!() const {
+    return this->logical_not();
 }
 
 }  // namespace rdf4cpp::rdf
