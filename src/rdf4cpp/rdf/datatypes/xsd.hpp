@@ -7,6 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 /*#include <rdf4cpp/rdf/datatypes/xsd/Int.hpp>*/
+#include <rdf4cpp/rdf/datatypes/xsd/HexBinary.hpp>
 
 /**
  * Namespace where datatypes from XSD are implemented.
