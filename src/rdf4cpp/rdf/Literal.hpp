@@ -9,6 +9,15 @@
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
+private:
+    template<typename OpSelect>
+    Literal numeric_binop_impl(Literal const &other, OpSelect op_select) const;
+
+    template<typename OpSelect>
+    Literal numeric_unop_impl(OpSelect op_select) const;
+
+    template<typename BinOp>
+    Literal logical_binop_impl(Literal const &other, BinOp bin_op) const;
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -98,6 +107,19 @@ public:
     bool operator==(const Literal &other) const;
 
     std::partial_ordering operator<=>(const Literal &other) const;
+
+    Literal operator+(Literal const &other) const;
+    Literal operator-(Literal const &other) const;
+    Literal operator*(Literal const &other) const;
+    Literal operator/(Literal const &other) const;
+
+    Literal operator+() const;
+    Literal operator-() const;
+
+    Literal operator&&(Literal const &other) const;
+    Literal operator||(Literal const &other) const;
+
+    Literal operator!() const;
 
     /**
      * Constructs a datatype specific container from Literal.

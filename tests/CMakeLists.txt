@@ -45,6 +45,13 @@ target_link_libraries(tests_Literal
 set_property(TARGET tests_Literal PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Literal COMMAND tests_Literal)
 
+add_executable(tests_Literal_ops nodes/tests_Literal_ops.cpp)
+target_link_libraries(tests_Literal_ops
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Literal_ops PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Literal_ops COMMAND tests_Literal_ops)
 
 add_executable(tests_Node_comparison nodes/tests_Node_comparison.cpp)
 target_link_libraries(tests_Node_comparison

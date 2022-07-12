@@ -153,5 +153,274 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
+void substitute(
+        datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
+        std::any &lhs_value,
+        datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
+        std::any &rhs_value) {
+
+    using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
+    using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
+
+    auto const substitute_impl = [](auto const &to_substitute_entry, auto const &to_substitute_value, auto const &target_entry) {
+        DatatypeEntry result_entry = to_substitute_entry;
+        ConversionResult pr{ to_substitute_entry.datatype_iri, to_substitute_value };
+
+        while (result_entry.subtype_rank > target_entry.subtype_rank) {
+            pr = result_entry.into_supertype_fptr(pr.converted_value);
+            result_entry = datatypes::registry::DatatypeRegistry::get_entry(pr.converted_iri).value();
+        }
+
+        if (result_entry.subtype_rank != target_entry.subtype_rank) {
+            throw std::runtime_error{ "subtype substitution error, invalid hierarchy" };
+        }
+
+        return std::make_pair(result_entry, pr.converted_value);
+    };
+
+    if (lhs_entry.subtype_rank == 0 && rhs_entry.subtype_rank == 0) {
+        // nothing to do
+        return;
+    } else if (rhs_entry.subtype_rank > lhs_entry.subtype_rank) {
+        // substitute rhs
+        auto const [substituted_entry, substituted_value] = substitute_impl(rhs_entry, rhs_value, lhs_entry);
+
+        rhs_entry = substituted_entry;
+        rhs_value = substituted_value;
+    } else if (lhs_entry.subtype_rank > rhs_entry.subtype_rank) {
+        // substitute lhs
+        auto const [substituted_entry, substituted_value] = substitute_impl(lhs_entry, lhs_value, rhs_entry);
+
+        lhs_entry = substituted_entry;
+        lhs_value = substituted_value;
+    } else {
+        // substitute both once
+
+        if (lhs_entry.into_supertype_fptr == nullptr || rhs_entry.into_supertype_fptr == nullptr) {
+            throw std::runtime_error{ "subtype substitution unsupported for type" };
+        }
+
+        ConversionResult cr_lhs = lhs_entry.into_supertype_fptr(lhs_value);
+        ConversionResult cr_rhs = rhs_entry.into_supertype_fptr(rhs_value);
+
+        DatatypeEntry e_lhs = datatypes::registry::DatatypeRegistry::get_entry(cr_lhs.converted_iri).value();
+        DatatypeEntry e_rhs = datatypes::registry::DatatypeRegistry::get_entry(cr_rhs.converted_iri).value();
+
+        lhs_entry = e_lhs;
+        lhs_value = cr_lhs.converted_value;
+        rhs_entry = e_rhs;
+        rhs_value = cr_rhs.converted_value;
+    }
+}
+
+void promote(
+        datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
+        std::any &lhs_value,
+        datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
+        std::any &rhs_value) {
+
+    using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
+    using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
+
+    auto const promote_impl = [](auto const &to_promote_entry, auto const &to_promote_value, auto const &target_entry) {
+        DatatypeEntry result_entry = to_promote_entry;
+        ConversionResult pr{ to_promote_entry.datatype_iri, to_promote_value };
+
+        while (pr.converted_iri != target_entry.datatype_iri && result_entry.promote_fptr != nullptr) {
+            pr = result_entry.promote_fptr(pr.converted_value);
+            result_entry = datatypes::registry::DatatypeRegistry::get_entry(pr.converted_iri).value();
+        }
+
+        if (pr.converted_iri != target_entry.datatype_iri) {
+            throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
+        }
+
+        return std::make_pair(result_entry, pr.converted_value);
+    };
+
+    if (lhs_entry.promote_rank > rhs_entry.promote_rank) {
+        // promote lhs
+        auto const [promoted_entry, promoted_value] = promote_impl(lhs_entry, lhs_value, rhs_entry);
+
+        lhs_entry = promoted_entry;
+        lhs_value = promoted_value;
+    } else if (lhs_entry.promote_rank < rhs_entry.promote_rank) {
+        // promote rhs
+        auto const [promoted_entry, promoted_value] = promote_impl(rhs_entry, rhs_value, lhs_entry);
+
+        rhs_entry = promoted_entry;
+        rhs_value = promoted_value;
+    } else {
+        throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
+    }
+}
+
+std::tuple<datatypes::registry::DatatypeRegistry::DatatypeEntry, std::any, std::any> equalize(
+        datatypes::registry::DatatypeRegistry::DatatypeEntry lhs_entry,
+        std::any lhs_value,
+        datatypes::registry::DatatypeRegistry::DatatypeEntry rhs_entry,
+        std::any rhs_value) {
+
+    while (lhs_entry.datatype_iri != rhs_entry.datatype_iri) {
+        if (lhs_entry.subtype_rank == rhs_entry.subtype_rank) {
+            try {
+                promote(lhs_entry, lhs_value, rhs_entry, rhs_value);
+                break;
+            } catch (std::runtime_error const &e) {
+                if (lhs_entry.subtype_rank == 0) {
+                    throw e;
+                }
+            }
+        }
+
+        substitute(lhs_entry, lhs_value, rhs_entry, rhs_value);
+    }
+
+    return std::make_tuple(lhs_entry, lhs_value, rhs_value);
+}
+
+
+template<typename OpSelect>
+Literal Literal::numeric_binop_impl(Literal const &other, OpSelect op_select) const {
+    auto const this_type = this->handle_.type();
+    auto const other_type = other.handle_.type();
+
+    if (this_type != other_type || this_type != RDFNodeType::Literal) {
+        throw std::runtime_error{ "node type mismatch, expected literal" };
+    }
+
+    auto const [result_entry, lhs_val, rhs_val] = [&]() {
+        auto const this_lit_type = this->handle_.literal_backend().datatype_id;
+        auto const other_lit_type = other.handle_.literal_backend().datatype_id;
+
+        auto this_entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value();
+
+        if (this_lit_type == other_lit_type) {
+            return std::make_tuple(this_entry, this->value(), other.value());
+        } else {
+            auto other_entry = datatypes::registry::DatatypeRegistry::get_entry(other.datatype().identifier()).value();
+            return equalize(this_entry, this->value(), other_entry, other.value());
+        }
+    }();
+
+    if (!result_entry.numeric_ops.has_value()) {
+        throw std::runtime_error{ "result datatype not numeric" };
+    }
+
+    auto op_res = op_select(*result_entry.numeric_ops)(lhs_val, rhs_val);
+
+    return Literal {
+        result_entry.to_string_fptr(op_res),
+        IRI{ result_entry.datatype_iri, NodeStorage::default_instance() },
+        NodeStorage::default_instance() // TODO: which node storage should be used
+    };
+}
+
+template<typename OpSelect>
+Literal Literal::numeric_unop_impl(OpSelect op_select) const {
+    auto const this_type = this->handle_.type();
+
+    if (this_type != RDFNodeType::Literal) {
+        throw std::runtime_error{ "node type mismatch, expected literal" };
+    }
+
+    auto const entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value();
+
+    if (!entry.numeric_ops.has_value()) {
+        throw std::runtime_error{ "datatype not numeric" };
+    }
+
+    auto op_res = op_select(*entry.numeric_ops)(this->value());
+
+    return Literal {
+        entry.to_string_fptr(op_res),
+        this->datatype(),
+        NodeStorage::default_instance() // TODO: which node storage should be used
+    };
+}
+
+template<typename BinOp>
+Literal Literal::logical_binop_impl(Literal const &other, BinOp bin_op) const {
+    auto const this_type = this->handle_.type();
+    auto const other_type = other.handle_.type();
+
+    if (this_type != other_type || this_type != RDFNodeType::Literal) {
+        throw std::runtime_error{ "node type mismatch, expected literal" };
+    }
+
+    auto const ebv_this = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+
+    if (ebv_this == nullptr) {
+        throw std::runtime_error{ "lhs not convertible to bool" };
+    }
+
+    auto const ebv_other = datatypes::registry::DatatypeRegistry::get_ebv(other.datatype().identifier());
+
+    if (ebv_other == nullptr) {
+        throw std::runtime_error{ "rhs not convertible to bool" };
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(bin_op(ebv_this(this->value()), ebv_other(other.value())));
+}
+
+Literal Literal::operator+(Literal const &other) const {
+    return this->numeric_binop_impl(other, [](auto const &num_ops) {
+        return num_ops.add_fptr;
+    });
+}
+
+Literal Literal::operator-(Literal const &other) const {
+    return this->numeric_binop_impl(other, [](auto const &num_ops) {
+        return num_ops.sub_fptr;
+    });
+}
+
+Literal Literal::operator*(Literal const &other) const {
+    return this->numeric_binop_impl(other, [](auto const &num_ops) {
+        return num_ops.mul_fptr;
+    });
+}
+
+Literal Literal::operator/(Literal const &other) const {
+    return this->numeric_binop_impl(other, [](auto const &num_ops) {
+        return num_ops.div_fptr;
+    });
+}
+
+Literal Literal::operator+() const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.pos_fptr;
+    });
+}
+
+Literal Literal::operator-() const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.neg_fptr;
+    });
+}
+
+Literal Literal::operator&&(Literal const &other) const {
+    return this->logical_binop_impl(other, std::logical_and{});
+}
+
+Literal Literal::operator||(Literal const &other) const {
+    return this->logical_binop_impl(other, std::logical_or{});
+}
+
+Literal Literal::operator!() const {
+    auto const this_type = this->handle_.type();
+
+    if (this_type != RDFNodeType::Literal) {
+        throw std::runtime_error{ "node type mismatch, expected literal" };
+    }
+
+    auto const ebv_fptr = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+
+    if (ebv_fptr == nullptr) {
+        throw std::runtime_error{ "datatype not convertible to bool" };
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(!ebv_fptr(this->value()));
+}
 
 }  // namespace rdf4cpp::rdf
