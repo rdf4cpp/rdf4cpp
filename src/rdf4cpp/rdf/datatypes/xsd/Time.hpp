@@ -41,7 +41,7 @@ inline LiteralDatatypeImpl<xsd_time>::cpp_type LiteralDatatypeImpl<xsd_time>::fr
         strptime(s.data(), "%H:%M:%S", &tm);
 
         //default values
-        tm.tm_year = 1900;  // year since 1900
+        tm.tm_year = 0;  // year since 1900
         tm.tm_mon = 0;      // month of year from 0 to 11
         tm.tm_mday = 1;     //date of the month
         tm.tm_isdst = -1;   // value should be set even if not used

@@ -21,10 +21,10 @@ TEST_CASE("Datatype Time") {
     struct tm tm{};
 
     // Fill in values for Time
-    tm.tm_sec = 1; // seconds of minutes from 0 to 61
+    tm.tm_sec = 1; // seconds of minutes from 0 to 60
     tm.tm_min = 21; // minutes of hour from 0 to 59
     tm.tm_hour = 10; // hours of day from 0 to 24
-    tm.tm_year = 1900; // year since 1900
+    tm.tm_year = 0; // year since 1900
     tm.tm_mon = 0; // month of year from 0 to 11
     tm.tm_mday = 1; //date of the month
     tm.tm_isdst = -1; // value should be set even if not used
@@ -37,7 +37,7 @@ TEST_CASE("Datatype Time") {
     tm.tm_sec = 6; // seconds of minutes from 0 to 61
     tm.tm_min = 20; // minutes of hour from 0 to 59
     tm.tm_hour = 10; // hours of day from 0 to 24
-    tm.tm_year = 1900; // year since 1900
+    tm.tm_year = 0; // year since 1900
     tm.tm_mon = 0; // month of year from 0 to 11
     tm.tm_mday = 1; //date of the month
     tm.tm_isdst = -1; // value should be set even if not used
@@ -47,10 +47,10 @@ TEST_CASE("Datatype Time") {
     CHECK(lit2.value<datatypes::xsd::Time>() == value);
 
     // Fill in values for Time
-    tm.tm_sec = 61; // seconds of minutes from 0 to 61
+    tm.tm_sec = 61; // seconds of minutes from 0 to 60
     tm.tm_min = 20; // minutes of hour from 0 to 59
     tm.tm_hour = 10; // hours of day from 0 to 24
-    tm.tm_year = 1900; // year since 1900
+    tm.tm_year = 0; // year since 1900
     tm.tm_mon = 0; // month of year from 0 to 11
     tm.tm_mday = 1; //date of the month
     tm.tm_isdst = -1; // value should be set even if not used
@@ -60,10 +60,10 @@ TEST_CASE("Datatype Time") {
     CHECK(lit3.value<datatypes::xsd::Time>() == value);
 
     // Fill in values for Time
-    tm.tm_sec = 120; // seconds of minutes from 0 to 61
+    tm.tm_sec = 120; // seconds of minutes from 0 to 60
     tm.tm_min = 20; // minutes of hour from 0 to 59
     tm.tm_hour = 10; // hours of day from 0 to 24
-    tm.tm_year = 1900; // year since 1900
+    tm.tm_year = 0; // year since 1900
     tm.tm_mon = 0; // month of year from 0 to 11
     tm.tm_mday = 1; //date of the month
     tm.tm_isdst = -1; // value should be set even if not used
@@ -75,10 +75,27 @@ TEST_CASE("Datatype Time") {
     auto lit5 = Literal("10:22:00", type_iri);
     CHECK(lit5.value<datatypes::xsd::Time>() == value);
 
+    // Fill in values for Time
+    tm.tm_sec = 0; // seconds of minutes from 0 to 60
+    tm.tm_min = 0; // minutes of hour from 0 to 59
+    tm.tm_hour = 24; // hours of day from 0 to 24
+    tm.tm_year = 0; // year since 1900
+    tm.tm_mon = 0; // month of year from 0 to 11
+    tm.tm_mday = 0; //date of the month to be set to 0, if tm_hour > 23
+    tm.tm_isdst = -1; // value should be set even if not used
+    value = mktime(&tm);
+
+    auto lit6 = Literal::make<datatypes::xsd::Time>(value);
+    CHECK(lit6.value<datatypes::xsd::Time>() == value);
+
+    auto lit7 = Literal("00:00:00", type_iri);
+    CHECK(lit7.value<datatypes::xsd::Time>() == value);
+
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
     CHECK(lit1 == lit3);
     CHECK(lit4 == lit5);
+    CHECK(lit6 == lit7);
 
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
