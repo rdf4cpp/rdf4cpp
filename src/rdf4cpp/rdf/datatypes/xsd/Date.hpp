@@ -36,6 +36,7 @@ inline LiteralDatatypeImpl<xsd_date>::cpp_type LiteralDatatypeImpl<xsd_date>::fr
 
     const std::regex date_regex(R"(-?([1-9][0-9]{3,}|0[0-9]{3})-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)");
 
+    //checks whether the lexical form matches with date_regex specified
     if (std::regex_match(s.data(), date_regex)) {
         struct tm tm {};
         strptime(s.data(), "%Y-%m-%d", &tm);
@@ -59,6 +60,8 @@ template<>
 inline std::string LiteralDatatypeImpl<xsd_date>::to_string(const cpp_type &value) {
 
     char str[32];
+
+    //converts time in seconds to the format YYYY:MM::DD
     std::strftime(str, 32, "%Y-%m-%d", std::localtime(&value));
 
     return std::string{str};

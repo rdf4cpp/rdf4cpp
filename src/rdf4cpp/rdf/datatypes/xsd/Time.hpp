@@ -36,6 +36,7 @@ inline LiteralDatatypeImpl<xsd_time>::cpp_type LiteralDatatypeImpl<xsd_time>::fr
 
     const std::regex time_regex(R"((([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?|(24:00:00(\.0+)?))(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)");
 
+    //checks whether the lexical form matches with time_regex specified
     if (std::regex_match(s.data(), time_regex)) {
         struct tm tm {};
         strptime(s.data(), "%H:%M:%S", &tm);
@@ -59,6 +60,8 @@ template<>
 inline std::string LiteralDatatypeImpl<xsd_time>::to_string(const cpp_type &value) {
 
     char str[32];
+
+    //converts time in seconds to the format HH:MM::SS
     std::strftime(str, 32, "%H:%M:%S", std::localtime(&value));
 
     return std::string{str};
