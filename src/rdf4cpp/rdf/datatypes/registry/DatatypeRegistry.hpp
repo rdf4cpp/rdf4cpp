@@ -292,33 +292,33 @@ inline void DatatypeRegistry::add() {
         }
     }();
 
-    auto const promote_fptr = []() -> promote_fptr_t {
+    auto const [promote_fptr, promote_rank] = []() -> std::tuple<promote_fptr_t, unsigned> {
         if constexpr (datatypes::PromotableLiteralDatatype<LiteralDatatype_t>) {
-            return [](std::any const &value) -> ConversionResult {
+            auto const fptr = [](std::any const &value) -> ConversionResult {
                 return ConversionResult{
                         LiteralDatatype_t::promoted::identifier,
                         LiteralDatatype_t::promote(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
             };
+
+            return std::make_tuple(fptr, LiteralDatatype_t::promotion_rank);
         } else {
-            return nullptr;
+            return std::make_tuple(nullptr, 0);
         }
     }();
 
-    auto const promote_rank = detail_rank::DatatypePromotionRank<LiteralDatatype_t::identifier>::value;
-
-    auto const into_supertype_fptr = []() -> into_supertype_fptr_t {
+    auto const [into_supertype_fptr, subtype_rank] = []() -> std::tuple<into_supertype_fptr_t, unsigned> {
         if constexpr (datatypes::SubtypedLiteralDatatype<LiteralDatatype_t>) {
-            return [](std::any const &value) -> ConversionResult {
+            auto const fptr = [](std::any const &value) -> ConversionResult {
                 return ConversionResult{
                         LiteralDatatype_t::supertype::identifier,
                         LiteralDatatype_t::into_supertype(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
             };
+
+            return std::make_tuple(fptr, LiteralDatatype_t::subtype_rank);
         } else {
-            return nullptr;
+            return std::make_tuple(nullptr, 0);
         }
     }();
-
-    auto const subtype_rank = detail_rank::DatatypeSubtypeRank<LiteralDatatype_t::identifier>::value;
 
     DatatypeRegistry::add(DatatypeEntry {
             std::string{ LiteralDatatype_t::identifier },

@@ -10,7 +10,7 @@ TEST_CASE("decimal capabilities") {
     static_assert(datatypes::NumericLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::PromotableLiteralDatatype<datatypes::xsd::Decimal>);
-    static_assert(datatypes::xsd::Decimal::rank == 1);
+    static_assert(datatypes::xsd::Decimal::promotion_rank == 1);
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Decimal>);
 }
 

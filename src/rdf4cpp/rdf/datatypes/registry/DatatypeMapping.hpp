@@ -7,16 +7,27 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+/**
+ * Mapping type_iri -> c++ datatype
+ */
 template<ConstexprString type_iri>
 struct DatatypeMapping {
     using cpp_datatype = std::false_type;
 };
 
+/**
+ * Mapping type_iri -> promoted version of itself
+ * Note: promoted must be a: LiteralDatatypeImpl
+ */
 template<ConstexprString type_iri>
 struct DatatypePromotionMapping {
     using promoted = std::false_type;
 };
 
+/**
+ * Mapping type_iri -> supertype of itself
+ * Note: supertype must be a: LiteralDatatypeImpl
+ */
 template<ConstexprString type_iri>
 struct DatatypeSupertypeMapping {
     using supertype = std::false_type;
@@ -25,6 +36,9 @@ struct DatatypeSupertypeMapping {
 
 namespace detail_rank {
 
+/**
+ * The promotion rank of a type (the number of times a type can be promoted)
+ */
 template<ConstexprString type_iri, typename enable = void>
 struct DatatypePromotionRank {
     static constexpr unsigned value = 0;
@@ -35,7 +49,9 @@ struct DatatypePromotionRank<type_iri, std::enable_if_t<!std::is_same_v<typename
     static constexpr unsigned value = 1 + DatatypePromotionRank<DatatypePromotionMapping<type_iri>::promoted::identifier>::value;
 };
 
-
+/**
+ * The subtype rank of a type (the number of supertypes that are above in the hierarchy of a type)
+ */
 template<ConstexprString type_iri, typename enable = void>
 struct DatatypeSubtypeRank {
     static constexpr unsigned value = 0;

@@ -10,15 +10,46 @@
 namespace rdf4cpp::rdf {
 class Literal : public Node {
 private:
+    /**
+     * @brief the implementation for all numeric, binary operations
+     *
+     * @tparam OpSelect a function NumericOps -> binop_fptr_t
+     * @param op_select is used to select the specific operation to be carried out
+     * @param other rhs of the operation
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting from the selected binop
+     */
     template<typename OpSelect>
     Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * @brief the implementation for all numeric, unary operations
+     *
+     * @tparam OpSelect a function NumericOps -> unop_fptr_t
+     * @param op_select is used to select the specific operation to be carried out
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting from the selected unop
+     */
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * @brief the implementation for all logical, binary operations
+     *
+     * @tparam BinOp a function (bool, bool) -> bool
+     * @param bin_op the binary operations applied to both operands, e.g. &&
+     * @param other the lhs of the operation
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting by converting both literals to their ebv and applying the provided binop
+     */
     template<typename BinOp>
     Literal logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * @brief the implementation for logical not
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the logical negation of the ebv of this
+     */
     Literal logical_not_impl(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
 protected:

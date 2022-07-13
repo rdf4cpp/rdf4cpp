@@ -153,6 +153,13 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
+/**
+ * @brief use type substitution to convert lhs and rhs into the same type
+ * @param lhs_entry the datatype entry for the type of lhs
+ * @param lhs_value the value of lhs
+ * @param rhs_entry the datatype entry for the type of rhs
+ * @param rhs_value the value of rhs
+ */
 void substitute(
         datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
         std::any &lhs_value,
@@ -213,6 +220,14 @@ void substitute(
     }
 }
 
+/**
+ * @brief use type promotion to try to convert lhs and rhs to the same type
+ *
+ * @param lhs_entry the datatype entry for the type of lhs
+ * @param lhs_value the value of lhs
+ * @param rhs_entry the datatype entry for the type of rhs
+ * @param rhs_value the value of rhs
+ */
 void promote(
         datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
         std::any &lhs_value,
@@ -255,6 +270,15 @@ void promote(
     }
 }
 
+/**
+ * @brief uses type promotion and subtype substitution to convert lhs and rhs to the same type
+ *
+ * @param lhs_entry the datatype entry for the type of lhs
+ * @param lhs_value the value of lhs
+ * @param rhs_entry the datatype entry for the type of rhs
+ * @param rhs_value the value of rhs
+ * @return a tuple consiting of: the result type, the final value of lhs, the final value of rhs
+ */
 std::tuple<datatypes::registry::DatatypeRegistry::DatatypeEntry, std::any, std::any> equalize(
         datatypes::registry::DatatypeRegistry::DatatypeEntry lhs_entry,
         std::any lhs_value,
@@ -264,21 +288,24 @@ std::tuple<datatypes::registry::DatatypeRegistry::DatatypeEntry, std::any, std::
     while (lhs_entry.datatype_iri != rhs_entry.datatype_iri) {
         if (lhs_entry.subtype_rank == rhs_entry.subtype_rank) {
             try {
+                // try to promote, if it doesn't work we are not in the same promotion hierarchy
                 promote(lhs_entry, lhs_value, rhs_entry, rhs_value);
                 break;
             } catch (std::runtime_error const &e) {
+                // cannot go one subtype level up, and promotion did not work
+                // => the types are not covertible into a common type
                 if (lhs_entry.subtype_rank == 0) {
                     throw e;
                 }
             }
         }
 
+        // either bring types up to the same level, or decrease the rank of both by 1
         substitute(lhs_entry, lhs_value, rhs_entry, rhs_value);
     }
 
     return std::make_tuple(lhs_entry, lhs_value, rhs_value);
 }
-
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {

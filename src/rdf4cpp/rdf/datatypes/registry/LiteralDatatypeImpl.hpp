@@ -71,7 +71,7 @@ struct Promotable {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
     using promoted_cpp_type = typename DatatypeMapping<promoted::identifier>::cpp_datatype;
 
-    static constexpr unsigned rank = detail_rank::DatatypePromotionRank<type_iri>::value;
+    static constexpr unsigned promotion_rank = detail_rank::DatatypePromotionRank<type_iri>::value;
 
     inline static promoted_cpp_type promote(cpp_type const &value) {
         return static_cast<promoted_cpp_type>(value);
@@ -87,6 +87,8 @@ struct Subtype {
 
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
     using super_cpp_type = typename DatatypeMapping<supertype::identifier>::cpp_datatype;
+
+    static constexpr unsigned subtype_rank = detail_rank::DatatypeSubtypeRank<type_iri>::value;
 
     inline static super_cpp_type into_supertype(cpp_type const &value) {
         return static_cast<super_cpp_type>(value);

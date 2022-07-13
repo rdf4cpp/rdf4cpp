@@ -26,8 +26,8 @@ concept NumericLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
 
 template<typename LiteralDatatypeImpl>
 concept LogicalLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
-                                 && requires (typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
-                                        { LiteralDatatypeImpl::effective_boolean_value(cpp_value) } -> std::convertible_to<bool>;
+                                 && requires (typename LiteralDatatypeImpl::cpp_type const &value) {
+                                        { LiteralDatatypeImpl::effective_boolean_value(value) } -> std::convertible_to<bool>;
                                     };
 
 template<typename LiteralDatatypeImpl>
@@ -35,7 +35,7 @@ concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
                                     && requires (typename LiteralDatatypeImpl::cpp_type const &value) {
                                            typename LiteralDatatypeImpl::promoted;
                                            typename LiteralDatatypeImpl::promoted_cpp_type;
-                                           { LiteralDatatypeImpl::rank } -> std::convertible_to<unsigned>;
+                                           { LiteralDatatypeImpl::promotion_rank } -> std::convertible_to<unsigned>;
                                            { LiteralDatatypeImpl::promote(value) } -> std::convertible_to<typename LiteralDatatypeImpl::promoted_cpp_type>;
                                        };
 
@@ -44,6 +44,7 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
                                   && requires (typename LiteralDatatypeImpl::cpp_type const &value) {
                                          typename LiteralDatatypeImpl::supertype;
                                          typename LiteralDatatypeImpl::super_cpp_type;
+                                         { LiteralDatatypeImpl::subtype_rank } -> std::convertible_to<unsigned>;
                                          { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
                                      };
 
