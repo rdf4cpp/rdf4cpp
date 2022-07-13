@@ -81,7 +81,7 @@ TEST_CASE("Literal - logical ops") {
 }
 
 #define GENERATE_BINOP_TESTCASE(lhs_type, lhs, op, rhs_type, rhs, expected_type, expected) \
-    SUBCASE("lhs_type op rhs_type") {                                                      \
+    SUBCASE(#lhs_type " " #op " " #rhs_type) {                                             \
         auto const lhs_lit = Literal::make<datatypes::xsd::lhs_type>(lhs);                 \
         auto const rhs_lit = Literal::make<datatypes::xsd::rhs_type>(rhs);                 \
                                                                                            \
@@ -90,7 +90,7 @@ TEST_CASE("Literal - logical ops") {
     }
 
 #define GENERATE_UNOP_TESTCASE(type, value, op, expected)                         \
-    SUBCASE("op type") {                                                          \
+    SUBCASE(#op " type") {                                                          \
         auto const value_lit = Literal::make<datatypes::xsd::type>(value);        \
                                                                                   \
         auto const expected_lit = Literal::make<datatypes::xsd::type>(expected);  \
@@ -243,6 +243,11 @@ struct DatatypeSupertypeMapping<B2> {
 };
 
 template<>
+struct DatatypePromotionMapping<B2> {
+    static constexpr ConstexprString promoted_identifier = Y;
+};
+
+template<>
 inline capabilities::Default<B2>::cpp_type capabilities::Default<B2>::from_string(std::string_view s) {
     cpp_type value;
     auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
@@ -278,6 +283,7 @@ inline capabilities::Default<C>::cpp_type capabilities::Default<C>::from_string(
         return value;
     }
 }
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 
@@ -292,7 +298,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  */
 using A = registry::LiteralDatatypeImpl<registry::A, registry::capabilities::Numeric, registry::capabilities::Promotable>;
 using B = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Subtype>;
-using B2 = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Subtype>;
+using B2 = registry::LiteralDatatypeImpl<registry::B2, registry::capabilities::Numeric, registry::capabilities::Subtype, registry::capabilities::Promotable>;
 using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Numeric, registry::capabilities::Subtype>;
 
 using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric>;

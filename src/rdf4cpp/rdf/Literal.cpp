@@ -104,10 +104,10 @@ std::partial_ordering Literal::operator<=>(const Literal &other) const {
     }
 }
 bool Literal::operator==(const Literal &other) const {
-    if (this->lexical_form() == other.lexical_form()) {
-        return true;
-    } else if (this->datatype() != other.datatype()) {
+    if (this->datatype() != other.datatype()) {
         return false;
+    } else if (this->lexical_form() == other.lexical_form()) {
+        return true;
     } else {
         return false;
         /*if(this->handle_.type() == RDFNodeType::Literal) return this->handle_.literal_backend() == other.handle_.literal_backend();
