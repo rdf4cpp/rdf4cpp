@@ -30,7 +30,7 @@ struct DatatypeMapping<xsd_boolean> {
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_boolean>::cpp_type LiteralDatatypeImpl<xsd_boolean>::from_string(std::string_view s) {
+inline capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>::from_string(std::string_view s) {
     if (s == "true" || s == "1") return true;
     else if (s == "false" || s == "0")
         return false;
@@ -42,13 +42,19 @@ inline LiteralDatatypeImpl<xsd_boolean>::cpp_type LiteralDatatypeImpl<xsd_boolea
  * Specialisation of to_string template function.
  */
 template<>
-inline std::string LiteralDatatypeImpl<xsd_boolean>::to_string(const cpp_type &value) {
+inline std::string capabilities::Default<xsd_boolean>::to_string(const cpp_type &value) {
 
     std::ostringstream str_os;
     str_os << std::boolalpha << value;
     std::string str = str_os.str();
     return str;
 }
+
+template<>
+inline bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) {
+    return value;
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 
@@ -56,7 +62,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::boolean
  */
-using Boolean = registry::LiteralDatatypeImpl<registry::xsd_boolean>;
+using Boolean = registry::LiteralDatatypeImpl<registry::xsd_boolean,
+                                              registry::capabilities::Logical>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 

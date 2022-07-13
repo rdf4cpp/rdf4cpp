@@ -5,6 +5,14 @@
 
 using namespace rdf4cpp::rdf;
 
+TEST_CASE("string capabilities") {
+    static_assert(datatypes::LiteralDatatype<datatypes::xsd::String>);
+    static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::String>);
+    static_assert(!datatypes::NumericLiteralDatatype<datatypes::xsd::String>);
+    static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::String>);
+    static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::String>);
+}
+
 TEST_CASE("Datatype String") {
 
     constexpr auto correct_type_iri_cstr = "http://www.w3.org/2001/XMLSchema#string";
