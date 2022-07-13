@@ -14,12 +14,12 @@ struct DatatypeMapping {
 
 template<ConstexprString type_iri>
 struct DatatypePromotionMapping {
-    static constexpr ConstexprString<0> promoted_identifier{{}};
+    using promoted = std::false_type;
 };
 
 template<ConstexprString type_iri>
 struct DatatypeSupertypeMapping {
-    static constexpr ConstexprString<0> supertype_identifier{{}};
+    using supertype = std::false_type;
 };
 
 
@@ -31,8 +31,8 @@ struct DatatypePromotionRank {
 };
 
 template<ConstexprString type_iri>
-struct DatatypePromotionRank<type_iri, std::enable_if_t<(DatatypePromotionMapping<type_iri>::promoted_identifier.size() > 0)>> {
-    static constexpr unsigned value = 1 + DatatypePromotionRank<DatatypePromotionMapping<type_iri>::promoted_identifier>::value;
+struct DatatypePromotionRank<type_iri, std::enable_if_t<!std::is_same_v<typename DatatypePromotionMapping<type_iri>::promoted, std::false_type>>> {
+    static constexpr unsigned value = 1 + DatatypePromotionRank<DatatypePromotionMapping<type_iri>::promoted::identifier>::value;
 };
 
 
@@ -42,11 +42,11 @@ struct DatatypeSubtypeRank {
 };
 
 template<ConstexprString type_iri>
-struct DatatypeSubtypeRank<type_iri, std::enable_if_t<(DatatypeSupertypeMapping<type_iri>::supertype_identifier.size() > 0)>> {
-    static constexpr unsigned value = 1 + DatatypeSubtypeRank<DatatypeSupertypeMapping<type_iri>::supertype_identifier>::value;
+struct DatatypeSubtypeRank<type_iri, std::enable_if_t<!std::is_same_v<typename DatatypeSupertypeMapping<type_iri>::supertype, std::false_type>>> {
+    static constexpr unsigned value = 1 + DatatypeSubtypeRank<DatatypeSupertypeMapping<type_iri>::supertype::identifier>::value;
 };
 
 
-} // namespace detail::rank
+} // namespace detail_rank
 } // namespace rdf4cpp::rdf::datatypes::registry
 #endif  //RDF4CPP_DATATYPEMAPPING_HPP

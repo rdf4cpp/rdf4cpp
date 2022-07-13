@@ -33,7 +33,7 @@ struct DatatypeMapping<xsd_decimal> {
 
 template<>
 struct DatatypePromotionMapping<xsd_decimal> {
-    static constexpr ConstexprString promoted_identifier = xsd_float;
+    using promoted = xsd::Float;
 };
 
 /**

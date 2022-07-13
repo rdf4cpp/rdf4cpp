@@ -33,8 +33,8 @@ concept LogicalLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
 template<typename LiteralDatatypeImpl>
 concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
                                     && requires (typename LiteralDatatypeImpl::cpp_type const &value) {
+                                           typename LiteralDatatypeImpl::promoted;
                                            typename LiteralDatatypeImpl::promoted_cpp_type;
-                                           { LiteralDatatypeImpl::promoted_identifier } -> std::convertible_to<std::string_view>;
                                            { LiteralDatatypeImpl::rank } -> std::convertible_to<unsigned>;
                                            { LiteralDatatypeImpl::promote(value) } -> std::convertible_to<typename LiteralDatatypeImpl::promoted_cpp_type>;
                                        };
@@ -42,8 +42,8 @@ concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
 template<typename LiteralDatatypeImpl>
 concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl>
                                   && requires (typename LiteralDatatypeImpl::cpp_type const &value) {
+                                         typename LiteralDatatypeImpl::supertype;
                                          typename LiteralDatatypeImpl::super_cpp_type;
-                                         { LiteralDatatypeImpl::supertype_identifier } -> std::convertible_to<std::string_view>;
                                          { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
                                      };
 

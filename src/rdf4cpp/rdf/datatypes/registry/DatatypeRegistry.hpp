@@ -296,7 +296,7 @@ inline void DatatypeRegistry::add() {
         if constexpr (datatypes::PromotableLiteralDatatype<LiteralDatatype_t>) {
             return [](std::any const &value) -> ConversionResult {
                 return ConversionResult{
-                        LiteralDatatype_t::promoted_identifier,
+                        LiteralDatatype_t::promoted::identifier,
                         LiteralDatatype_t::promote(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
             };
         } else {
@@ -310,7 +310,7 @@ inline void DatatypeRegistry::add() {
         if constexpr (datatypes::SubtypedLiteralDatatype<LiteralDatatype_t>) {
             return [](std::any const &value) -> ConversionResult {
                 return ConversionResult{
-                        LiteralDatatype_t::supertype_identifier,
+                        LiteralDatatype_t::supertype::identifier,
                         LiteralDatatype_t::into_supertype(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
             };
         } else {

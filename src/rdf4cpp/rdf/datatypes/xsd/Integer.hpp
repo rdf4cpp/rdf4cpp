@@ -30,7 +30,7 @@ struct DatatypeMapping<xsd_integer> {
 
 template<>
 struct DatatypeSupertypeMapping<xsd_integer> {
-    static constexpr ConstexprString supertype_identifier = xsd_decimal;
+    using supertype = xsd::Decimal;
 };
 
 /**

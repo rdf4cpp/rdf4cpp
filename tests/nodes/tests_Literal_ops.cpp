@@ -139,152 +139,14 @@ TEST_CASE("Literal - numeric ops") {
 namespace rdf4cpp::rdf::datatypes::registry {
 
 constexpr static registry::ConstexprString Z{"Z"};
-
-template<>
-struct DatatypeMapping<Z> {
-    using cpp_datatype = double;
-};
-
-template<>
-inline capabilities::Default<Z>::cpp_type capabilities::Default<Z>::from_string(std::string_view s) {
-    double value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
 constexpr static registry::ConstexprString Y{"Y"};
 
-template<>
-struct DatatypeMapping<Y> {
-    using cpp_datatype = float;
-};
-
-template<>
-struct DatatypeSupertypeMapping<Y> {
-    static constexpr ConstexprString supertype_identifier = Z;
-};
-
-template<>
-inline capabilities::Default<Y>::cpp_type capabilities::Default<Y>::from_string(std::string_view s) {
-    cpp_type value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
 constexpr static registry::ConstexprString A{"A"};
-
-template<>
-struct DatatypeMapping<A> {
-    using cpp_datatype = int64_t;
-};
-
-template<>
-struct DatatypePromotionMapping<A> {
-    static constexpr ConstexprString promoted_identifier = Z;
-};
-
-template<>
-inline capabilities::Default<A>::cpp_type capabilities::Default<A>::from_string(std::string_view s) {
-    cpp_type value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
-
 constexpr static registry::ConstexprString B{"B"};
-
-template<>
-struct DatatypeMapping<B> {
-    using cpp_datatype = int32_t;
-};
-
-template<>
-struct DatatypeSupertypeMapping<B> {
-    static constexpr ConstexprString supertype_identifier = A;
-};
-
-template<>
-inline capabilities::Default<B>::cpp_type capabilities::Default<B>::from_string(std::string_view s) {
-    cpp_type value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
 constexpr static registry::ConstexprString B2{"B2"};
-
-template<>
-struct DatatypeMapping<B2> {
-    using cpp_datatype = uint32_t;
-};
-
-template<>
-struct DatatypeSupertypeMapping<B2> {
-    static constexpr ConstexprString supertype_identifier = A;
-};
-
-template<>
-struct DatatypePromotionMapping<B2> {
-    static constexpr ConstexprString promoted_identifier = Y;
-};
-
-template<>
-inline capabilities::Default<B2>::cpp_type capabilities::Default<B2>::from_string(std::string_view s) {
-    cpp_type value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
-
 constexpr static registry::ConstexprString C{"C"};
 
-template<>
-struct DatatypeMapping<C> {
-    using cpp_datatype = int16_t;
-};
-
-template<>
-struct DatatypeSupertypeMapping<C> {
-    static constexpr ConstexprString supertype_identifier = B;
-};
-
-template<>
-inline capabilities::Default<C>::cpp_type capabilities::Default<C>::from_string(std::string_view s) {
-    cpp_type value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
-    } else {
-        return value;
-    }
-}
-
-}  // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::rdf::datatypes::registry
 
 
 namespace rdf4cpp::rdf::datatypes::xsd {
@@ -303,11 +165,165 @@ using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Num
 
 using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric>;
 using Y = registry::LiteralDatatypeImpl<registry::Y, registry::capabilities::Numeric, registry::capabilities::Subtype>;
+
 }  // namespace rdf4cpp::rdf::datatypes::xsd
+
+namespace rdf4cpp::rdf::datatypes::registry {
+
+// Z
+template<>
+struct DatatypeMapping<Z> {
+    using cpp_datatype = double;
+};
+
+template<>
+inline capabilities::Default<Z>::cpp_type capabilities::Default<Z>::from_string(std::string_view s) {
+    double value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+
+// Y
+template<>
+struct DatatypeMapping<Y> {
+    using cpp_datatype = float;
+};
+
+template<>
+struct DatatypeSupertypeMapping<Y> {
+   using supertype = xsd::Z;
+};
+
+template<>
+inline capabilities::Default<Y>::cpp_type capabilities::Default<Y>::from_string(std::string_view s) {
+    cpp_type value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+
+// A
+template<>
+struct DatatypeMapping<A> {
+    using cpp_datatype = int64_t;
+};
+
+template<>
+struct DatatypePromotionMapping<A> {
+    using promoted = xsd::Z;
+};
+
+template<>
+inline capabilities::Default<A>::cpp_type capabilities::Default<A>::from_string(std::string_view s) {
+    cpp_type value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+
+// B
+template<>
+struct DatatypeMapping<B> {
+    using cpp_datatype = int32_t;
+};
+
+template<>
+struct DatatypeSupertypeMapping<B> {
+    using supertype = xsd::A;
+};
+
+template<>
+inline capabilities::Default<B>::cpp_type capabilities::Default<B>::from_string(std::string_view s) {
+    cpp_type value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+
+// B2
+template<>
+struct DatatypeMapping<B2> {
+    using cpp_datatype = uint32_t;
+};
+
+template<>
+struct DatatypeSupertypeMapping<B2> {
+    using supertype = xsd::A;
+};
+
+template<>
+struct DatatypePromotionMapping<B2> {
+    using promoted = xsd::Y;
+};
+
+template<>
+inline capabilities::Default<B2>::cpp_type capabilities::Default<B2>::from_string(std::string_view s) {
+    cpp_type value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+
+// C
+template<>
+struct DatatypeMapping<C> {
+    using cpp_datatype = int16_t;
+};
+
+template<>
+struct DatatypeSupertypeMapping<C> {
+    using supertype = xsd::B;
+};
+
+template<>
+inline capabilities::Default<C>::cpp_type capabilities::Default<C>::from_string(std::string_view s) {
+    cpp_type value;
+    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+
+    if (parse_res.ptr != s.data() + s.size()) {
+        throw std::runtime_error("XSD Parsing Error");
+    } else {
+        return value;
+    }
+}
+
+}  // namespace rdf4cpp::rdf::datatypes::registry
 
 
 #define GENERATE_HIERARCHY_TEST(lhs, rhs, expected) \
     GENERATE_BINOP_TESTCASE(lhs, 1, +, rhs, 1, expected, 2)
+
+TEST_CASE("complex hierarchy order edge case") {
+    // this conversion goes over A
+    // which has to be instantiated even though it is never explicitly named in this test
+    GENERATE_HIERARCHY_TEST(B, Y, Z);
+}
 
 TEST_CASE("complex hierarchy") {
     GENERATE_HIERARCHY_TEST(A, B, A);

@@ -28,7 +28,7 @@ struct DatatypeMapping<xsd_int> {
 
 template<>
 struct DatatypeSupertypeMapping<xsd_int> {
-    static constexpr ConstexprString supertype_identifier = xsd_integer;
+    using supertype = xsd::Integer;
 };
 
 /**

@@ -66,10 +66,10 @@ struct Default {
  */
 template<ConstexprString type_iri>
 struct Promotable {
-    static constexpr ConstexprString promoted_identifier = DatatypePromotionMapping<type_iri>::promoted_identifier;
+    using promoted = typename DatatypePromotionMapping<type_iri>::promoted;
 
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
-    using promoted_cpp_type = typename DatatypeMapping<promoted_identifier>::cpp_datatype;
+    using promoted_cpp_type = typename DatatypeMapping<promoted::identifier>::cpp_datatype;
 
     static constexpr unsigned rank = detail_rank::DatatypePromotionRank<type_iri>::value;
 
@@ -83,10 +83,10 @@ struct Promotable {
  */
 template<ConstexprString type_iri>
 struct Subtype {
-    static constexpr ConstexprString supertype_identifier = DatatypeSupertypeMapping<type_iri>::supertype_identifier;
+    using supertype = typename DatatypeSupertypeMapping<type_iri>::supertype;
 
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
-    using super_cpp_type = typename DatatypeMapping<supertype_identifier>::cpp_datatype;
+    using super_cpp_type = typename DatatypeMapping<supertype::identifier>::cpp_datatype;
 
     inline static super_cpp_type into_supertype(cpp_type const &value) {
         return static_cast<super_cpp_type>(value);
