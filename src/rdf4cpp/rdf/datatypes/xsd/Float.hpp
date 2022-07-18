@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
+#include <charconv>
 #include <cstdint>
 #include <ostream>
 #include <regex>
