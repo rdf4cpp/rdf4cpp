@@ -9,6 +9,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
+#include <charconv>
+#include <cmath>
 #include <cstdint>
 #include <iomanip>
 #include <ostream>
@@ -34,14 +36,26 @@ struct DatatypeMapping<xsd_decimal> {
  */
 template<>
 inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decimal>::from_string(std::string_view s) {
-
-    const std::regex decimal_regex("(\\+|-)?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)");
-
-    if (std::regex_match(s.data(), decimal_regex)) {
-        return std::strtod(s.data(), nullptr);
-    } else {
-        throw std::runtime_error("XSD Parsing Error");
+    
+    if (s.starts_with('+')) {
+        // from_chars does not allow initial +
+        s.remove_prefix(1);
     }
+
+    cpp_type value;
+    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::fixed);
+
+    if (res.ptr != s.data() + s.size()) {
+        // parsing did not reach end of string => it contains invalid characters
+        throw std::runtime_error{ "XSD Parsing Error" };
+    }
+
+    if (std::isnan(value) || std::isinf(value)) {
+        // nan and +-inf not permitted in decimal
+        throw std::runtime_error{ "XSD Parsing Error" };
+    }
+
+    return value;
 }
 
 /**

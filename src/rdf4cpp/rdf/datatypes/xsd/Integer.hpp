@@ -33,13 +33,20 @@ struct DatatypeMapping<xsd_integer> {
 template<>
 inline LiteralDatatypeImpl<xsd_integer>::cpp_type LiteralDatatypeImpl<xsd_integer>::from_string(std::string_view s) {
 
-    const std::regex integer_regex("[\\-+]?[0-9]+");
-
-    if (std::regex_match(s.data(), integer_regex)) {
-        return std::strtol(s.data(), nullptr, 10);
-    } else {
-        throw std::runtime_error("XSD Parsing Error");
+    if (s.starts_with('+')) {
+        // from_chars does not allow initial +
+        s.remove_prefix(1);
     }
+
+    cpp_type value;
+    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, 10);
+
+    if (res.ptr != s.data() + s.size()) {
+        // parsing did not reach end of string => it contains invalid characters
+        throw std::runtime_error{ "XSD Parsing Error" };
+    }
+
+    return value;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 

@@ -31,7 +31,7 @@ struct DatatypeMapping<xsd_string> {
  */
 template<>
 inline LiteralDatatypeImpl<xsd_string>::cpp_type LiteralDatatypeImpl<xsd_string>::from_string(std::string_view s) {
-    return s.data();
+    return std::string{ s };
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 namespace rdf4cpp::rdf::datatypes::xsd {
