@@ -9,8 +9,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-#include <cstdint>
-#include <ostream>
+#include <sstream>
+#include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*

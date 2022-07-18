@@ -10,9 +10,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 #include <charconv>
-#include <cstdint>
-#include <ostream>
-#include <regex>
+#include <sstream>
+#include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*

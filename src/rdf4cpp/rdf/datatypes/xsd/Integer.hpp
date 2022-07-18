@@ -11,8 +11,7 @@
 
 #include <charconv>
 #include <cstdint>
-#include <ostream>
-#include <regex>
+#include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
