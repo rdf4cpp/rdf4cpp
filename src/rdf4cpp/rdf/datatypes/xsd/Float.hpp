@@ -9,9 +9,9 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-#include <cstdint>
-#include <ostream>
-#include <regex>
+#include <charconv>
+#include <sstream>
+#include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
@@ -32,7 +32,21 @@ struct DatatypeMapping<xsd_float> {
  */
 template<>
 inline LiteralDatatypeImpl<xsd_float>::cpp_type LiteralDatatypeImpl<xsd_float>::from_string(std::string_view s) {
-    return std::stof(std::string{s.data()});
+
+    if (s.starts_with('+')) {
+        // from_chars does not allow initial +
+        s.remove_prefix(1);
+    }
+
+    cpp_type value;
+    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
+
+    if (res.ptr != s.data() + s.size()) {
+        // parsing did not reach end of string => it contains invalid characters
+        throw std::runtime_error{ "XSD Parsing Error" };
+    }
+
+    return value;
 }
 
 /**

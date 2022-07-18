@@ -9,9 +9,6 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-#include <cstdint>
-#include <ostream>
-
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
@@ -31,7 +28,7 @@ struct DatatypeMapping<xsd_string> {
  */
 template<>
 inline LiteralDatatypeImpl<xsd_string>::cpp_type LiteralDatatypeImpl<xsd_string>::from_string(std::string_view s) {
-    return s.data();
+    return std::string{ s };
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 namespace rdf4cpp::rdf::datatypes::xsd {
