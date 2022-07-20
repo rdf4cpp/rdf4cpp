@@ -157,6 +157,13 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  *     B  B2 -->   Y
  *     |
  *     C
+ *
+ *     Legend:
+ *          A --> B : A is promotable to B
+ *
+ *          A
+ *          |  : B is a subtype of A
+ *          B
  */
 using A = registry::LiteralDatatypeImpl<registry::A, registry::capabilities::Numeric, registry::capabilities::Promotable>;
 using B = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Subtype>;
