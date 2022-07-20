@@ -166,6 +166,8 @@ void substitute(
         datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
         std::any &rhs_value) {
 
+    assert(lhs_entry.datatype_iri != rhs_entry.datatype_iri);
+
     using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
     using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
 
@@ -188,7 +190,7 @@ void substitute(
     if (lhs_entry.subtype_rank == 0 && rhs_entry.subtype_rank == 0) {
         // nothing to do
         return;
-    } else if (rhs_entry.subtype_rank > lhs_entry.subtype_rank) {
+    } else if (lhs_entry.subtype_rank < rhs_entry.subtype_rank) {
         // substitute rhs
         auto const [substituted_entry, substituted_value] = substitute_impl(rhs_entry, rhs_value, lhs_entry);
 
@@ -202,6 +204,9 @@ void substitute(
         lhs_value = substituted_value;
     } else {
         // substitute both once
+        // This path will be used if the types are at the same subtype level but promotion failed.
+        // When this happens it means there is no connecting promotion path between the types at the current
+        // subtype level, and we have to try to promote again one level up.
 
         if (lhs_entry.into_supertype_fptr == nullptr || rhs_entry.into_supertype_fptr == nullptr) {
             throw std::runtime_error{ "subtype substitution unsupported for type" };
@@ -233,6 +238,8 @@ void promote(
         std::any &lhs_value,
         datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
         std::any &rhs_value) {
+
+    assert(lhs_entry.datatype_iri != rhs_entry.datatype_iri);
 
     using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
     using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
