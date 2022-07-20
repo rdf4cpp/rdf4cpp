@@ -49,7 +49,7 @@ inline capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_in
 }
 
 template<>
-inline bool capabilities::Logical<xsd_integer>::effective_boolean_value(cpp_type const &value) {
+inline bool capabilities::Logical<xsd_integer>::effective_boolean_value(cpp_type const &value) noexcept {
     return value != 0;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -73,7 +73,7 @@ struct Promotable {
 
     static constexpr unsigned promotion_rank = detail_rank::DatatypePromotionRank<type_iri>::value;
 
-    inline static promoted_cpp_type promote(cpp_type const &value) {
+    inline static promoted_cpp_type promote(cpp_type const &value) noexcept {
         return static_cast<promoted_cpp_type>(value);
     }
 };
@@ -90,7 +90,7 @@ struct Subtype {
 
     static constexpr unsigned subtype_rank = detail_rank::DatatypeSubtypeRank<type_iri>::value;
 
-    inline static super_cpp_type into_supertype(cpp_type const &value) {
+    inline static super_cpp_type into_supertype(cpp_type const &value) noexcept {
         return static_cast<super_cpp_type>(value);
     }
 };
@@ -98,31 +98,31 @@ struct Subtype {
 /**
  * The capability to be used in numeric operations.
  */
-template<ConstexprString xsd_string>
+template<ConstexprString type_iri>
 struct Numeric {
-    using cpp_type = typename DatatypeMapping<xsd_string>::cpp_datatype;
+    using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
-    inline static cpp_type add(cpp_type const &lhs, cpp_type const &rhs) {
+    inline static cpp_type add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs + rhs;
     }
 
-    inline static cpp_type sub(cpp_type const &lhs, cpp_type const &rhs) {
+    inline static cpp_type sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs - rhs;
     }
 
-    inline static cpp_type mul(cpp_type const &lhs, cpp_type const &rhs) {
+    inline static cpp_type mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs * rhs;
     }
 
-    inline static cpp_type div(cpp_type const &lhs, cpp_type const &rhs) {
+    inline static cpp_type div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs / rhs;
     }
 
-    inline static cpp_type pos(cpp_type const &operand) {
+    inline static cpp_type pos(cpp_type const &operand) noexcept {
         return +operand;
     }
 
-    inline static cpp_type neg(cpp_type const &operand) {
+    inline static cpp_type neg(cpp_type const &operand) noexcept {
         return -operand;
     }
 };
@@ -130,14 +130,14 @@ struct Numeric {
 /**
  * The capability to be used in boolean contexts.
  */
-template<ConstexprString xsd_string>
+template<ConstexprString type_iri>
 struct Logical {
-    using cpp_type = typename DatatypeMapping<xsd_string>::cpp_datatype;
+    using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
     /**
      * @return the EBV (effective boolean value) of a datatype
      */
-    inline static bool effective_boolean_value(cpp_type const &) {
+    inline static bool effective_boolean_value(cpp_type const &) noexcept {
         static_assert(detail::always_false_v<cpp_type>, "'effective_boolean_value' is not implemented for this type!");
     }
 };
@@ -149,9 +149,9 @@ struct Logical {
  *
  * @tparam Capabilities all capabilities this instantiation should have
  */
-template<ConstexprString type_iri_t, template<ConstexprString> typename ...Capabilities>
-struct LiteralDatatypeImpl : capabilities::Default<type_iri_t>, Capabilities<type_iri_t>... {
-    using typename capabilities::Default<type_iri_t>::cpp_type;
+template<ConstexprString type_iri, template<ConstexprString> typename ...Capabilities>
+struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_iri>... {
+    using typename capabilities::Default<type_iri>::cpp_type;
 
 private:
     inline static std::nullptr_t init();

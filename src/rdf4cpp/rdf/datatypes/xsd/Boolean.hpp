@@ -51,7 +51,7 @@ inline std::string capabilities::Default<xsd_boolean>::to_string(const cpp_type 
 }
 
 template<>
-inline bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) {
+inline bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) noexcept {
     return value;
 }
 

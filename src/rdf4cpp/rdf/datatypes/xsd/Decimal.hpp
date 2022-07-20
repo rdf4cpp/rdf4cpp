@@ -84,7 +84,7 @@ inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type 
 }
 
 template<>
-inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) {
+inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept {
     return !std::isnan(value) && value != 0.0;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
