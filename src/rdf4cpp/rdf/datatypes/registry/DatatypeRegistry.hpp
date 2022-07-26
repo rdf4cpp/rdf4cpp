@@ -2,11 +2,15 @@
 #define RDF4CPP_DATATYPEREGISTRY_HPP
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 
 #include <algorithm>
 #include <any>
+#include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -18,20 +22,12 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 class DatatypeRegistry {
 public:
-    struct ConversionResult {
-        std::string_view converted_iri;
-        std::any converted_value;
-    };
-
     /**
      * Constructs an instance of a type from a string.
      */
     using factory_fptr_t = std::any (*)(std::string_view);
     using to_string_fptr_t = std::string (*)(const std::any &);
     using ebv_fptr_t = bool (*)(std::any const &);
-
-    using promote_fptr_t = ConversionResult (*)(std::any const &);
-    using into_supertype_fptr_t = ConversionResult (*)(std::any const &);
 
     using unop_fptr_t = std::any (*)(std::any const &);
     using binop_fptr_t = std::any (*)(std::any const &, std::any const &);
@@ -55,11 +51,10 @@ public:
 
         std::optional<NumericOps> numeric_ops;
 
-        promote_fptr_t promote_fptr; // type promotion
-        unsigned promote_rank;       // number of times this type can be promoted
+        RuntimeConversionTable conversion_table;
 
-        into_supertype_fptr_t into_supertype_fptr; // conversion to supertype
-        unsigned subtype_rank;                     // number of supertypes above in hierarchy, 0 means no supertype
+        unsigned promote_rank; // number of times this type can be promoted
+        unsigned subtype_rank; // number of supertypes above in hierarchy, 0 means no supertype
 
         inline static DatatypeEntry for_search(std::string_view const datatype_iri) {
             return DatatypeEntry{
@@ -68,19 +63,78 @@ public:
                     nullptr,
                     nullptr,
                     std::nullopt,
-                    nullptr,
+                    {},
                     0,
-                    nullptr,
                     0};
         }
     };
 
+private:
     using registered_datatypes_t = std::vector<DatatypeEntry>;
+
+    struct ConversionEntry {
+        std::string target_type_iri;
+        std::function<std::any(std::any const &)> convert_lhs;
+        std::function<std::any(std::any const &)> convert_rhs;
+    };
+
+    using conversion_index_t = std::tuple<std::string, std::string>;
+    using conversion_hasher_t = util::UnorderedPairHash<void, std::hash<std::string_view>>;
+    using conversion_equal_t = util::UnorderedPairEqual<>;
+    using conversion_mapping_t = std::unordered_map<conversion_index_t, std::optional<ConversionEntry>, conversion_hasher_t, conversion_equal_t>;
+
+public:
+    struct DatatypeConverter {
+    private:
+        friend class DatatypeRegistry;
+
+        std::reference_wrapper<conversion_mapping_t::value_type const> entry;
+
+        explicit DatatypeConverter(conversion_mapping_t::const_reference entry)
+                : entry{ std::cref(entry) }
+        {
+        }
+    public:
+        /**
+         * @return the iri of the target type of this conversion
+         */
+        [[nodiscard]]
+        std::string_view target_type_iri() const noexcept {
+            return entry.get().second->target_type_iri;
+        }
+
+        /**
+         * converts a value of type origin_datatype
+         * into a value of type target_type (with iri target_type_iri())
+         *
+         * @param origin_datatype_iri the datatype of the to be converted value
+         * @param value the value to be converted
+         * @return the converted value
+         */
+        [[nodiscard]]
+        std::any convert(std::string_view const origin_datatype_iri, std::any const &value) const noexcept {
+            auto const &e = entry.get();
+
+            // necessary because conversions are only stored once for each combination so trying to find
+            // a conversion for (lhs, rhs) might yield a ConversionEntry ordered (convert rhs, convert lhs)
+            if (origin_datatype_iri == std::get<0>(e.first)) {
+                return e.second->convert_lhs(value);
+            } else {
+                assert(origin_datatype_iri == std::get<1>(e.first));
+                return e.second->convert_rhs(value);
+            }
+        }
+    };
 
 private:
     inline static registered_datatypes_t &get_mutable() {
         static registered_datatypes_t registry_;
         return registry_;
+    }
+
+    inline static conversion_mapping_t &get_conversion_mappings_mut() {
+        static conversion_mapping_t mappings_;
+        return mappings_;
     }
 
     /**
@@ -152,8 +206,8 @@ public:
      * @param datatype_iri datatype IRI string
      * @return if available database entry else nullopt
      */
-    inline static std::optional<DatatypeEntry> get_entry(std::string_view const datatype_iri) {
-        return find_map_entry(datatype_iri, [](auto const &entry) { return entry; });
+    inline static std::optional<std::reference_wrapper<DatatypeEntry const>> get_entry(std::string_view const datatype_iri) {
+        return find_map_entry(datatype_iri, [](auto const &entry) { return std::cref(entry); });
     }
 
     /**
@@ -213,19 +267,6 @@ public:
     }
 
     /**
-     * Try to get the type promotion function for datatype_iri.
-     * @param datatype_iri datatype IRI string
-     * @return if available the promotion function else nullptr
-     */
-    inline static promote_fptr_t get_promote(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
-            return entry.promote_fptr;
-        });
-
-        return res.has_value() ? *res : nullptr;
-    }
-
-    /**
      * Get the promotion rank for datatype_iri.
      * @param datatype_iri datatype IRI string
      * @return promotion rank if datatype exists else 0
@@ -236,19 +277,6 @@ public:
         });
 
         return res.has_value() ? *res : 0;
-    }
-
-    /**
-     * Try to get the type supertype conversion function for datatype_iri.
-     * @param datatype_iri datatype IRI string
-     * @return if available the conversion function else nullptr
-     */
-    inline static into_supertype_fptr_t get_into_supertype(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
-            return entry.into_supertype_fptr;
-        });
-
-        return res.has_value() ? *res : nullptr;
     }
 
     /**
@@ -263,6 +291,14 @@ public:
 
         return res.has_value() ? *res : 0;
     }
+
+    /**
+     * Tries to find a conversion to convert lhs_type_iri and rhs_type_iri into a
+     * common type to be used in e.g. numeric calculations.
+     *
+     * @return if possible a conversion that converts lhs and rhs into a common type
+     */
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(std::string_view lhs_type_iri, std::string_view rhs_type_iri);
 };
 
 
@@ -292,31 +328,19 @@ inline void DatatypeRegistry::add() {
         }
     }();
 
-    auto const [promote_fptr, promote_rank] = []() -> std::tuple<promote_fptr_t, unsigned> {
+    auto const promote_rank = []() -> unsigned {
         if constexpr (datatypes::PromotableLiteralDatatype<LiteralDatatype_t>) {
-            auto const fptr = [](std::any const &value) -> ConversionResult {
-                return ConversionResult{
-                        LiteralDatatype_t::promoted::identifier,
-                        LiteralDatatype_t::promote(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
-            };
-
-            return std::make_tuple(fptr, LiteralDatatype_t::promotion_rank);
+            return LiteralDatatype_t::promotion_rank;
         } else {
-            return std::make_tuple(nullptr, 0);
+            return 0;
         }
     }();
 
-    auto const [into_supertype_fptr, subtype_rank] = []() -> std::tuple<into_supertype_fptr_t, unsigned> {
+    auto const subtype_rank = []() -> unsigned {
         if constexpr (datatypes::SubtypedLiteralDatatype<LiteralDatatype_t>) {
-            auto const fptr = [](std::any const &value) -> ConversionResult {
-                return ConversionResult{
-                        LiteralDatatype_t::supertype::identifier,
-                        LiteralDatatype_t::into_supertype(std::any_cast<typename LiteralDatatype_t::cpp_type>(value))};
-            };
-
-            return std::make_tuple(fptr, LiteralDatatype_t::subtype_rank);
+            return LiteralDatatype_t::subtype_rank;
         } else {
-            return std::make_tuple(nullptr, 0);
+            return 0;
         }
     }();
 
@@ -330,9 +354,8 @@ inline void DatatypeRegistry::add() {
             },
             ebv_fptr,
             num_ops,
-            promote_fptr,
+            make_conversion_table_for<LiteralDatatype_t>().into_runtime_table(),
             promote_rank,
-            into_supertype_fptr,
             subtype_rank});
 }
 
@@ -378,6 +401,113 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
                 return LiteralDatatype_t::neg(operand_val);
             }
     };
+}
+
+inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_type_conversion(
+        std::string_view const lhs_type_iri,
+        std::string_view const rhs_type_iri) {
+
+    auto &conversion_mappings = get_conversion_mappings_mut();
+
+    // try to find existing conversion entry
+    if (auto it = conversion_mappings.find(std::tie(lhs_type_iri, rhs_type_iri)); it != conversion_mappings.end()) {
+        if (it->second.has_value()) {
+            return DatatypeConverter{ *it };
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    auto const &lhs_entry = get_entry(lhs_type_iri).value().get();
+    auto const &rhs_entry = get_entry(rhs_type_iri).value().get();
+
+    // lesser should be type entry of the type with lower subtype rank
+    auto const find_conv_impl = [](auto const &lesser, auto const &greater) -> std::optional<std::tuple<RuntimeConversionEntry const &, RuntimeConversionEntry const &>> {
+        // initial subtype offset, aka. at which subtype depth/rank to start searching
+        auto const init_s_off = greater.subtype_rank - lesser.subtype_rank;
+
+        for (size_t s_off = init_s_off;
+             s_off < greater.conversion_table.size() && s_off - init_s_off < lesser.conversion_table.size();
+             ++s_off) {
+
+            // get promotions table for given subtype level
+            auto const &lesser_s_promotions = lesser.conversion_table[s_off - init_s_off];
+            auto const &greater_s_promotions = greater.conversion_table[s_off];
+
+            if (lesser_s_promotions.size() == greater_s_promotions.size()) {
+                // same promotion rank
+                // so either it is the first conversion or none at this level
+
+                if (lesser_s_promotions[0].target_type_iri == greater_s_promotions[0].target_type_iri) {
+                    return std::tie(lesser_s_promotions[0], greater_s_promotions[0]);
+                }
+
+                continue;
+            }
+
+            if (lesser_s_promotions.size() < greater_s_promotions.size()) {
+                // lesser has lower promotion rank
+                // => greater needs to be promoted
+
+                assert(lesser_s_promotions.size() > 0);
+                auto const p_off = greater_s_promotions.size() - lesser_s_promotions.size();
+
+                auto const &lesser_p_conv = lesser_s_promotions[0];
+                auto const &greater_p_conv = greater_s_promotions[p_off];
+
+                if (greater_p_conv.target_type_iri == lesser_p_conv.target_type_iri) {
+                    return std::tie(lesser_p_conv, greater_p_conv);
+                }
+            } else {
+                // greater has lower promotion rank
+                // => lesser needs to be promoted
+
+                assert(greater_s_promotions.size() > 0);
+                auto const p_off = lesser_s_promotions.size() - greater_s_promotions.size();
+
+                auto const &lesser_p_conv = lesser_s_promotions[p_off];
+                auto const &greater_p_conv = greater_s_promotions[0];
+
+                if (greater_p_conv.target_type_iri == lesser_p_conv.target_type_iri) {
+                    return std::tie(lesser_p_conv, greater_p_conv);
+                }
+            }
+        }
+
+        return std::nullopt;
+    };
+
+    // call find_conv_impl with entries in correct order (lesser s rank, greater s rank)
+    auto const res = [&]() -> std::optional<std::tuple<RuntimeConversionEntry const &, RuntimeConversionEntry const &>> {
+        if (lhs_entry.subtype_rank < rhs_entry.subtype_rank) {
+            return find_conv_impl(lhs_entry, rhs_entry);
+        } else {
+            auto res = find_conv_impl(rhs_entry, lhs_entry);
+
+            if (res.has_value()) {
+                // swap values to return pair in correct order (lhs, rhs)
+                return std::tie(std::get<1>(*res), std::get<0>(*res));
+            }
+
+            return res;
+        }
+    }();
+
+    if (!res.has_value()) {
+        return std::nullopt;
+    }
+
+    assert(std::get<0>(*res).target_type_iri == std::get<1>(*res).target_type_iri);
+    ConversionEntry conversion {
+            std::get<0>(*res).target_type_iri,
+            std::get<0>(*res).conversion_fn,
+            std::get<1>(*res).conversion_fn};
+
+    // insert found conversion into cache
+    auto const [it, _] = conversion_mappings.emplace(std::piecewise_construct,
+                                                     std::forward_as_tuple(lhs_type_iri, rhs_type_iri),
+                                                     std::forward_as_tuple(conversion));
+    return DatatypeConverter{ *it };
 }
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
