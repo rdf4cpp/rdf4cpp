@@ -153,167 +153,6 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
-/**
- * @brief use type substitution to convert lhs and rhs into the same type
- * @param lhs_entry the datatype entry for the type of lhs
- * @param lhs_value the value of lhs
- * @param rhs_entry the datatype entry for the type of rhs
- * @param rhs_value the value of rhs
- */
-void substitute(
-        datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
-        std::any &lhs_value,
-        datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
-        std::any &rhs_value) {
-
-    assert(lhs_entry.datatype_iri != rhs_entry.datatype_iri);
-
-    using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
-    using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
-
-    auto const substitute_impl = [](auto const &to_substitute_entry, auto const &to_substitute_value, auto const &target_entry) {
-        DatatypeEntry result_entry = to_substitute_entry;
-        ConversionResult pr{ to_substitute_entry.datatype_iri, to_substitute_value };
-
-        while (result_entry.subtype_rank > target_entry.subtype_rank) {
-            pr = result_entry.into_supertype_fptr(pr.converted_value);
-            result_entry = datatypes::registry::DatatypeRegistry::get_entry(pr.converted_iri).value();
-        }
-
-        if (result_entry.subtype_rank != target_entry.subtype_rank) {
-            throw std::runtime_error{ "subtype substitution error, invalid hierarchy" };
-        }
-
-        return std::make_pair(result_entry, pr.converted_value);
-    };
-
-    if (lhs_entry.subtype_rank == 0 && rhs_entry.subtype_rank == 0) {
-        // nothing to do
-        return;
-    } else if (lhs_entry.subtype_rank < rhs_entry.subtype_rank) {
-        // substitute rhs
-        auto const [substituted_entry, substituted_value] = substitute_impl(rhs_entry, rhs_value, lhs_entry);
-
-        rhs_entry = substituted_entry;
-        rhs_value = substituted_value;
-    } else if (lhs_entry.subtype_rank > rhs_entry.subtype_rank) {
-        // substitute lhs
-        auto const [substituted_entry, substituted_value] = substitute_impl(lhs_entry, lhs_value, rhs_entry);
-
-        lhs_entry = substituted_entry;
-        lhs_value = substituted_value;
-    } else {
-        // substitute both once
-        // This path will be used if the types are at the same subtype level but promotion failed.
-        // When this happens it means there is no connecting promotion path between the types at the current
-        // subtype level, and we have to try to promote again one level up.
-
-        if (lhs_entry.into_supertype_fptr == nullptr || rhs_entry.into_supertype_fptr == nullptr) {
-            throw std::runtime_error{ "subtype substitution unsupported for type" };
-        }
-
-        ConversionResult cr_lhs = lhs_entry.into_supertype_fptr(lhs_value);
-        ConversionResult cr_rhs = rhs_entry.into_supertype_fptr(rhs_value);
-
-        DatatypeEntry e_lhs = datatypes::registry::DatatypeRegistry::get_entry(cr_lhs.converted_iri).value();
-        DatatypeEntry e_rhs = datatypes::registry::DatatypeRegistry::get_entry(cr_rhs.converted_iri).value();
-
-        lhs_entry = e_lhs;
-        lhs_value = cr_lhs.converted_value;
-        rhs_entry = e_rhs;
-        rhs_value = cr_rhs.converted_value;
-    }
-}
-
-/**
- * @brief use type promotion to try to convert lhs and rhs to the same type
- *
- * @param lhs_entry the datatype entry for the type of lhs
- * @param lhs_value the value of lhs
- * @param rhs_entry the datatype entry for the type of rhs
- * @param rhs_value the value of rhs
- */
-void promote(
-        datatypes::registry::DatatypeRegistry::DatatypeEntry &lhs_entry,
-        std::any &lhs_value,
-        datatypes::registry::DatatypeRegistry::DatatypeEntry &rhs_entry,
-        std::any &rhs_value) {
-
-    assert(lhs_entry.datatype_iri != rhs_entry.datatype_iri);
-
-    using DatatypeEntry = datatypes::registry::DatatypeRegistry::DatatypeEntry;
-    using ConversionResult = datatypes::registry::DatatypeRegistry::ConversionResult;
-
-    auto const promote_impl = [](auto const &to_promote_entry, auto const &to_promote_value, auto const &target_entry) {
-        DatatypeEntry result_entry = to_promote_entry;
-        ConversionResult pr{ to_promote_entry.datatype_iri, to_promote_value };
-
-        while (pr.converted_iri != target_entry.datatype_iri && result_entry.promote_fptr != nullptr) {
-            pr = result_entry.promote_fptr(pr.converted_value);
-            result_entry = datatypes::registry::DatatypeRegistry::get_entry(pr.converted_iri).value();
-        }
-
-        if (pr.converted_iri != target_entry.datatype_iri) {
-            throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
-        }
-
-        return std::make_pair(result_entry, pr.converted_value);
-    };
-
-    if (lhs_entry.promote_rank > rhs_entry.promote_rank) {
-        // promote lhs
-        auto const [promoted_entry, promoted_value] = promote_impl(lhs_entry, lhs_value, rhs_entry);
-
-        lhs_entry = promoted_entry;
-        lhs_value = promoted_value;
-    } else if (lhs_entry.promote_rank < rhs_entry.promote_rank) {
-        // promote rhs
-        auto const [promoted_entry, promoted_value] = promote_impl(rhs_entry, rhs_value, lhs_entry);
-
-        rhs_entry = promoted_entry;
-        rhs_value = promoted_value;
-    } else {
-        throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
-    }
-}
-
-/**
- * @brief uses type promotion and subtype substitution to convert lhs and rhs to the same type
- *
- * @param lhs_entry the datatype entry for the type of lhs
- * @param lhs_value the value of lhs
- * @param rhs_entry the datatype entry for the type of rhs
- * @param rhs_value the value of rhs
- * @return a tuple consiting of: the result type, the final value of lhs, the final value of rhs
- */
-std::tuple<datatypes::registry::DatatypeRegistry::DatatypeEntry, std::any, std::any> equalize(
-        datatypes::registry::DatatypeRegistry::DatatypeEntry lhs_entry,
-        std::any lhs_value,
-        datatypes::registry::DatatypeRegistry::DatatypeEntry rhs_entry,
-        std::any rhs_value) {
-
-    while (lhs_entry.datatype_iri != rhs_entry.datatype_iri) {
-        if (lhs_entry.subtype_rank == rhs_entry.subtype_rank) {
-            try {
-                // try to promote, if it doesn't work we are not in the same promotion hierarchy
-                promote(lhs_entry, lhs_value, rhs_entry, rhs_value);
-                break;
-            } catch (std::runtime_error const &e) {
-                // cannot go one subtype level up, and promotion did not work
-                // => the types are not covertible into a common type
-                if (lhs_entry.subtype_rank == 0) {
-                    throw e;
-                }
-            }
-        }
-
-        // either bring types up to the same level, or decrease the rank of both by 1
-        substitute(lhs_entry, lhs_value, rhs_entry, rhs_value);
-    }
-
-    return std::make_tuple(lhs_entry, lhs_value, rhs_value);
-}
-
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
     auto const this_type = this->handle_.type();
@@ -323,22 +162,34 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         throw std::runtime_error{ "node type mismatch, expected literal" };
     }
 
-    auto const [result_entry, lhs_val, rhs_val] = [&]() {
+    auto const [res_identifier, lhs_val, rhs_val] = [&]() {
         auto const this_lit_type = this->handle_.literal_backend().datatype_id;
         auto const other_lit_type = other.handle_.literal_backend().datatype_id;
 
-        auto this_entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value();
-
         if (this_lit_type == other_lit_type) {
-            return std::make_tuple(this_entry, this->value(), other.value());
+            return std::make_tuple(this->datatype().identifier(), this->value(), other.value());
         } else {
-            auto other_entry = datatypes::registry::DatatypeRegistry::get_entry(other.datatype().identifier()).value();
-            return equalize(this_entry, this->value(), other_entry, other.value());
+            auto const lhs_datatype = this->datatype().identifier();
+            auto const rhs_datatype = other.datatype().identifier();
+
+            auto const equalizer = datatypes::registry::DatatypeRegistry::get_common_type_conversion(
+                    lhs_datatype,
+                    rhs_datatype);
+
+            if (!equalizer.has_value()) {
+                throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
+            }
+
+            return std::make_tuple(equalizer->target_type_iri(),
+                                   equalizer->convert(lhs_datatype, this->value()),
+                                   equalizer->convert(rhs_datatype, other.value()));
         }
     }();
 
+    auto const result_entry = datatypes::registry::DatatypeRegistry::get_entry(res_identifier).value().get();
+
     if (!result_entry.numeric_ops.has_value()) {
-        throw std::runtime_error{ "result datatype not numeric" };
+        throw std::runtime_error{ "common datatype is not numeric" };
     }
 
     auto op_res = op_select(*result_entry.numeric_ops)(lhs_val, rhs_val);
@@ -358,7 +209,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
         throw std::runtime_error{ "node type mismatch, expected literal" };
     }
 
-    auto const entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value();
+    auto const &entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value().get();
 
     if (!entry.numeric_ops.has_value()) {
         throw std::runtime_error{ "datatype not numeric" };

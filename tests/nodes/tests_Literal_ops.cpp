@@ -123,7 +123,7 @@ TEST_CASE("Literal - numeric ops") {
         auto const lhs = Literal::make<datatypes::xsd::Boolean>(true);
         auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
 
-        CHECK_THROWS_WITH_AS(lhs + rhs, "result datatype not numeric", std::runtime_error);
+        CHECK_THROWS_WITH_AS(lhs + rhs, "common datatype is not numeric", std::runtime_error);
     }
 
     SUBCASE("add literal type mismatch") {
