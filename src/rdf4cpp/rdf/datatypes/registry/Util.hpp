@@ -26,6 +26,13 @@ constexpr Acc tuple_fold_impl(TupleLike &&tup, Acc init, F &&f, std::index_seque
     return init;
 }
 
+template<typename TupleLike, typename Acc, typename F, size_t ...Ixs>
+constexpr Acc tuple_type_fold_impl(Acc init, F &&f, std::index_sequence<Ixs...>) {
+    ((init = f.template operator()<std::tuple_element_t<Ixs, TupleLike>>(std::move(init))), ...);
+    return init;
+}
+
+
 } // namespace tuple_util_detail
 
 /**
@@ -43,7 +50,9 @@ constexpr auto tuple_map(TupleLike &&tup, F &&f) {
 }
 
 /**
- * Fold all elements in a tuple into a single object
+ * Fold all elements in a tuple into a single object.
+ * The provided function f will be repeatedly called as f(acc, element) for each element in the
+ * tuple and is expected to return the acc for the next invocation.
  *
  * @tparam Acc the type of the accumulator
  * @param tup a std::tuple like object to fold
@@ -58,64 +67,45 @@ constexpr Acc tuple_fold(TupleLike &&tup, Acc init, F &&f) {
 }
 
 /**
- * Equality function object for tuples of the form std::tuple<T, T> where
- * the order of the tuple should be disregarded.
+ * Simmilar to tuple_fold except that it is not folding over the actual elements
+ * of the tuple, but just their types.
+ * The provided function f will be repeatedly called as f.template operator()<Element>(acc)
+ * for each type in the tuple and is expected to return the accumulator for the next invocation.
  *
- * => UnorderedPairEqual{}(std::make_tuple(a, b), std::make_tuple(b, a)) == true
+ * @example
+ * @code
+ * using tuple_t = std::tuple<int, double, float>;
  *
- * @tparam T
+ * std::string all_types = tuple_type_fold<tuple_t>(std::string{}, []<typename T>(std::string &&acc) {
+ *     return std::move(acc) + typeid(T).name() + " ";
+ * });
+ * @endcode
+ *
+ * @tparam TupleLike a std::tuple like type to be folded
+ * @tparam Acc the type of the accumulator
+ * @param init the initial value of the accumulator
+ * @param f a unary operation mapping a accumulator to the next accumulator
+ * @return the final accumulator value
  */
-template<typename T = void>
-struct UnorderedPairEqual {
-    constexpr bool operator()(std::tuple<T, T> const &lhs, std::tuple<T, T> const &rhs) const noexcept {
-        return lhs == rhs
-               || lhs == std::tie(std::get<1>(rhs), std::get<0>(rhs));
-    }
-};
+template<typename TupleLike, typename Acc, typename F>
+constexpr Acc tuple_type_fold(Acc init, F &&f) {
+    constexpr size_t tup_size = std::tuple_size_v<std::remove_cvref_t<TupleLike>>;
+    return tuple_util_detail::tuple_type_fold_impl<TupleLike>(std::move(init), std::forward<F>(f), std::make_index_sequence<tup_size>{});
+}
 
 /**
- * Transparent version of UnorderedPairEqual
+ * Check if all given types in the Ts parameter pack are equal.
+ *
+ * @tparam Ts types to check for equality
  */
+template<typename ...Ts>
+struct AllSame : std::false_type {};
+
 template<>
-struct UnorderedPairEqual<void> {
-    using is_transparent = void;
+struct AllSame<> : std::true_type {};
 
-    template<typename T, typename U>
-    constexpr bool operator()(std::tuple<T, T> const &lhs, std::tuple<U, U> const &rhs) const noexcept {
-        return lhs == rhs
-               || lhs == std::tie(std::get<1>(rhs), std::get<0>(rhs));
-    }
-};
-
-/**
- * Hasher function object to hash tuples of the form std::tuple<T, T>
- * where the order of elements should be disregarded.
- *
- * => UnorderedPairHash{}(std::make_tuple(a, b)) == UnorderedPairHash{}(std::make_tuple((b, a))
- *
- * @tparam T
- * @tparam Hasher the hasher that should be used to hash the individual elements
- */
-template<typename T = void, typename Hasher = std::hash<T>>
-struct UnorderedPairHash {
-    constexpr size_t operator()(std::tuple<T, T> const &pair) const noexcept {
-        return Hasher{}(std::get<0>(pair)) ^ Hasher{}(std::get<1>(pair));
-    }
-};
-
-/**
- * Transparent version of UnorderedPairHash
- * @tparam Hasher
- */
-template<typename Hasher>
-struct UnorderedPairHash<void, Hasher> {
-    using is_transparent = void;
-
-    template<typename T>
-    constexpr size_t operator()(std::tuple<T, T> const &pair) const noexcept {
-        return Hasher{}(std::get<0>(pair)) ^ Hasher{}(std::get<1>(pair));
-    }
-};
+template<typename T, typename ...Ts>
+struct AllSame<T, Ts...> : std::bool_constant<(std::is_same_v<T, Ts> && ...)> {};
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util
 
