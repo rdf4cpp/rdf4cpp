@@ -3,98 +3,28 @@
 
 #include <any>
 #include <cstddef>
+#include <functional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-
-struct RuntimeConversionEntry {
-    std::string target_type_iri;
-    std::function<std::any(std::any const &)> conversion_fn;
-};
-
-using RuntimeConversionTable = std::vector<std::vector<RuntimeConversionEntry>>;
 
 
 namespace conversion_detail {
 
 /**
- * function composition of two functions f and g
- * @return the composed function
- */
-template<typename F, typename G>
-constexpr auto compose_fns(F f, G g) {
-    return [f, g](auto &&x) {
-        return f(g(std::forward<decltype(x)>(x)));
-    };
-}
-
-/**
- * A conversion to a TargetType
+ * Generate a linear conversion table
+ * consisting only of one type of conversion,
+ * so either only promotion or only subtype substitution.
  *
- * @tparam TargetTypeImpl the target of the conversion
- * @tparam F the function to take an here unspecified BaseType to the TargetType
+ * This is a recursive function and the first call is expected to have BaseType == Type.
  *
- * Note: The base type is not specified here because this is only supposed
- *      to be used in conjunction with ConversionTable
- */
-template<LiteralDatatype TargetTypeImpl, typename F>
-struct ConversionEntry {
-    using TargetType = TargetTypeImpl;
-    F convert;
-};
-
-/**
- * A holder for a compiletime generated conversion table
- * of the form
- *
- * std::tuple<
- *     std::tuple<ConversionEntry<LiteralDatatype Target, ConversionFunction>, ...>,     <-- direct promotions of LiteralDatatypeImpl
- *     std::tuple<ConversionEntry<LiteralDatatype Target, ConversionFunction2>, ...>,    <-- direct promotions of Supertype of LiteralDatatypeImpl
- *     ...>
- *
- * @tparam LiteralDatatypeImpl The LiteralDatatype to which this table belongs
- * @tparam Table The actual compile time generated table type
- */
-template<LiteralDatatype LiteralDatatypeImpl, typename Table>
-struct ConversionTable {
-    Table conversion_fns;
-
-    /**
-     * Turn the compile time representation of this conversion table (Table)
-     * into a type erased representation that can be queried and used at runtime
-     *
-     * @return runtime representation of this
-     */
-    [[nodiscard]]
-    inline RuntimeConversionTable into_runtime_table() const noexcept {
-        return util::tuple_fold(this->conversion_fns, std::vector<std::vector<RuntimeConversionEntry>>{}, [](auto acc, auto const &layer) {
-            auto rt = util::tuple_fold(layer, std::vector<RuntimeConversionEntry>{}, [](auto acc, auto const &ct_conv) {
-                auto rte = RuntimeConversionEntry {
-                        std::string{std::remove_cvref_t<decltype(ct_conv)>::TargetType::identifier},
-                        [f = ct_conv.convert](std::any const &value) -> std::any {
-                            auto cpp_value = std::any_cast<typename LiteralDatatypeImpl::cpp_type>(value);
-                            return f(cpp_value);
-                        }};
-
-                acc.push_back(rte);
-                return acc;
-            });
-
-            acc.push_back(rt);
-            return acc;
-        });
-    }
-};
-
-/**
- * Generate a linear conversion table_acc
- * consisting only of conversions in one direction,
- * so either only promotion or only subtype substitution
+ * for more details see: make_promotion_layer or make_subtype_layer
  *
  * @tparam BaseType the type for which to generate the linear conversions
  * @tparam Type the current type getting processed in the linear hierarchy
@@ -110,15 +40,15 @@ template<LiteralDatatype BaseType,
          template<LiteralDatatype> typename Conversion,
          template<LiteralDatatype> typename HasConversion,
          template<LiteralDatatype, LiteralDatatype> typename RankRule,
-         typename ...ConvertEntries>
-consteval auto make_conversion_table_impl(std::tuple<ConvertEntries...> const &table_acc) {
+         ConversionLayer LayerAcc>
+consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_acc) {
     if constexpr (!HasConversion<Type>::value) {
         return table_acc;
     } else {
         using next = Conversion<Type>;
 
         // defining a hierarchy which does not follow the rank rules (see adaptors::PromoteRankRule, adaptors::SubtypeRankRule)
-        // would result in not being able to find all conversions between types
+        // would result in not being able to find all conversions between types (because of assumptions used in the search algorithm)
         // and thus yield unexpected behaviour when trying to convert
         // e.g. with
         //        A --> Z               Legend:
@@ -134,21 +64,34 @@ consteval auto make_conversion_table_impl(std::tuple<ConvertEntries...> const &t
                       "detected invalid hierarchy, would not be able to discover all conversions");
 
         if constexpr (BaseType::identifier == Type::identifier) {
-            ConversionEntry<typename next::converted, decltype(&next::convert)> next_conversion{&next::convert};
+            struct FirstConversion {
+                using source_type = Type;
+                using target_type = typename next::converted;
 
-            auto next_table = std::tuple_cat(table_acc, std::make_tuple(next_conversion));
-            return make_conversion_table_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                    return next::convert(value);
+                }
+            };
+
+            auto next_table = std::tuple_cat(table_acc, std::make_tuple(FirstConversion{}));
+            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
         } else {
             using table_type_t = std::remove_reference_t<decltype(table_acc)>;
             auto const table_size = std::tuple_size_v<table_type_t>;
 
-            auto const prev_promotion_fn = std::get<table_size - 1>(table_acc).convert;
-            auto new_promotion_fn = compose_fns(next::convert, prev_promotion_fn);
+            using prev_promotion_t = typename std::tuple_element_t<table_size - 1, table_type_t>;
 
-            ConversionEntry<typename next::converted, decltype(new_promotion_fn)> next_conversion{new_promotion_fn};
+            struct NextConversion {
+                using source_type = typename prev_promotion_t::source_type;
+                using target_type = typename next::converted;
 
-            auto next_table = std::tuple_cat(table_acc, std::make_tuple(next_conversion));
-            return make_conversion_table_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                    return next::convert(prev_promotion_t::convert(value));
+                }
+            };
+
+            auto next_table = std::tuple_cat(table_acc, std::make_tuple(NextConversion{}));
+            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
         }
     }
 }
@@ -168,15 +111,13 @@ struct PromoteConversion<LiteralDatatypeImpl> {
     using converted = typename LiteralDatatypeImpl::promoted;
     using converted_cpp_type = typename LiteralDatatypeImpl::promoted_cpp_type;
 
-    static constexpr size_t rank = LiteralDatatypeImpl::promotion_rank;
-
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::promote(value);
     }
 };
 
 /**
- * Adapt subtype substitution to a common "conversion" interface
+ * Adapt subtype substitution to a common "conversion" interface.
  */
 template<LiteralDatatype LiteralDatatypeImpl>
 struct SupertypeConversion;
@@ -187,8 +128,6 @@ struct SupertypeConversion<LiteralDatatypeImpl> {
 
     using converted = typename LiteralDatatypeImpl::supertype;
     using converted_cpp_type = typename LiteralDatatypeImpl::super_cpp_type;
-
-    static constexpr size_t rank = LiteralDatatypeImpl::subtype_rank;
 
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::into_supertype(value);
@@ -221,15 +160,28 @@ struct SubtypeRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Sup
 } // namespace adaptor
 
 /**
- * Generate the linear conversion table consisting of type promotion conversions for a LiteralDatatype
+ * Generate the linear conversion table consisting only of type promotion conversions with a LiteralDatatype
+ * as a source
  *
- * @tparam Type the datatype to generate the promotion table for
+ * Example: Given the hierarchy
+ *         A    --> Z
+ *      |    |      |
+ *     B --> B2 --> Y
+ *     |
+ *     C
+ *
+ * make_promotion_layer<B>()  would generate a ConversionLayer containing: (B -> B2, B -> Y)
+ * make_promotion_layer<A>()  would generate a ConversionLayer containing: (A -> Z)
+ * make_promotion_layer<B2>() would generate a ConversionLayer containing: (B2 -> Y)
+ * make_promotion_layer<Z>()  would generate a ConversionLayer containing nothing
+ *
+ * @tparam Type the source datatype to generate the promotion table for
  * @return compiletime linear promotion table
  */
 template<LiteralDatatype Type>
-consteval auto make_promotion_table() {
+consteval ConversionLayer auto make_promotion_layer() {
     if constexpr (PromotableLiteralDatatype<Type>) {
-        return conversion_detail::make_conversion_table_impl<Type,
+        return conversion_detail::make_conversion_layer_impl<Type,
                                                              Type,
                                                              conversion_detail::adaptor::PromoteConversion,
                                                              conversion_detail::adaptor::PromoteConcept,
@@ -240,15 +192,28 @@ consteval auto make_promotion_table() {
 }
 
 /**
- * Generate the linear conversion table consisting of subtype substitution conversions for a LiteralDatatype
+ * Generate the linear conversion table consisting only of subtype substitution conversions with a LiteralDatatype
+ * as a source.
  *
- * @tparam Type the datatype to generate the subtype substitution table for
+ * Example: Given the hierarchy
+ *         A    --> Z
+ *      |    |      |
+ *     B --> B2 --> Y
+ *     |
+ *     C
+ *
+ * make_subtype_layer<C>()  would generate a ConversionLayer containing: (C -> B, C -> A)
+ * make_subtype_layer<B2>() would generate a ConversionLayer containing: (B2 -> A)
+ * make_subtype_layer<Y>()  would generate a ConversionLayer containing (Y -> Z)
+ * make_subtype_layer<A>()  would generate a ConversionLayer containing nothing
+ *
+ * @tparam Type the source datatype to generate the subtype substitution table for
  * @return compiletime linear subtype substitution table
  */
 template<LiteralDatatype Type>
-consteval auto make_subtype_table() {
+consteval ConversionLayer auto make_subtype_layer() {
     if constexpr (SubtypedLiteralDatatype<Type>) {
-        return conversion_detail::make_conversion_table_impl<Type,
+        return conversion_detail::make_conversion_layer_impl<Type,
                                                              Type,
                                                              conversion_detail::adaptor::SupertypeConversion,
                                                              conversion_detail::adaptor::SubtypeConcept,
@@ -261,36 +226,73 @@ consteval auto make_subtype_table() {
 /**
  * Generate the combined table that contains conversions
  * for every type that is reachable from Type by a combination
- * of subtype substitution and type promotion.
+ * of subtype substitution and type promotion. (For a definition of reachable see make_conversion_table_for.)
  *
- * For a definition of reachable see make_conversion_table_for.
+ * The table gets generated by combining linear layers generated by make_subtype_layer and make_promotion_layer.
+ *      - The first layer is just the promotion layer for `Type` with an identity conversion prepended at the beginning.
+ *      - Every other layer gets generated by: Foreach `target` in the linear subtype layer of `Type` generate the linear promotion layer
+ *          and compose the layer (element-wise) with the subtype conversion that was required to reach the `target`. Then the conversion
+ *          from `Type` to `target` is prepended at the front.
+ *
+ * Example: Given the hierarchy:
+ *         A   --> Z
+ *      |    |
+ *     B --> C
+ *
+ * So resulting ConversionTable for B is generated like this:
+ *      tuple{
+ *           tuple_cat( tuple{B -> B}, make_promotion_layer<B>() ),
+ *           tuple_cat( tuple{B -> A}, tuple_map( make_promotion_layer<A>(), `compose with B -> A` ) )
+ *      }
+ *      ==
+ *      tuple{
+ *           tuple{B -> B, B -> C},
+ *           tuple{B -> A, tuple_map(tuple{A -> Z}, `compose with B -> A` )}
+ *      }
+ *      ==
+ *      tuple{
+ *           tuple{B -> B, B -> C},
+ *           tuple{B -> A, B -> Z}
+ *      }
  *
  * @tparam Type the datatype to generate the combined table for
  * @return the combined table
  */
 template<LiteralDatatype Type>
-consteval auto make_combined_conversion_table() {
-    auto id_f = [](auto &&x) { return std::forward<decltype(x)>(x); };
-    conversion_detail::ConversionEntry<Type, decltype(id_f)> id_conversion{ id_f };
+consteval ConversionTable auto make_conversion_table() {
+    struct IdConversion {
+        using source_type = Type;
+        using target_type = Type;
 
-    auto level_0_table = std::tuple_cat(std::make_tuple(id_conversion), make_promotion_table<Type>());
+        inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+            return value;
+        }
+    };
+
+    auto level_0_table = std::tuple_cat(std::make_tuple(IdConversion{}), make_promotion_layer<Type>());
 
     if constexpr (!SubtypedLiteralDatatype<Type>) {
         return std::make_tuple(level_0_table);
     } else {
-        auto s_table = make_subtype_table<Type>();
+        ConversionLayer auto const s_table = make_subtype_layer<Type>();
 
         // generate the linear promotion table for each supertype
-        auto other_level_tables = util::tuple_map(s_table, []<LiteralDatatype SuperType, typename SF>(ConversionEntry<SuperType, SF> const &to_super) {
-
-            auto const level_p_table = make_promotion_table<SuperType>();
+        auto other_level_tables = util::tuple_map(s_table, []<ConversionEntry ToSuper>(ToSuper const &to_super) {
+            ConversionLayer auto const level_p_table = make_promotion_layer<typename ToSuper::target_type>();
 
             // compose each promotion for the supertype with the function to convert to the supertype
             // to get direct conversions from Type to promoted supertype
-            auto const to_promoted_supers = util::tuple_map(level_p_table, [=]<LiteralDatatype SuperPromotedType, typename PF>(ConversionEntry<SuperPromotedType, PF> const &promote_super) {
+            auto const to_promoted_supers = util::tuple_map(level_p_table, []<ConversionEntry PromoteSuper>(PromoteSuper) {
+                struct PromotedSuperConversion {
+                    using source_type = typename ToSuper::source_type;
+                    using target_type = typename PromoteSuper::target_type;
 
-                auto const convert = conversion_detail::compose_fns(promote_super.convert, to_super.convert);
-                return conversion_detail::ConversionEntry<SuperPromotedType, decltype(convert)>{convert};
+                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                        return PromoteSuper::convert(ToSuper::convert(value));
+                    }
+                };
+
+                return PromotedSuperConversion{};
             });
 
             return std::tuple_cat(std::make_tuple(to_super), to_promoted_supers);
@@ -301,15 +303,6 @@ consteval auto make_combined_conversion_table() {
 }
 
 } // namespace conversion_detail
-
-
-/**
- * a type that can be turned into a runtime conversion table
- */
-template<typename Table>
-concept IntoRuntimeConversionTable = requires(Table ctable) {
-                                         { ctable.into_runtime_table() } -> std::convertible_to<RuntimeConversionTable>;
-                                     };
 
 /**
  * Generate a compiletime conversion table for the given type
@@ -323,15 +316,31 @@ concept IntoRuntimeConversionTable = requires(Table ctable) {
  *      are included, meaning paths that do a promotion first and then go to a supertype
  *      are not included
  *
+ * for more details see: conversion_detail::make_conversion_table
+ *
  * @tparam T the type for which to generate the table
  * @return the generated table
  */
 template<LiteralDatatype T>
-consteval IntoRuntimeConversionTable auto make_conversion_table_for() {
-    constexpr auto combined_table = conversion_detail::make_combined_conversion_table<T>();
-    return conversion_detail::ConversionTable<T, decltype(combined_table)>{ combined_table };
+consteval ConversionTable auto make_conversion_table_for() {
+    return conversion_detail::make_conversion_table<T>();
 }
 
+/**
+ * Generate a runtime conversion for the given type
+ * by first generating the compiletime version with make_conversion_table_for
+ * and then constructing a RuntimeConversionTable from it.
+ *
+ * for more details see: make_conversion_table_for
+ *
+ * @tparam T the type for which to generate the table
+ * @return the generated runtime table
+ */
+template<LiteralDatatype T>
+RuntimeConversionTable make_runtime_conversion_table_for() {
+    using convert_table_t = decltype(make_conversion_table_for<T>());
+    return RuntimeConversionTable::from_concrete<convert_table_t>();
+}
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 
