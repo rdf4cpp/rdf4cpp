@@ -180,9 +180,9 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
                 throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
             }
 
-            return std::make_tuple(equalizer->target_type_iri(),
-                                   equalizer->convert(lhs_datatype, this->value()),
-                                   equalizer->convert(rhs_datatype, other.value()));
+            return std::make_tuple(equalizer->target_type_iri,
+                                   equalizer->convert_lhs(this->value()),
+                                   equalizer->convert_rhs(other.value()));
         }
     }();
 
