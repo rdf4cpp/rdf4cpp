@@ -69,7 +69,7 @@ public:
         RuntimeConversionEntry::convert_fptr_t convert_lhs;
         RuntimeConversionEntry::convert_fptr_t convert_rhs;
 
-        constexpr static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
+        inline static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
             assert(l.target_type_iri == r.target_type_iri);
 
             return DatatypeConverter {
