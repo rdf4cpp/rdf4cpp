@@ -9,9 +9,6 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-#include <cstdint>
-#include <ostream>
-
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.

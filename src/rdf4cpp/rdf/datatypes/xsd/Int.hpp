@@ -5,12 +5,13 @@
 #ifndef RDF4CPP_XSD_INT_HPP
 #define RDF4CPP_XSD_INT_HPP
 
-#include <cstdint>
-#include <ostream>
-#include <charconv>
-
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
+
+#include <charconv>
+#include <cstdint>
+#include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
@@ -36,7 +37,9 @@ struct DatatypeSupertypeMapping<xsd_int> {
  */
 template<>
 inline capabilities::Default<xsd_int>::cpp_type capabilities::Default<xsd_int>::from_string(std::string_view s) {
+
     if (s.starts_with('+')) {
+        // from_chars does not allow initial +
         s.remove_prefix(1);
     }
 
@@ -44,7 +47,7 @@ inline capabilities::Default<xsd_int>::cpp_type capabilities::Default<xsd_int>::
     auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
 
     if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error("XSD Parsing Error");
+        throw std::runtime_error{ "XSD Parsing Error" };
     } else {
         return value;
     }

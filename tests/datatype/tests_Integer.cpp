@@ -79,3 +79,11 @@ TEST_CASE("Datatype Integer") {
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.2e-308", type_iri), "XSD Parsing Error", std::runtime_error);
 }
+
+TEST_CASE("Datatype Integer overread UB") {
+    std::string const s = "123456";
+    std::string_view const sv{ s.data(), 3 };
+
+    Literal const lit{ sv, datatypes::xsd::Integer::identifier };
+    CHECK(lit.value<datatypes::xsd::Integer>() == 123);
+}

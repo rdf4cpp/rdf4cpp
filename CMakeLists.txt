@@ -1,16 +1,20 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.4)
+project(rdf4cpp VERSION 0.0.5)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
+OPTION(USE_CONAN "If available, use conan to retrieve dependencies." ON)
+if (IS_TOP_LEVEL AND USE_CONAN)
+    include(cmake/conan_cmake.cmake)
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "")
+endif ()
+
 # find packages
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
 find_package(serd 0 QUIET)
 
 # find system libraries
-if (NOT serd-FOUND)
+if (NOT serd_FOUND)
     find_library(serd
             NAMES serd-0
             NO_CACHE REQUIRED)
@@ -65,8 +69,7 @@ target_include_directories(
         rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
 
 target_link_libraries(rdf4cpp PRIVATE
-        Threads::Threads
-        $<IF:$<BOOL:serd-FOUND>,${serd},serd:serd> # ${VAR}-FOUND is only defined if the system library is used
+        $<IF:${serd_FOUND},serd::serd,${serd}> # ${VAR}_FOUND is only defined if the system library is used
         )
 
 set_target_properties(rdf4cpp PROPERTIES

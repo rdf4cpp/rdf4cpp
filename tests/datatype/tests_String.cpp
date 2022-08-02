@@ -91,3 +91,11 @@ TEST_CASE("Datatype String") {
     CHECK(lit1 == lit4);
     CHECK(lit2 == lit5);
 }
+
+TEST_CASE("Datatype String overread UB") {
+    std::string const s = "Hello World";
+    std::string_view const sv{ s.data(), 5 };
+
+    Literal const lit{ sv, datatypes::xsd::String::identifier };
+    CHECK(lit.value<datatypes::xsd::String>() == "Hello");
+}

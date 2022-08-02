@@ -125,3 +125,11 @@ TEST_CASE("Datatype Decimal") {
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.225E-307", type_iri), "XSD Parsing Error", std::runtime_error);
 }
+
+TEST_CASE("Datatype Decimal buffer overread UB") {
+    std::string const s = "123.456";
+    std::string_view const sv{ s.data(), 5 };
+
+    Literal const lit{ sv, datatypes::xsd::Decimal::identifier };
+    CHECK(lit.value<datatypes::xsd::Decimal>() == 123.4);
+}
