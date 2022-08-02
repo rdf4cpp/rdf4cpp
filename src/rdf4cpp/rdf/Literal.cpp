@@ -155,14 +155,9 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
-    auto const this_type = this->handle_.type();
-    auto const other_type = other.handle_.type();
+    assert(this->handle_.type() == RDFNodeType::Literal && other.handle_.type() == RDFNodeType::Literal);
 
-    if (this_type != other_type || this_type != RDFNodeType::Literal) {
-        throw std::runtime_error{ "node type mismatch, expected literal" };
-    }
-
-    auto const [res_identifier, lhs_val, rhs_val] = [&]() {
+    auto const after_conversion = [&]() -> std::optional<std::tuple<std::string_view, std::any, std::any>> {
         auto const this_lit_type = this->handle_.literal_backend().datatype_id;
         auto const other_lit_type = other.handle_.literal_backend().datatype_id;
 
@@ -177,7 +172,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
                     rhs_datatype);
 
             if (!equalizer.has_value()) {
-                throw std::runtime_error{ "datatype mismatch and not in same promotion hierarchy" };
+                return std::nullopt;
             }
 
             return std::make_tuple(equalizer->target_type_iri,
@@ -186,10 +181,16 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         }
     }();
 
+    if (!after_conversion.has_value()) {
+        return Literal{}; // datatype mismatch and not in same promotion hierarchy
+    }
+
+    auto const &[res_identifier, lhs_val, rhs_val] = *after_conversion;
+
     auto const result_entry = datatypes::registry::DatatypeRegistry::get_entry(res_identifier).value().get();
 
     if (!result_entry.numeric_ops.has_value()) {
-        throw std::runtime_error{ "common datatype is not numeric" };
+        return Literal{}; // common datatype is not numeric
     }
 
     auto op_res = op_select(*result_entry.numeric_ops)(lhs_val, rhs_val);
@@ -203,16 +204,12 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
 template<typename OpSelect>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
-    auto const this_type = this->handle_.type();
-
-    if (this_type != RDFNodeType::Literal) {
-        throw std::runtime_error{ "node type mismatch, expected literal" };
-    }
+    assert(this->handle_.type() == RDFNodeType::Literal);
 
     auto const &entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value().get();
 
     if (!entry.numeric_ops.has_value()) {
-        throw std::runtime_error{ "datatype not numeric" };
+        return Literal{}; // datatype not numeric
     }
 
     auto op_res = op_select(*entry.numeric_ops)(this->value());
@@ -226,39 +223,30 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
 template<typename BinOp>
 Literal Literal::logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage) const {
-    auto const this_type = this->handle_.type();
-    auto const other_type = other.handle_.type();
-
-    if (this_type != other_type || this_type != RDFNodeType::Literal) {
-        throw std::runtime_error{ "node type mismatch, expected literal" };
-    }
+    assert(this->handle_.type() == RDFNodeType::Literal && other.handle_.type() == RDFNodeType::Literal);
 
     auto const ebv_this = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
 
     if (ebv_this == nullptr) {
-        throw std::runtime_error{ "lhs not convertible to bool" };
+        return Literal{}; // lhs not convertible to bool
     }
 
     auto const ebv_other = datatypes::registry::DatatypeRegistry::get_ebv(other.datatype().identifier());
 
     if (ebv_other == nullptr) {
-        throw std::runtime_error{ "rhs not convertible to bool" };
+        return Literal{}; // rhs not convertible to bool
     }
 
     return Literal::make<datatypes::xsd::Boolean>(bin_op(ebv_this(this->value()), ebv_other(other.value())), node_storage);
 }
 
 Literal Literal::logical_not_impl(NodeStorage &node_storage) const {
-    auto const this_type = this->handle_.type();
-
-    if (this_type != RDFNodeType::Literal) {
-        throw std::runtime_error{ "node type mismatch, expected literal" };
-    }
+    assert(this->handle_.type() == RDFNodeType::Literal);
 
     auto const ebv_fptr = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
 
     if (ebv_fptr == nullptr) {
-        throw std::runtime_error{ "datatype not convertible to bool" };
+        return Literal{}; // datatype not convertible to bool
     }
 
     return Literal::make<datatypes::xsd::Boolean>(!ebv_fptr(this->value()), node_storage);

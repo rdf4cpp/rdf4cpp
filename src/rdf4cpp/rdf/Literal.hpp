@@ -17,7 +17,8 @@ private:
      * @param op_select is used to select the specific operation to be carried out
      * @param other rhs of the operation
      * @param node_storage the node storage that the resulting value will be put in
-     * @return the literal resulting from the selected binop
+     * @return the literal resulting from the selected binop or Literal{} if the types are not
+     *      convertible to a common type or the common type is not numeric
      */
     template<typename OpSelect>
     Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
@@ -28,7 +29,7 @@ private:
      * @tparam OpSelect a function NumericOps -> unop_fptr_t
      * @param op_select is used to select the specific operation to be carried out
      * @param node_storage the node storage that the resulting value will be put in
-     * @return the literal resulting from the selected unop
+     * @return the literal resulting from the selected unop or Literal{} if this is not numeric
      */
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
@@ -40,7 +41,8 @@ private:
      * @param bin_op the binary operations applied to both operands, e.g. &&
      * @param other the lhs of the operation
      * @param node_storage the node storage that the resulting value will be put in
-     * @return the literal resulting by converting both literals to their ebv and applying the provided binop
+     * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
+     *      if at least one of the types is not convertible to bool
      */
     template<typename BinOp>
     Literal logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
@@ -48,7 +50,7 @@ private:
     /**
      * @brief the implementation for logical not
      * @param node_storage the node storage that the resulting value will be put in
-     * @return the logical negation of the ebv of this
+     * @return the logical negation of the ebv of this or Literal{} if this is not convertible to bool
      */
     Literal logical_not_impl(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 

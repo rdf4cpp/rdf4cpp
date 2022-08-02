@@ -123,14 +123,14 @@ TEST_CASE("Literal - numeric ops") {
         auto const lhs = Literal::make<datatypes::xsd::Boolean>(true);
         auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
 
-        CHECK_THROWS_WITH_AS(lhs + rhs, "common datatype is not numeric", std::runtime_error);
+        CHECK((lhs + rhs).null());
     }
 
     SUBCASE("add literal type mismatch") {
         auto const lhs = Literal::make<datatypes::xsd::Float>(1.f);
         auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
 
-        CHECK_THROWS_WITH_AS(lhs + rhs, "datatype mismatch and not in same promotion hierarchy", std::runtime_error);
+        CHECK((lhs + rhs).null());
     }
 }
 
