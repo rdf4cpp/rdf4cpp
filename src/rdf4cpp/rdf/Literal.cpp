@@ -331,13 +331,11 @@ Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    using TriStateBool::Err, TriStateBool::False, TriStateBool::True;
-
     constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table {
-            /* lhs \ rhs */          /* Err    False  True  */
-            /* Err       */ std::array{ Err,   False, Err   },
-            /* False     */ std::array{ False, False, False },
-            /* True      */ std::array{ Err,   False, True  }
+            /* lhs \ rhs */          /* Err                  False                True  */
+            /* Err       */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::Err   },
+            /* False     */ std::array{ TriStateBool::False, TriStateBool::False, TriStateBool::False },
+            /* True      */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::True  }
     };
 
     return this->logical_binop_impl(and_logic_table, other, node_storage);
@@ -348,13 +346,11 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    using TriStateBool::Err, TriStateBool::False, TriStateBool::True;
-
     constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table {
-            /* lhs \ rhs */          /* Err    False  True */
-            /* Err       */ std::array{ Err,   Err,   True },
-            /* False     */ std::array{ Err,   False, True },
-            /* True      */ std::array{ True,  True,  True }
+            /* lhs \ rhs */          /* Err                  False                True */
+            /* Err       */ std::array{ TriStateBool::Err,   TriStateBool::Err,   TriStateBool::True },
+            /* False     */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::True },
+            /* True      */ std::array{ TriStateBool::True,  TriStateBool::True,  TriStateBool::True }
     };
 
     return this->logical_binop_impl(or_logic_table, other, node_storage);
