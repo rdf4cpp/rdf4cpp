@@ -104,7 +104,9 @@ std::partial_ordering Literal::operator<=>(const Literal &other) const {
     }
 }
 bool Literal::operator==(const Literal &other) const {
-    if (this->datatype() != other.datatype()) {
+    if (this->null() && other.null()) {
+        return true;
+    } else if (this->datatype() != other.datatype()) {
         return false;
     } else if (this->lexical_form() == other.lexical_form()) {
         return true;
@@ -155,7 +157,11 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
-    assert(this->handle_.type() == RDFNodeType::Literal && other.handle_.type() == RDFNodeType::Literal);
+    if (this->null() || other.null()) {
+        return Literal{};
+    }
+
+    assert(this->handle_.is_literal() && other.handle_.is_literal());
 
     auto const after_conversion = [&]() -> std::optional<std::tuple<std::string_view, std::any, std::any>> {
         auto const this_lit_type = this->handle_.literal_backend().datatype_id;
@@ -204,7 +210,11 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
 template<typename OpSelect>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
-    assert(this->handle_.type() == RDFNodeType::Literal);
+    if (this->null()) {
+        return Literal{};
+    }
+
+    assert(this->handle_.is_literal());
 
     auto const &entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value().get();
 
@@ -221,35 +231,33 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     };
 }
 
-template<typename BinOp>
-Literal Literal::logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage) const {
-    assert(this->handle_.type() == RDFNodeType::Literal && other.handle_.type() == RDFNodeType::Literal);
-
-    auto const ebv_this = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
-
-    if (ebv_this == nullptr) {
-        return Literal{}; // lhs not convertible to bool
+Literal::TriStateBool Literal::get_ebv_impl() const {
+    if (this->null()) {
+        return TriStateBool::Err;
     }
 
-    auto const ebv_other = datatypes::registry::DatatypeRegistry::get_ebv(other.datatype().identifier());
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
 
-    if (ebv_other == nullptr) {
-        return Literal{}; // rhs not convertible to bool
+    if (ebv == nullptr) {
+        return TriStateBool::Err;
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(bin_op(ebv_this(this->value()), ebv_other(other.value())), node_storage);
+    return ebv(this->value()) ? TriStateBool::True : TriStateBool::False;
 }
 
-Literal Literal::logical_not_impl(NodeStorage &node_storage) const {
-    assert(this->handle_.type() == RDFNodeType::Literal);
+Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage) const {
+    assert(this->handle_.is_literal() && other.handle_.is_literal());
 
-    auto const ebv_fptr = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+    auto const this_ebv = this->get_ebv_impl();
+    auto const other_ebv = other.get_ebv_impl();
 
-    if (ebv_fptr == nullptr) {
-        return Literal{}; // datatype not convertible to bool
+    auto const res = logic_table[static_cast<size_t>(this_ebv)][static_cast<size_t>(other_ebv)];
+
+    if (res == TriStateBool::Err) {
+        return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(!ebv_fptr(this->value()), node_storage);
+    return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
@@ -312,8 +320,27 @@ Literal Literal::operator-() const {
     return this->neg();
 }
 
+Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
+    auto const ebv = this->get_ebv_impl();
+
+    if (ebv == TriStateBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::True, node_storage);
+}
+
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    return this->logical_binop_impl(std::logical_and{}, other, node_storage);
+    using TriStateBool::Err, TriStateBool::False, TriStateBool::True;
+
+    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table {
+            /* lhs \ rhs */          /* Err    False  True  */
+            /* Err       */ std::array{ Err,   False, Err   },
+            /* False     */ std::array{ False, False, False },
+            /* True      */ std::array{ Err,   False, True  }
+    };
+
+    return this->logical_binop_impl(and_logic_table, other, node_storage);
 }
 
 Literal Literal::operator&&(Literal const &other) const {
@@ -321,7 +348,16 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    return this->logical_binop_impl(std::logical_or{}, other, node_storage);
+    using TriStateBool::Err, TriStateBool::False, TriStateBool::True;
+
+    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table {
+            /* lhs \ rhs */          /* Err    False  True */
+            /* Err       */ std::array{ Err,   Err,   True },
+            /* False     */ std::array{ Err,   False, True },
+            /* True      */ std::array{ True,  True,  True }
+    };
+
+    return this->logical_binop_impl(or_logic_table, other, node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const {
@@ -329,7 +365,15 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    return this->logical_not_impl(node_storage);
+    assert(this->handle_.is_literal());
+
+    auto const ebv = this->get_ebv_impl();
+
+    if (ebv == TriStateBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::False, node_storage);
 }
 
 Literal Literal::operator!() const {

@@ -34,25 +34,24 @@ private:
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    enum struct TriStateBool : size_t {
+        Err = 0,
+        False = 1,
+        True = 2,
+    };
+
+    TriStateBool get_ebv_impl() const;
+
     /**
      * @brief the implementation for all logical, binary operations
      *
-     * @tparam BinOp a function (bool, bool) -> bool
-     * @param bin_op the binary operations applied to both operands, e.g. &&
+     * @param logic_table the logic table for the binary operation accessed via logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())]
      * @param other the lhs of the operation
      * @param node_storage the node storage that the resulting value will be put in
      * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
      *      if at least one of the types is not convertible to bool
      */
-    template<typename BinOp>
-    Literal logical_binop_impl(BinOp bin_op, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-
-    /**
-     * @brief the implementation for logical not
-     * @param node_storage the node storage that the resulting value will be put in
-     * @return the logical negation of the ebv of this or Literal{} if this is not convertible to bool
-     */
-    Literal logical_not_impl(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
@@ -161,6 +160,12 @@ public:
 
     Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator-() const;
+
+    /**
+     * Converts this literal to it's effective boolean value
+     * @return Literal containing the ebv
+     */
+    Literal effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator&&(Literal const &other) const;

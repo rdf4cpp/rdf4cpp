@@ -35,6 +35,33 @@ TEST_CASE("Literal - logical ops") {
                 CHECK(res == Literal::make<datatypes::xsd::Boolean>(false));
                 CHECK(res2 == Literal::make<datatypes::xsd::Boolean>(false));
             }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
+
+                auto const res = lhs && rhs;
+                auto const res2 = rhs && lhs;
+                CHECK(res == Literal::make<datatypes::xsd::Boolean>(false));
+                CHECK(res2 == Literal::make<datatypes::xsd::Boolean>(false));
+            }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal::make<datatypes::xsd::Boolean>(true);
+
+                auto const res = lhs && rhs;
+                auto const res2 = rhs && lhs;
+                CHECK(res.null());
+                CHECK(res2.null());
+            }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal{};
+
+                auto const res = lhs && rhs;
+                auto const res2 = rhs && lhs;
+                CHECK(res.null());
+                CHECK(res2.null());
+            }
         }
 
         SUBCASE("Literal - logical ops - bool results - or") {
@@ -65,6 +92,33 @@ TEST_CASE("Literal - logical ops") {
                 CHECK(res == Literal::make<datatypes::xsd::Boolean>(false));
                 CHECK(res2 == Literal::make<datatypes::xsd::Boolean>(false));
             }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
+
+                auto const res = lhs || rhs;
+                auto const res2 = rhs || lhs;
+                CHECK(res.null());
+                CHECK(res2.null());
+            }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal::make<datatypes::xsd::Boolean>(true);
+
+                auto const res = lhs || rhs;
+                auto const res2 = rhs || lhs;
+                CHECK(res == Literal::make<datatypes::xsd::Boolean>(true));
+                CHECK(res2 == Literal::make<datatypes::xsd::Boolean>(true));
+            }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal{};
+
+                auto const res = lhs || rhs;
+                auto const res2 = rhs || lhs;
+                CHECK(res.null());
+                CHECK(res2.null());
+            }
         }
 
         SUBCASE("Literal - logical ops - bool results - not") {
@@ -75,6 +129,10 @@ TEST_CASE("Literal - logical ops") {
             {
                 auto const op = Literal::make<datatypes::xsd::Boolean>(false);
                 CHECK(!op == Literal::make<datatypes::xsd::Boolean>(true));
+            }
+            {
+                auto const op = Literal{};
+                CHECK((!op).null());
             }
         }
     }
@@ -131,6 +189,26 @@ TEST_CASE("Literal - numeric ops") {
         auto const rhs = Literal::make<datatypes::xsd::Boolean>(false);
 
         CHECK((lhs + rhs).null());
+    }
+
+    SUBCASE("op with null") {
+        {
+            auto const lhs = Literal::make<datatypes::xsd::Float>(2.f);
+            auto const rhs = Literal{};
+
+            CHECK((lhs + rhs).null());
+            CHECK((rhs + lhs).null());
+        }
+        {
+            auto const lhs = Literal{};
+            auto const rhs = Literal{};
+
+            CHECK((lhs + rhs).null());
+        }
+        {
+            auto const lit = Literal{};
+            CHECK((-lit).null());
+        }
     }
 }
 
