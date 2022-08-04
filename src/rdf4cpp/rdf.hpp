@@ -2,7 +2,9 @@
 #define RDF4CPP_RDF_HPP
 
 #include <rdf4cpp/rdf/Dataset.hpp>
+#include <rdf4cpp/rdf/Namespace.hpp>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/namespaces/RDFS.hpp>
 #include <rdf4cpp/rdf/writer/NNodeWriter.hpp>
 #include <rdf4cpp/rdf/writer/NQuadsWriter.hpp>
 #include <rdf4cpp/rdf/writer/NTriplesWriter.hpp>
