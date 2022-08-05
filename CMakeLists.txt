@@ -29,13 +29,13 @@ if (NOT fmt_FOUND)
     include(FetchContent)
     FetchContent_Declare(
             fetchfmt
-            GIT_REPOSITORY      https://github.com/fmtlib/fmt.git
+            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
             GIT_TAG c4ee726532178e556d923372f29163bd206d7732 # v9.0.0
     )
 
     FetchContent_MakeAvailable(fetchfmt)
     message(DEBUG "Non CMake package for fmt found. fmt was retrieved via FetchContent.")
-endif()
+endif ()
 
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
