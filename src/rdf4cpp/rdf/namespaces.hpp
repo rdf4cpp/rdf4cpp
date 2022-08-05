@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/namespaces/PREMIS3.hpp>
 #include <rdf4cpp/rdf/namespaces/RDF.hpp>
 #include <rdf4cpp/rdf/namespaces/RDFS.hpp>
+#include <rdf4cpp/rdf/namespaces/XSD.hpp>
 
 /**
  * This namespace contains common XML namespaces used for RDF standard vocabulary.

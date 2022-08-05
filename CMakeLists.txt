@@ -53,6 +53,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/PREMIS3.cpp
         src/rdf4cpp/rdf/namespaces/RDF.cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
+        src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/parser/SerdParsing.cpp
         src/rdf4cpp/rdf/Quad.cpp
