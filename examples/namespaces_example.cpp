@@ -19,7 +19,7 @@ int main() {
     auto rdf_15 = rdf + "_15";
     std::cout << rdf_15 << std::endl;
     try {
-        auto random = rdf + "random";
+        [[maybe_unused]] auto random = rdf + "random";
     } catch (std::runtime_error const &ex) {
         std::cerr << ex.what() << std::endl;
     }

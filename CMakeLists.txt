@@ -12,7 +12,7 @@ endif ()
 
 # find packages
 find_package(serd 0 QUIET)
-find_package(fmt REQUIRED)
+find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 
 # find system libraries
 if (NOT serd_FOUND)
@@ -23,6 +23,19 @@ if (NOT serd_FOUND)
 else ()
     message(DEBUG "serd cmake package found")
 endif ()
+
+# retrieve missing libraries
+if (NOT fmt_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            fetchfmt
+            GIT_REPOSITORY      https://github.com/fmtlib/fmt.git
+            GIT_TAG c4ee726532178e556d923372f29163bd206d7732 # v9.0.0
+    )
+
+    FetchContent_MakeAvailable(fetchfmt)
+    message(DEBUG "Non CMake package for fmt found. fmt was retrieved via FetchContent.")
+endif()
 
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
