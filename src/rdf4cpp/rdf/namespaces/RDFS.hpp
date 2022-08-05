@@ -6,7 +6,7 @@
 namespace rdf4cpp::rdf::namespaces {
 
 /**
- * Prefix for https://www.w3.org/TR/rdf-schema/
+ * A ClosedNamespace for https://www.w3.org/TR/rdf-schema/
  */
 class RDFS : public ClosedNamespace {
 public:
