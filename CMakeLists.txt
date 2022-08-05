@@ -46,6 +46,11 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/IRI.cpp
         src/rdf4cpp/rdf/Literal.cpp
         src/rdf4cpp/rdf/Namespace.cpp
+        src/rdf4cpp/rdf/namespaces/BFLC.cpp
+        src/rdf4cpp/rdf/namespaces/FOAF.cpp
+        src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
+        src/rdf4cpp/rdf/namespaces/OWL.cpp
+        src/rdf4cpp/rdf/namespaces/PREMIS3.cpp
         src/rdf4cpp/rdf/namespaces/RDF.cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/Node.cpp
