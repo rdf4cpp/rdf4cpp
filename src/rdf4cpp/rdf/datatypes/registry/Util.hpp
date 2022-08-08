@@ -15,10 +15,20 @@ concept HasTupleElementType = requires {
                               };
 
 template<typename T, size_t Ix>
-concept HasAccessibleTupleElement = HasTupleElementType<T, Ix>
-                                    && requires (T t) {
+concept HasAccessibleTupleElement = requires (T t) {
+                                        typename std::tuple_element_t<Ix, T>;
                                         { get<Ix>(t) } -> std::convertible_to<std::tuple_element_t<Ix, T> const &>;
                                     };
+
+template<typename T, size_t ...Ixs>
+consteval bool has_all_accessible_tuple_elements(std::index_sequence<Ixs...>) {
+    return (HasAccessibleTupleElement<T, Ixs> && ...);
+}
+
+template<typename T, size_t ...Ixs>
+consteval bool has_all_tuple_element_types(std::index_sequence<Ixs...>) {
+    return (HasTupleElementType<T, Ixs> && ...);
+}
 
 /**
  * tuple map implementation
@@ -58,9 +68,7 @@ template<typename T>
 concept HasTupleTraits = requires {
                              { std::tuple_size_v<T> } -> std::convertible_to<size_t>;
                          }
-                         && []<size_t ...Ixs>(std::index_sequence<Ixs...>) {
-                             return (tuple_util_detail::HasTupleElementType<T, Ixs> && ...);
-                         }(std::make_index_sequence<std::tuple_size_v<T>>{});;
+                         && tuple_util_detail::has_all_tuple_element_types<T>(std::make_index_sequence<std::tuple_size_v<T>>{});
 
 /**
  * An std::tuple<>-like type that is usable with the common tuple traits:
@@ -70,10 +78,10 @@ concept HasTupleTraits = requires {
  *      - get<Ix>(tuple)
  */
 template<typename T>
-concept AccessibleTuple = HasTupleTraits<T>
-                    && []<size_t ...Ixs>(std::index_sequence<Ixs...>) {
-                        return (tuple_util_detail::HasAccessibleTupleElement<T, Ixs> && ...);
-                    }(std::make_index_sequence<std::tuple_size_v<T>>{});
+concept AccessibleTuple = requires {
+                              { std::tuple_size_v<T> } -> std::convertible_to<size_t>;
+                          }
+                          && tuple_util_detail::has_all_accessible_tuple_elements<T>(std::make_index_sequence<std::tuple_size_v<T>>{});
 
 /**
  * Map each element in a tuple using a unary operation f
