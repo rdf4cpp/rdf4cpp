@@ -33,6 +33,11 @@ struct DatatypeSupertypeMapping<xsd_integer> {
     using supertype = xsd::Decimal;
 };
 
+template<>
+struct DatatypeDivResultMapping<xsd_integer> {
+    using op_result = xsd::Decimal;
+};
+
 /**
  * Specialisation of from_string template function.
  */
@@ -59,6 +64,12 @@ template<>
 inline bool capabilities::Logical<xsd_integer>::effective_boolean_value(cpp_type const &value) noexcept {
     return value != 0;
 }
+
+template<>
+inline capabilities::Numeric<xsd_integer>::div_result_cpp_type capabilities::Numeric<xsd_integer>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    return static_cast<div_result_cpp_type>(lhs) / static_cast<div_result_cpp_type>(rhs);
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

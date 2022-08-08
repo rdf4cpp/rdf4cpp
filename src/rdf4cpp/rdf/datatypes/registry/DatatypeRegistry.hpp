@@ -29,25 +29,30 @@ public:
     using to_string_fptr_t = std::string (*)(const std::any &);
     using ebv_fptr_t = bool (*)(std::any const &);
 
-    using unop_fptr_t = std::any (*)(std::any const &);
-    using binop_fptr_t = std::any (*)(std::any const &, std::any const &);
+    struct NumericOpResult {
+        std::string_view result_type_iri;
+        std::any result_value;
+    };
+
+    using unop_fptr_t = NumericOpResult (*)(std::any const &);
+    using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &);
 
     struct NumericOps {
-        binop_fptr_t add_fptr; // a + b
-        binop_fptr_t sub_fptr; // a - b
-        binop_fptr_t mul_fptr; // a * b
-        binop_fptr_t div_fptr; // a / b
+        binop_fptr_t add_fptr;  // a + b
+        binop_fptr_t sub_fptr;  // a - b
+        binop_fptr_t mul_fptr;  // a * b
+        binop_fptr_t div_fptr;  // a / b
 
-        unop_fptr_t pos_fptr; // +a
-        unop_fptr_t neg_fptr; // -a
+        unop_fptr_t pos_fptr;  // +a
+        unop_fptr_t neg_fptr;  // -a
     };
 
     struct DatatypeEntry {
-        std::string datatype_iri;        // datatype IRI string
-        factory_fptr_t factory_fptr;     // construct from string
-        to_string_fptr_t to_string_fptr; // convert to string
+        std::string datatype_iri;         // datatype IRI string
+        factory_fptr_t factory_fptr;      // construct from string
+        to_string_fptr_t to_string_fptr;  // convert to string
 
-        ebv_fptr_t ebv_fptr; // convert to effective boolean value
+        ebv_fptr_t ebv_fptr;  // convert to effective boolean value
 
         std::optional<NumericOps> numeric_ops;
 
@@ -72,10 +77,10 @@ public:
         inline static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
             assert(l.target_type_iri == r.target_type_iri);
 
-            return DatatypeConverter {
-                .target_type_iri = l.target_type_iri,
-                .convert_lhs = l.convert,
-                .convert_rhs = r.convert};
+            return DatatypeConverter{
+                    .target_type_iri = l.target_type_iri,
+                    .convert_lhs = l.convert,
+                    .convert_rhs = r.convert};
         }
     };
 
@@ -116,6 +121,7 @@ private:
      */
     template<datatypes::NumericLiteralDatatype datatype_info>
     inline static NumericOps make_numeric_ops();
+
 public:
     /**
      * Auto-register a datatype that fulfills DatatypeConcept
@@ -130,7 +136,7 @@ public:
      * @param factory_fptr factory function to construct an instance from a string
      * @param to_string_fptr converts type instance to its string representation
      */
-    inline static void add(DatatypeEntry entry_to_add){
+    inline static void add(DatatypeEntry entry_to_add) {
         auto &registry = DatatypeRegistry::get_mutable();
         auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &entry) { return entry.datatype_iri == entry_to_add.datatype_iri; });
         if (found == registry.end()) {
@@ -252,8 +258,8 @@ inline void DatatypeRegistry::add() {
         }
     }();
 
-    DatatypeRegistry::add(DatatypeEntry {
-            .datatype_iri = std::string{ LiteralDatatype_t::identifier },
+    DatatypeRegistry::add(DatatypeEntry{
+            .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return std::any(LiteralDatatype_t::from_string(string_repr));
             },
@@ -265,46 +271,74 @@ inline void DatatypeRegistry::add() {
             .conversion_table = make_runtime_conversion_table_for<LiteralDatatype_t>()});
 }
 
+namespace detail {
+
+template<typename OpRes, LiteralDatatype Fallback>
+struct SelectOpRes {
+    using type = OpRes;
+};
+
+template<LiteralDatatype Fallback>
+struct SelectOpRes<std::false_type, Fallback> {
+    using type = Fallback;
+};
+
+} // namespace detail
+
 template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
 inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
     return NumericOps{
             // a + b
-            [](std::any const &lhs, std::any const &rhs) -> std::any {
+            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
-                return LiteralDatatype_t::add(lhs_val, rhs_val);
+                return NumericOpResult {
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::add(lhs_val, rhs_val)};
             },
             // a - b
-            [](std::any const &lhs, std::any const &rhs) -> std::any {
+            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
-                return LiteralDatatype_t::sub(lhs_val, rhs_val);
+                return NumericOpResult{
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::sub(lhs_val, rhs_val)};
             },
             // a * b
-            [](std::any const &lhs, std::any const &rhs) -> std::any {
+            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
-                return LiteralDatatype_t::mul(lhs_val, rhs_val);
+                return NumericOpResult{
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::mul(lhs_val, rhs_val)};
             },
             // a / b
-            [](std::any const &lhs, std::any const &rhs) -> std::any {
+            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
-                return LiteralDatatype_t::div(lhs_val, rhs_val);
+                return NumericOpResult{
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::div(lhs_val, rhs_val)};
             },
             // +a
-            [](std::any const &operand) -> std::any {
+            [](std::any const &operand) -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
-                return LiteralDatatype_t::pos(operand_val);
+
+                return NumericOpResult{
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::pos(operand_val)};
             },
             // -a
-            [](std::any const &operand) -> std::any {
+            [](std::any const &operand) -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
-                return LiteralDatatype_t::neg(operand_val);
+
+                return NumericOpResult{
+                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::type::identifier,
+                        .result_value = LiteralDatatype_t::neg(operand_val)};
             }
     };
 }

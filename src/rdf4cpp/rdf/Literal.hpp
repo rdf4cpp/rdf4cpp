@@ -40,12 +40,17 @@ private:
         True = 2,
     };
 
+    /**
+     * @return the effective-boolean-value of this literal as a TriStateBool
+     */
     TriStateBool get_ebv_impl() const;
 
     /**
      * @brief the implementation for all logical, binary operations
      *
-     * @param logic_table the logic table for the binary operation accessed via logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())]
+     * @param logic_table the logic table for the binary operation. It is accessed via
+     *                      logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())].
+     *                      For an example logic table see operator&& or operator||.
      * @param other the lhs of the operation
      * @param node_storage the node storage that the resulting value will be put in
      * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
@@ -138,6 +143,7 @@ public:
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_numeric() const;
 
     bool operator==(const Literal &other) const;
 

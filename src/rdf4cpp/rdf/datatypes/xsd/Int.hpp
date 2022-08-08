@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
 
 #include <charconv>
 #include <cstdint>
@@ -30,6 +31,11 @@ struct DatatypeMapping<xsd_int> {
 template<>
 struct DatatypeSupertypeMapping<xsd_int> {
     using supertype = xsd::Integer;
+};
+
+template<>
+struct DatatypeDivResultMapping<xsd_int> {
+    using op_result = xsd::Decimal;
 };
 
 /**
@@ -57,6 +63,12 @@ template<>
 inline bool capabilities::Logical<xsd_int>::effective_boolean_value(cpp_type const &value) noexcept {
     return value != 0;
 }
+
+template<>
+inline capabilities::Numeric<xsd_int>::div_result_cpp_type capabilities::Numeric<xsd_int>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    return static_cast<div_result_cpp_type>(lhs) / static_cast<div_result_cpp_type>(rhs);
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

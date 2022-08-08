@@ -82,6 +82,10 @@ bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
+bool Literal::is_numeric() const {
+    return datatypes::registry::DatatypeRegistry::get_numerical_ops(this->datatype().identifier()).has_value();
+}
+
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 
 std::partial_ordering Literal::operator<=>(const Literal &other) const {
@@ -104,8 +108,8 @@ std::partial_ordering Literal::operator<=>(const Literal &other) const {
     }
 }
 bool Literal::operator==(const Literal &other) const {
-    if (this->null() && other.null()) {
-        return true;
+    if (this->null() || other.null()) {
+        return this->null() == other.null();
     } else if (this->datatype() != other.datatype()) {
         return false;
     } else if (this->lexical_form() == other.lexical_form()) {
@@ -157,78 +161,116 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
+    using datatypes::registry::DatatypeRegistry;
+
     if (this->null() || other.null()) {
         return Literal{};
     }
 
-    assert(this->handle_.is_literal() && other.handle_.is_literal());
+    auto const this_datatype = this->datatype().identifier();
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    assert(this_entry.has_value());
 
-    auto const after_conversion = [&]() -> std::optional<std::tuple<std::string_view, std::any, std::any>> {
-        auto const this_lit_type = this->handle_.literal_backend().datatype_id;
-        auto const other_lit_type = other.handle_.literal_backend().datatype_id;
+    if (!this_entry->get().numeric_ops.has_value()) {
+        return Literal{}; // not numeric
+    }
 
-        if (this_lit_type == other_lit_type) {
-            return std::make_tuple(this->datatype().identifier(), this->value(), other.value());
-        } else {
-            auto const lhs_datatype = this->datatype().identifier();
-            auto const rhs_datatype = other.datatype().identifier();
+    auto const other_datatype = other.datatype().identifier();
 
-            auto const equalizer = datatypes::registry::DatatypeRegistry::get_common_type_conversion(
-                    lhs_datatype,
-                    rhs_datatype);
+    if (this_datatype == other_datatype) {
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->get().numeric_ops)(this->value(),
+                                                                                                   other.value());
 
-            if (!equalizer.has_value()) {
-                return std::nullopt;
+        auto const to_string_fptr = [&]() {
+            if (op_res.result_type_iri == this_datatype) [[likely]] {
+                return this_entry->get().to_string_fptr;
+            } else [[unlikely]] {
+                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
             }
+        }();
 
-            return std::make_tuple(equalizer->target_type_iri,
-                                   equalizer->convert_lhs(this->value()),
-                                   equalizer->convert_rhs(other.value()));
+        assert(to_string_fptr != nullptr);
+
+        return Literal{to_string_fptr(op_res.result_value),
+                       IRI{ op_res.result_type_iri, node_storage },
+                       node_storage};
+    } else {
+        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+        assert(other_entry.has_value());
+
+        if (!other_entry->get().numeric_ops.has_value()) {
+            return Literal{}; // not numeric
         }
-    }();
 
-    if (!after_conversion.has_value()) {
-        return Literal{}; // datatype mismatch and not in same promotion hierarchy
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype,
+                                                                            other_datatype);
+
+        if (!equalizer.has_value()) {
+            return Literal{}; // not convertible
+        }
+
+        auto const equalized_entry = [&]() {
+            if (equalizer->target_type_iri == this_datatype) {
+                return this_entry;
+            }  else if (equalizer->target_type_iri == other_datatype) {
+                return other_entry;
+            } else {
+                return DatatypeRegistry::get_entry(equalizer->target_type_iri);
+            }
+        }();
+
+        assert(equalized_entry.has_value());
+        assert(equalized_entry->get().numeric_ops.has_value());
+
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->get().numeric_ops)(equalizer->convert_lhs(this->value()),
+                                                                                                        equalizer->convert_rhs(other.value()));
+
+        auto const to_string_fptr = [&]() {
+            if (op_res.result_type_iri == equalized_entry->get().datatype_iri) [[likely]] {
+                return equalized_entry->get().to_string_fptr;
+            } else [[unlikely]] {
+                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+            }
+        }();
+
+        assert(to_string_fptr != nullptr);
+
+        return Literal{to_string_fptr(op_res.result_value),
+                       IRI{ op_res.result_type_iri, node_storage },
+                       node_storage};
     }
-
-    auto const &[res_identifier, lhs_val, rhs_val] = *after_conversion;
-
-    auto const result_entry = datatypes::registry::DatatypeRegistry::get_entry(res_identifier).value().get();
-
-    if (!result_entry.numeric_ops.has_value()) {
-        return Literal{}; // common datatype is not numeric
-    }
-
-    auto op_res = op_select(*result_entry.numeric_ops)(lhs_val, rhs_val);
-
-    return Literal {
-        result_entry.to_string_fptr(op_res),
-        IRI{ result_entry.datatype_iri, node_storage },
-        node_storage
-    };
 }
 
 template<typename OpSelect>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
+    using datatypes::registry::DatatypeRegistry;
+
     if (this->null()) {
         return Literal{};
     }
 
-    assert(this->handle_.is_literal());
+    auto const entry = DatatypeRegistry::get_entry(this->datatype().identifier());
+    assert(entry.has_value());
 
-    auto const &entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype().identifier()).value().get();
-
-    if (!entry.numeric_ops.has_value()) {
+    if (!entry->get().numeric_ops.has_value()) {
         return Literal{}; // datatype not numeric
     }
 
-    auto op_res = op_select(*entry.numeric_ops)(this->value());
+    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->get().numeric_ops)(this->value());
 
-    return Literal {
-        entry.to_string_fptr(op_res),
-        this->datatype(),
-        node_storage
-    };
+    auto const to_string_fptr = [&]() {
+        if (op_res.result_type_iri == entry->get().datatype_iri) [[likely]] {
+            return entry->get().to_string_fptr;
+        } else [[unlikely]] {
+            return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+        }
+    }();
+
+    assert(to_string_fptr != nullptr);
+
+    return Literal{to_string_fptr(op_res.result_value),
+                   IRI{ op_res.result_type_iri, node_storage },
+                   node_storage};
 }
 
 Literal::TriStateBool Literal::get_ebv_impl() const {
@@ -246,8 +288,6 @@ Literal::TriStateBool Literal::get_ebv_impl() const {
 }
 
 Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage) const {
-    assert(this->handle_.is_literal() && other.handle_.is_literal());
-
     auto const this_ebv = this->get_ebv_impl();
     auto const other_ebv = other.get_ebv_impl();
 
@@ -361,9 +401,7 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    assert(this->handle_.is_literal());
-
-    auto const ebv = this->get_ebv_impl();
+    TriStateBool const ebv = this->get_ebv_impl();
 
     if (ebv == TriStateBool::Err) {
         return Literal{};

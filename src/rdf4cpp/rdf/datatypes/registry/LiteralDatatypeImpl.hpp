@@ -26,8 +26,21 @@ using always_false = std::false_type;
 template<typename T>
 static constexpr bool always_false_v = always_false<T>::value;
 
+template<typename OpResMapping, typename Fallback, typename enable = void>
+struct SelectOpResult {
+    using type = typename OpResMapping::cpp_type;
+};
+
+template<typename Fallback>
+struct SelectOpResult<std::false_type, Fallback> {
+    using type = Fallback;
+};
+
 } // namespace detail
 
+/**
+ * The default capability. All LiteralDatatypes must implement these operations.
+ */
 template<ConstexprString type_iri_t>
 struct Default {
     /**
@@ -102,27 +115,41 @@ template<ConstexprString type_iri>
 struct Numeric {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
-    inline static cpp_type add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    using add_result = typename DatatypeAddResultMapping<type_iri>::op_result;
+    using sub_result = typename DatatypeSubResultMapping<type_iri>::op_result;
+    using mul_result = typename DatatypeMulResultMapping<type_iri>::op_result;
+    using div_result = typename DatatypeDivResultMapping<type_iri>::op_result;
+    using pos_result = typename DatatypePosResultMapping<type_iri>::op_result;
+    using neg_result = typename DatatypeNegResultMapping<type_iri>::op_result;
+
+    using add_result_cpp_type = typename detail::SelectOpResult<add_result, cpp_type>::type;
+    using sub_result_cpp_type = typename detail::SelectOpResult<sub_result, cpp_type>::type;
+    using mul_result_cpp_type = typename detail::SelectOpResult<mul_result, cpp_type>::type;
+    using div_result_cpp_type = typename detail::SelectOpResult<div_result, cpp_type>::type;
+    using pos_result_cpp_type = typename detail::SelectOpResult<pos_result, cpp_type>::type;
+    using neg_result_cpp_type = typename detail::SelectOpResult<neg_result, cpp_type>::type;
+
+    inline static add_result_cpp_type add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs + rhs;
     }
 
-    inline static cpp_type sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static sub_result_cpp_type sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs - rhs;
     }
 
-    inline static cpp_type mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static mul_result_cpp_type mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs * rhs;
     }
 
-    inline static cpp_type div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static div_result_cpp_type div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs / rhs;
     }
 
-    inline static cpp_type pos(cpp_type const &operand) noexcept {
+    inline static pos_result_cpp_type pos(cpp_type const &operand) noexcept {
         return +operand;
     }
 
-    inline static cpp_type neg(cpp_type const &operand) noexcept {
+    inline static neg_result_cpp_type neg(cpp_type const &operand) noexcept {
         return -operand;
     }
 };
@@ -139,6 +166,7 @@ struct Logical {
      */
     inline static bool effective_boolean_value(cpp_type const &) noexcept {
         static_assert(detail::always_false_v<cpp_type>, "'effective_boolean_value' is not implemented for this type!");
+        return false; // supress warnings in gcc, because it cannot properly detect that this is unreachable
     }
 };
 

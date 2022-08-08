@@ -170,12 +170,13 @@ TEST_CASE("Literal - numeric ops") {
     GENERATE_BINOP_TESTCASE(Integer, 1, +, Integer , 2, Integer, 3);
     GENERATE_BINOP_TESTCASE(Integer, 12, -, Integer, 1, Integer, 11);
     GENERATE_BINOP_TESTCASE(Integer, 3, *, Integer, 6, Integer, 18);
-    GENERATE_BINOP_TESTCASE(Integer, 12, /, Integer, 4, Integer, 3); // TODO: use idiv or div? currently using idiv
+    GENERATE_BINOP_TESTCASE(Integer, 12, /, Integer, 4, Decimal, 3.0);
     GENERATE_UNOP_TESTCASE(Integer, 1, +, 1);
     GENERATE_UNOP_TESTCASE(Integer, 1, -, -1);
 
     GENERATE_BINOP_TESTCASE(Int, 1, +, Integer, 3, Integer, 4);
     GENERATE_BINOP_TESTCASE(Int, 1, +, Decimal, 2, Decimal, 3);
+    GENERATE_BINOP_TESTCASE(Int, 1, /, Int, 5, Decimal, 1.0/5);
 
     SUBCASE("boolean not add") {
         auto const lhs = Literal::make<datatypes::xsd::Boolean>(true);
