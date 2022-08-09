@@ -227,12 +227,32 @@ public:
     }
 
     /**
+     * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
+     *
+     * @return the found conversion if there is a viable one
+     */
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv);
+
+    /**
      * Tries to find a conversion to convert lhs_type_iri and rhs_type_iri into a
      * common type to be used in e.g. numeric calculations.
      *
-     * @return if possible a conversion that converts lhs and rhs into a common type
+     * @return nullopt if any of lhs_type_iri or rhs_type_iri does not have a datatype registered
+     * or there is no viable conversion, else the found conversion
      */
-    inline static std::optional<DatatypeConverter> get_common_type_conversion(std::string_view lhs_type_iri, std::string_view rhs_type_iri);
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(std::string_view lhs_type_iri, std::string_view rhs_type_iri) {
+        auto const lhs_entry = get_entry(lhs_type_iri);
+        if (lhs_entry == nullptr) {
+            return std::nullopt;
+        }
+
+        auto const &rhs_entry = get_entry(rhs_type_iri);
+        if (rhs_entry == nullptr) {
+            return std::nullopt;
+        }
+
+        return get_common_type_conversion(lhs_entry->conversion_table, rhs_entry->conversion_table);
+    }
 };
 
 
@@ -348,8 +368,8 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 }
 
 inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_type_conversion(
-        std::string_view const lhs_type_iri,
-        std::string_view const rhs_type_iri) {
+        RuntimeConversionTable const &lhs_conv,
+        RuntimeConversionTable const &rhs_conv) {
 
     auto const find_conv_impl = [](RuntimeConversionTable const &lesser, RuntimeConversionTable const &greater) -> std::optional<DatatypeConverter> {
         auto const lesser_s_rank = lesser.subtype_rank();
@@ -402,14 +422,6 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         // no conversion available
         return std::nullopt;
     };
-
-    auto const lhs_entry = get_entry(lhs_type_iri);
-    assert(lhs_entry != nullptr);
-    auto const &lhs_conv = lhs_entry->conversion_table;
-
-    auto const &rhs_entry = get_entry(rhs_type_iri);
-    assert(rhs_entry != nullptr);
-    auto const &rhs_conv = rhs_entry->conversion_table;
 
     // call find_conv_impl with entries in correct order (lesser s rank, greater s rank)
     if (lhs_conv.subtype_rank() < rhs_conv.subtype_rank()) {

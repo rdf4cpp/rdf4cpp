@@ -202,7 +202,8 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{}; // not numeric
         }
 
-        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype, other_datatype);
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_entry->conversion_table,
+                                                                            other_entry->conversion_table);
 
         if (!equalizer.has_value()) {
             return Literal{}; // not convertible
