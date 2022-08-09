@@ -5,7 +5,7 @@ namespace rdf4cpp::rdf {
 
 Namespace::Namespace(std::string_view namespace_iri, Namespace::NodeStorage &node_storage)
     : namespace_iri_(namespace_iri), node_storage_(node_storage) {}
-std::string const &Namespace::names_space() const noexcept {
+std::string_view Namespace::name_space() const noexcept {
     return namespace_iri_;
 }
 const Namespace::NodeStorage &Namespace::node_storage() const noexcept {

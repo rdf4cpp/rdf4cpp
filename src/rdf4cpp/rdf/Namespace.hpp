@@ -53,7 +53,7 @@ public:
     /**
      * @return IRI string of the Namespace
      */
-    std::string const &names_space() const noexcept;
+    std::string_view name_space() const noexcept;
 
     /**
      * @return NodeStorage used to create <div>IRI</div>s from this Namespace.
