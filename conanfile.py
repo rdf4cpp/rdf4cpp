@@ -19,7 +19,8 @@ class Recipe(ConanFile):
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*"
-    requires = ("serd/0.30.12",)
+    requires = (("serd/0.30.12", "private"),
+                ("fmt/9.0.0", "private"))  # format must only be used within cpp files
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
@@ -31,6 +32,7 @@ class Recipe(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
+        self.options["fmt"].header_only = True
 
     _cmake = None
 
