@@ -64,11 +64,12 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                       "detected invalid hierarchy, would not be able to discover all conversions");
 
         // conversion must preserve numericity, so:
-        // NumericLiteralDatatype<Type> must imply NumericLiteralDatatype<typename next::converted>
+        // NumericLiteralDatatype<Type> <-> NumericLiteralDatatype<typename next::converted>
         // This is because the numeric operations assume that if any of the operands is not numeric
         // the common type and the result type will also not be numeric to allow for an early return
         // without doing the actual conversion.
-        static_assert(!NumericLiteralDatatype<Type> || NumericLiteralDatatype<typename next::converted>,
+        static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>)
+                              || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
                       "conversion must preserve numericity");
 
         if constexpr (BaseType::identifier == Type::identifier) {
