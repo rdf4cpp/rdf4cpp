@@ -169,21 +169,21 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
     auto const this_datatype = this->datatype().identifier();
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
-    assert(this_entry.has_value());
+    assert(this_entry != nullptr);
 
-    if (!this_entry->get().numeric_ops.has_value()) {
+    if (!this_entry->numeric_ops.has_value()) {
         return Literal{}; // not numeric
     }
 
     auto const other_datatype = other.datatype().identifier();
 
     if (this_datatype == other_datatype) {
-        DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->get().numeric_ops)(this->value(),
-                                                                                                   other.value());
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
+                                                                                             other.value());
 
         auto const to_string_fptr = [&]() {
             if (op_res.result_type_iri == this_datatype) [[likely]] {
-                return this_entry->get().to_string_fptr;
+                return this_entry->to_string_fptr;
             } else [[unlikely]] {
                 return DatatypeRegistry::get_to_string(op_res.result_type_iri);
             }
@@ -196,14 +196,13 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
                        node_storage};
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
-        assert(other_entry.has_value());
+        assert(other_entry != nullptr);
 
-        if (!other_entry->get().numeric_ops.has_value()) {
+        if (!other_entry->numeric_ops.has_value()) {
             return Literal{}; // not numeric
         }
 
-        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype,
-                                                                            other_datatype);
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype, other_datatype);
 
         if (!equalizer.has_value()) {
             return Literal{}; // not convertible
@@ -219,15 +218,15 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             }
         }();
 
-        assert(equalized_entry.has_value());
-        assert(equalized_entry->get().numeric_ops.has_value());
+        assert(equalized_entry != nullptr);
+        assert(equalized_entry->numeric_ops.has_value());
 
-        DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->get().numeric_ops)(equalizer->convert_lhs(this->value()),
-                                                                                                        equalizer->convert_rhs(other.value()));
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
+                                                                                                  equalizer->convert_rhs(other.value()));
 
         auto const to_string_fptr = [&]() {
-            if (op_res.result_type_iri == equalized_entry->get().datatype_iri) [[likely]] {
-                return equalized_entry->get().to_string_fptr;
+            if (op_res.result_type_iri == equalized_entry->datatype_iri) [[likely]] {
+                return equalized_entry->to_string_fptr;
             } else [[unlikely]] {
                 return DatatypeRegistry::get_to_string(op_res.result_type_iri);
             }
@@ -250,17 +249,17 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     }
 
     auto const entry = DatatypeRegistry::get_entry(this->datatype().identifier());
-    assert(entry.has_value());
+    assert(entry != nullptr);
 
-    if (!entry->get().numeric_ops.has_value()) {
+    if (!entry->numeric_ops.has_value()) {
         return Literal{}; // datatype not numeric
     }
 
-    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->get().numeric_ops)(this->value());
+    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
 
     auto const to_string_fptr = [&]() {
-        if (op_res.result_type_iri == entry->get().datatype_iri) [[likely]] {
-            return entry->get().to_string_fptr;
+        if (op_res.result_type_iri == entry->datatype_iri) [[likely]] {
+            return entry->to_string_fptr;
         } else [[unlikely]] {
             return DatatypeRegistry::get_to_string(op_res.result_type_iri);
         }

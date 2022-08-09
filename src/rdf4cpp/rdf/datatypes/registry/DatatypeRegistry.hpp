@@ -162,8 +162,12 @@ public:
      * @param datatype_iri datatype IRI string
      * @return if available database entry else nullopt
      */
-    inline static std::optional<std::reference_wrapper<DatatypeEntry const>> get_entry(std::string_view const datatype_iri) {
-        return find_map_entry(datatype_iri, [](auto const &entry) { return std::cref(entry); });
+    inline static DatatypeEntry const *get_entry(std::string_view const datatype_iri) {
+        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+            return &entry;
+        });
+
+        return res.has_value() ? *res : nullptr;
     }
 
     /**
@@ -399,8 +403,13 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         return std::nullopt;
     };
 
-    auto const &lhs_conv = get_entry(lhs_type_iri).value().get().conversion_table;
-    auto const &rhs_conv = get_entry(rhs_type_iri).value().get().conversion_table;
+    auto const lhs_entry = get_entry(lhs_type_iri);
+    assert(lhs_entry != nullptr);
+    auto const &lhs_conv = lhs_entry->conversion_table;
+
+    auto const &rhs_entry = get_entry(rhs_type_iri);
+    assert(rhs_entry != nullptr);
+    auto const &rhs_conv = rhs_entry->conversion_table;
 
     // call find_conv_impl with entries in correct order (lesser s rank, greater s rank)
     if (lhs_conv.subtype_rank() < rhs_conv.subtype_rank()) {
