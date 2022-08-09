@@ -3,7 +3,7 @@
 
 namespace rdf4cpp::rdf {
 
-IRI ClosedNamespace::operator+(const std::string &suffix) {
+IRI ClosedNamespace::operator+(std::string_view suffix) {
     if (auto found = cache_.find(suffix); found != cache_.end()) {
         return IRI(found->second);
     } else {

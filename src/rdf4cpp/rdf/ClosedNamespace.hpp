@@ -32,7 +32,7 @@ public:
      * @return the constructed IRI
      * @throws std::runtime_exception if a suffix is available within the namespace
      */
-    IRI operator+(const std::string &suffix) override;
+    IRI operator+(std::string_view suffix) override;
 
     /**
      * Clear has no effect on a ClosedNamespace.

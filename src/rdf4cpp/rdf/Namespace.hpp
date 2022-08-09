@@ -38,8 +38,7 @@ protected:
      * Cache storing the <div>NodeBackendHandle</div> for prefixes. This saves roundtrips to NodeStorage.
      */
     storage::util::tsl::sparse_map<std::string, storage::node::identifier::NodeBackendHandle,
-                                   storage::util::robin_hood::hash<std::string>,
-                                   std::equal_to<std::string>>
+                                   storage::util::robin_hood::hash<std::string_view>, std::equal_to<>>
             cache_;
 
 public:
@@ -75,7 +74,7 @@ public:
      * @param suffix suffix that is appended
      * @return the constructed IRI
      */
-    virtual IRI operator+(std::string const &suffix);
+    virtual IRI operator+(std::string_view suffix);
 
     /**
      * Clears the cache.
