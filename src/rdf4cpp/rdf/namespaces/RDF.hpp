@@ -11,8 +11,8 @@ namespace rdf4cpp::rdf::namespaces {
  */
 class RDF : public ClosedNamespace {
 public:
-    static const std::string NAMESPACE;
-    static const std::vector<std::string> SUFFIXES;
+    static constexpr std::string_view NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    static constexpr std::array<std::string_view, 22> SUFFIXES = {"HTML", "langString", "PlainLiteral", "type", "Property", "Statement", "subject", "predicate", "object", "Bag", "Seq", "Alt", "value", "List", "nil", "first", "rest", "XMLLiteral", "JSON", "CompoundLiteral", "language", "direction"};
 
     explicit RDF(NodeStorage &node_storage = NodeStorage::default_instance());
 

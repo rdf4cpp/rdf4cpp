@@ -10,8 +10,8 @@ namespace rdf4cpp::rdf::namespaces {
  */
 class BFLC : public ClosedNamespace {
 public:
-    static const std::string NAMESPACE;
-    static const std::vector<std::string> SUFFIXES;
+    static constexpr std::string_view NAMESPACE = "http://id.loc.gov/ontologies/bflc/";
+    static constexpr std::array<std::string_view, 24> SUFFIXES = {"AppliesTo", "CreatorCharacteristic", "DemographicGroup", "Eidr", "EncodingLevel", "GrooveCutting", "ImageBitDepth", "MachineModel", "MetadataLicensor", "OperatingSystem", "PrimaryContribution", "ProgrammingLanguage", "Relation", "Relationship", "Relief", "SeriesAnalysis", "SeriesClassification", "SeriesNumbering", "SeriesNumberingPeculiarities", "SeriesProvider", "SeriesSequentialDesignation", "SeriesTracing", "SeriesTreatment", "TransliteratedTitle"};
 
     explicit BFLC(NodeStorage &node_storage = NodeStorage::default_instance());
 };

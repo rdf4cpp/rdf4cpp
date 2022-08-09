@@ -10,8 +10,8 @@ namespace rdf4cpp::rdf::namespaces {
  */
 class FOAF : public ClosedNamespace {
 public:
-    static const std::string NAMESPACE;
-    static const std::vector<std::string> SUFFIXES;
+    static constexpr std::string_view NAMESPACE = "http://xmlns.com/foaf/0.1/";
+    static constexpr std::array<std::string_view, 73> SUFFIXES = {"Person", "name", "homepage", "openid", "img", "Document", "Image", "mbox", "depiction", "Agent", "Group", "member", "workplaceHomepage", "membershipClass", "Organization", "OnlineAccount", "PersonalProfileDocument", "maker", "primaryTopic", "Project", "LabelProperty", "OnlineChatAccount", "account", "accountServiceHomepage", "accountName", "OnlineEcommerceAccount", "OnlineGamingAccount", "isPrimaryTopicOf", "knows", "made", "page", "weblog", "aimChatID", "based", "currentProject", "depicts", "familyName", "firstName", "focus", "gender", "givenName", "icqChatID", "interest", "jabberID", "lastName", "logo", "msnChatID", "myersBriggs", "nick", "pastProject", "phone", "plan", "publications", "schoolHomepage", "skypeID", "thumbnail", "tipjar", "title", "topic", "workInfoHomepage", "yahooChatID", "age", "birthday", "sha", "status", "dnaChecksum", "family", "fundedBy", "geekcode", "givenname", "holdsAccount", "surname", "theme"};
 
     explicit FOAF(NodeStorage &node_storage = NodeStorage::default_instance());
 };

@@ -10,9 +10,8 @@ namespace rdf4cpp::rdf::namespaces {
  */
 class RDFS : public ClosedNamespace {
 public:
-    static const std::string NAMESPACE;
-    static const std::vector<std::string> SUFFIXES;
-
+    static constexpr std::string_view NAMESPACE = "http://www.w3.org/2000/01/rdf-schema#";
+    static constexpr std::array<std::string_view, 30> SUFFIXES = {"Resource", "Class", "Literal", "Datatype", "range", "domain", "subClassOf", "subPropertyOf", "label", "comment", "Container", "ContainerMembershipProperty", "member", "seeAlso", "isDefinedBy", "subClassOf ", "Resource ", "Class ", "Literal ", "Datatype ", "subPropertyOf ", "domain ", "range ", "label ", "comment ", "Container ", "ContainerMembershipProperty ", "member ", "seeAlso ", "isDefinedBy"};
     explicit RDFS(NodeStorage &node_storage = NodeStorage::default_instance());
 };
 

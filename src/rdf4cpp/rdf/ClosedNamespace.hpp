@@ -19,11 +19,11 @@ public:
      * @param node_storage where the IRIs will live
      */
     template<typename Suffixes>
-        requires std::convertible_to<std::ranges::range_value_t<Suffixes>, std::string>
+        requires std::convertible_to<std::ranges::range_value_t<Suffixes>, std::string_view>
     ClosedNamespace(std::string_view namespace_iri, Suffixes all_suffixes, NodeStorage &node_storage)
         : Namespace(namespace_iri, node_storage) {
         for (auto const &suffix : all_suffixes)
-            this->cache_[suffix] = IRI{namespace_iri_ + suffix, node_storage}.backend_handle();
+            this->cache_.template emplace(suffix, IRI{namespace_iri_ + std::string{suffix}, node_storage}.backend_handle());
     }
 
     /**

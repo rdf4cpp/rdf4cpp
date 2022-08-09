@@ -10,7 +10,7 @@ namespace rdf4cpp::rdf::namespaces {
  */
 class XSD : public Namespace {
 public:
-    static const std::string NAMESPACE;
+    static constexpr std::string_view NAMESPACE = "http://xmlns.com/XSD/0.1/";
 
     explicit XSD(NodeStorage &node_storage = NodeStorage::default_instance());
 };
