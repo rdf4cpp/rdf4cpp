@@ -6,7 +6,6 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
 
 #include <cstddef>
-#include <iosfwd>
 #include <sstream>
 #include <string_view>
 #include <type_traits>
@@ -36,7 +35,7 @@ struct SelectOpResult<std::false_type, Fallback> {
     using type = Fallback;
 };
 
-} // namespace detail
+}  // namespace detail
 
 /**
  * The default capability. All LiteralDatatypes must implement these operations.
@@ -166,18 +165,18 @@ struct Logical {
      */
     inline static bool effective_boolean_value(cpp_type const &) noexcept {
         static_assert(detail::always_false_v<cpp_type>, "'effective_boolean_value' is not implemented for this type!");
-        return false; // supress warnings in gcc, because it cannot properly detect that this is unreachable
+        return false;  // supress warnings in gcc, because it cannot properly detect that this is unreachable
     }
 };
 
-} // namespace capabilities
+}  // namespace capabilities
 
 /**
  * An automatically registering LiteralDatatype with given capabilities.
  *
  * @tparam Capabilities all capabilities this instantiation should have
  */
-template<ConstexprString type_iri, template<ConstexprString> typename ...Capabilities>
+template<ConstexprString type_iri, template<ConstexprString> typename... Capabilities>
 struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_iri>... {
     using typename capabilities::Default<type_iri>::cpp_type;
 
@@ -189,7 +188,7 @@ private:
     static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};
 };
 
-template<ConstexprString type_iri, template<ConstexprString> typename ...Capabilities>
+template<ConstexprString type_iri, template<ConstexprString> typename... Capabilities>
 std::nullptr_t LiteralDatatypeImpl<type_iri, Capabilities...>::init() {
     DatatypeRegistry::add<LiteralDatatypeImpl<type_iri, Capabilities...>>();
     return nullptr;

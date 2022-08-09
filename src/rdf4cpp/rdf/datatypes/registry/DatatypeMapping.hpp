@@ -115,6 +115,6 @@ struct DatatypeSubtypeRank<type_iri, std::enable_if_t<!std::is_same_v<typename D
     static constexpr unsigned value = 1 + DatatypeSubtypeRank<DatatypeSupertypeMapping<type_iri>::supertype::identifier>::value;
 };
 
-} // namespace detail_rank
-} // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace detail_rank
+}  // namespace rdf4cpp::rdf::datatypes::registry
 #endif  //RDF4CPP_DATATYPEMAPPING_HPP

@@ -5,8 +5,8 @@
 #include <tuple>
 #include <type_traits>
 
-#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -14,7 +14,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * A conversion from a source_type to a target_type
  */
 template<typename T>
-concept ConversionEntry = requires (typename T::source_type::cpp_type value) {
+concept ConversionEntry = requires(typename T::source_type::cpp_type value) {
                               requires LiteralDatatype<typename T::source_type>;
                               requires LiteralDatatype<typename T::target_type>;
                               { T::convert(value) } -> std::same_as<typename T::target_type::cpp_type>;
@@ -26,17 +26,16 @@ namespace conversion_typing_detail {
 template<typename T>
 struct IsConversionLayer : std::false_type {};
 
-template<typename ...Ts>
+template<typename... Ts>
 struct IsConversionLayer<std::tuple<Ts...>>
     : std::bool_constant<
-              (ConversionEntry<Ts> && ...)
-              && util::AllSame<typename Ts::source_type...>::value> {};
+              (ConversionEntry<Ts> && ...) && util::AllSame<typename Ts::source_type...>::value> {};
 
 
 template<typename Layer>
 struct ConversionLayerSource;
 
-template<typename Entry, typename ...Entries>
+template<typename Entry, typename... Entries>
 struct ConversionLayerSource<std::tuple<Entry, Entries...>> {
     using type = typename Entry::source_type;
 };
@@ -45,13 +44,12 @@ template<typename T>
 struct IsConversionTable
     : std::false_type {};
 
-template<typename ...Ts>
+template<typename... Ts>
 struct IsConversionTable<std::tuple<Ts...>>
     : std::bool_constant<
-              (IsConversionLayer<Ts>::value && ...)
-              && util::AllSame<typename ConversionLayerSource<Ts>::type...>::value> {};
+              (IsConversionLayer<Ts>::value && ...) && util::AllSame<typename ConversionLayerSource<Ts>::type...>::value> {};
 
-} // namespace conversion_typing_detail
+}  // namespace conversion_typing_detail
 
 
 /**
@@ -80,8 +78,8 @@ struct RuntimeConversionEntry {
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() {
-        return RuntimeConversionEntry {
-                .target_type_iri = std::string{ Entry::target_type::identifier },
+        return RuntimeConversionEntry{
+                .target_type_iri = std::string{Entry::target_type::identifier},
                 .convert = [](std::any const &value) -> std::any {
                     auto actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
@@ -100,13 +98,10 @@ private:
     std::vector<RuntimeConversionEntry> table;
 
     RuntimeConversionTable(size_t const s_rank, size_t const max_p_rank)
-            : s_rank{ s_rank }
-            , max_p_rank{ max_p_rank }
-            , p_ranks(s_rank)
-            , table(s_rank * max_p_rank) {}
+        : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank), table(s_rank * max_p_rank) {}
 
     inline static RuntimeConversionTable empty() {
-        return RuntimeConversionTable{ 0, 0 };
+        return RuntimeConversionTable{0, 0};
     }
 
     /**
@@ -122,6 +117,7 @@ private:
 
 
     friend class DatatypeRegistry;
+
 public:
     template<ConversionTable Table>
     static RuntimeConversionTable from_concrete() {
@@ -131,7 +127,7 @@ public:
             return std::max(acc, std::tuple_size_v<Layer>);
         });
 
-        RuntimeConversionTable table{ s_rank, max_p_rank };
+        RuntimeConversionTable table{s_rank, max_p_rank};
 
         util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) {
             table.p_ranks[s_off] = std::tuple_size_v<Layer>;
@@ -150,8 +146,7 @@ public:
     /**
      * @return the type's subtype rank
      */
-    [[nodiscard]]
-    inline size_t subtype_rank() const noexcept {
+    [[nodiscard]] inline size_t subtype_rank() const noexcept {
         return s_rank;
     }
 
@@ -159,8 +154,7 @@ public:
      * @param subtype_level how many subtype substitutions up to calculate the promotion rank
      * @return the type's promotion rank at a given subtype offset
      */
-    [[nodiscard]]
-    inline size_t promotion_rank_at_level(size_t const subtype_offset) const noexcept {
+    [[nodiscard]] inline size_t promotion_rank_at_level(size_t const subtype_offset) const noexcept {
         return p_ranks[subtype_offset];
     }
 
@@ -175,8 +169,7 @@ public:
      * @param p_off promotion offset, how many promotions right given the subtype offset the conversion is
      * @return the found conversion
      */
-    [[nodiscard]]
-    inline RuntimeConversionEntry const &conversion_at_index(size_t s_off, size_t p_off) const noexcept {
+    [[nodiscard]] inline RuntimeConversionEntry const &conversion_at_index(size_t s_off, size_t p_off) const noexcept {
         assert(s_off < s_rank);
         assert(p_off < promotion_rank_at_level(s_off));
 
@@ -184,6 +177,6 @@ public:
     }
 };
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::rdf::datatypes::registry
 
 #endif  //RDF4CPP_DATATYPECONVERSIONTYPING_HPP

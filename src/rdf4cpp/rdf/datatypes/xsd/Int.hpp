@@ -7,8 +7,8 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
 
 #include <charconv>
 #include <cstdint>
@@ -53,7 +53,7 @@ inline capabilities::Default<xsd_int>::cpp_type capabilities::Default<xsd_int>::
     auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
 
     if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     } else {
         return value;
     }

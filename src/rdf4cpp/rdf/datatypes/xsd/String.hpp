@@ -28,7 +28,7 @@ struct DatatypeMapping<xsd_string> {
  */
 template<>
 inline capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s) {
-    return std::string{ s };
+    return std::string{s};
 }
 
 template<>

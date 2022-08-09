@@ -40,7 +40,7 @@ struct DatatypePromotionMapping<xsd_decimal> {
  */
 template<>
 inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
-    
+
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
         s.remove_prefix(1);
@@ -51,12 +51,12 @@ inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_de
 
     if (res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     }
 
     if (std::isnan(value) || std::isinf(value)) {
         // nan and +-inf not permitted in decimal
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     }
 
     return value;
@@ -69,15 +69,14 @@ template<>
 inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
 
     double int_part, fract_part;
-    fract_part  = modf(value, &int_part);
+    fract_part = modf(value, &int_part);
     bool remove_trailing_zeros = false;
     std::ostringstream str_os;
     str_os << std::fixed;
     if (fract_part == 0) {
         //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
         str_os << std::setprecision(1);
-    }
-    else {
+    } else {
         //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to nearest possible representation
         str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
         remove_trailing_zeros = true;
@@ -86,10 +85,9 @@ inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type 
     std::string str = str_os.str();
 
     //Removes trailing zeros from fractional part if precision was set to maximum
-    if(remove_trailing_zeros && str.find('.') != std::string::npos)
-    {
+    if (remove_trailing_zeros && str.find('.') != std::string::npos) {
         //Removes trailing zeroes
-        str = str.substr(0, str.find_last_not_of('0')+1);
+        str = str.substr(0, str.find_last_not_of('0') + 1);
     }
     return str;
 }

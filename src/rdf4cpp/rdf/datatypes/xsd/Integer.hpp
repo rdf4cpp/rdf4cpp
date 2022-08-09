@@ -54,7 +54,7 @@ inline capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_in
 
     if (res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     }
 
     return value;

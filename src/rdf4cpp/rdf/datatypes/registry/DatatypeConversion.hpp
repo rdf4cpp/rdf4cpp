@@ -9,8 +9,8 @@
 #include <utility>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -68,8 +68,7 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
         // This is because the numeric operations assume that if any of the operands is not numeric
         // the common type and the result type will also not be numeric to allow for an early return
         // without doing the actual conversion.
-        static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>)
-                              || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
+        static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>) || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
                       "conversion must preserve numericity");
 
         if constexpr (BaseType::identifier == Type::identifier) {
@@ -154,19 +153,15 @@ struct SubtypeConcept : std::bool_constant<SubtypedLiteralDatatype<Type>> {};
  * - A promotion must lower the promotion rank by exactly 1
  */
 template<LiteralDatatype Type, LiteralDatatype Promoted>
-struct PromoteRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Type::identifier>::value
-                                                    == detail_rank::DatatypeSubtypeRank<Promoted::identifier>::value
-                                            && detail_rank::DatatypePromotionRank<Promoted::identifier>::value
-                                                       == detail_rank::DatatypePromotionRank<Type::identifier>::value - 1> {};
+struct PromoteRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Type::identifier>::value == detail_rank::DatatypeSubtypeRank<Promoted::identifier>::value && detail_rank::DatatypePromotionRank<Promoted::identifier>::value == detail_rank::DatatypePromotionRank<Type::identifier>::value - 1> {};
 
 /**
  * - A subtype substitution must lower the subtype rank by exactly 1
  */
 template<LiteralDatatype Type, LiteralDatatype Super>
-struct SubtypeRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Super::identifier>::value
-                                                    == detail_rank::DatatypeSubtypeRank<Type::identifier>::value - 1> {};
+struct SubtypeRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Super::identifier>::value == detail_rank::DatatypeSubtypeRank<Type::identifier>::value - 1> {};
 
-} // namespace adaptor
+}  // namespace adaptor
 
 /**
  * Generate the linear conversion table consisting only of type promotion conversions with a LiteralDatatype
@@ -311,7 +306,7 @@ consteval ConversionTable auto make_conversion_table() {
     }
 }
 
-} // namespace conversion_detail
+}  // namespace conversion_detail
 
 /**
  * Generate a compiletime conversion table for the given type
@@ -351,6 +346,6 @@ RuntimeConversionTable make_runtime_conversion_table_for() {
     return RuntimeConversionTable::from_concrete<convert_table_t>();
 }
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::rdf::datatypes::registry
 
 #endif  //RDF4CPP_DATATYPECONVERSION_HPP

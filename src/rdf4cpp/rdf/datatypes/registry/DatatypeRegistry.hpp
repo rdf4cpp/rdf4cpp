@@ -10,7 +10,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -307,7 +306,7 @@ struct SelectOpRes<std::false_type, Fallback> {
     using type = Fallback;
 };
 
-} // namespace detail
+}  // namespace detail
 
 template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
 inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
@@ -317,7 +316,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
-                return NumericOpResult {
+                return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::type::identifier,
                         .result_value = LiteralDatatype_t::add(lhs_val, rhs_val)};
             },
@@ -363,8 +362,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::type::identifier,
                         .result_value = LiteralDatatype_t::neg(operand_val)};
-            }
-    };
+            }};
 }
 
 inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_type_conversion(

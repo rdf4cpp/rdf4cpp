@@ -149,7 +149,7 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
                                                  .language_tag = ""}),
                                          storage::node::identifier::RDFNodeType::Literal,
                                          node_storage.id()});
-    } else { // datatype is not registered, so we cannot parse the lexical_form nor canonize it
+    } else {  // datatype is not registered, so we cannot parse the lexical_form nor canonize it
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                                  .lexical_form = lexical_form,
@@ -172,7 +172,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
     assert(this_entry != nullptr);
 
     if (!this_entry->numeric_ops.has_value()) {
-        return Literal{}; // not numeric
+        return Literal{};  // not numeric
     }
 
     auto const other_datatype = other.datatype().identifier();
@@ -192,27 +192,27 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(op_res.result_value),
-                       IRI{ op_res.result_type_iri, node_storage },
+                       IRI{op_res.result_type_iri, node_storage},
                        node_storage};
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
         assert(other_entry != nullptr);
 
         if (!other_entry->numeric_ops.has_value()) {
-            return Literal{}; // not numeric
+            return Literal{};  // not numeric
         }
 
         auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_entry->conversion_table,
                                                                             other_entry->conversion_table);
 
         if (!equalizer.has_value()) {
-            return Literal{}; // not convertible
+            return Literal{};  // not convertible
         }
 
         auto const equalized_entry = [&]() {
             if (equalizer->target_type_iri == this_datatype) {
                 return this_entry;
-            }  else if (equalizer->target_type_iri == other_datatype) {
+            } else if (equalizer->target_type_iri == other_datatype) {
                 return other_entry;
             } else {
                 return DatatypeRegistry::get_entry(equalizer->target_type_iri);
@@ -236,7 +236,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(op_res.result_value),
-                       IRI{ op_res.result_type_iri, node_storage },
+                       IRI{op_res.result_type_iri, node_storage},
                        node_storage};
     }
 }
@@ -253,7 +253,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     assert(entry != nullptr);
 
     if (!entry->numeric_ops.has_value()) {
-        return Literal{}; // datatype not numeric
+        return Literal{};  // datatype not numeric
     }
 
     DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
@@ -269,7 +269,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     assert(to_string_fptr != nullptr);
 
     return Literal{to_string_fptr(op_res.result_value),
-                   IRI{ op_res.result_type_iri, node_storage },
+                   IRI{op_res.result_type_iri, node_storage},
                    node_storage};
 }
 
@@ -371,12 +371,11 @@ Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table {
-            /* lhs \ rhs */          /* Err                  False                True  */
-            /* Err       */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::Err   },
-            /* False     */ std::array{ TriStateBool::False, TriStateBool::False, TriStateBool::False },
-            /* True      */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::True  }
-    };
+    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table{
+            /* lhs \ rhs               Err                  False                True */
+            /* Err       */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::Err},
+            /* False     */ std::array{TriStateBool::False, TriStateBool::False, TriStateBool::False},
+            /* True      */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::True}};
 
     return this->logical_binop_impl(and_logic_table, other, node_storage);
 }
@@ -386,12 +385,11 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table {
-            /* lhs \ rhs */          /* Err                  False                True */
-            /* Err       */ std::array{ TriStateBool::Err,   TriStateBool::Err,   TriStateBool::True },
-            /* False     */ std::array{ TriStateBool::Err,   TriStateBool::False, TriStateBool::True },
-            /* True      */ std::array{ TriStateBool::True,  TriStateBool::True,  TriStateBool::True }
-    };
+    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table{
+            /* lhs \ rhs               Err                 False                True */
+            /* Err       */ std::array{TriStateBool::Err,  TriStateBool::Err,   TriStateBool::True},
+            /* False     */ std::array{TriStateBool::Err,  TriStateBool::False, TriStateBool::True},
+            /* True      */ std::array{TriStateBool::True, TriStateBool::True,  TriStateBool::True}};
 
     return this->logical_binop_impl(or_logic_table, other, node_storage);
 }
