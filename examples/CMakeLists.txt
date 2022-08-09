@@ -15,7 +15,7 @@ target_link_libraries(rdf_nodes_example PRIVATE
         rdf4cpp::rdf4cpp
         )
 
-add_executable(namespaces_example namespaces_example.cpp)
+add_executable(namespaces_example namespaces.cpp)
 target_link_libraries(namespaces_example PRIVATE
         rdf4cpp::rdf4cpp
         )
