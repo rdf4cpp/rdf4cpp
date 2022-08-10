@@ -9,6 +9,55 @@
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
+private:
+    /**
+     * @brief the implementation for all numeric, binary operations
+     *
+     * @tparam OpSelect a function NumericOps -> binop_fptr_t
+     * @param op_select is used to select the specific operation to be carried out
+     * @param other rhs of the operation
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting from the selected binop or Literal{} if the types are not
+     *      convertible to a common type or the common type is not numeric
+     */
+    template<typename OpSelect>
+    Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * @brief the implementation for all numeric, unary operations
+     *
+     * @tparam OpSelect a function NumericOps -> unop_fptr_t
+     * @param op_select is used to select the specific operation to be carried out
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting from the selected unop or Literal{} if this is not numeric
+     */
+    template<typename OpSelect>
+    Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    enum struct TriStateBool : size_t {
+        Err = 0,
+        False = 1,
+        True = 2,
+    };
+
+    /**
+     * @return the effective-boolean-value of this literal as a TriStateBool
+     */
+    [[nodiscard]] TriStateBool get_ebv_impl() const;
+
+    /**
+     * @brief the implementation for all logical, binary operations
+     *
+     * @param logic_table the logic table for the binary operation. It is accessed via
+     *      logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())].
+     *      For an example logic table see operator&& or operator||.
+     * @param other the lhs of the operation
+     * @param node_storage the node storage that the resulting value will be put in
+     * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
+     *      if at least one of the types is not convertible to bool
+     */
+    Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -94,10 +143,44 @@ public:
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_numeric() const;
 
     bool operator==(const Literal &other) const;
 
     std::partial_ordering operator<=>(const Literal &other) const;
+
+    Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator+(Literal const &other) const;
+
+    Literal sub(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator-(Literal const &other) const;
+
+    Literal mul(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator*(Literal const &other) const;
+
+    Literal div(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator/(Literal const &other) const;
+
+    Literal pos(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator+() const;
+
+    Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator-() const;
+
+    /**
+     * Converts this literal to it's effective boolean value
+     * @return Literal containing the ebv
+     */
+    Literal effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator&&(Literal const &other) const;
+
+    Literal logical_or(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator||(Literal const &other) const;
+
+    Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    Literal operator!() const;
 
     /**
      * Constructs a datatype specific container from Literal.

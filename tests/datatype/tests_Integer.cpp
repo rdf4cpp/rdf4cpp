@@ -5,6 +5,15 @@
 
 using namespace rdf4cpp::rdf;
 
+TEST_CASE("integer capabilities") {
+    static_assert(datatypes::LiteralDatatype<datatypes::xsd::Integer>);
+    static_assert(datatypes::NumericLiteralDatatype<datatypes::xsd::Integer>);
+    static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Integer>);
+    static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::Integer>);
+    static_assert(datatypes::SubtypedLiteralDatatype<datatypes::xsd::Integer>);
+    static_assert(datatypes::xsd::Integer::subtype_rank == 1);
+}
+
 TEST_CASE("Datatype Integer") {
 
     constexpr auto correct_type_iri_cstr = "http://www.w3.org/2001/XMLSchema#integer";

@@ -27,15 +27,21 @@ struct DatatypeMapping<xsd_string> {
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_string>::cpp_type LiteralDatatypeImpl<xsd_string>::from_string(std::string_view s) {
-    return std::string{ s };
+inline capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s) {
+    return std::string{s};
+}
+
+template<>
+inline bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept {
+    return !value.empty();
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::string
  */
-using String = registry::LiteralDatatypeImpl<registry::xsd_string>;
+using String = registry::LiteralDatatypeImpl<registry::xsd_string,
+                                             registry::capabilities::Logical>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_STRING_HPP

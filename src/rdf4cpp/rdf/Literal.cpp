@@ -82,6 +82,10 @@ bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
+bool Literal::is_numeric() const {
+    return datatypes::registry::DatatypeRegistry::get_numerical_ops(this->datatype().identifier()).has_value();
+}
+
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 
 std::partial_ordering Literal::operator<=>(const Literal &other) const {
@@ -104,10 +108,12 @@ std::partial_ordering Literal::operator<=>(const Literal &other) const {
     }
 }
 bool Literal::operator==(const Literal &other) const {
-    if (this->lexical_form() == other.lexical_form()) {
-        return true;
+    if (this->null() || other.null()) {
+        return this->null() == other.null();
     } else if (this->datatype() != other.datatype()) {
         return false;
+    } else if (this->lexical_form() == other.lexical_form()) {
+        return true;
     } else {
         return false;
         /*if(this->handle_.type() == RDFNodeType::Literal) return this->handle_.literal_backend() == other.handle_.literal_backend();
@@ -143,7 +149,7 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
                                                  .language_tag = ""}),
                                          storage::node::identifier::RDFNodeType::Literal,
                                          node_storage.id()});
-    } else { // datatype is not registered, so we cannot parse the lexical_form nor canonize it
+    } else {  // datatype is not registered, so we cannot parse the lexical_form nor canonize it
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                                  .lexical_form = lexical_form,
@@ -153,5 +159,257 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
+template<typename OpSelect>
+Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
+    using datatypes::registry::DatatypeRegistry;
+
+    if (this->null() || other.null()) {
+        return Literal{};
+    }
+
+    auto const this_datatype = this->datatype().identifier();
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    assert(this_entry != nullptr);
+
+    if (!this_entry->numeric_ops.has_value()) {
+        return Literal{};  // not numeric
+    }
+
+    auto const other_datatype = other.datatype().identifier();
+
+    if (this_datatype == other_datatype) {
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
+                                                                                             other.value());
+
+        auto const to_string_fptr = [&]() {
+            if (op_res.result_type_iri == this_datatype) [[likely]] {
+                return this_entry->to_string_fptr;
+            } else [[unlikely]] {
+                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+            }
+        }();
+
+        assert(to_string_fptr != nullptr);
+
+        return Literal{to_string_fptr(op_res.result_value),
+                       IRI{op_res.result_type_iri, node_storage},
+                       node_storage};
+    } else {
+        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+        assert(other_entry != nullptr);
+
+        if (!other_entry->numeric_ops.has_value()) {
+            return Literal{};  // not numeric
+        }
+
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_entry->conversion_table,
+                                                                            other_entry->conversion_table);
+
+        if (!equalizer.has_value()) {
+            return Literal{};  // not convertible
+        }
+
+        auto const equalized_entry = [&]() {
+            if (equalizer->target_type_iri == this_datatype) {
+                return this_entry;
+            } else if (equalizer->target_type_iri == other_datatype) {
+                return other_entry;
+            } else {
+                return DatatypeRegistry::get_entry(equalizer->target_type_iri);
+            }
+        }();
+
+        assert(equalized_entry != nullptr);
+        assert(equalized_entry->numeric_ops.has_value());
+
+        DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
+                                                                                                  equalizer->convert_rhs(other.value()));
+
+        auto const to_string_fptr = [&]() {
+            if (op_res.result_type_iri == equalized_entry->datatype_iri) [[likely]] {
+                return equalized_entry->to_string_fptr;
+            } else [[unlikely]] {
+                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+            }
+        }();
+
+        assert(to_string_fptr != nullptr);
+
+        return Literal{to_string_fptr(op_res.result_value),
+                       IRI{op_res.result_type_iri, node_storage},
+                       node_storage};
+    }
+}
+
+template<typename OpSelect>
+Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
+    using datatypes::registry::DatatypeRegistry;
+
+    if (this->null()) {
+        return Literal{};
+    }
+
+    auto const entry = DatatypeRegistry::get_entry(this->datatype().identifier());
+    assert(entry != nullptr);
+
+    if (!entry->numeric_ops.has_value()) {
+        return Literal{};  // datatype not numeric
+    }
+
+    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
+
+    auto const to_string_fptr = [&]() {
+        if (op_res.result_type_iri == entry->datatype_iri) [[likely]] {
+            return entry->to_string_fptr;
+        } else [[unlikely]] {
+            return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+        }
+    }();
+
+    assert(to_string_fptr != nullptr);
+
+    return Literal{to_string_fptr(op_res.result_value),
+                   IRI{op_res.result_type_iri, node_storage},
+                   node_storage};
+}
+
+Literal::TriStateBool Literal::get_ebv_impl() const {
+    if (this->null()) {
+        return TriStateBool::Err;
+    }
+
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+
+    if (ebv == nullptr) {
+        return TriStateBool::Err;
+    }
+
+    return ebv(this->value()) ? TriStateBool::True : TriStateBool::False;
+}
+
+Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage) const {
+    auto const this_ebv = this->get_ebv_impl();
+    auto const other_ebv = other.get_ebv_impl();
+
+    auto const res = logic_table[static_cast<size_t>(this_ebv)][static_cast<size_t>(other_ebv)];
+
+    if (res == TriStateBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
+}
+
+Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.add_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator+(Literal const &other) const {
+    return this->add(other);
+}
+
+Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.sub_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator-(Literal const &other) const {
+    return this->sub(other);
+}
+
+Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.mul_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator*(Literal const &other) const {
+    return this->mul(other);
+}
+
+Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const {
+    return this->numeric_binop_impl([](auto const &num_ops) {
+        return num_ops.div_fptr;
+    }, other, node_storage);
+}
+
+Literal Literal::operator/(Literal const &other) const {
+    return this->div(other);
+}
+
+Literal Literal::pos(Node::NodeStorage &node_storage) const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.pos_fptr;
+    }, node_storage);
+}
+
+Literal Literal::operator+() const {
+    return this->pos();
+}
+
+Literal Literal::neg(Node::NodeStorage &node_storage) const {
+    return this->numeric_unop_impl([](auto const &num_ops) {
+        return num_ops.neg_fptr;
+    }, node_storage);
+}
+
+Literal Literal::operator-() const {
+    return this->neg();
+}
+
+Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
+    auto const ebv = this->get_ebv_impl();
+
+    if (ebv == TriStateBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::True, node_storage);
+}
+
+Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
+    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table{
+            /* lhs \ rhs               Err                  False                True */
+            /* Err       */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::Err},
+            /* False     */ std::array{TriStateBool::False, TriStateBool::False, TriStateBool::False},
+            /* True      */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::True}};
+
+    return this->logical_binop_impl(and_logic_table, other, node_storage);
+}
+
+Literal Literal::operator&&(Literal const &other) const {
+    return this->logical_and(other);
+}
+
+Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
+    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table{
+            /* lhs \ rhs               Err                 False                True */
+            /* Err       */ std::array{TriStateBool::Err,  TriStateBool::Err,   TriStateBool::True},
+            /* False     */ std::array{TriStateBool::Err,  TriStateBool::False, TriStateBool::True},
+            /* True      */ std::array{TriStateBool::True, TriStateBool::True,  TriStateBool::True}};
+
+    return this->logical_binop_impl(or_logic_table, other, node_storage);
+}
+
+Literal Literal::operator||(Literal const &other) const {
+    return this->logical_or(other);
+}
+
+Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
+    TriStateBool const ebv = this->get_ebv_impl();
+
+    if (ebv == TriStateBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::False, node_storage);
+}
+
+Literal Literal::operator!() const {
+    return this->logical_not();
+}
 
 }  // namespace rdf4cpp::rdf

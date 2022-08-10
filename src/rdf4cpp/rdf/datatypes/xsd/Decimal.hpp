@@ -8,6 +8,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 
 #include <charconv>
 #include <cmath>
@@ -29,12 +30,17 @@ struct DatatypeMapping<xsd_decimal> {
     using cpp_datatype = double;
 };
 
+template<>
+struct DatatypePromotionMapping<xsd_decimal> {
+    using promoted = xsd::Float;
+};
+
 /**
  * Specialisation of from_string template function.
  */
 template<>
-inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decimal>::from_string(std::string_view s) {
-    
+inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
+
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
         s.remove_prefix(1);
@@ -45,12 +51,12 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
 
     if (res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     }
 
     if (std::isnan(value) || std::isinf(value)) {
         // nan and +-inf not permitted in decimal
-        throw std::runtime_error{ "XSD Parsing Error" };
+        throw std::runtime_error{"XSD Parsing Error"};
     }
 
     return value;
@@ -60,19 +66,18 @@ inline LiteralDatatypeImpl<xsd_decimal>::cpp_type LiteralDatatypeImpl<xsd_decima
  * Specialisation of to_string template function.
  */
 template<>
-inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &value) {
+inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
 
     double int_part, fract_part;
-    fract_part  = modf(value, &int_part);
+    fract_part = modf(value, &int_part);
     bool remove_trailing_zeros = false;
     std::ostringstream str_os;
     str_os << std::fixed;
     if (fract_part == 0) {
         //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
         str_os << std::setprecision(1);
-    }
-    else {
-        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to nearest possible representation
+    } else {
+        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to the nearest possible representation
         str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
         remove_trailing_zeros = true;
     }
@@ -80,12 +85,16 @@ inline std::string LiteralDatatypeImpl<xsd_decimal>::to_string(const cpp_type &v
     std::string str = str_os.str();
 
     //Removes trailing zeros from fractional part if precision was set to maximum
-    if(remove_trailing_zeros && str.find('.') != std::string::npos)
-    {
+    if (remove_trailing_zeros && str.find('.') != std::string::npos) {
         //Removes trailing zeroes
-        str = str.substr(0, str.find_last_not_of('0')+1);
+        str = str.substr(0, str.find_last_not_of('0') + 1);
     }
     return str;
+}
+
+template<>
+inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept {
+    return !std::isnan(value) && value != 0.0;
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -93,7 +102,10 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::decimal
  */
-using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal>;
+using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal,
+                                              registry::capabilities::Logical,
+                                              registry::capabilities::Numeric,
+                                              registry::capabilities::Promotable>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_DECIMAL_HPP

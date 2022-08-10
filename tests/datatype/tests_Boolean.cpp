@@ -5,6 +5,14 @@
 
 using namespace rdf4cpp::rdf;
 
+TEST_CASE("boolean capabilities") {
+    static_assert(datatypes::LiteralDatatype<datatypes::xsd::Boolean>);
+    static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Boolean>);
+    static_assert(!datatypes::NumericLiteralDatatype<datatypes::xsd::Boolean>);
+    static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::Boolean>);
+    static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Boolean>);
+}
+
 TEST_CASE("Datatype Boolean") {
 
     constexpr auto correct_type_iri_cstr = "http://www.w3.org/2001/XMLSchema#boolean";

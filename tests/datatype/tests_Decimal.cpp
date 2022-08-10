@@ -5,6 +5,15 @@
 
 using namespace rdf4cpp::rdf;
 
+TEST_CASE("decimal capabilities") {
+    static_assert(datatypes::LiteralDatatype<datatypes::xsd::Decimal>);
+    static_assert(datatypes::NumericLiteralDatatype<datatypes::xsd::Decimal>);
+    static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Decimal>);
+    static_assert(datatypes::PromotableLiteralDatatype<datatypes::xsd::Decimal>);
+    static_assert(datatypes::xsd::Decimal::promotion_rank == 1);
+    static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Decimal>);
+}
+
 TEST_CASE("Datatype Decimal") {
 
     constexpr auto correct_type_iri_cstr = "http://www.w3.org/2001/XMLSchema#decimal";
