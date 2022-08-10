@@ -43,7 +43,7 @@ private:
     /**
      * @return the effective-boolean-value of this literal as a TriStateBool
      */
-    TriStateBool get_ebv_impl() const;
+    [[nodiscard]] TriStateBool get_ebv_impl() const;
 
     /**
      * @brief the implementation for all logical, binary operations
