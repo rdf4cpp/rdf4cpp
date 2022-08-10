@@ -58,6 +58,16 @@ private:
      */
     Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * @brief the implementation of the value comparison function
+     *
+     * @param other the literal to compare to
+     * @param out_type_ordering optional out parameter to receive the type ordering
+     *      (this saves 2 calls to the backend in the comparison function with extensions)
+     * @return the partial ordering of the values of this and other
+     */
+    std::partial_ordering compare_impl(Literal const &other, std::partial_ordering *out_type_ordering) const;
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -145,9 +155,32 @@ public:
     [[nodiscard]] bool is_iri() const;
     [[nodiscard]] bool is_numeric() const;
 
-    bool operator==(const Literal &other) const;
+    /**
+     * The default (value-only) comparison function
+     * without sparql operator extensions.
+     *
+     * @return the value ordering of this and other
+     */
+    [[nodiscard]] std::partial_ordering compare(Literal const &other) const;
 
-    std::partial_ordering operator<=>(const Literal &other) const;
+    /**
+     * A convenient (and equivalent) alternative to compare.
+     */
+    std::partial_ordering operator<=>(Literal const &other) const;
+
+    /**
+     * @return returns true if: *this <=> other == equivalent
+     * @note this only exists to hide operator== of base class Node
+     */
+    bool operator==(Literal const &other) const;
+
+    /**
+     * The comparison function with sparql operator extensions.
+     *
+     * @return similar to `compare` but if the values of this and other are equal it instead
+     *      returns the type ordering for the data types of this and other.
+     */
+    [[nodiscard]] std::partial_ordering compare_with_extensions(Literal const &other) const;
 
     Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+(Literal const &other) const;

@@ -88,39 +88,6 @@ bool Literal::is_numeric() const {
 
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 
-std::partial_ordering Literal::operator<=>(const Literal &other) const {
-    if (auto comp_id = this->handle_ <=> other.handle_; comp_id == std::partial_ordering::equivalent) {
-        return std::strong_ordering::equal;
-    } else if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
-        return comp_type;
-    } else {  // same type, different id.
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() <=> other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
-        }
-        return std::strong_ordering::less;
-    }
-}
-bool Literal::operator==(const Literal &other) const {
-    if (this->null() || other.null()) {
-        return this->null() == other.null();
-    } else if (this->datatype() != other.datatype()) {
-        return false;
-    } else if (this->lexical_form() == other.lexical_form()) {
-        return true;
-    } else {
-        return false;
-        /*if(this->handle_.type() == RDFNodeType::Literal) return this->handle_.literal_backend() == other.handle_.literal_backend();
-        else return false;*/
-    }
-}
-
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << (std::string) literal;
     return os;
@@ -298,6 +265,87 @@ Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> c
     }
 
     return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
+}
+
+std::partial_ordering Literal::compare_impl(Literal const &other, std::partial_ordering *out_type_ordering) const {
+    using datatypes::registry::DatatypeRegistry;
+
+    if (this->handle_.null() || other.handle_.null()) {
+        return this->handle_ == other.handle_
+                       ? std::partial_ordering::equivalent
+                       : std::partial_ordering::unordered;
+    }
+
+    auto const this_datatype = this->datatype().identifier();
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    assert(this_entry != nullptr);
+
+    if (this_entry->compare_fptr == nullptr) {
+        return std::partial_ordering::unordered; // not comparable
+    }
+
+    auto const other_datatype = other.datatype().identifier();
+
+    auto const datatype_cmp_res = this_datatype <=> other_datatype;
+
+    if (out_type_ordering != nullptr) {
+        *out_type_ordering = datatype_cmp_res;
+    }
+
+    if (datatype_cmp_res == std::strong_ordering::equivalent) {
+        return this_entry->compare_fptr(this->value(), other.value());
+    } else {
+        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+        assert(other_entry != nullptr);
+
+        if (other_entry->compare_fptr == nullptr) {
+            return std::partial_ordering::unordered; // not comparable
+        }
+
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype, other_datatype);
+
+        if (!equalizer.has_value()) {
+            return std::partial_ordering::unordered; // not convertible
+        }
+
+        auto const equalized_compare_fptr = [&]() {
+            if (equalizer->target_type_iri == this_datatype) {
+                return this_entry->compare_fptr;
+            }  else if (equalizer->target_type_iri == other_datatype) {
+                return other_entry->compare_fptr;
+            } else {
+                return DatatypeRegistry::get_compare(equalizer->target_type_iri);
+            }
+        }();
+
+        assert(equalized_compare_fptr != nullptr);
+
+        return equalized_compare_fptr(equalizer->convert_lhs(this->value()),
+                                      equalizer->convert_rhs(other.value()));
+    }
+}
+
+std::partial_ordering Literal::compare(Literal const &other) const {
+    return this->compare_impl(other, nullptr);
+}
+
+std::partial_ordering Literal::operator<=>(Literal const &other) const {
+    return this->compare(other);
+}
+
+bool Literal::operator==(Literal const &other) const {
+    return this->compare(other) == std::partial_ordering::equivalent;
+}
+
+std::partial_ordering Literal::compare_with_extensions(Literal const &other) const {
+    auto type_cmp_res = std::partial_ordering::unordered;
+    auto const cmp_res = this->compare_impl(other, &type_cmp_res);
+
+    if (cmp_res == std::partial_ordering::equivalent) {
+        return type_cmp_res;
+    }
+
+    return cmp_res;
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
