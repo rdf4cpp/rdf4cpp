@@ -66,7 +66,7 @@ struct Default {
      * @return <div>value</div>'s canonical string representation
      */
     inline static std::string to_string(cpp_type const &value) {
-        // If not further specified, to_string is instanciated via operator<<. If operator<< is not defined for cpp_type instanciation will fail.
+        // If not further specified, to_string is instantiated via operator<<. If operator<< is not defined for cpp_type instantiation will fail.
         std::stringstream str_s;
         str_s << value;
         return str_s.str();

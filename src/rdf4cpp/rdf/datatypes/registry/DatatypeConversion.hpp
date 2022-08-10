@@ -31,7 +31,7 @@ namespace conversion_detail {
  * @tparam Conversion a common interface to carry out a conversion (see adaptor namespace)
  * @tparam HasConversion check if a LiteralDatatype has a next conversion, e.g. if it is promotable
  * @tparam RankRule a boolean predicate to check if the defined conversion is valid
- * @tparam ConvertEntries types of the already existing ConversionEntries
+ * @tparam LayerAcc TODO
  * @param table_acc accumulator for ConversionEntries
  * @return a std::tuple<ConversionEntry, ...> containing all linear conversions reachable from BaseType
  */
@@ -180,7 +180,7 @@ struct SubtypeRankRule : std::bool_constant<detail_rank::DatatypeSubtypeRank<Sup
  * make_promotion_layer<Z>()  would generate a ConversionLayer containing nothing
  *
  * @tparam Type the source datatype to generate the promotion table for
- * @return compiletime linear promotion table
+ * @return compile-time linear promotion table
  */
 template<LiteralDatatype Type>
 consteval ConversionLayer auto make_promotion_layer() {
@@ -212,7 +212,7 @@ consteval ConversionLayer auto make_promotion_layer() {
  * make_subtype_layer<A>()  would generate a ConversionLayer containing nothing
  *
  * @tparam Type the source datatype to generate the subtype substitution table for
- * @return compiletime linear subtype substitution table
+ * @return compile-time linear subtype substitution table
  */
 template<LiteralDatatype Type>
 consteval ConversionLayer auto make_subtype_layer() {
@@ -309,7 +309,7 @@ consteval ConversionTable auto make_conversion_table() {
 }  // namespace conversion_detail
 
 /**
- * Generate a compiletime conversion table for the given type
+ * Generate a compile-time conversion table for the given type
  * this will include all conversions that are reachable from T.
  *
  * Reachable in this context means that there is a (*) directed path in the hierarchy
@@ -332,7 +332,7 @@ consteval ConversionTable auto make_conversion_table_for() {
 
 /**
  * Generate a runtime conversion for the given type
- * by first generating the compiletime version with make_conversion_table_for
+ * by first generating the compile-time version with make_conversion_table_for
  * and then constructing a RuntimeConversionTable from it.
  *
  * for more details see: make_conversion_table_for

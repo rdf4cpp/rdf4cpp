@@ -115,7 +115,7 @@ constexpr Acc tuple_fold(Tuple &&tup, Acc init, F &&f) {
 }
 
 /**
- * Simmilar to tuple_fold except that it is not folding over the actual elements
+ * Similar to tuple_fold except that it is not folding over the actual elements
  * of the tuple, but just their types.
  * The provided function f will be repeatedly called as f.template operator()<Element>(acc)
  * for each type in the tuple and is expected to return the accumulator for the next invocation.

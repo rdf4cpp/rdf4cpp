@@ -88,7 +88,7 @@ struct RuntimeConversionEntry {
 };
 
 /**
- * A runtime accessible version of a compiletime conversion table.
+ * A runtime accessible version of a compile-time conversion table.
  */
 struct RuntimeConversionTable {
 private:

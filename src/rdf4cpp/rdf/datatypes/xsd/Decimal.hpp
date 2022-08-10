@@ -77,7 +77,7 @@ inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type 
         //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
         str_os << std::setprecision(1);
     } else {
-        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to nearest possible representation
+        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to the nearest possible representation
         str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
         remove_trailing_zeros = true;
     }

@@ -170,7 +170,7 @@ public:
     }
 
     /**
-     * Get a factory_fptr_t for a datatype IRI std::string. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string repressentation")`.
+     * Get a factory_fptr_t for a datatype IRI std::string. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string representation")`.
      * @param datatype_iri datatype IRI std::string
      * @return function pointer or nullptr
      */
@@ -373,7 +373,7 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         auto const lesser_s_rank = lesser.subtype_rank();
         auto const greater_s_rank = greater.subtype_rank();
 
-        // lesser should be conversiont table of the type with lower subtype rank
+        // lesser should be the conversion table of the type with lower subtype rank
         assert(lesser_s_rank <= greater_s_rank);
 
         // calculate initial subtype offsets to equalize subtype rank
