@@ -80,6 +80,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 using Integer = registry::LiteralDatatypeImpl<registry::xsd_integer,
                                               registry::capabilities::Logical,
                                               registry::capabilities::Numeric,
+                                              registry::capabilities::Comparable,
                                               registry::capabilities::Subtype>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 #endif  //RDF4CPP_XSD_INTEGER_HPP

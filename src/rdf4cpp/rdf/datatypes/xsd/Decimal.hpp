@@ -105,6 +105,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 using Decimal = registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                               registry::capabilities::Logical,
                                               registry::capabilities::Numeric,
+                                              registry::capabilities::Comparable,
                                               registry::capabilities::Promotable>;
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
