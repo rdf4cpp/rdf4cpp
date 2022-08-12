@@ -178,9 +178,12 @@ public:
      * The comparison function with SPARQL operator extensions.
      *
      * @return similar to `compare` but:
-     *      - if the values ore equal return the type ordering instead
-     *      - if the values are not comparable return equivalent (this makes this only a weak_ordering and not strong)
-     *      - if exactly one of the literals is null order the null literal before the other
+     *      - values of an incomparable type are all considered equivalent
+     *      - a null literal is the smallest possible value of all types
+     *      - the type ordering replaces the value ordering in the following cases
+     *          - the values are equal
+     *          - at least one of the value's types is not comparable
+     *          - there is no viable conversion to a common type to check for equality
      */
     [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const;
 

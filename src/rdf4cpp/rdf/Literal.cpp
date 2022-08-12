@@ -280,16 +280,16 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
-    if (this_entry->compare_fptr == nullptr) {
-        return std::partial_ordering::unordered; // not comparable
-    }
-
     auto const other_datatype = other.datatype().identifier();
 
     std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
 
     if (out_type_ordering != nullptr) {
         *out_type_ordering = datatype_cmp_res;
+    }
+
+    if (this_entry->compare_fptr == nullptr) {
+        return std::partial_ordering::unordered; // this not comparable
     }
 
     if (datatype_cmp_res == std::strong_ordering::equal) {
@@ -299,13 +299,13 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
         assert(other_entry != nullptr);
 
         if (other_entry->compare_fptr == nullptr) {
-            return std::partial_ordering::unordered; // not comparable
+            return std::partial_ordering::unordered; // other not comparable
         }
 
         auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype, other_datatype);
 
         if (!equalizer.has_value()) {
-            return std::partial_ordering::unordered; // not convertible
+            return std::partial_ordering::unordered; // not convertible to common type
         }
 
         auto const equalized_compare_fptr = [&]() {
@@ -338,7 +338,7 @@ bool Literal::operator==(Literal const &other) const {
 }
 
 std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
-    auto type_cmp_res  = std::strong_ordering::equal;
+    std::strong_ordering type_cmp_res = std::strong_ordering::equivalent; // choose any here, will be overwritten anyway
     auto const cmp_res = this->compare_impl(other, &type_cmp_res);
 
     if (cmp_res == std::partial_ordering::equivalent) {
@@ -356,9 +356,11 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
             return std::weak_ordering::greater;
         }
 
-        // return equal on not comparable, since it's the only stable option
-        // => this makes this comparator weak
-        return std::weak_ordering::equivalent;
+        // return type comparison instead
+        // this is reached either:
+        //      - if one of the arguments is not comparable
+        //      - there is no viable conversion to a common type
+        return type_cmp_res;
     } else if (cmp_res == std::partial_ordering::less) {
         return std::weak_ordering::less;
     } else if (cmp_res == std::partial_ordering::greater) {
