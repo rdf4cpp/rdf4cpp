@@ -267,7 +267,7 @@ Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> c
     return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
 }
 
-std::partial_ordering Literal::compare_impl(Literal const &other, std::partial_ordering *out_type_ordering) const {
+std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_type_ordering) const {
     using datatypes::registry::DatatypeRegistry;
 
     if (this->handle_.null() || other.handle_.null()) {
@@ -286,13 +286,13 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::partial_o
 
     auto const other_datatype = other.datatype().identifier();
 
-    auto const datatype_cmp_res = this_datatype <=> other_datatype;
+    std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
 
     if (out_type_ordering != nullptr) {
         *out_type_ordering = datatype_cmp_res;
     }
 
-    if (datatype_cmp_res == std::strong_ordering::equivalent) {
+    if (datatype_cmp_res == std::strong_ordering::equal) {
         return this_entry->compare_fptr(this->value(), other.value());
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
@@ -326,7 +326,7 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::partial_o
 }
 
 std::partial_ordering Literal::compare(Literal const &other) const {
-    return this->compare_impl(other, nullptr);
+    return this->compare_impl(other);
 }
 
 std::partial_ordering Literal::operator<=>(Literal const &other) const {
@@ -337,15 +337,37 @@ bool Literal::operator==(Literal const &other) const {
     return this->compare(other) == std::partial_ordering::equivalent;
 }
 
-std::partial_ordering Literal::compare_with_extensions(Literal const &other) const {
-    auto type_cmp_res = std::partial_ordering::unordered;
+std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
+    auto type_cmp_res  = std::strong_ordering::equal;
     auto const cmp_res = this->compare_impl(other, &type_cmp_res);
 
     if (cmp_res == std::partial_ordering::equivalent) {
+        // return type ordering instead
         return type_cmp_res;
+    } else if (cmp_res == std::partial_ordering::unordered) {
+        // either exactly one of the literals is null or they are not comparable
+        // a null literal is the smallest of all values
+
+        if (this->handle_.null()) {
+            return std::weak_ordering::less;
+        }
+
+        if (other.handle_.null()) {
+            return std::weak_ordering::greater;
+        }
+
+        // return equal on not comparable, since it's the only stable option
+        // => this makes this comparator weak
+        return std::weak_ordering::equivalent;
+    } else if (cmp_res == std::partial_ordering::less) {
+        return std::weak_ordering::less;
+    } else if (cmp_res == std::partial_ordering::greater) {
+        return std::weak_ordering::greater;
     }
 
-    return cmp_res;
+    // std::partial_ordering only has these 4 variants
+    assert(false);
+    __builtin_unreachable();
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {

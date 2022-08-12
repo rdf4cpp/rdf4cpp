@@ -66,7 +66,7 @@ private:
      *      (this saves 2 calls to the backend in the comparison function with extensions)
      * @return the partial ordering of the values of this and other
      */
-    std::partial_ordering compare_impl(Literal const &other, std::partial_ordering *out_type_ordering) const;
+    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_type_ordering = nullptr) const;
 
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
@@ -157,7 +157,7 @@ public:
 
     /**
      * The default (value-only) comparison function
-     * without sparql operator extensions.
+     * without SPARQL operator extensions.
      *
      * @return the value ordering of this and other
      */
@@ -175,12 +175,14 @@ public:
     bool operator==(Literal const &other) const;
 
     /**
-     * The comparison function with sparql operator extensions.
+     * The comparison function with SPARQL operator extensions.
      *
-     * @return similar to `compare` but if the values of this and other are equal it instead
-     *      returns the type ordering for the data types of this and other.
+     * @return similar to `compare` but:
+     *      - if the values ore equal return the type ordering instead
+     *      - if the values are not comparable return equivalent (this makes this only a weak_ordering and not strong)
+     *      - if exactly one of the literals is null order the null literal before the other
      */
-    [[nodiscard]] std::partial_ordering compare_with_extensions(Literal const &other) const;
+    [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const;
 
     Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+(Literal const &other) const;
