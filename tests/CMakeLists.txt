@@ -103,6 +103,13 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
+add_executable(tests_TriBool util/tests_TriBool.cpp)
+target_link_libraries(tests_TriBool
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_TriBool PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_TriBool COMMAND tests_TriBool)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
