@@ -1,5 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#include <set>
+#include <unordered_set>
+
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
@@ -117,5 +120,54 @@ TEST_SUITE("comparisions") {
         SUBCASE("test ordering extensions ignored when not equal") {
             CHECK(Literal::make<Float>(2.f).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::greater);
         }
+    }
+
+    TEST_CASE("std::set") {
+        Literal const lit = Literal::make<Int>(5);
+        Literal const lit2 = Literal::make<Int>(5); // duplicate to check if it's filtered out
+        Literal const lit3 = Literal::make<Integer>(10);
+        Literal const lit4 = Literal::make<String>("hello world");
+        IRI const iri{"some random iri"};
+        IRI const null_iri{};
+        Node const node{};
+        BlankNode const blank_node{"some_random_id"};
+        query::Variable const variable{"a_variable"};
+
+        std::set<Node> const s{
+                lit, iri, node, lit2, blank_node, null_iri, lit3, variable, lit4};
+
+        std::vector<Node> const v{s.begin(), s.end()};
+
+        // lexical order of types, and null smallest
+        // and null Node has type BNode
+        std::vector<Node> const expected{node, null_iri, blank_node, iri, lit, lit3, lit4, variable};
+
+        CHECK(v == expected);
+    }
+
+    TEST_CASE("std::unordered_set") {
+        Literal const lit = Literal::make<Int>(5);
+        Literal const lit2 = Literal::make<Int>(5); // duplicate to check if it's filtered out
+        Literal const lit3 = Literal::make<Integer>(10);
+        Literal const lit4 = Literal::make<String>("hello world");
+        IRI const iri{"some random iri"};
+        IRI const null_iri{};
+        Node const node{};
+        BlankNode const blank_node{"some_random_id"};
+        query::Variable const variable{"a_variable"};
+
+        std::unordered_set<Node> s{
+                iri, null_iri, lit, lit2, lit3, lit4, node, blank_node, variable};
+
+        CHECK(s.size() == 8);
+        CHECK(s.contains(lit));
+        CHECK(s.contains(lit2));
+        CHECK(s.contains(lit3));
+        CHECK(s.contains(lit4));
+        CHECK(s.contains(iri));
+        CHECK(s.contains(null_iri));
+        CHECK(s.contains(node));
+        CHECK(s.contains(blank_node));
+        CHECK(s.contains(variable));
     }
 }
