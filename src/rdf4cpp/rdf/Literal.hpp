@@ -6,6 +6,7 @@
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
@@ -34,29 +35,10 @@ private:
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
-    enum struct TriStateBool : size_t {
-        Err = 0,
-        False = 1,
-        True = 2,
-    };
-
     /**
-     * @return the effective-boolean-value of this literal as a TriStateBool
+     * @return the effective boolean value of this
      */
-    [[nodiscard]] TriStateBool get_ebv_impl() const;
-
-    /**
-     * @brief the implementation for all logical, binary operations
-     *
-     * @param logic_table the logic table for the binary operation. It is accessed via
-     *      logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())].
-     *      For an example logic table see operator&& or operator||.
-     * @param other the lhs of the operation
-     * @param node_storage the node storage that the resulting value will be put in
-     * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
-     *      if at least one of the types is not convertible to bool
-     */
-    Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] util::TriBool get_ebv_impl() const;
 
     /**
      * @brief the implementation of the value comparison function
@@ -67,7 +49,6 @@ private:
      * @return the partial ordering of the values of this and other
      */
     std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_type_ordering = nullptr) const;
-
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -149,6 +130,12 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
+    /**
+     * Constructs a datatype specific container from Literal.
+     * @return std::any wrapped value. might be empty if type is not registered.
+     */
+    [[nodiscard]] std::any value() const;
+
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_blank_node() const;
@@ -169,12 +156,6 @@ public:
     std::partial_ordering operator<=>(Literal const &other) const;
 
     /**
-     * @return returns true if: *this <=> other == equivalent
-     * @note this only exists to hide operator== of base class Node
-     */
-    bool operator==(Literal const &other) const;
-
-    /**
      * The comparison function with SPARQL operator extensions.
      *
      * @return similar to `compare` but:
@@ -186,6 +167,31 @@ public:
      *          - there is no viable conversion to a common type to check for equality
      */
     [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const;
+
+    util::TriBool eq(Literal const &other) const;
+    util::TriBool operator==(Literal const &other) const;
+
+    util::TriBool ne(Literal const &other) const;
+    util::TriBool operator!=(Literal const &other) const;
+
+    util::TriBool lt(Literal const &other) const;
+    util::TriBool operator<(Literal const &other) const;
+
+    util::TriBool le(Literal const &other) const;
+    util::TriBool operator<=(Literal const &other) const;
+
+    util::TriBool gt(Literal const &other) const;
+    util::TriBool operator>(Literal const &other) const;
+
+    util::TriBool ge(Literal const &other) const;
+    util::TriBool operator>=(Literal const &other) const;
+
+    bool eq_with_extensions(Literal const &other) const;
+    bool ne_with_extensions(Literal const &other) const;
+    bool lt_with_extensions(Literal const &other) const;
+    bool le_with_extensions(Literal const &other) const;
+    bool gt_with_extensions(Literal const &other) const;
+    bool ge_with_extensions(Literal const &other) const;
 
     Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+(Literal const &other) const;
@@ -219,12 +225,6 @@ public:
 
     Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator!() const;
-
-    /**
-     * Constructs a datatype specific container from Literal.
-     * @return std::any wrapped value. might be empty if type is not registered.
-     */
-    [[nodiscard]] std::any value() const;
 
     /**
      * Get the value of an literal. T must be the registered datatype for the datatype iri.

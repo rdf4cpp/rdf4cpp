@@ -240,31 +240,18 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
                    node_storage};
 }
 
-Literal::TriStateBool Literal::get_ebv_impl() const {
+util::TriBool Literal::get_ebv_impl() const {
     if (this->null()) {
-        return TriStateBool::Err;
+        return util::TriBool::Err;
     }
 
     auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
 
     if (ebv == nullptr) {
-        return TriStateBool::Err;
+        return util::TriBool::Err;
     }
 
-    return ebv(this->value()) ? TriStateBool::True : TriStateBool::False;
-}
-
-Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage) const {
-    auto const this_ebv = this->get_ebv_impl();
-    auto const other_ebv = other.get_ebv_impl();
-
-    auto const res = logic_table[static_cast<size_t>(this_ebv)][static_cast<size_t>(other_ebv)];
-
-    if (res == TriStateBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
+    return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
 }
 
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_type_ordering) const {
@@ -333,10 +320,6 @@ std::partial_ordering Literal::operator<=>(Literal const &other) const {
     return this->compare(other);
 }
 
-bool Literal::operator==(Literal const &other) const {
-    return this->compare(other) == std::partial_ordering::equivalent;
-}
-
 std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
     std::strong_ordering type_cmp_res = std::strong_ordering::equivalent; // choose any here, will be overwritten anyway
     auto const cmp_res = this->compare_impl(other, &type_cmp_res);
@@ -370,6 +353,78 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
     // std::partial_ordering only has these 4 variants
     assert(false);
     __builtin_unreachable();
+}
+
+util::TriBool Literal::eq(Literal const &other) const {
+    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+}
+
+util::TriBool Literal::operator==(Literal const &other) const {
+    return this->eq(other);
+}
+
+util::TriBool Literal::ne(Literal const &other) const {
+    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+}
+
+util::TriBool Literal::operator!=(Literal const &other) const {
+    return this->ne(other);
+}
+
+util::TriBool Literal::lt(Literal const &other) const {
+    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+}
+
+util::TriBool Literal::operator<(Literal const &other) const {
+    return this->lt(other);
+}
+
+util::TriBool Literal::le(Literal const &other) const {
+    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+}
+
+util::TriBool Literal::operator<=(Literal const &other) const {
+    return this->le(other);
+}
+
+util::TriBool Literal::gt(Literal const &other) const {
+    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+}
+
+util::TriBool Literal::operator>(Literal const &other) const {
+    return this->gt(other);
+}
+
+util::TriBool Literal::ge(Literal const &other) const {
+    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+}
+
+util::TriBool Literal::operator>=(Literal const &other) const {
+    return this->ge(other);
+}
+
+bool Literal::eq_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::equivalent;
+}
+
+bool Literal::ne_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::equivalent;
+}
+
+bool Literal::lt_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::less;
+}
+
+bool Literal::le_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::greater;
+}
+
+bool Literal::gt_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::greater;
+}
+
+bool Literal::ge_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::less;
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
@@ -435,21 +490,21 @@ Literal Literal::operator-() const {
 Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
     auto const ebv = this->get_ebv_impl();
 
-    if (ebv == TriStateBool::Err) {
+    if (ebv == util::TriBool::Err) {
         return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::True, node_storage);
+    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table{
-            /* lhs \ rhs               Err                  False                True */
-            /* Err       */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::Err},
-            /* False     */ std::array{TriStateBool::False, TriStateBool::False, TriStateBool::False},
-            /* True      */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::True}};
+    auto const res = this->get_ebv_impl() && other.get_ebv_impl();
 
-    return this->logical_binop_impl(and_logic_table, other, node_storage);
+    if (res == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator&&(Literal const &other) const {
@@ -457,13 +512,13 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table{
-            /* lhs \ rhs               Err                 False                True */
-            /* Err       */ std::array{TriStateBool::Err,  TriStateBool::Err,   TriStateBool::True},
-            /* False     */ std::array{TriStateBool::Err,  TriStateBool::False, TriStateBool::True},
-            /* True      */ std::array{TriStateBool::True, TriStateBool::True,  TriStateBool::True}};
+    auto const res = this->get_ebv_impl() || other.get_ebv_impl();
 
-    return this->logical_binop_impl(or_logic_table, other, node_storage);
+    if (res == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const {
@@ -471,13 +526,13 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    TriStateBool const ebv = this->get_ebv_impl();
+    auto const ebv = this->get_ebv_impl();
 
-    if (ebv == TriStateBool::Err) {
+    if (ebv == util::TriBool::Err) {
         return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::False, node_storage);
+    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
 }
 
 Literal Literal::operator!() const {
