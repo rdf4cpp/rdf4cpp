@@ -76,10 +76,12 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::integer
  */
-using Int = registry::LiteralDatatypeImpl<registry::xsd_int,
-                                          registry::capabilities::Logical,
-                                          registry::capabilities::Numeric,
-                                          registry::capabilities::Subtype>;
+struct Int : registry::LiteralDatatypeImpl<registry::xsd_int,
+                                           registry::capabilities::Logical,
+                                           registry::capabilities::Numeric,
+                                           registry::capabilities::Subtype> {
+};
+
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_INT_HPP

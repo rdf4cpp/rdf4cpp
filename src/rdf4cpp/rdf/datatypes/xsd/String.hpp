@@ -40,8 +40,10 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::string
  */
-using String = registry::LiteralDatatypeImpl<registry::xsd_string,
-                                             registry::capabilities::Logical>;
+struct String : registry::LiteralDatatypeImpl<registry::xsd_string,
+                                              registry::capabilities::Logical> {
+};
+
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_STRING_HPP

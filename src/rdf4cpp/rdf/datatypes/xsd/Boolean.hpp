@@ -59,11 +59,14 @@ inline bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type
 
 
 namespace rdf4cpp::rdf::datatypes::xsd {
+
 /**
  * Implementation of xsd::boolean
  */
-using Boolean = registry::LiteralDatatypeImpl<registry::xsd_boolean,
-                                              registry::capabilities::Logical>;
+struct Boolean : registry::LiteralDatatypeImpl<registry::xsd_boolean,
+                                               registry::capabilities::Logical> {
+};
+
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 
