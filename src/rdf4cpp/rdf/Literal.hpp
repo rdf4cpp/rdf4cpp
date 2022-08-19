@@ -44,11 +44,11 @@ private:
      * @brief the implementation of the value comparison function
      *
      * @param other the literal to compare to
-     * @param out_type_ordering optional out parameter to receive the type ordering
+     * @param out_alternative_ordering optional out parameter to receive the type ordering
      *      (this saves 2 calls to the backend in the comparison function with extensions)
      * @return the partial ordering of the values of this and other
      */
-    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_type_ordering = nullptr) const;
+    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 

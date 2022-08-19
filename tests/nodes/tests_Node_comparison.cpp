@@ -84,7 +84,7 @@ TEST_SUITE("comparisions") {
     TEST_CASE("order by compare tests") {
         // Incomparable <=> Incomparable
         SUBCASE("incomparability") {
-            CHECK(Literal::make<Incomparable>(5).compare_with_extensions(Literal::make<Incomparable>(10)) == std::weak_ordering::equivalent);
+            CHECK(Literal::make<Incomparable>(5).compare_with_extensions(Literal::make<Incomparable>(10)) == std::weak_ordering::greater);
 
             // reason: "http://www.w3.org/2001/XMLSchema#float" > "Incomparable" (with ascii lexicographical compare)
             CHECK(Literal::make<Float>(10.f).compare_with_extensions(Literal::make<Incomparable>(1)) == std::weak_ordering::greater);

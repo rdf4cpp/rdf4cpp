@@ -254,42 +254,54 @@ util::TriBool Literal::get_ebv_impl() const {
     return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
 }
 
-std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_type_ordering) const {
+std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const {
     using datatypes::registry::DatatypeRegistry;
 
     if (this->handle_.null() || other.handle_.null()) {
-        return this->handle_ == other.handle_
-                       ? std::partial_ordering::equivalent
-                       : std::partial_ordering::unordered;
+        if (this->handle_ == other.handle_) {
+            return std::partial_ordering::equivalent;
+        } else {
+            if (out_alternative_ordering != nullptr) {
+                *out_alternative_ordering = this->handle_.null()
+                                             ? std::strong_ordering::less
+                                             : std::strong_ordering::greater;
+            }
+            return std::partial_ordering::unordered;
+        }
     }
 
     auto const this_datatype = this->datatype().identifier();
-    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
-    assert(this_entry != nullptr);
-
     auto const other_datatype = other.datatype().identifier();
 
     std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
 
-    if (out_type_ordering != nullptr) {
-        *out_type_ordering = datatype_cmp_res;
-    }
-
-    if (this_entry->compare_fptr == nullptr) {
-        return std::partial_ordering::unordered; // this not comparable
-    }
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
 
     if (datatype_cmp_res == std::strong_ordering::equal) {
-        return this_entry->compare_fptr(this->value(), other.value());
-    } else {
-        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
-        assert(other_entry != nullptr);
-
-        if (other_entry->compare_fptr == nullptr) {
-            return std::partial_ordering::unordered; // other not comparable
+        if (out_alternative_ordering != nullptr) {
+            // types equal, fallback to lexical form ordering
+            *out_alternative_ordering = this->lexical_form() <=> other.lexical_form();
         }
 
-        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_datatype, other_datatype);
+        if (this_entry == nullptr || this_entry->compare_fptr == nullptr) {
+            return std::partial_ordering::unordered;
+        }
+
+        return this_entry->compare_fptr(this->value(), other.value());
+    } else {
+        if (out_alternative_ordering != nullptr) {
+            // types are different, the only useful alternative ordering is the type ordering
+            *out_alternative_ordering = datatype_cmp_res;
+        }
+
+        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+
+        if (this_entry == nullptr || this_entry->compare_fptr == nullptr || other_entry == nullptr || other_entry->compare_fptr == nullptr) {
+            return std::partial_ordering::unordered;
+        }
+
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_entry->conversion_table,
+                                                                            other_entry->conversion_table);
 
         if (!equalizer.has_value()) {
             return std::partial_ordering::unordered; // not convertible to common type
@@ -321,29 +333,12 @@ std::partial_ordering Literal::operator<=>(Literal const &other) const {
 }
 
 std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
-    std::strong_ordering type_cmp_res = std::strong_ordering::equivalent; // choose any here, will be overwritten anyway
-    auto const cmp_res = this->compare_impl(other, &type_cmp_res);
+    std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent; // choose any here, will be overwritten anyway
+    auto const cmp_res = this->compare_impl(other, &alternative_cmp_res);
 
-    if (cmp_res == std::partial_ordering::equivalent) {
-        // return type ordering instead
-        return type_cmp_res;
-    } else if (cmp_res == std::partial_ordering::unordered) {
-        // either exactly one of the literals is null or they are not comparable
-        // a null literal is the smallest of all values
-
-        if (this->handle_.null()) {
-            return std::weak_ordering::less;
-        }
-
-        if (other.handle_.null()) {
-            return std::weak_ordering::greater;
-        }
-
-        // return type comparison instead
-        // this is reached either:
-        //      - if one of the arguments is not comparable
-        //      - there is no viable conversion to a common type
-        return type_cmp_res;
+    if (cmp_res == std::partial_ordering::equivalent || cmp_res == std::partial_ordering::unordered) {
+        // return alternative ordering instead
+        return alternative_cmp_res;
     } else if (cmp_res == std::partial_ordering::less) {
         return std::weak_ordering::less;
     } else if (cmp_res == std::partial_ordering::greater) {
