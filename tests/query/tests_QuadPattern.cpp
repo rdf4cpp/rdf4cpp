@@ -98,13 +98,13 @@ TEST_CASE("QuadPattern - Check validity") {
             query::Variable{"v2", true},
     };
     for (const auto &graph : nodes) {
-        SUBCASE((std::string{"graph: "} + ((not graph.null()) ? (std::string) graph : std::string{"null"})).c_str()) {
+        SUBCASE((std::string{"graph: "} + ((not graph.null()) ? static_cast<std::string>(graph) : std::string{"null"})).c_str()) {
             for (const auto &subject : nodes) {
-                SUBCASE((std::string{"subject: "} + ((not subject.null()) ? (std::string) subject : std::string{"null"})).c_str()) {
+                SUBCASE((std::string{"subject: "} + ((not subject.null()) ? static_cast<std::string>(subject) : std::string{"null"})).c_str()) {
                     for (const auto &predicate : nodes) {
-                        SUBCASE((std::string{"predicate: "} + ((not predicate.null()) ? (std::string) predicate : std::string{"null"})).c_str()) {
+                        SUBCASE((std::string{"predicate: "} + ((not predicate.null()) ? static_cast<std::string>(predicate) : std::string{"null"})).c_str()) {
                             for (const auto &object : nodes) {
-                                SUBCASE((std::string{"object: "} + ((not object.null()) ? (std::string) object : std::string{"null"})).c_str()) {
+                                SUBCASE((std::string{"object: "} + ((not object.null()) ? static_cast<std::string>(object) : std::string{"null"})).c_str()) {
                                     bool valid = valid_graph(graph) and valid_subject(subject) and valid_predicate(predicate) and valid_object(object);
                                     validate_quad_pattern(graph, subject, predicate, object, valid);
                                 }
