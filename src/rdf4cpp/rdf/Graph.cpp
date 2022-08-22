@@ -15,7 +15,7 @@ Graph::Graph(storage::node::NodeStorage node_storage)
       graph_name(IRI::default_graph(this->dataset_storage.node_storage())) {}
 
 Graph::Graph(const IRI &graph_name, NodeStorage node_storage) : Graph(std::move(node_storage)) {
-    this->graph_name = (IRI) graph_name.to_node_storage(backend().node_storage());
+    this->graph_name = static_cast<IRI>(graph_name.to_node_storage(backend().node_storage()));
 }
 
 void Graph::add(const Statement &statement) {

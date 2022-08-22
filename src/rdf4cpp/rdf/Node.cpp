@@ -52,7 +52,7 @@ Node::operator std::string() const {
             return handle_.bnode_backend().n_string();
         case RDFNodeType::Literal: {
             const auto &literal = static_cast<const Literal &>(*this);
-            return (std::string) literal;
+            return static_cast<std::string>(literal);
         }
         case RDFNodeType::Variable:
             return handle_.variable_backend().n_string();
@@ -165,7 +165,7 @@ bool Node::null() const noexcept {
     return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
-    return os << (std::string) node;
+    return os << static_cast<std::string>(node);
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;

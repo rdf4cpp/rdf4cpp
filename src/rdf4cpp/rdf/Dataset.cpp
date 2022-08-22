@@ -22,7 +22,7 @@ size_t Dataset::size() const {
     return dataset_storage.size();
 }
 size_t Dataset::size(const IRI &graph_name) const {
-    return dataset_storage.size((IRI) graph_name.to_node_storage(backend().node_storage()));
+    return dataset_storage.size(static_cast<IRI>(graph_name.to_node_storage(backend().node_storage())));
 }
 Graph Dataset::graph(const IRI &graph_name) {
     return {dataset_storage, graph_name};
