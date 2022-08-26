@@ -75,10 +75,12 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 /**
  * Implementation of xsd::float
  */
-using Float = registry::LiteralDatatypeImpl<registry::xsd_float,
-                                            registry::capabilities::Logical,
-                                            registry::capabilities::Numeric,
-                                            registry::capabilities::Comparable>;
+struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
+                                             registry::capabilities::Logical,
+                                             registry::capabilities::Numeric,
+                                             registry::capabilities::Comparable> {
+};
+
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_FLOAT_HPP

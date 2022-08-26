@@ -142,3 +142,12 @@ TEST_CASE("Literal - Check for lexical form with language tag") {
     CHECK(lit1.language_tag() == "en");
     CHECK(std::string(lit1) == "\"Bugs Bunny\"@en");
 }
+
+TEST_CASE("Literal - ctor edge-case") {
+    IRI const iri{"http://www.w3.org/2001/XMLSchema#int"};
+    Literal const lit1{"1", iri};
+    Literal const lit2{"2", iri};
+
+    Literal const expected{"3", iri};
+    CHECK(lit1 + lit2 == expected);
+}
