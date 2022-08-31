@@ -1,5 +1,7 @@
 #include "Literal.hpp"
 
+#include <sstream>
+
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 
@@ -38,12 +40,11 @@ std::string_view Literal::language_tag() const {
 }
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
-    auto quote_lexical = [](std::string_view lexical) -> std::string {
+    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) {
         // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
-        std::ostringstream out{};
-        out << "\"";
 
-        for (auto const &character : lexical) {
+        out << "\"";
+        for (auto const character : lexical) {
             switch (character) {
                 case '\\': {
                     out << R"(\\)";
@@ -61,22 +62,30 @@ Literal::operator std::string() const {
                     out << R"(\")";
                     break;
                 }
-                    [[likely]] default : {
-                        out << character;
-                        break;
-                    }
+                [[likely]] default : {
+                    out << character;
+                    break;
+                }
             }
         }
         out << "\"";
-        return out.str();
     };
+
     const auto &literal = handle_.literal_backend();
+    std::ostringstream oss;
+
+    quoted_lexical_into_stream(oss, literal.lexical_form);
+
     if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
-        return quote_lexical(literal.lexical_form) + "@" + std::string{literal.language_tag};
+        if (!literal.language_tag.empty()) {
+            oss << "@" << literal.language_tag;
+        }
     } else {
         auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
-        return quote_lexical(literal.lexical_form) + "^^" + dtype_iri.n_string();
+        oss << "^^" << dtype_iri.n_string();
     }
+
+    return oss.str();
 }
 bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
@@ -126,30 +135,46 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     return os;
 }
 std::any Literal::value() const {
-    datatypes::registry::DatatypeRegistry::factory_fptr_t factory = datatypes::registry::DatatypeRegistry::get_factory(this->datatype().identifier());
-    if (factory != nullptr)
-        return factory(lexical_form());
-    else
+    using namespace datatypes;
+
+    auto const datatype = this->datatype().identifier();
+
+    if (datatype == rdf::LangString::identifier) {
+        auto const &lit = this->handle_.literal_backend();
+
+        return registry::LangStringRepr{
+            .lexical_form = std::string{lit.lexical_form},
+            .language_tag = std::string{lit.language_tag}};
+    } else if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
+        return factory(this->lexical_form());
+    } else {
         return {};
+    }
 }
 
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
-    // retrieving the datatype.identifier() requires a lookup in the backend -> cache
-    std::string_view const datatype_identifier = datatype.identifier();  // string_view
-    auto const factory_func = datatypes::registry::DatatypeRegistry::get_factory(datatype_identifier);
+    using namespace datatypes::registry;
 
-    if (factory_func) {  // this is a know datatype -> canonize the string representation
-        auto const native_type = factory_func(lexical_form);
-        // if factory_func exists, to_string_func must exist, too
-        auto const to_string_func = datatypes::registry::DatatypeRegistry::get_to_string(datatype_identifier);
+    // retrieving the datatype.identifier() requires a lookup in the backend -> cache
+    auto const datatype_id = datatype.identifier();
+
+    if (datatype_id == datatypes::rdf::LangString::identifier) {
+        // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other constructors"};
+    }
+
+    if (auto const *entry = DatatypeRegistry::get_entry(datatype_id); entry != nullptr) {
+        // exists => canonize
+        auto const cpp_type = entry->factory_fptr(lexical_form);
 
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                                 .lexical_form = to_string_func(native_type),
+                                                 .lexical_form = entry->to_string_fptr(cpp_type),
                                                  .language_tag = ""}),
                                          storage::node::identifier::RDFNodeType::Literal,
                                          node_storage.id()});
-    } else {  // datatype is not registered, so we cannot parse the lexical_form nor canonize it
+    } else {
+        // datatype is not registered, so we cannot parse the lexical_form nor canonize it
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                                  .lexical_form = lexical_form,
