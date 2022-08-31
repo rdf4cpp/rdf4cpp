@@ -29,7 +29,7 @@ query::SolutionSequence DefaultDatasetBackend::match(const QuadPattern &quad_pat
 }
 
 size_t DefaultDatasetBackend::size(const IRI &graph_name) const {
-    return std::count_if(quads_.begin(), quads_.end(), [&](const Quad &quad) { return (IRI) quad.graph() == graph_name; });
+    return std::count_if(quads_.begin(), quads_.end(), [&](const Quad &quad) { return static_cast<IRI>(quad.graph()) == graph_name; });
 }
 
 IDatasetBackend::const_iterator DefaultDatasetBackend::begin() const {

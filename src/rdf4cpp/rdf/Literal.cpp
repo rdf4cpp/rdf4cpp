@@ -122,7 +122,7 @@ bool Literal::operator==(const Literal &other) const {
 }
 
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
-    os << (std::string) literal;
+    os << static_cast<std::string>(literal);
     return os;
 }
 std::any Literal::value() const {

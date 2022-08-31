@@ -68,7 +68,7 @@ int main() {
     }
 
     if (nodes[1].is_variable()) {
-        auto v = (query::Variable) nodes[1];
+        auto v = static_cast<query::Variable>(nodes[1]);
         std::cout << v << std::endl;
     }
 }
