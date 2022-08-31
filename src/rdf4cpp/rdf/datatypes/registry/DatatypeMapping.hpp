@@ -8,6 +8,13 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 /**
+ * Mapping type_iri -> fixed id
+ * Note: a fixed id can only be at most 6 bits long
+ */
+template<ConstexprString type_iri>
+struct DatatypeFixedIdMapping;
+
+/**
  * Mapping type_iri -> c++ datatype
  */
 template<ConstexprString type_iri>

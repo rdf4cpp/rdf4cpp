@@ -4,9 +4,11 @@
 #include <concepts>
 #include <tuple>
 #include <type_traits>
+#include <variant>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -66,20 +68,27 @@ concept ConversionLayer = conversion_typing_detail::IsConversionLayer<T>::value;
 template<typename T>
 concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
 
-
 /**
  * A type erased version of a ConversionEntry.
  */
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &);
 
-    std::string target_type_iri;
+    DatatypeIRI target_type_iri;
     convert_fptr_t convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() {
+        DatatypeIRI target_type_iri = []() {
+            if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
+                return DatatypeIRI{Entry::target_type::fixed_id};
+            } else {
+                return DatatypeIRI{std::string{Entry::target_type::identifier}};
+            }
+        }();
+
         return RuntimeConversionEntry{
-                .target_type_iri = std::string{Entry::target_type::identifier},
+                .target_type_iri = std::move(target_type_iri),
                 .convert = [](std::any const &value) -> std::any {
                     auto actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
@@ -98,7 +107,14 @@ private:
     std::vector<RuntimeConversionEntry> table;
 
     RuntimeConversionTable(size_t const s_rank, size_t const max_p_rank)
-        : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank), table(s_rank * max_p_rank) {}
+        : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank)
+    {
+        if (s_rank * max_p_rank > 0) {
+            table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
+                                                      .target_type_iri = DatatypeIRI::empty(),
+                                                      .convert = nullptr});
+        }
+    }
 
     inline static RuntimeConversionTable empty() {
         return RuntimeConversionTable{0, 0};

@@ -83,7 +83,9 @@ bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
 bool Literal::is_numeric() const {
-    return datatypes::registry::DatatypeRegistry::get_numerical_ops(this->datatype().identifier()).has_value();
+    using namespace datatypes::registry;
+
+    return DatatypeRegistry::get_numerical_ops(this->datatype().to_datatype_iri()).has_value();
 }
 
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
@@ -126,7 +128,9 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     return os;
 }
 std::any Literal::value() const {
-    datatypes::registry::DatatypeRegistry::factory_fptr_t factory = datatypes::registry::DatatypeRegistry::get_factory(this->datatype().identifier());
+    using namespace datatypes::registry;
+
+    DatatypeRegistry::factory_fptr_t factory = DatatypeRegistry::get_factory(this->get_datatype_iri());
     if (factory != nullptr)
         return factory(lexical_form());
     else
@@ -134,14 +138,16 @@ std::any Literal::value() const {
 }
 
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
+    using namespace datatypes::registry;
+
     // retrieving the datatype.identifier() requires a lookup in the backend -> cache
-    std::string_view const datatype_identifier = datatype.identifier();  // string_view
-    auto const factory_func = datatypes::registry::DatatypeRegistry::get_factory(datatype_identifier);
+    DatatypeIRIView const datatype_identifier = datatype.to_datatype_iri();
+    auto const factory_func = DatatypeRegistry::get_factory(datatype_identifier);
 
     if (factory_func) {  // this is a know datatype -> canonize the string representation
         auto const native_type = factory_func(lexical_form);
         // if factory_func exists, to_string_func must exist, too
-        auto const to_string_func = datatypes::registry::DatatypeRegistry::get_to_string(datatype_identifier);
+        auto const to_string_func = DatatypeRegistry::get_to_string(datatype_identifier);
 
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
@@ -167,7 +173,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         return Literal{};
     }
 
-    auto const this_datatype = this->datatype().identifier();
+    auto const this_datatype = this->get_datatype_iri();
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
@@ -175,7 +181,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         return Literal{};  // not numeric
     }
 
-    auto const other_datatype = other.datatype().identifier();
+    auto const other_datatype = other.get_datatype_iri();
 
     if (this_datatype == other_datatype) {
         DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
@@ -192,7 +198,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(op_res.result_value),
-                       IRI{op_res.result_type_iri, node_storage},
+                       IRI::from_datatype_iri(op_res.result_type_iri, node_storage), // todo translate
                        node_storage};
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
@@ -236,7 +242,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(op_res.result_value),
-                       IRI{op_res.result_type_iri, node_storage},
+                       IRI::from_datatype_iri(op_res.result_type_iri, node_storage),
                        node_storage};
     }
 }
@@ -249,7 +255,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
         return Literal{};
     }
 
-    auto const entry = DatatypeRegistry::get_entry(this->datatype().identifier());
+    auto const entry = DatatypeRegistry::get_entry(this->get_datatype_iri());
     assert(entry != nullptr);
 
     if (!entry->numeric_ops.has_value()) {
@@ -269,7 +275,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     assert(to_string_fptr != nullptr);
 
     return Literal{to_string_fptr(op_res.result_value),
-                   IRI{op_res.result_type_iri, node_storage},
+                   IRI::from_datatype_iri(op_res.result_type_iri, node_storage),
                    node_storage};
 }
 
@@ -278,7 +284,7 @@ Literal::TriStateBool Literal::get_ebv_impl() const {
         return TriStateBool::Err;
     }
 
-    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_iri());
 
     if (ebv == nullptr) {
         return TriStateBool::Err;
@@ -298,6 +304,16 @@ Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> c
     }
 
     return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
+}
+
+datatypes::registry::DatatypeIRIView Literal::get_datatype_iri() const noexcept {
+    auto const lit_type = this->handle_.node_id().literal_type();
+
+    if (lit_type.is_fixed()) {
+        return datatypes::registry::DatatypeIRIView{lit_type.to_underlying()};
+    } else {
+        return datatypes::registry::DatatypeIRIView{this->datatype().identifier()};
+    }
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {

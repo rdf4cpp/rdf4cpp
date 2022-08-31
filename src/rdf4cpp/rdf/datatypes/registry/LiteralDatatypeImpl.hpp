@@ -169,6 +169,13 @@ struct Logical {
     }
 };
 
+template<ConstexprString type_iri>
+struct FixedId {
+    static constexpr uint8_t fixed_id = DatatypeFixedIdMapping<type_iri>::fixed_id;
+    static_assert(fixed_id > 1 && fixed_id < 64, "fixed id can only have 6 bits and the 0 and 1 values are reserved");
+    // todo: figure out how to not reserve them as they are not useful
+};
+
 }  // namespace capabilities
 
 /**

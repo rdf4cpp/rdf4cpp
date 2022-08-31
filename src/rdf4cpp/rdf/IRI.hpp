@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -10,11 +11,13 @@ namespace rdf4cpp::rdf {
  * IRI Resource node.
  */
 class IRI : public Node {
+private:
+    static IRI from_datatype_iri(datatypes::registry::DatatypeIRIView iri, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+    [[nodiscard]] datatypes::registry::DatatypeIRIView to_datatype_iri() const noexcept;
+
 public:
     explicit IRI(Node::NodeBackendHandle handle) noexcept;
 
-
-public:
     IRI() noexcept;
 
     /**

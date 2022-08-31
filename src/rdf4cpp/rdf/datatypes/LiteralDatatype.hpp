@@ -60,5 +60,10 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
                                                                               { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
                                                                           };
 
+template<typename LiteralDatatypeImpl>
+concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires {
+                                                                             { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<uint8_t>;
+                                                                         };
+
 }  // namespace rdf4cpp::rdf::datatypes
 #endif  //RDF4CPP_LITERALDATATYPE_HPP
