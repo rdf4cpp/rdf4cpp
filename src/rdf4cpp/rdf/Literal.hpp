@@ -44,9 +44,15 @@ private:
      * @brief the implementation of the value comparison function
      *
      * @param other the literal to compare to
-     * @param out_alternative_ordering optional out parameter to receive the type ordering
-     *      (this saves 2 calls to the backend in the comparison function with extensions)
-     * @return the partial ordering of the values of this and other
+     * @param out_alternative_ordering optional out parameter to receive an alternative ordering (for ordering extensions).
+     *      Note: If present it is expected to be defaulted to std::strong_ordering::equivalent.
+     *      It is populated based on the following rules:
+     *          - (null, non-null) => less
+     *          - (non-null, null) => greater
+     *          - (non-null, non-null) and equal type => lexical form ordering
+     *          - (non-null, non-null) and different type => type ordering
+     *
+     * @return the ordering of the values of this and other; if there is a value ordering
      */
     std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
 protected:

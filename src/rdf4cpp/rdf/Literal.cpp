@@ -262,6 +262,8 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
             return std::partial_ordering::equivalent;
         } else {
             if (out_alternative_ordering != nullptr) {
+                // ordering extensions (for e.g. ORDER BY) require that null nodes
+                // are always the smallest node
                 *out_alternative_ordering = this->handle_.null()
                                              ? std::strong_ordering::less
                                              : std::strong_ordering::greater;
@@ -333,7 +335,9 @@ std::partial_ordering Literal::operator<=>(Literal const &other) const {
 }
 
 std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
-    std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent; // choose any here, will be overwritten anyway
+    // default to equivalent; as required by compare_impl
+    // see doc for compare_impl
+    std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent;
     auto const cmp_res = this->compare_impl(other, &alternative_cmp_res);
 
     if (cmp_res == std::partial_ordering::equivalent || cmp_res == std::partial_ordering::unordered) {
@@ -341,17 +345,13 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
         return alternative_cmp_res;
     } else if (cmp_res == std::partial_ordering::less) {
         return std::weak_ordering::less;
-    } else if (cmp_res == std::partial_ordering::greater) {
+    } else { // cmp_res == std::partial_ordering::greater
         return std::weak_ordering::greater;
     }
-
-    // std::partial_ordering only has these 4 variants
-    assert(false);
-    __builtin_unreachable();
 }
 
 util::TriBool Literal::eq(Literal const &other) const {
-    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
 util::TriBool Literal::operator==(Literal const &other) const {
@@ -359,7 +359,7 @@ util::TriBool Literal::operator==(Literal const &other) const {
 }
 
 util::TriBool Literal::ne(Literal const &other) const {
-    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
 util::TriBool Literal::operator!=(Literal const &other) const {
@@ -367,7 +367,7 @@ util::TriBool Literal::operator!=(Literal const &other) const {
 }
 
 util::TriBool Literal::lt(Literal const &other) const {
-    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
 util::TriBool Literal::operator<(Literal const &other) const {
@@ -375,7 +375,7 @@ util::TriBool Literal::operator<(Literal const &other) const {
 }
 
 util::TriBool Literal::le(Literal const &other) const {
-    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
 util::TriBool Literal::operator<=(Literal const &other) const {
@@ -383,7 +383,7 @@ util::TriBool Literal::operator<=(Literal const &other) const {
 }
 
 util::TriBool Literal::gt(Literal const &other) const {
-    return util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
 util::TriBool Literal::operator>(Literal const &other) const {
@@ -391,7 +391,7 @@ util::TriBool Literal::operator>(Literal const &other) const {
 }
 
 util::TriBool Literal::ge(Literal const &other) const {
-    return !util::TriBool::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
 util::TriBool Literal::operator>=(Literal const &other) const {
