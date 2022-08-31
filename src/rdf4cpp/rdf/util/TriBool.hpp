@@ -23,7 +23,7 @@ private:
         return static_cast<std::underlying_type_t<Value>>(this->value) + 1;
     }
 
-    constexpr TriBool(Value const value) : value{value} {}
+    constexpr TriBool(Value const value) noexcept : value{value} {}
 public:
     static TriBool const True;
     static TriBool const False;
@@ -32,7 +32,7 @@ public:
     /**
      * @brief implicit conversion from bool; maps true -> TriBool::True and false -> TriBool::False
      */
-    constexpr TriBool(bool const b) : value{ static_cast<std::underlying_type_t<Value>>(b) } {}
+    constexpr TriBool(bool const b) noexcept : value{static_cast<std::underlying_type_t<Value>>(b)} {}
 
     constexpr bool operator==(TriBool const &) const noexcept = default;
     constexpr bool operator!=(TriBool const &) const noexcept = default;
@@ -98,7 +98,7 @@ inline constexpr TriBool TriBool::Err{TriBool::Value::Err};
  * @brief Checks whether the value of the partial_ordering (l) is equal to the value of the weak ordering (r)
  * @return TriBool::Err if l is unordered; otherwise return l == r
  */
-constexpr TriBool partial_ordering_eq(std::partial_ordering const l, std::weak_ordering const r) {
+constexpr TriBool partial_weak_ordering_eq(std::partial_ordering const l, std::weak_ordering const r) noexcept {
     if (l == std::partial_ordering::unordered) {
         return TriBool::Err;
     }

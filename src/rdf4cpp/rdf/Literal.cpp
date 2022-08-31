@@ -376,7 +376,7 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
 }
 
 util::TriBool Literal::eq(Literal const &other) const {
-    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
 util::TriBool Literal::operator==(Literal const &other) const {
@@ -384,7 +384,7 @@ util::TriBool Literal::operator==(Literal const &other) const {
 }
 
 util::TriBool Literal::ne(Literal const &other) const {
-    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
 util::TriBool Literal::operator!=(Literal const &other) const {
@@ -392,7 +392,7 @@ util::TriBool Literal::operator!=(Literal const &other) const {
 }
 
 util::TriBool Literal::lt(Literal const &other) const {
-    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
 util::TriBool Literal::operator<(Literal const &other) const {
@@ -400,7 +400,7 @@ util::TriBool Literal::operator<(Literal const &other) const {
 }
 
 util::TriBool Literal::le(Literal const &other) const {
-    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
 util::TriBool Literal::operator<=(Literal const &other) const {
@@ -408,7 +408,7 @@ util::TriBool Literal::operator<=(Literal const &other) const {
 }
 
 util::TriBool Literal::gt(Literal const &other) const {
-    return util::partial_ordering_eq(this->compare(other), std::weak_ordering::greater);
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
 util::TriBool Literal::operator>(Literal const &other) const {
@@ -416,7 +416,7 @@ util::TriBool Literal::operator>(Literal const &other) const {
 }
 
 util::TriBool Literal::ge(Literal const &other) const {
-    return !util::partial_ordering_eq(this->compare(other), std::weak_ordering::less);
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
 util::TriBool Literal::operator>=(Literal const &other) const {
