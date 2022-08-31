@@ -5,6 +5,7 @@
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
+#include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
@@ -97,9 +98,16 @@ public:
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     inline static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
                                NodeStorage &node_storage = NodeStorage::default_instance()) {
-        return Literal(LiteralDatatype_t::to_string(compatible_value),
-                       IRI(LiteralDatatype_t::identifier, node_storage),
-                       node_storage);
+
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            return Literal{compatible_value.lexical_form,
+                           compatible_value.language_tag,
+                           node_storage};
+        } else {
+            return Literal{LiteralDatatype_t::to_string(compatible_value),
+                           IRI{LiteralDatatype_t::identifier, node_storage},
+                           node_storage};
+        }
     }
 
     /**
@@ -110,8 +118,8 @@ public:
      * @param node_storage
      * @return
      */
-    inline static Literal make(std::string_view lexical_form, const IRI &datatype,
-                               NodeStorage &node_storage = NodeStorage::default_instance());
+    static Literal make(std::string_view lexical_form, const IRI &datatype,
+                        NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
@@ -239,7 +247,15 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     typename LiteralDatatype_t::cpp_type value() const {
-        return LiteralDatatype_t::from_string(this->lexical_form());
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            auto const &lit = this->handle_.literal_backend();
+
+            return datatypes::registry::LangStringRepr {
+                    .lexical_form = std::string{lit.lexical_form},
+                    .language_tag = std::string{lit.language_tag}};
+        } else {
+            return LiteralDatatype_t::from_string(this->lexical_form());
+        }
     }
 
     friend class Node;

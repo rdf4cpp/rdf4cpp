@@ -1,7 +1,7 @@
 #include "TriplePattern.hpp"
 namespace rdf4cpp::rdf::query {
 TriplePattern::operator std::string() const {
-    return (std::string) subject() + " " + (std::string) predicate() + " " + (std::string) object() + " . ";
+    return static_cast<std::string>(subject()) + " " + static_cast<std::string>(predicate()) + " " + static_cast<std::string>(object()) + " . ";
 }
 TriplePattern::TriplePattern(Node subject, Node predicate, Node object) : entries_{{subject, predicate, object}} {}
 Node &TriplePattern::subject() { return entries_[0]; }
@@ -24,7 +24,7 @@ TriplePattern::const_reverse_iterator TriplePattern::rbegin() const { return ent
 TriplePattern::reverse_iterator TriplePattern::rend() { return entries_.rend(); }
 TriplePattern::const_reverse_iterator TriplePattern::rend() const { return entries_.rend(); }
 std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern) {
-    os << (std::string) pattern;
+    os << static_cast<std::string>(pattern);
     return os;
 }
 TriplePattern TriplePattern::to_node_storage(storage::node::NodeStorage &node_storage) const {

@@ -2,12 +2,12 @@
 namespace rdf4cpp::rdf::query {
 QuadPattern::operator std::string() const {
 
-    return ((graph().is_iri() and ((IRI) graph()).null())  // Graph
+    return (graph().is_iri() and static_cast<IRI>(graph()).null())  // Graph
                     ? std::string{}
-                    : (((std::string) graph()) + " ")) +
-           (std::string) subject() + " " +    // Subject
-           (std::string) predicate() + " " +  // Predicate
-           (std::string) object() + " . ";    // Object
+                    : static_cast<std::string>(graph()) + " " +
+           static_cast<std::string>(subject()) + " " +    // Subject
+           static_cast<std::string>(predicate()) + " " +  // Predicate
+           static_cast<std::string>(object()) + " . ";    // Object
 }
 QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) : entries_({graph, subject, predicate, object}) {}
 Node &QuadPattern::graph() { return entries_[0]; }
@@ -33,7 +33,7 @@ QuadPattern::const_reverse_iterator QuadPattern::rbegin() const { return entries
 QuadPattern::reverse_iterator QuadPattern::rend() { return entries_.rend(); }
 QuadPattern::const_reverse_iterator QuadPattern::rend() const { return entries_.rend(); }
 std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
-    os << (std::string) pattern;
+    os << static_cast<std::string>(pattern);
     return os;
 }
 QuadPattern QuadPattern::to_node_storage(storage::node::NodeStorage &node_storage) const {
