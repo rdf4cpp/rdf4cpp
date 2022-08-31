@@ -76,7 +76,7 @@ public:
         return this->underlying;
     }
 
-    bool operator==(LiteralType const &other) const noexcept {
+    constexpr bool operator==(LiteralType const &other) const noexcept {
         return this->to_underlying() == other.to_underlying();
     }
 };

@@ -20,6 +20,11 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 constexpr static registry::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
 
+template<>
+struct DatatypeFixedIdMapping<xsd_int> {
+    static constexpr uint8_t fixed_id = 56;
+};
+
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
@@ -79,7 +84,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 struct Int : registry::LiteralDatatypeImpl<registry::xsd_int,
                                            registry::capabilities::Logical,
                                            registry::capabilities::Numeric,
-                                           registry::capabilities::Subtype> {
+                                           registry::capabilities::Subtype,
+                                           registry::capabilities::FixedId> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
