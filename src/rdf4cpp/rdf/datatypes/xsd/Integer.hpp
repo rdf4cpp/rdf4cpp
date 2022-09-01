@@ -80,6 +80,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 struct Integer : registry::LiteralDatatypeImpl<registry::xsd_integer,
                                                registry::capabilities::Logical,
                                                registry::capabilities::Numeric,
+                                               registry::capabilities::Comparable,
                                                registry::capabilities::Subtype> {
 };
 

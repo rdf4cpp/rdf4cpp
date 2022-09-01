@@ -77,7 +77,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  */
 struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
                                              registry::capabilities::Logical,
-                                             registry::capabilities::Numeric> {
+                                             registry::capabilities::Numeric,
+                                             registry::capabilities::Comparable> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd

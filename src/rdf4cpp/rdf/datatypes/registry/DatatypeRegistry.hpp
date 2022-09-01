@@ -36,6 +36,8 @@ public:
     using unop_fptr_t = NumericOpResult (*)(std::any const &);
     using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &);
 
+    using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &);
+
     struct NumericOps {
         binop_fptr_t add_fptr;  // a + b
         binop_fptr_t sub_fptr;  // a - b
@@ -51,9 +53,10 @@ public:
         factory_fptr_t factory_fptr;      // construct from string
         to_string_fptr_t to_string_fptr;  // convert to string
 
-        ebv_fptr_t ebv_fptr;  // convert to effective boolean value
+        ebv_fptr_t ebv_fptr; // convert to effective boolean value
 
         std::optional<NumericOps> numeric_ops;
+        compare_fptr_t compare_fptr;
 
         RuntimeConversionTable conversion_table;
 
@@ -64,6 +67,7 @@ public:
                     .to_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
+                    .compare_fptr = nullptr,
                     .conversion_table = RuntimeConversionTable::empty()};
         }
     };
@@ -225,6 +229,14 @@ public:
         return res.has_value() ? *res : nullptr;
     }
 
+    inline static compare_fptr_t get_compare(std::string_view const datatype_iri) {
+        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+            return entry.compare_fptr;
+        });
+
+        return res.has_value() ? *res : nullptr;
+    }
+
     /**
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
      *
@@ -281,7 +293,20 @@ inline void DatatypeRegistry::add() {
         }
     }();
 
-    DatatypeRegistry::add(DatatypeEntry{
+    auto const compare_fptr = []() -> compare_fptr_t {
+        if constexpr (datatypes::ComparableLiteralDatatype<LiteralDatatype_t>) {
+            return [](std::any const &lhs, std::any const &rhs) -> std::partial_ordering {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
+
+                return LiteralDatatype_t::compare(lhs_val, rhs_val);
+            };
+        } else {
+            return nullptr;
+        }
+    }();
+
+    DatatypeRegistry::add(DatatypeEntry {
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return std::any(LiteralDatatype_t::from_string(string_repr));
@@ -291,6 +316,7 @@ inline void DatatypeRegistry::add() {
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,
+            .compare_fptr = compare_fptr,
             .conversion_table = make_runtime_conversion_table_for<LiteralDatatype_t>()});
 }
 

@@ -11,6 +11,7 @@ TEST_CASE("string capabilities") {
     static_assert(!datatypes::NumericLiteralDatatype<datatypes::xsd::String>);
     static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::String>);
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::String>);
+    static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::String>);
 }
 
 TEST_CASE("Datatype String") {

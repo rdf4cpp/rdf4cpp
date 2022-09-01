@@ -83,7 +83,7 @@ public:
 
     bool operator==(const Node &other) const noexcept;
 
-    std::strong_ordering operator<=>(const Node &other) const noexcept;
+    std::weak_ordering operator<=>(const Node &other) const noexcept;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`

@@ -48,7 +48,8 @@ namespace rdf4cpp::rdf::datatypes::rdf {
 /**
  * Implementation of rdf::langString
  */
-struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string> {
+struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
+                                                  registry::capabilities::Comparable> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf

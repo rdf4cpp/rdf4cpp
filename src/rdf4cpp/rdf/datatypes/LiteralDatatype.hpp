@@ -45,6 +45,11 @@ concept LogicalLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && require
                                                                          };
 
 template<typename LiteralDatatypeImpl>
+concept ComparableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires (typename LiteralDatatypeImpl::cpp_type const &lhs, typename LiteralDatatypeImpl::cpp_type const &rhs) {
+                                                                                { LiteralDatatypeImpl::compare(lhs, rhs) } -> std::convertible_to<std::partial_ordering>;
+                                                                            };
+
+template<typename LiteralDatatypeImpl>
 concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value) {
                                                                                 requires LiteralDatatype<typename LiteralDatatypeImpl::promoted>;
                                                                                 typename LiteralDatatypeImpl::promoted_cpp_type;

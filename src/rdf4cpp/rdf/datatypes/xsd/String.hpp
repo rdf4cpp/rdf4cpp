@@ -41,7 +41,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  * Implementation of xsd::string
  */
 struct String : registry::LiteralDatatypeImpl<registry::xsd_string,
-                                              registry::capabilities::Logical> {
+                                              registry::capabilities::Logical,
+                                              registry::capabilities::Comparable> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd

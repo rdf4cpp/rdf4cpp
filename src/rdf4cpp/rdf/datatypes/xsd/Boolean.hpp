@@ -64,7 +64,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  * Implementation of xsd::boolean
  */
 struct Boolean : registry::LiteralDatatypeImpl<registry::xsd_boolean,
-                                               registry::capabilities::Logical> {
+                                               registry::capabilities::Logical,
+                                               registry::capabilities::Comparable> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd

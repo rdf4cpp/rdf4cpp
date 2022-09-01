@@ -169,7 +169,19 @@ struct Logical {
     }
 };
 
-}  // namespace capabilities
+/**
+ * The capability to be compared, e.g. with operator<=>
+ */
+template<ConstexprString type_iri>
+struct Comparable {
+    using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
+
+    inline static std::partial_ordering compare(cpp_type const &lhs, cpp_type const &rhs) {
+        return lhs <=> rhs;
+    }
+};
+
+} // namespace capabilities
 
 /**
  * An automatically registering LiteralDatatype with given capabilities.
