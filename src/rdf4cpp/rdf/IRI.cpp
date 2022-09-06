@@ -15,7 +15,7 @@ IRI IRI::from_datatype_iri(datatypes::registry::DatatypeIRIView const iri, NodeS
                                      storage::node::identifier::RDFNodeType::IRI,
                                      node_storage.id()}};
     } else {
-        return IRI{iri.get_other(), node_storage};
+        return IRI{iri.get_dynamic(), node_storage};
     }
 }
 

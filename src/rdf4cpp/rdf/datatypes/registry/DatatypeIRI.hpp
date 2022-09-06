@@ -26,42 +26,51 @@ struct DatatypeIRIVisitor {
 template<typename F, typename O>
 DatatypeIRIVisitor(F, O) -> DatatypeIRIVisitor<F, O>;
 
-struct DatatypeIRIView : std::variant<storage::node::identifier::LiteralType, std::string_view> {
+struct DatatypeIRIView {
+private:
     using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
-
+    variant_t inner;
+public:
     explicit constexpr DatatypeIRIView(storage::node::identifier::LiteralType fixed)
-        : variant_t{fixed} {
+        : inner{fixed} {
     }
 
     explicit constexpr DatatypeIRIView(std::string_view const other)
-        : variant_t{other} {
+        : inner{other} {
     }
 
     [[nodiscard]] constexpr bool is_fixed() const {
-        return this->index() == 0;
+        return this->inner.index() == 0;
     }
 
     [[nodiscard]] constexpr bool is_dynamic() const noexcept {
-        return this->index() == 1;
+        return this->inner.index() == 1;
     }
 
     [[nodiscard]] constexpr storage::node::identifier::LiteralType get_fixed() const {
-        return std::get<0>(*this);
+        return std::get<0>(this->inner);
     }
 
-    [[nodiscard]] constexpr std::string_view get_other() const {
-        return std::get<1>(*this);
+    [[nodiscard]] constexpr std::string_view get_dynamic() const {
+        return std::get<1>(this->inner);
     }
 
-    std::strong_ordering operator<=>(DatatypeIRIView const &other) const noexcept = default;
+    constexpr std::strong_ordering operator<=>(DatatypeIRIView const &other) const noexcept = default;
+
+    template<typename F>
+    friend constexpr decltype(auto) visit(F &&f, DatatypeIRIView const &self) noexcept(noexcept(std::visit(std::forward<F>(f), std::declval<variant_t const &>()))) {
+        return std::visit(std::forward<F>(f), self.inner);
+    }
 };
 
 
-struct DatatypeIRI : std::variant<storage::node::identifier::LiteralType, std::string> {
+struct DatatypeIRI {
+private:
     using variant_t = std::variant<storage::node::identifier::LiteralType, std::string>;
-
+    variant_t inner;
+public:
     explicit inline DatatypeIRI(DatatypeIRIView const iri)
-        : variant_t{visit(
+        : inner{visit(
                   DatatypeIRIVisitor{
                           [](storage::node::identifier::LiteralType fixed) { return variant_t{fixed}; },
                           [](std::string_view other) { return variant_t{std::string{other}}; }},
@@ -69,48 +78,45 @@ struct DatatypeIRI : std::variant<storage::node::identifier::LiteralType, std::s
     }
 
     explicit inline DatatypeIRI(storage::node::identifier::LiteralType const fixed)
-        : variant_t{fixed} {
+        : inner{fixed} {
     }
 
     explicit inline DatatypeIRI(std::string const &other)
-        : variant_t{other} {
+        : inner{other} {
     }
 
     explicit inline DatatypeIRI(std::string &&other)
-        : variant_t{std::move(other)} {
+        : inner{std::move(other)} {
     }
 
     inline operator DatatypeIRIView() const noexcept {
         return visit(DatatypeIRIVisitor{
                              [](storage::node::identifier::LiteralType fixed) { return DatatypeIRIView{fixed}; },
                              [](std::string const &other) { return DatatypeIRIView{other}; }},
-                     *this);
+                     this->inner);
     }
 
     [[nodiscard]] inline bool is_fixed() const {
-        return this->index() == 0;
+        return this->inner.index() == 0;
     }
 
     [[nodiscard]] inline bool is_dynamic() const noexcept {
-        return this->index() == 1;
+        return this->inner.index() == 1;
     }
 
     [[nodiscard]] inline storage::node::identifier::LiteralType get_fixed() const {
-        return std::get<0>(*this);
+        return std::get<0>(this->inner);
     }
 
-    [[nodiscard]] inline std::string const &get_other() const {
-        return std::get<1>(*this);
+    [[nodiscard]] inline std::string const &get_dynamic() const {
+        return std::get<1>(this->inner);
     }
 
     inline std::strong_ordering operator<=>(DatatypeIRI const &other) const noexcept = default;
 
-    inline bool operator==(std::string_view const other) const noexcept {
-        return this->is_dynamic() && this->get_other() == other;
-    }
-
-    inline bool operator==(storage::node::identifier::LiteralType const fixed) const noexcept {
-        return this->is_fixed() && this->get_fixed() == fixed;
+    template<typename F>
+    friend decltype(auto) visit(F && f, DatatypeIRI const &self) noexcept(noexcept(std::visit(std::forward<F>(f), std::declval<variant_t const &>()))) {
+        return std::visit(std::forward<F>(f), self);
     }
 };
 

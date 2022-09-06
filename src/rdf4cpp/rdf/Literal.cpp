@@ -169,7 +169,7 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
-    using datatypes::registry::DatatypeRegistry;
+    using namespace datatypes::registry;
 
     if (this->null() || other.null() || this->is_fixed_not_numeric() || other.is_fixed_not_numeric()) {
         return Literal{};
@@ -217,13 +217,13 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};  // not convertible
         }
 
-        auto const equalized_entry = [&]() {
+        auto const [equalized_entry, equalized_iri] = [&]() {
             if (equalizer->target_type_iri == this_datatype) {
-                return this_entry;
+                return std::make_pair(this_entry, this_datatype);
             } else if (equalizer->target_type_iri == other_datatype) {
-                return other_entry;
+                return std::make_pair(other_entry, other_datatype);
             } else {
-                return DatatypeRegistry::get_entry(equalizer->target_type_iri);
+                return std::make_pair(DatatypeRegistry::get_entry(equalizer->target_type_iri), equalizer->target_type_iri);
             }
         }();
 
@@ -233,13 +233,9 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
                                                                                                   equalizer->convert_rhs(other.value()));
 
-        auto const to_string_fptr = [&]() {
-            if (op_res.result_type_iri == equalized_entry->datatype_iri) [[likely]] {
-                return equalized_entry->to_string_fptr;
-            } else [[unlikely]] {
-                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
-            }
-        }();
+        auto const to_string_fptr = op_res.result_type_iri == equalized_iri
+                                            ? equalized_entry->to_string_fptr
+                                            : DatatypeRegistry::get_to_string(op_res.result_type_iri);
 
         assert(to_string_fptr != nullptr);
 
@@ -251,28 +247,25 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
 template<typename OpSelect>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
-    using datatypes::registry::DatatypeRegistry;
+    using namespace datatypes::registry;
 
     if (this->null()) {
         return Literal{};
     }
 
-    auto const entry = DatatypeRegistry::get_entry(this->get_datatype_iri());
-    assert(entry != nullptr);
+    auto const this_datatype = this->get_datatype_iri();
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    assert(this_entry != nullptr);
 
-    if (!entry->numeric_ops.has_value()) {
-        return Literal{};  // datatype not numeric
+    if (!this_entry->numeric_ops.has_value()) {
+        return Literal{};  // this_datatype not numeric
     }
 
-    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
+    DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value());
 
-    auto const to_string_fptr = [&]() {
-        if (op_res.result_type_iri == entry->datatype_iri) [[likely]] {
-            return entry->to_string_fptr;
-        } else [[unlikely]] {
-            return DatatypeRegistry::get_to_string(op_res.result_type_iri);
-        }
-    }();
+    auto const to_string_fptr = op_res.result_type_iri == this_datatype
+                                        ? this_entry->to_string_fptr
+                                        : DatatypeRegistry::get_to_string(op_res.result_type_iri);
 
     assert(to_string_fptr != nullptr);
 
