@@ -20,7 +20,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
  */
-constexpr static registry::ConstexprString xsd_decimal{"http://www.w3.org/2001/XMLSchema#decimal"};
+constexpr static util::ConstexprString xsd_decimal{"http://www.w3.org/2001/XMLSchema#decimal"};
 
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.

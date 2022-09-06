@@ -11,12 +11,13 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
  */
-constexpr static registry::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSchema#boolean"};
+constexpr static util::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSchema#boolean"};
 
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.

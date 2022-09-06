@@ -4,6 +4,7 @@
 #include <variant>
 #include <cstdint>
 
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -12,7 +13,7 @@ struct DatatypeIRIVisitor {
     F map_fixed;
     O map_other;
 
-    auto operator()(uint8_t const fixed) -> std::invoke_result_t<F, uint8_t> {
+    auto operator()(storage::node::identifier::LiteralType const fixed) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
         return std::invoke(this->map_fixed, fixed);
     }
 
@@ -25,10 +26,10 @@ struct DatatypeIRIVisitor {
 template<typename F, typename O>
 DatatypeIRIVisitor(F, O) -> DatatypeIRIVisitor<F, O>;
 
-struct DatatypeIRIView : std::variant<uint8_t, std::string_view> {
-    using variant_t = std::variant<uint8_t, std::string_view>;
+struct DatatypeIRIView : std::variant<storage::node::identifier::LiteralType, std::string_view> {
+    using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
 
-    explicit constexpr DatatypeIRIView(uint8_t fixed)
+    explicit constexpr DatatypeIRIView(storage::node::identifier::LiteralType fixed)
         : variant_t{fixed} {
     }
 
@@ -40,79 +41,75 @@ struct DatatypeIRIView : std::variant<uint8_t, std::string_view> {
         return this->index() == 0;
     }
 
-    [[nodiscard]] constexpr bool is_other() const noexcept {
+    [[nodiscard]] constexpr bool is_dynamic() const noexcept {
         return this->index() == 1;
     }
 
-    [[nodiscard]] constexpr uint8_t get_fixed() const {
-        return std::get<uint8_t>(*this);
+    [[nodiscard]] constexpr storage::node::identifier::LiteralType get_fixed() const {
+        return std::get<0>(*this);
     }
 
     [[nodiscard]] constexpr std::string_view get_other() const {
-        return std::get<std::string_view>(*this);
+        return std::get<1>(*this);
     }
 
     std::strong_ordering operator<=>(DatatypeIRIView const &other) const noexcept = default;
 };
 
 
-struct DatatypeIRI : std::variant<uint8_t, std::string> {
-    using variant_t = std::variant<uint8_t, std::string>;
+struct DatatypeIRI : std::variant<storage::node::identifier::LiteralType, std::string> {
+    using variant_t = std::variant<storage::node::identifier::LiteralType, std::string>;
 
-    explicit constexpr DatatypeIRI(DatatypeIRIView const iri)
+    explicit inline DatatypeIRI(DatatypeIRIView const iri)
         : variant_t{visit(
                   DatatypeIRIVisitor{
-                          [](uint8_t fixed) { return variant_t{fixed}; },
+                          [](storage::node::identifier::LiteralType fixed) { return variant_t{fixed}; },
                           [](std::string_view other) { return variant_t{std::string{other}}; }},
                   iri)} {
     }
 
-    explicit constexpr DatatypeIRI(uint8_t const fixed)
+    explicit inline DatatypeIRI(storage::node::identifier::LiteralType const fixed)
         : variant_t{fixed} {
     }
 
-    explicit constexpr DatatypeIRI(std::string const &other)
-        : variant_t{std::in_place_type<std::string>, other} {
+    explicit inline DatatypeIRI(std::string const &other)
+        : variant_t{other} {
     }
 
-    explicit constexpr DatatypeIRI(std::string &&other)
-        : variant_t{std::in_place_type<std::string>, std::move(other)} {
+    explicit inline DatatypeIRI(std::string &&other)
+        : variant_t{std::move(other)} {
     }
 
-    constexpr operator DatatypeIRIView() const noexcept {
+    inline operator DatatypeIRIView() const noexcept {
         return visit(DatatypeIRIVisitor{
-                             [](uint8_t fixed) { return DatatypeIRIView{fixed}; },
+                             [](storage::node::identifier::LiteralType fixed) { return DatatypeIRIView{fixed}; },
                              [](std::string const &other) { return DatatypeIRIView{other}; }},
                      *this);
     }
 
-    static constexpr DatatypeIRI empty() {
-        return DatatypeIRI{""};
-    }
-
-    [[nodiscard]] constexpr bool is_fixed() const {
+    [[nodiscard]] inline bool is_fixed() const {
         return this->index() == 0;
     }
 
-    [[nodiscard]] constexpr bool is_other() const noexcept {
+    [[nodiscard]] inline bool is_dynamic() const noexcept {
         return this->index() == 1;
     }
 
-    [[nodiscard]] constexpr uint8_t get_fixed() const {
-        return std::get<uint8_t>(*this);
+    [[nodiscard]] inline storage::node::identifier::LiteralType get_fixed() const {
+        return std::get<0>(*this);
     }
 
-    [[nodiscard]] constexpr std::string const &get_other() const {
-        return std::get<std::string>(*this);
+    [[nodiscard]] inline std::string const &get_other() const {
+        return std::get<1>(*this);
     }
 
-    constexpr std::strong_ordering operator<=>(DatatypeIRI const &other) const noexcept = default;
+    inline std::strong_ordering operator<=>(DatatypeIRI const &other) const noexcept = default;
 
-    constexpr bool operator==(std::string_view const other) const noexcept {
-        return this->is_other() && this->get_other() == other;
+    inline bool operator==(std::string_view const other) const noexcept {
+        return this->is_dynamic() && this->get_other() == other;
     }
 
-    constexpr bool operator==(uint8_t const fixed) const noexcept {
+    inline bool operator==(storage::node::identifier::LiteralType const fixed) const noexcept {
         return this->is_fixed() && this->get_fixed() == fixed;
     }
 };

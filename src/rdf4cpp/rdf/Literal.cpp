@@ -70,6 +70,7 @@ Literal::operator std::string() const {
         out << "\"";
         return out.str();
     };
+
     const auto &literal = handle_.literal_backend();
     if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
         return quote_lexical(literal.lexical_form) + "@" + std::string{literal.language_tag};
@@ -85,7 +86,8 @@ bool Literal::is_iri() const { return false; }
 bool Literal::is_numeric() const {
     using namespace datatypes::registry;
 
-    return DatatypeRegistry::get_numerical_ops(this->datatype().to_datatype_iri()).has_value();
+    return this->handle_.node_id().literal_type().is_numeric()
+           || DatatypeRegistry::get_numerical_ops(this->datatype().to_datatype_iri()) != nullptr;
 }
 
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
@@ -169,7 +171,7 @@ template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
     using datatypes::registry::DatatypeRegistry;
 
-    if (this->null() || other.null()) {
+    if (this->null() || other.null() || this->is_fixed_not_numeric() || other.is_fixed_not_numeric()) {
         return Literal{};
     }
 
@@ -310,10 +312,17 @@ datatypes::registry::DatatypeIRIView Literal::get_datatype_iri() const noexcept 
     auto const lit_type = this->handle_.node_id().literal_type();
 
     if (lit_type.is_fixed()) {
-        return datatypes::registry::DatatypeIRIView{lit_type.to_underlying()};
+        return datatypes::registry::DatatypeIRIView{lit_type};
     } else {
         return datatypes::registry::DatatypeIRIView{this->datatype().identifier()};
     }
+}
+
+bool Literal::is_fixed_not_numeric() const noexcept {
+    using namespace datatypes::registry;
+
+    auto const lit_type = this->handle_.node_id().literal_type();
+    return lit_type.is_fixed() && !lit_type.is_numeric();
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {

@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <algorithm>
 #include <any>
@@ -21,7 +22,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 class DatatypeRegistry {
 public:
-    static constexpr size_t dynamic_datatype_offset = 64; // 2^6 (= possible values of LiteralType id in node storage)
+    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id;
 
     /**
      * Constructs an instance of a type from a string.
@@ -124,9 +125,11 @@ private:
         auto const &registry = registered_datatypes();
 
         return visit(DatatypeIRIVisitor{
-                             [&registry, f](uint8_t const fixed_id) -> ret_type {
-                                 assert(fixed_id < dynamic_datatype_offset);
-                                 return f(registry[static_cast<size_t>(fixed_id)]);
+                             [&registry, f](LiteralType const fixed_id) -> ret_type {
+                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying());
+                                 assert(id_as_index < dynamic_datatype_offset);
+
+                                 return f(registry[id_as_index - 1]); // ids from 1 to 64 stored in places 0 to 63
                              },
                              [&registry, f](std::string_view const other_iri) -> ret_type {
                                  auto found = std::lower_bound(registry.begin() + dynamic_datatype_offset, registry.end(),
@@ -149,10 +152,11 @@ private:
     template<datatypes::NumericLiteralDatatype datatype_info>
     static NumericOps make_numeric_ops();
 
-    inline static void add_fixed(DatatypeEntry entry_to_add, uint8_t type_id) {
-        assert(type_id < dynamic_datatype_offset);
+    inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) {
+        auto const id_as_index = static_cast<size_t>(type_id.to_underlying());
+        assert(id_as_index < dynamic_datatype_offset);
 
-        auto &slot = DatatypeRegistry::get_mutable()[static_cast<size_t>(type_id)];
+        auto &slot = DatatypeRegistry::get_mutable()[id_as_index - 1];
         assert(slot.datatype_iri.empty()); // is placeholder
         slot = std::move(entry_to_add);
     }
@@ -239,12 +243,16 @@ public:
      * @param datatype_iri datatype IRI string
      * @return if available a structure containing function pointers for all numeric ops
      */
-    inline static std::optional<NumericOps> get_numerical_ops(DatatypeIRIView const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
-            return entry.numeric_ops;
+    inline static NumericOps const *get_numerical_ops(DatatypeIRIView const datatype_iri) {
+        auto const res = find_map_entry(datatype_iri, [](auto const &entry) -> NumericOps const * {
+            if (entry.numeric_ops.has_value()) {
+                return &*entry.numeric_ops;
+            }
+
+            return nullptr;
         });
 
-        return res.has_value() ? *res : std::nullopt;
+        return res.has_value() ? *res : nullptr;
     }
 
     /**

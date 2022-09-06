@@ -1,7 +1,8 @@
 #ifndef RDF4CPP_LITERALDATATYPE_HPP
 #define RDF4CPP_LITERALDATATYPE_HPP
 
-#include <rdf4cpp/rdf/datatypes/registry/ConstexprString.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
 
@@ -62,7 +63,7 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
 
 template<typename LiteralDatatypeImpl>
 concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires {
-                                                                             { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<uint8_t>;
+                                                                             { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::node::identifier::LiteralType>;
                                                                          };
 
 }  // namespace rdf4cpp::rdf::datatypes

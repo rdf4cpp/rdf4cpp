@@ -58,7 +58,8 @@ private:
      */
     Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
-    datatypes::registry::DatatypeIRIView get_datatype_iri() const noexcept;
+    [[nodiscard]] datatypes::registry::DatatypeIRIView get_datatype_iri() const noexcept;
+    [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
 
 protected:
     explicit Literal(Node::NodeBackendHandle handle);

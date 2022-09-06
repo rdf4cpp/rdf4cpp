@@ -1,9 +1,10 @@
 #ifndef RDF4CPP_LITERALDATATYPEIMPL_HPP
 #define RDF4CPP_LITERALDATATYPEIMPL_HPP
 
-#include <rdf4cpp/rdf/datatypes/registry/ConstexprString.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <cstddef>
 #include <sstream>
@@ -40,12 +41,12 @@ struct SelectOpResult<std::false_type, Fallback> {
 /**
  * The default capability. All LiteralDatatypes must implement these operations.
  */
-template<ConstexprString type_iri_t>
+template<util::ConstexprString type_iri_t>
 struct Default {
     /**
      * IRI of the LiteralDatatype.
      */
-    static constexpr ConstexprString identifier = type_iri_t;
+    static constexpr util::ConstexprString identifier = type_iri_t;
 
     /**
      * The C++ type that this LiteralDatatype is mapped to.
@@ -76,7 +77,7 @@ struct Default {
 /**
  * The capability to be promoted to another LiteralDatatype, e.g. Decimal -> Float.
  */
-template<ConstexprString type_iri>
+template<util::ConstexprString type_iri>
 struct Promotable {
     using promoted = typename DatatypePromotionMapping<type_iri>::promoted;
 
@@ -93,7 +94,7 @@ struct Promotable {
 /**
  * The capability to be converted to it's supertype, e.g. Int -> Integer.
  */
-template<ConstexprString type_iri>
+template<util::ConstexprString type_iri>
 struct Subtype {
     using supertype = typename DatatypeSupertypeMapping<type_iri>::supertype;
 
@@ -110,7 +111,7 @@ struct Subtype {
 /**
  * The capability to be used in numeric operations.
  */
-template<ConstexprString type_iri>
+template<util::ConstexprString type_iri>
 struct Numeric {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
@@ -156,7 +157,7 @@ struct Numeric {
 /**
  * The capability to be used in boolean contexts.
  */
-template<ConstexprString type_iri>
+template<util::ConstexprString type_iri>
 struct Logical {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
@@ -169,11 +170,10 @@ struct Logical {
     }
 };
 
-template<ConstexprString type_iri>
+template<util::ConstexprString type_iri>
 struct FixedId {
-    static constexpr uint8_t fixed_id = DatatypeFixedIdMapping<type_iri>::fixed_id;
-    static_assert(fixed_id > 1 && fixed_id < 64, "fixed id can only have 6 bits and the 0 and 1 values are reserved");
-    // todo: figure out how to not reserve them as they are not useful
+    static constexpr LiteralType fixed_id = reserved_datatype_ids[type_iri];
+    static_assert(fixed_id.is_fixed(), "fixed id can only have 6 bits and the 0 and 1 values are reserved");
 };
 
 }  // namespace capabilities
@@ -183,7 +183,7 @@ struct FixedId {
  *
  * @tparam Capabilities all capabilities this instantiation should have
  */
-template<ConstexprString type_iri, template<ConstexprString> typename... Capabilities>
+template<util::ConstexprString type_iri, template<util::ConstexprString> typename... Capabilities>
 struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_iri>... {
     using typename capabilities::Default<type_iri>::cpp_type;
 
@@ -195,7 +195,7 @@ private:
     static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};
 };
 
-template<ConstexprString type_iri, template<ConstexprString> typename... Capabilities>
+template<util::ConstexprString type_iri, template<util::ConstexprString> typename... Capabilities>
 std::nullptr_t LiteralDatatypeImpl<type_iri, Capabilities...>::init() {
     DatatypeRegistry::add<LiteralDatatypeImpl<type_iri, Capabilities...>>();
     return nullptr;

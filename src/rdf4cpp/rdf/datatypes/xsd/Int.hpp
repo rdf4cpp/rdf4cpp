@@ -18,12 +18,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 /*
  * Name of the datatype. This is kept so that we won't need to type it over and over again.
  */
-constexpr static registry::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
-
-template<>
-struct DatatypeFixedIdMapping<xsd_int> {
-    static constexpr uint8_t fixed_id = 56;
-};
+constexpr static util::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
 
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.

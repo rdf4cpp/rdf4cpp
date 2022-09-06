@@ -6,8 +6,8 @@
 #include <type_traits>
 #include <variant>
 
+#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -111,7 +111,7 @@ private:
     {
         if (s_rank * max_p_rank > 0) {
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
-                                                      .target_type_iri = DatatypeIRI::empty(),
+                                                      .target_type_iri = DatatypeIRI{storage::node::identifier::LiteralType{}},
                                                       .convert = nullptr});
         }
     }
@@ -137,9 +137,9 @@ private:
 public:
     template<ConversionTable Table>
     static RuntimeConversionTable from_concrete() {
-        constexpr size_t s_rank = std::tuple_size_v<Table>;
+        static constexpr size_t s_rank = std::tuple_size_v<Table>;
 
-        constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
+        static constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
             return std::max(acc, std::tuple_size_v<Layer>);
         });
 

@@ -7,6 +7,7 @@
 
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/storage/util/StaticVec.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <array>
 #include <cassert>
@@ -25,7 +26,7 @@ public:
     static std::pair<NodeID, std::string_view> const xsd_string_iri;
     static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
 
-    static util::StaticVec<std::pair<NodeID, std::string_view>, 64> const predefined_iris;
+    //static util::StaticVec<std::pair<NodeID, std::string_view>, 64> const predefined_iris;
 
     static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
@@ -131,24 +132,22 @@ public:
 static_assert(sizeof(NodeID) == 6);
 
 inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{NodeID{1}, ""};
-inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{datatypes::xsd::String::fixed_id, datatypes::xsd::String::identifier};
-inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{NodeID{3}, "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
-
-inline constexpr util::StaticVec<std::pair<NodeID, std::string_view>, 64> NodeID::predefined_iris{
-        default_graph_iri,
-        xsd_string_iri,
-        rdf_langstring_iri,
-        {NodeID{datatypes::xsd::Int::fixed_id}, datatypes::xsd::Int::identifier},
-        {NodeID{datatypes::xsd::Integer::fixed_id}, datatypes::xsd::Integer::identifier}}; // todo: maybe find better way
-
+inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{datatypes::xsd::String::fixed_id.to_underlying(), datatypes::xsd::String::identifier};
+inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{NodeID{3}, "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"}; // todo use langString datatype
 
 inline constexpr NodeID NodeID::min_bnode_id{1};
-inline constexpr NodeID NodeID::min_iri_id{NodeID::predefined_iris.max_size() + 1};
+inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};
 inline constexpr NodeID NodeID::min_variable_id{1};
 inline constexpr LiteralID NodeID::min_literal_id{1};
 
+constexpr LiteralType iri_node_id_to_literal_type(NodeID const id) noexcept {
+    auto const value = id.value();
+
+    return value < datatypes::registry::min_dynamic_datatype_id && value != 0
+                   ? LiteralType::from_underlying(static_cast<LiteralType::underlying_type>(value))
+                   : LiteralType::other();
+}
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
-
 
 #endif  //RDF4CPP_NODEID_HPP
