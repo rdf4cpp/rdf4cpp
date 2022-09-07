@@ -13,6 +13,7 @@ endif ()
 # find packages
 find_package(serd 0 QUIET)
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
+find_package(expected-lite)
 
 # find system libraries
 if (NOT serd_FOUND)
@@ -24,9 +25,10 @@ else ()
     message(DEBUG "serd cmake package found")
 endif ()
 
+include(FetchContent)
+
 # retrieve missing libraries
 if (NOT fmt_FOUND)
-    include(FetchContent)
     FetchContent_Declare(
             fetchfmt
             GIT_REPOSITORY https://github.com/fmtlib/fmt.git
@@ -35,6 +37,17 @@ if (NOT fmt_FOUND)
 
     FetchContent_MakeAvailable(fetchfmt)
     message(DEBUG "Non CMake package for fmt found. fmt was retrieved via FetchContent.")
+endif ()
+
+if (NOT expected-lite_FOUND)
+    FetchContent_Declare(
+            fetchexpected-lite
+            GIT_REPOSITORY https://github.com/martinmoene/expected-lite
+            GIT_TAG v0.6.2
+    )
+
+    FetchContent_MakeAvailable(fetchexpected-lite)
+    message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
 
 ## Create the main rdf4cpp library target
@@ -90,12 +103,14 @@ add_library(rdf4cpp
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
 target_include_directories(
-        rdf4cpp PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+        rdf4cpp PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+        "${expected-lite_INCLUDE_DIRS}")
 
 target_link_libraries(rdf4cpp PRIVATE
         $<IF:${serd_FOUND},serd::serd,${serd}> # ${VAR}_FOUND is only defined if the system library is used
         fmt::fmt-header-only
-        )
+        nonstd::expected-lite)
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}

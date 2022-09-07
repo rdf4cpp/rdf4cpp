@@ -2,6 +2,7 @@
 #define RDF4CPP_LITERALDATATYPE_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/ConstexprString.hpp>
+#include <nonstd/expected.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
 
@@ -15,6 +16,14 @@ concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typ
 
 template<typename LiteralDatatypeImpl>
 concept LiteralDatatypeOrUndefined = LiteralDatatype<LiteralDatatypeImpl> || std::same_as<LiteralDatatypeImpl, std::false_type>;
+
+/**
+ * Errors that can be returned from numeric operations
+ */
+enum struct NumericOpError {
+    DivideByZero,   // https://www.w3.org/TR/xpath-functions/#ERRFOAR0001
+    OverOrUnderFlow // https://www.w3.org/TR/xpath-functions/#ERRFOAR0002
+};
 
 template<typename LiteralDatatypeImpl>
 concept NumericLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &lhs, typename LiteralDatatypeImpl::cpp_type const &rhs) {
@@ -31,12 +40,12 @@ concept NumericLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && require
                                                                              typename LiteralDatatypeImpl::pos_result_cpp_type;
                                                                              typename LiteralDatatypeImpl::neg_result_cpp_type;
 
-                                                                             { LiteralDatatypeImpl::add(lhs, rhs) } -> std::convertible_to<typename LiteralDatatypeImpl::add_result_cpp_type>;
-                                                                             { LiteralDatatypeImpl::sub(lhs, rhs) } -> std::convertible_to<typename LiteralDatatypeImpl::sub_result_cpp_type>;
-                                                                             { LiteralDatatypeImpl::mul(lhs, rhs) } -> std::convertible_to<typename LiteralDatatypeImpl::mul_result_cpp_type>;
-                                                                             { LiteralDatatypeImpl::div(lhs, rhs) } -> std::convertible_to<typename LiteralDatatypeImpl::div_result_cpp_type>;
-                                                                             { LiteralDatatypeImpl::pos(lhs) } -> std::convertible_to<typename LiteralDatatypeImpl::pos_result_cpp_type>;
-                                                                             { LiteralDatatypeImpl::neg(lhs) } -> std::convertible_to<typename LiteralDatatypeImpl::neg_result_cpp_type>;
+                                                                             { LiteralDatatypeImpl::add(lhs, rhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::add_result_cpp_type, NumericOpError>>;
+                                                                             { LiteralDatatypeImpl::sub(lhs, rhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::sub_result_cpp_type, NumericOpError>>;
+                                                                             { LiteralDatatypeImpl::mul(lhs, rhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::mul_result_cpp_type, NumericOpError>>;
+                                                                             { LiteralDatatypeImpl::div(lhs, rhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::div_result_cpp_type, NumericOpError>>;
+                                                                             { LiteralDatatypeImpl::pos(lhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::pos_result_cpp_type, NumericOpError>>;
+                                                                             { LiteralDatatypeImpl::neg(lhs) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::neg_result_cpp_type, NumericOpError>>;
                                                                          };
 
 template<typename LiteralDatatypeImpl>
