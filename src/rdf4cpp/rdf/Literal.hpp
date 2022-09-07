@@ -41,8 +41,6 @@ private:
      */
     [[nodiscard]] util::TriBool get_ebv_impl() const;
 
-    Literal logical_binop_impl(std::array<std::array<util::TriBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-
     /**
      * @brief the implementation of the value comparison function
      *
