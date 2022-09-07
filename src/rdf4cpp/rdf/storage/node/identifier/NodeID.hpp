@@ -7,14 +7,11 @@
 
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
-#include <rdf4cpp/rdf/storage/util/StaticVec.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
-#include <array>
 #include <cassert>
 #include <compare>
-#include <tuple>
-#include <vector>
+#include <utility>
 #include <string_view>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
