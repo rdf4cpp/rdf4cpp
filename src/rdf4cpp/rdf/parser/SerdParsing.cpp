@@ -23,27 +23,27 @@ struct SerdHandle {
 };
 
 SerdStatus on_base(SerdHandle *handle, const SerdNode *uri) {
-    handle->prefixes[""] = std::string((char *) (uri->buf), uri->n_bytes);
+    handle->prefixes[""] = std::string{reinterpret_cast<char const *>(uri->buf), uri->n_bytes};
     return SERD_SUCCESS;
 }
 
 SerdStatus on_prefix(SerdHandle *handle, const SerdNode *name, const SerdNode *uri) {
-    handle->prefixes[std::string((char *) (name->buf), name->n_bytes)] = std::string((char *) (uri->buf), uri->n_bytes);
+    handle->prefixes[std::string{reinterpret_cast<char const *>(name->buf), name->n_bytes}] = std::string{reinterpret_cast<char const *>(uri->buf), uri->n_bytes};
     return SERD_SUCCESS;
 }
 
 BlankNode getBNode(const SerdNode *node) {
-    auto identifier = std::string(std::string_view{(char *) (node->buf), size_t(node->n_bytes)});
+    auto identifier = std::string(std::string_view{reinterpret_cast<char const *>(node->buf), size_t(node->n_bytes)});
     return BlankNode(identifier);
 }
 
 IRI getURI(const SerdNode *node) {
-    auto iri = std::string(std::string_view{(char *) (node->buf), size_t(node->n_bytes)});
+    auto iri = std::string(std::string_view{reinterpret_cast<char const *>(node->buf), size_t(node->n_bytes)});
     return IRI(iri);
 }
 
 IRI getPrefixedUri(SerdHandle &handle, const SerdNode *node) {
-    std::string_view uri_node_view{(char *) (node->buf), size_t(node->n_bytes)};
+    std::string_view uri_node_view{reinterpret_cast<char const *>(node->buf), size_t(node->n_bytes)};
     auto sep_pos = uri_node_view.find(':');
     std::string_view prefix{uri_node_view.begin(), sep_pos};
     std::string_view suffix{uri_node_view.begin() + (sep_pos + 1), uri_node_view.size() - sep_pos - 1};
@@ -54,12 +54,12 @@ IRI getPrefixedUri(SerdHandle &handle, const SerdNode *node) {
 }
 
 Literal getLiteral(const SerdNode *literal, const SerdNode *type_node, const SerdNode *lang_node) {
-    std::string literal_value = std::string{(char *) (literal->buf), size_t(literal->n_bytes)};
+    std::string literal_value = std::string{reinterpret_cast<char const *>(literal->buf), size_t(literal->n_bytes)};
     if (type_node != nullptr)
         return Literal(literal_value,
-                       IRI(std::string{(char *) (type_node->buf), size_t(type_node->n_bytes)}));
+                       IRI(std::string{reinterpret_cast<char const *>(type_node->buf), size_t(type_node->n_bytes)}));
     else if (lang_node != nullptr)
-        return Literal(literal_value, std::string{(char *) (lang_node->buf), size_t(lang_node->n_bytes)});
+        return Literal(literal_value, std::string{reinterpret_cast<char const *>(lang_node->buf), size_t(lang_node->n_bytes)});
     else
         return Literal(literal_value);
 };
@@ -142,7 +142,7 @@ namespace rdf4cpp::rdf {
 void import_rdf_file(const std::string &path, Dataset *dataset) {
     SerdHandle serd_handle;
     serd_handle.datset = dataset;
-    SerdReader *reader = serd_reader_new(SERD_TURTLE, (void *) &serd_handle,
+    SerdReader *reader = serd_reader_new(SERD_TURTLE, static_cast<void *>(&serd_handle),
                                          nullptr,
                                          reinterpret_cast<SerdBaseSink>(on_base),
                                          reinterpret_cast<SerdPrefixSink>(on_prefix),

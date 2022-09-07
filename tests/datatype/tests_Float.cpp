@@ -11,4 +11,5 @@ TEST_CASE("float capabilities") {
     static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Float>);
     static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::Float>); // float is end of promotion hierarchy for now, so not promotable
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Float>);
+    static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::Float>);
 }

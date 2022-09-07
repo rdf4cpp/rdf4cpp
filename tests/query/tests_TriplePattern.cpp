@@ -24,9 +24,9 @@ static void validate_triple_pattern(Node sub, Node pred, Node obj, bool result) 
         CHECK(tpattern.object() == obj);
         std::cout << obj << std::endl;
 
-        if (result) CHECK_MESSAGE(tpattern.valid(), (std::string) tpattern);
+        if (result) CHECK_MESSAGE(tpattern.valid(), static_cast<std::string>(tpattern));
         else
-            CHECK_MESSAGE(not tpattern.valid(), (std::string) tpattern);
+            CHECK_MESSAGE(not tpattern.valid(), static_cast<std::string>(tpattern));
 
         //checks whether a valid triplepattern have a valid string output
         if (tpattern.valid()) std::cout << tpattern << std::endl;

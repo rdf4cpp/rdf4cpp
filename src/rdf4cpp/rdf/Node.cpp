@@ -45,14 +45,13 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
 
 Node::operator std::string() const {
     switch (handle_.type()) {
-
         case RDFNodeType::IRI:
             return handle_.iri_backend().n_string();
         case RDFNodeType::BNode:
             return handle_.bnode_backend().n_string();
         case RDFNodeType::Literal: {
             const auto &literal = static_cast<const Literal &>(*this);
-            return (std::string) literal;
+            return static_cast<std::string>(literal);
         }
         case RDFNodeType::Variable:
             return handle_.variable_backend().n_string();
@@ -73,19 +72,19 @@ bool Node::is_iri() const noexcept {
     return handle_.is_iri();
 }
 
-std::strong_ordering Node::operator<=>(const Node &other) const noexcept {
+std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
     if (this->handle_ == other.handle_){
         return std::strong_ordering::equivalent;
     }
 
+    if (this->null() && other.null()) {
+        return this->handle_.type() <=> other.handle_.type();
+    }
+
     // unbound
-    if (this->null()){
-        if (other.null()){
-            return std::strong_ordering::equivalent;
-        } else {
-            return std::strong_ordering::less;
-        }
-    } else if(other.null()){
+    if (this->null()) {
+        return std::strong_ordering::less;
+    } else if (other.null()) {
         return std::strong_ordering::greater;
     }
 
@@ -99,7 +98,7 @@ std::strong_ordering Node::operator<=>(const Node &other) const noexcept {
             case RDFNodeType::BNode:
                 return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
             case RDFNodeType::Literal:
-                return this->handle_.literal_backend() <=> other.handle_.literal_backend();
+                return Literal{this->handle_}.compare_with_extensions(Literal{other.handle_});
             case RDFNodeType::Variable:
                 return this->handle_.variable_backend() <=> other.handle_.variable_backend();
             default:{
@@ -111,38 +110,7 @@ std::strong_ordering Node::operator<=>(const Node &other) const noexcept {
 }
 
 bool Node::operator==(const Node &other) const noexcept {
-    if (this->handle_ == other.handle_){
-        return true;
-    }
-
-    if (this->null()){
-        if (other.null()){
-            return true;
-        } else {
-            return false;
-        }
-    } else if(other.null()){
-        return true;
-    }
-
-    if (this->handle_.type() != other.handle_.type()){
-        return false;
-    } else {
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() == other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() == other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() == other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() == other.handle_.variable_backend();
-            default:{
-                assert(false); // this will never be reached because RDFNodeType has only 4 values.
-                return false;
-            }
-        }
-    }
+    return *this <=> other == std::strong_ordering::equivalent;
 }
 
 Node::operator BlankNode() const {
@@ -165,7 +133,7 @@ bool Node::null() const noexcept {
     return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
-    return os << (std::string) node;
+    return os << static_cast<std::string>(node);
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;

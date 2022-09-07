@@ -37,6 +37,7 @@ public:
     }
 
     static constexpr LiteralType from_parts(bool const is_numeric, uint8_t const type_id) noexcept {
+        assert(is_numeric || type_id != 0);
         assert((type_id & 0b1110'0000) == 0);
         return LiteralType::from_underlying(type_id | (is_numeric << numeric_tagging_bit_pos));
     }

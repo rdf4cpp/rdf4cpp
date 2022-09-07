@@ -70,6 +70,12 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
         static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>) || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
                       "conversion must preserve numericity");
 
+        // conversion must preserve comparability, so:
+        // ComparableLiteralDatatype<Type> <-> ComparableLiteralDatatype<typename next::converted>
+        // The reasoning is the same as in the static_assert for numericity.
+        static_assert((ComparableLiteralDatatype<Type> && ComparableLiteralDatatype<typename next::converted>) || (!ComparableLiteralDatatype<Type> && !ComparableLiteralDatatype<typename next::converted>),
+                      "conversion must preserve comparability");
+
         if constexpr (BaseType::identifier == Type::identifier) {
             struct FirstConversion {
                 using source_type = Type;

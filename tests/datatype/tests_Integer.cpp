@@ -12,6 +12,7 @@ TEST_CASE("integer capabilities") {
     static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::Integer>);
     static_assert(datatypes::SubtypedLiteralDatatype<datatypes::xsd::Integer>);
     static_assert(datatypes::xsd::Integer::subtype_rank == 1);
+    static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::Integer>);
 }
 
 TEST_CASE("Datatype Integer") {

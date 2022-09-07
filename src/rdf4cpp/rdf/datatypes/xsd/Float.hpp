@@ -7,6 +7,7 @@
 
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 #include <cmath>
@@ -15,11 +16,6 @@
 #include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-/*
- * Name of the datatype. This is kept so that we won't need to type it over and over again.
- */
-constexpr static util::ConstexprString xsd_float{"http://www.w3.org/2001/XMLSchema#float"};
-
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
@@ -78,7 +74,9 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  */
 struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
                                              registry::capabilities::Logical,
-                                             registry::capabilities::Numeric> {
+                                             registry::capabilities::Numeric,
+                                             registry::capabilities::Comparable,
+                                             registry::capabilities::FixedId> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd

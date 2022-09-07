@@ -5,7 +5,9 @@
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
+#include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
@@ -34,31 +36,39 @@ private:
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
-    enum struct TriStateBool : size_t {
-        Err = 0,
-        False = 1,
-        True = 2,
-    };
-
     /**
-     * @return the effective-boolean-value of this literal as a TriStateBool
+     * @return the effective boolean value of this
      */
-    [[nodiscard]] TriStateBool get_ebv_impl() const;
+    [[nodiscard]] util::TriBool get_ebv_impl() const;
+
+    Literal logical_binop_impl(std::array<std::array<util::TriBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
-     * @brief the implementation for all logical, binary operations
+     * @brief the implementation of the value comparison function
      *
-     * @param logic_table the logic table for the binary operation. It is accessed via
-     *      logic_table[static_cast<size_t>(this->get_ebv_impl())][static_cast<size_t>(other.get_ebv_impl())].
-     *      For an example logic table see operator&& or operator||.
-     * @param other the lhs of the operation
-     * @param node_storage the node storage that the resulting value will be put in
-     * @return the literal resulting by converting both literals to their ebv and applying the provided binop or Literal{}
-     *      if at least one of the types is not convertible to bool
+     * @param other the literal to compare to
+     * @param out_alternative_ordering optional out parameter to receive an alternative ordering (for ordering extensions).
+     *      Note: If present it is expected to be defaulted to std::strong_ordering::equivalent.
+     *      It is populated based on the following rules:
+     *          - (null, non-null) => less
+     *          - (non-null, null) => greater
+     *          - (non-null, non-null) and equal type => lexical form ordering
+     *          - (non-null, non-null) and different type => type ordering
+     *
+     * @return the ordering of the values of this and other; if there is a value ordering
      */
-    Literal logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
 
+    /**
+     * get the DatatypeIRIView for the datatype of this
+     * it will always contain the appropriate id type
+     * and can be used to index the registry
+     */
     [[nodiscard]] datatypes::registry::DatatypeIRIView get_datatype_iri() const noexcept;
+
+    /**
+     * @return if the datatype of this is simultaneously fixed but not numeric
+     */
     [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
 
 protected:
@@ -103,9 +113,16 @@ public:
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     inline static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
                                NodeStorage &node_storage = NodeStorage::default_instance()) {
-        return Literal(LiteralDatatype_t::to_string(compatible_value),
-                       IRI(LiteralDatatype_t::identifier, node_storage),
-                       node_storage);
+
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            return Literal{compatible_value.lexical_form,
+                           compatible_value.language_tag,
+                           node_storage};
+        } else {
+            return Literal{LiteralDatatype_t::to_string(compatible_value),
+                           IRI{LiteralDatatype_t::identifier, node_storage},
+                           node_storage};
+        }
     }
 
     /**
@@ -116,8 +133,8 @@ public:
      * @param node_storage
      * @return
      */
-    inline static Literal make(std::string_view lexical_form, const IRI &datatype,
-                               NodeStorage &node_storage = NodeStorage::default_instance());
+    static Literal make(std::string_view lexical_form, const IRI &datatype,
+                        NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
@@ -142,15 +159,68 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
+    /**
+     * Constructs a datatype specific container from Literal.
+     * @return std::any wrapped value. might be empty if type is not registered.
+     */
+    [[nodiscard]] std::any value() const;
+
     [[nodiscard]] bool is_literal() const;
     [[nodiscard]] bool is_variable() const;
     [[nodiscard]] bool is_blank_node() const;
     [[nodiscard]] bool is_iri() const;
     [[nodiscard]] bool is_numeric() const;
 
-    bool operator==(const Literal &other) const;
+    /**
+     * The default (value-only) comparison function
+     * without SPARQL operator extensions.
+     *
+     * @return the value ordering of this and other
+     */
+    [[nodiscard]] std::partial_ordering compare(Literal const &other) const;
 
-    std::partial_ordering operator<=>(const Literal &other) const;
+    /**
+     * A convenient (and equivalent) alternative to compare.
+     */
+    std::partial_ordering operator<=>(Literal const &other) const;
+
+    /**
+     * The comparison function with SPARQL operator extensions.
+     *
+     * @return similar to `compare` but:
+     *      - values of an incomparable type are all considered equivalent
+     *      - a null literal is the smallest possible value of all types
+     *      - the type ordering replaces the value ordering in the following cases
+     *          - the values are equal
+     *          - at least one of the value's types is not comparable
+     *          - there is no viable conversion to a common type to check for equality
+     */
+    [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const;
+
+    util::TriBool eq(Literal const &other) const;
+    util::TriBool operator==(Literal const &other) const;
+
+    util::TriBool ne(Literal const &other) const;
+    util::TriBool operator!=(Literal const &other) const;
+
+    util::TriBool lt(Literal const &other) const;
+    util::TriBool operator<(Literal const &other) const;
+
+    util::TriBool le(Literal const &other) const;
+    util::TriBool operator<=(Literal const &other) const;
+
+    util::TriBool gt(Literal const &other) const;
+    util::TriBool operator>(Literal const &other) const;
+
+    util::TriBool ge(Literal const &other) const;
+    util::TriBool operator>=(Literal const &other) const;
+
+    bool eq_with_extensions(Literal const &other) const;
+    bool ne_with_extensions(Literal const &other) const;
+    bool lt_with_extensions(Literal const &other) const;
+    bool le_with_extensions(Literal const &other) const;
+    bool gt_with_extensions(Literal const &other) const;
+    bool ge_with_extensions(Literal const &other) const;
 
     Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator+(Literal const &other) const;
@@ -186,19 +256,21 @@ public:
     Literal operator!() const;
 
     /**
-     * Constructs a datatype specific container from Literal.
-     * @return std::any wrapped value. might be empty if type is not registered.
-     */
-    [[nodiscard]] std::any value() const;
-
-    /**
      * Get the value of an literal. T must be the registered datatype for the datatype iri.
      * @tparam T datatype of the returned instance
      * @return T instance with the value from this
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     typename LiteralDatatype_t::cpp_type value() const {
-        return LiteralDatatype_t::from_string(this->lexical_form());
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            auto const &lit = this->handle_.literal_backend();
+
+            return datatypes::registry::LangStringRepr {
+                    .lexical_form = std::string{lit.lexical_form},
+                    .language_tag = std::string{lit.language_tag}};
+        } else {
+            return LiteralDatatype_t::from_string(this->lexical_form());
+        }
     }
 
     friend class Node;

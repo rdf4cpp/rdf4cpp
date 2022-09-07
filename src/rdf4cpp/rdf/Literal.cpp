@@ -1,5 +1,7 @@
 #include "Literal.hpp"
 
+#include <sstream>
+
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 
@@ -38,12 +40,11 @@ std::string_view Literal::language_tag() const {
 }
 Literal::operator std::string() const {
     // TODO: escape non-standard chars correctly
-    auto quote_lexical = [](std::string_view lexical) -> std::string {
+    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) {
         // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
-        std::ostringstream out{};
-        out << "\"";
 
-        for (auto const &character : lexical) {
+        out << "\"";
+        for (auto const character : lexical) {
             switch (character) {
                 case '\\': {
                     out << R"(\\)";
@@ -61,23 +62,30 @@ Literal::operator std::string() const {
                     out << R"(\")";
                     break;
                 }
-                    [[likely]] default : {
-                        out << character;
-                        break;
-                    }
+                [[likely]] default : {
+                    out << character;
+                    break;
+                }
             }
         }
         out << "\"";
-        return out.str();
     };
 
     const auto &literal = handle_.literal_backend();
+    std::ostringstream oss;
+
+    quoted_lexical_into_stream(oss, literal.lexical_form);
+
     if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
-        return quote_lexical(literal.lexical_form) + "@" + std::string{literal.language_tag};
+        if (!literal.language_tag.empty()) {
+            oss << "@" << literal.language_tag;
+        }
     } else {
         auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
-        return quote_lexical(literal.lexical_form) + "^^" + dtype_iri.n_string();
+        oss << "^^" << dtype_iri.n_string();
     }
+
+    return oss.str();
 }
 bool Literal::is_literal() const { return true; }
 bool Literal::is_variable() const { return false; }
@@ -87,77 +95,54 @@ bool Literal::is_numeric() const {
     using namespace datatypes::registry;
 
     return this->handle_.node_id().literal_type().is_numeric()
-           || DatatypeRegistry::get_numerical_ops(this->datatype().to_datatype_iri()) != nullptr;
+           || DatatypeRegistry::get_numerical_ops(this->get_datatype_iri()) != nullptr;
 }
 
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
 
-std::partial_ordering Literal::operator<=>(const Literal &other) const {
-    if (auto comp_id = this->handle_ <=> other.handle_; comp_id == std::partial_ordering::equivalent) {
-        return std::strong_ordering::equal;
-    } else if (auto comp_type = this->handle_.type() <=> other.handle_.type(); comp_type != std::strong_ordering::equal) {
-        return comp_type;
-    } else {  // same type, different id.
-        switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
-                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case RDFNodeType::BNode:
-                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
-                return this->handle_.literal_backend() <=> other.handle_.literal_backend();
-            case RDFNodeType::Variable:
-                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
-        }
-        return std::strong_ordering::less;
-    }
-}
-bool Literal::operator==(const Literal &other) const {
-    if (this->null() || other.null()) {
-        return this->null() == other.null();
-    } else if (this->datatype() != other.datatype()) {
-        return false;
-    } else if (this->lexical_form() == other.lexical_form()) {
-        return true;
-    } else {
-        return false;
-        /*if(this->handle_.type() == RDFNodeType::Literal) return this->handle_.literal_backend() == other.handle_.literal_backend();
-        else return false;*/
-    }
-}
-
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
-    os << (std::string) literal;
+    os << static_cast<std::string>(literal);
     return os;
 }
 std::any Literal::value() const {
-    using namespace datatypes::registry;
+    using namespace datatypes;
 
-    DatatypeRegistry::factory_fptr_t factory = DatatypeRegistry::get_factory(this->get_datatype_iri());
-    if (factory != nullptr)
-        return factory(lexical_form());
-    else
+    auto const datatype = this->get_datatype_iri();
+
+    if (datatype == rdf::LangString::datatype_iri) {
+        auto const &lit = this->handle_.literal_backend();
+
+        return registry::LangStringRepr{
+            .lexical_form = std::string{lit.lexical_form},
+            .language_tag = std::string{lit.language_tag}};
+    } else if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
+        return factory(this->lexical_form());
+    } else {
         return {};
+    }
 }
 
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
-    // retrieving the datatype.identifier() requires a lookup in the backend -> cache
     DatatypeIRIView const datatype_identifier = datatype.to_datatype_iri();
-    auto const factory_func = DatatypeRegistry::get_factory(datatype_identifier);
 
-    if (factory_func) {  // this is a know datatype -> canonize the string representation
-        auto const native_type = factory_func(lexical_form);
-        // if factory_func exists, to_string_func must exist, too
-        auto const to_string_func = DatatypeRegistry::get_to_string(datatype_identifier);
+    if (datatype_identifier == datatypes::rdf::LangString::datatype_iri) {
+        // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other constructors"};
+    }
 
+    if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
+        // exists => canonize
+        auto const cpp_type = entry->factory_fptr(lexical_form);
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                                 .lexical_form = to_string_func(native_type),
+                                                 .lexical_form = entry->to_string_fptr(cpp_type),
                                                  .language_tag = ""}),
                                          storage::node::identifier::RDFNodeType::Literal,
                                          node_storage.id()});
-    } else {  // datatype is not registered, so we cannot parse the lexical_form nor canonize it
+    } else {
+        // datatype is not registered, so we cannot parse the lexical_form nor canonize it
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                                  .lexical_form = lexical_form,
@@ -274,31 +259,186 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
                    node_storage};
 }
 
-Literal::TriStateBool Literal::get_ebv_impl() const {
+util::TriBool Literal::get_ebv_impl() const {
     if (this->null()) {
-        return TriStateBool::Err;
+        return util::TriBool::Err;
     }
 
     auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_iri());
 
     if (ebv == nullptr) {
-        return TriStateBool::Err;
+        return util::TriBool::Err;
     }
 
-    return ebv(this->value()) ? TriStateBool::True : TriStateBool::False;
+    return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
 }
 
-Literal Literal::logical_binop_impl(std::array<std::array<TriStateBool, 3>, 3> const &logic_table, Literal const &other, NodeStorage &node_storage) const {
-    auto const this_ebv = this->get_ebv_impl();
-    auto const other_ebv = other.get_ebv_impl();
+std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const {
+    using datatypes::registry::DatatypeRegistry;
 
-    auto const res = logic_table[static_cast<size_t>(this_ebv)][static_cast<size_t>(other_ebv)];
-
-    if (res == TriStateBool::Err) {
-        return Literal{};
+    if (this->handle_.null() || other.handle_.null()) {
+        if (this->handle_ == other.handle_) {
+            return std::partial_ordering::equivalent;
+        } else {
+            if (out_alternative_ordering != nullptr) {
+                // ordering extensions (for e.g. ORDER BY) require that null nodes
+                // are always the smallest node
+                *out_alternative_ordering = this->handle_.null()
+                                             ? std::strong_ordering::less
+                                             : std::strong_ordering::greater;
+            }
+            return std::partial_ordering::unordered;
+        }
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(res == TriStateBool::True, node_storage);
+    auto const this_datatype = this->get_datatype_iri();
+    auto const other_datatype = other.get_datatype_iri();
+
+    std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
+
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+
+    if (datatype_cmp_res == std::strong_ordering::equal) {
+        if (out_alternative_ordering != nullptr) {
+            // types equal, fallback to lexical form ordering
+            *out_alternative_ordering = this->lexical_form() <=> other.lexical_form();
+        }
+
+        if (this_entry == nullptr || this_entry->compare_fptr == nullptr) {
+            return std::partial_ordering::unordered;
+        }
+
+        return this_entry->compare_fptr(this->value(), other.value());
+    } else {
+        if (out_alternative_ordering != nullptr) {
+            // types are different, the only useful alternative ordering is the type ordering
+            *out_alternative_ordering = datatype_cmp_res;
+        }
+
+        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+
+        if (this_entry == nullptr || this_entry->compare_fptr == nullptr || other_entry == nullptr || other_entry->compare_fptr == nullptr) {
+            return std::partial_ordering::unordered;
+        }
+
+        auto const equalizer = DatatypeRegistry::get_common_type_conversion(this_entry->conversion_table,
+                                                                            other_entry->conversion_table);
+
+        if (!equalizer.has_value()) {
+            return std::partial_ordering::unordered; // not convertible to common type
+        }
+
+        auto const equalized_compare_fptr = [&]() {
+            if (equalizer->target_type_iri == this_datatype) {
+                return this_entry->compare_fptr;
+            }  else if (equalizer->target_type_iri == other_datatype) {
+                return other_entry->compare_fptr;
+            } else {
+                return DatatypeRegistry::get_compare(equalizer->target_type_iri);
+            }
+        }();
+
+        assert(equalized_compare_fptr != nullptr);
+
+        return equalized_compare_fptr(equalizer->convert_lhs(this->value()),
+                                      equalizer->convert_rhs(other.value()));
+    }
+}
+
+std::partial_ordering Literal::compare(Literal const &other) const {
+    return this->compare_impl(other);
+}
+
+std::partial_ordering Literal::operator<=>(Literal const &other) const {
+    return this->compare(other);
+}
+
+std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
+    // default to equivalent; as required by compare_impl
+    // see doc for compare_impl
+    std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent;
+    auto const cmp_res = this->compare_impl(other, &alternative_cmp_res);
+
+    if (cmp_res == std::partial_ordering::equivalent || cmp_res == std::partial_ordering::unordered) {
+        // return alternative ordering instead
+        return alternative_cmp_res;
+    } else if (cmp_res == std::partial_ordering::less) {
+        return std::weak_ordering::less;
+    } else { // cmp_res == std::partial_ordering::greater
+        return std::weak_ordering::greater;
+    }
+}
+
+util::TriBool Literal::eq(Literal const &other) const {
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+}
+
+util::TriBool Literal::operator==(Literal const &other) const {
+    return this->eq(other);
+}
+
+util::TriBool Literal::ne(Literal const &other) const {
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
+}
+
+util::TriBool Literal::operator!=(Literal const &other) const {
+    return this->ne(other);
+}
+
+util::TriBool Literal::lt(Literal const &other) const {
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
+}
+
+util::TriBool Literal::operator<(Literal const &other) const {
+    return this->lt(other);
+}
+
+util::TriBool Literal::le(Literal const &other) const {
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
+}
+
+util::TriBool Literal::operator<=(Literal const &other) const {
+    return this->le(other);
+}
+
+util::TriBool Literal::gt(Literal const &other) const {
+    return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
+}
+
+util::TriBool Literal::operator>(Literal const &other) const {
+    return this->gt(other);
+}
+
+util::TriBool Literal::ge(Literal const &other) const {
+    return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
+}
+
+util::TriBool Literal::operator>=(Literal const &other) const {
+    return this->ge(other);
+}
+
+bool Literal::eq_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::equivalent;
+}
+
+bool Literal::ne_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::equivalent;
+}
+
+bool Literal::lt_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::less;
+}
+
+bool Literal::le_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::greater;
+}
+
+bool Literal::gt_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) == std::weak_ordering::greater;
+}
+
+bool Literal::ge_with_extensions(Literal const &other) const {
+    return this->compare_with_extensions(other) != std::weak_ordering::less;
 }
 
 datatypes::registry::DatatypeIRIView Literal::get_datatype_iri() const noexcept {
@@ -381,21 +521,21 @@ Literal Literal::operator-() const {
 Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
     auto const ebv = this->get_ebv_impl();
 
-    if (ebv == TriStateBool::Err) {
+    if (ebv == util::TriBool::Err) {
         return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::True, node_storage);
+    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> and_logic_table{
-            /* lhs \ rhs               Err                  False                True */
-            /* Err       */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::Err},
-            /* False     */ std::array{TriStateBool::False, TriStateBool::False, TriStateBool::False},
-            /* True      */ std::array{TriStateBool::Err,   TriStateBool::False, TriStateBool::True}};
+    auto const res = this->get_ebv_impl() && other.get_ebv_impl();
 
-    return this->logical_binop_impl(and_logic_table, other, node_storage);
+    if (res == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator&&(Literal const &other) const {
@@ -403,13 +543,13 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    constexpr std::array<std::array<TriStateBool, 3>, 3> or_logic_table{
-            /* lhs \ rhs               Err                 False                True */
-            /* Err       */ std::array{TriStateBool::Err,  TriStateBool::Err,   TriStateBool::True},
-            /* False     */ std::array{TriStateBool::Err,  TriStateBool::False, TriStateBool::True},
-            /* True      */ std::array{TriStateBool::True, TriStateBool::True,  TriStateBool::True}};
+    auto const res = this->get_ebv_impl() || other.get_ebv_impl();
 
-    return this->logical_binop_impl(or_logic_table, other, node_storage);
+    if (res == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const {
@@ -417,13 +557,13 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    TriStateBool const ebv = this->get_ebv_impl();
+    auto const ebv = this->get_ebv_impl();
 
-    if (ebv == TriStateBool::Err) {
+    if (ebv == util::TriBool::Err) {
         return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Boolean>(ebv == TriStateBool::False, node_storage);
+    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
 }
 
 Literal Literal::operator!() const {

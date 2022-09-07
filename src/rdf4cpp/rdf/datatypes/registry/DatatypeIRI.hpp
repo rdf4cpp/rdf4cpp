@@ -3,6 +3,7 @@
 
 #include <variant>
 #include <cstdint>
+#include <functional>
 
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 

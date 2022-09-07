@@ -24,7 +24,7 @@ bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
 std::ostream &operator<<(std::ostream &os, const Variable &variable) {
-    os << (std::string) variable;
+    os << static_cast<std::string>(variable);
     return os;
 }
 

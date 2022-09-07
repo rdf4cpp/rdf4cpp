@@ -2,6 +2,7 @@
 #define RDF4CPP_LITERALDATATYPE_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
@@ -10,6 +11,7 @@ template<typename LiteralDatatypeImpl>
 concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
+                              { LiteralDatatypeImpl::datatype_iri } -> std::convertible_to<registry::DatatypeIRIView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                               { LiteralDatatypeImpl::to_string(cpp_value) } -> std::convertible_to<std::string>;
                           };
@@ -46,6 +48,11 @@ concept LogicalLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && require
                                                                          };
 
 template<typename LiteralDatatypeImpl>
+concept ComparableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires (typename LiteralDatatypeImpl::cpp_type const &lhs, typename LiteralDatatypeImpl::cpp_type const &rhs) {
+                                                                                { LiteralDatatypeImpl::compare(lhs, rhs) } -> std::convertible_to<std::partial_ordering>;
+                                                                            };
+
+template<typename LiteralDatatypeImpl>
 concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value) {
                                                                                 requires LiteralDatatype<typename LiteralDatatypeImpl::promoted>;
                                                                                 typename LiteralDatatypeImpl::promoted_cpp_type;
@@ -61,10 +68,16 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
                                                                               { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
                                                                           };
 
+/**
+ * only exists to resolve a circular lookup problem in LiteralDatatypeImpl::datatype_iri
+ */
 template<typename LiteralDatatypeImpl>
-concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires {
-                                                                             { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::node::identifier::LiteralType>;
-                                                                         };
+concept HasFixedId = requires {
+                         { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::node::identifier::LiteralType>;
+                     };
+
+template<typename LiteralDatatypeImpl>
+concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && HasFixedId<LiteralDatatypeImpl>;
 
 }  // namespace rdf4cpp::rdf::datatypes
 #endif  //RDF4CPP_LITERALDATATYPE_HPP

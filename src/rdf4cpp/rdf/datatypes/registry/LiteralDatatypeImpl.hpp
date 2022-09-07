@@ -170,13 +170,29 @@ struct Logical {
     }
 };
 
+/**
+ * The capability to be compared, e.g. with operator<=>
+ */
+template<util::ConstexprString type_iri>
+struct Comparable {
+    using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
+
+    inline static std::partial_ordering compare(cpp_type const &lhs, cpp_type const &rhs) {
+        return lhs <=> rhs;
+    }
+};
+
+/**
+ * The capability to have a fixed id and therefore
+ * be looked up in constant time
+ */
 template<util::ConstexprString type_iri>
 struct FixedId {
     static constexpr LiteralType fixed_id = reserved_datatype_ids[type_iri];
-    static_assert(fixed_id.is_fixed(), "fixed id can only have 6 bits and the 0 and 1 values are reserved");
+    static_assert(fixed_id.is_fixed(), "cannot treat non fixed id as fixed");
 };
 
-}  // namespace capabilities
+} // namespace capabilities
 
 /**
  * An automatically registering LiteralDatatype with given capabilities.
@@ -187,6 +203,20 @@ template<util::ConstexprString type_iri, template<util::ConstexprString> typenam
 struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_iri>... {
     using typename capabilities::Default<type_iri>::cpp_type;
 
+    // todo: find better name
+    static constexpr DatatypeIRIView const datatype_iri = []() {
+        if constexpr (HasFixedId<LiteralDatatypeImpl>) {
+            return DatatypeIRIView{LiteralDatatypeImpl::fixed_id};
+        } else {
+            return DatatypeIRIView{LiteralDatatypeImpl::identifier};
+        }
+    }();
+
+    static_assert((datatype_iri.is_dynamic() && !reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier))
+                          || (datatype_iri.is_fixed() && reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier)),
+                  "Mismatch between declared and actual fixed id mapping state. "
+                  "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
+                  "Note: this would cause inconsistency between registry and node storage");
 private:
     inline static std::nullptr_t init();
     inline static const auto dummy = init();

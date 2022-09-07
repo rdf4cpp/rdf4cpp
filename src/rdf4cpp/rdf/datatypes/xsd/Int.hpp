@@ -6,6 +6,7 @@
 #define RDF4CPP_XSD_INT_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
@@ -15,11 +16,6 @@
 #include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-/*
- * Name of the datatype. This is kept so that we won't need to type it over and over again.
- */
-constexpr static util::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
-
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
@@ -79,6 +75,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 struct Int : registry::LiteralDatatypeImpl<registry::xsd_int,
                                            registry::capabilities::Logical,
                                            registry::capabilities::Numeric,
+                                           registry::capabilities::Comparable,
                                            registry::capabilities::Subtype,
                                            registry::capabilities::FixedId> {
 };

@@ -9,6 +9,13 @@
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
+/**
+ * A map with fixed/static (maximum) capacity that can be used in constexpr contexts
+ *
+ * @tparam Key key type
+ * @tparam Value mapped type
+ * @tparam capacity maximum number of mappings that can be contained in the map
+ */
 template<typename Key, typename Value, size_t capacity>
 struct StaticFlatMap {
 private:
@@ -61,6 +68,7 @@ public:
     }
 
     constexpr const_iterator find(key_type const &search_key) const noexcept {
+        // todo: maybe do a linear find to reduce compiletime overhead?
         auto res = std::ranges::lower_bound(this->begin(), this->end(), search_key, {},
                                             [](auto const &entry) {
                                                 return entry.first;
@@ -71,6 +79,10 @@ public:
         } else {
             return this->end();
         }
+    }
+
+    constexpr bool contains(key_type const &search_key) const noexcept {
+        return this->find(search_key) != this->end();
     }
 
     constexpr mapped_type const &operator[](key_type const &key) const noexcept {

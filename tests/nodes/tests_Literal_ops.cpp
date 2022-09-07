@@ -244,13 +244,13 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  *          |  : B is a subtype of A
  *          B
  */
-using A = registry::LiteralDatatypeImpl<registry::A, registry::capabilities::Numeric, registry::capabilities::Promotable>;
-using B = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Subtype>;
-using B2 = registry::LiteralDatatypeImpl<registry::B2, registry::capabilities::Numeric, registry::capabilities::Subtype, registry::capabilities::Promotable>;
-using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Numeric, registry::capabilities::Subtype>;
+using A = registry::LiteralDatatypeImpl<registry::A, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Promotable>;
+using B = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
+using B2 = registry::LiteralDatatypeImpl<registry::B2, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype, registry::capabilities::Promotable>;
+using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
 
-using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric>;
-using Y = registry::LiteralDatatypeImpl<registry::Y, registry::capabilities::Numeric, registry::capabilities::Subtype>;
+using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric, registry::capabilities::Comparable>;
+using Y = registry::LiteralDatatypeImpl<registry::Y, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

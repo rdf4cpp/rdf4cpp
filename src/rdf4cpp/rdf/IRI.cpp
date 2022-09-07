@@ -44,7 +44,7 @@ IRI IRI::default_graph(NodeStorage &node_storage) {
     return IRI("", node_storage);
 }
 std::ostream &operator<<(std::ostream &os, const IRI &iri) {
-    os << (std::string) iri;
+    os << static_cast<std::string>(iri);
     return os;
 }
 std::string_view IRI::identifier() const {
