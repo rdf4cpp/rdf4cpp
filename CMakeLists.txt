@@ -13,7 +13,7 @@ endif ()
 # find packages
 find_package(serd 0 QUIET)
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
-find_package(expected-lite)
+find_package(expected-lite 0.6 QUIET)
 
 # find system libraries
 if (NOT serd_FOUND)
@@ -41,13 +41,13 @@ endif ()
 
 if (NOT expected-lite_FOUND)
     FetchContent_Declare(
-            fetchexpected-lite
+            expected-lite
             GIT_REPOSITORY https://github.com/martinmoene/expected-lite
-            GIT_TAG v0.6.2
+            GIT_TAG 95b9cb015fa17baa749c2b396b335906e1596a9e # v0.6.2
     )
 
-    FetchContent_MakeAvailable(fetchexpected-lite)
-    message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
+    FetchContent_MakeAvailable(expected-lite)
+    message("No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
 
 ## Create the main rdf4cpp library target
