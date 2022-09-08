@@ -36,7 +36,7 @@ if (NOT fmt_FOUND)
     )
 
     FetchContent_MakeAvailable(fetchfmt)
-    message(DEBUG "Non CMake package for fmt found. fmt was retrieved via FetchContent.")
+    message(DEBUG "No CMake package for fmt found. fmt was retrieved via FetchContent.")
 endif ()
 
 if (NOT expected-lite_FOUND)
@@ -47,7 +47,7 @@ if (NOT expected-lite_FOUND)
     )
 
     FetchContent_MakeAvailable(expected-lite)
-    message("No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
+    message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
 
 ## Create the main rdf4cpp library target
@@ -105,12 +105,15 @@ add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 target_include_directories(
         rdf4cpp PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
-        "${expected-lite_INCLUDE_DIRS}")
+        )
 
-target_link_libraries(rdf4cpp PRIVATE
+target_link_libraries(rdf4cpp
+        PUBLIC
+        nonstd::expected-lite
+        PRIVATE
         $<IF:${serd_FOUND},serd::serd,${serd}> # ${VAR}_FOUND is only defined if the system library is used
         fmt::fmt-header-only
-        nonstd::expected-lite)
+        )
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}
