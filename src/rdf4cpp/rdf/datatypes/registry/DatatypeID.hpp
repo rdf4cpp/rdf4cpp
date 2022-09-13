@@ -5,9 +5,10 @@
 #ifndef RDF4CPP_REGISTRY_DATATYPEIRI_HPP
 #define RDF4CPP_REGISTRY_DATATYPEIRI_HPP
 
-#include <variant>
 #include <cstdint>
 #include <functional>
+#include <type_traits>
+#include <variant>
 
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
@@ -38,12 +39,12 @@ struct DatatypeIDVisitor {
     F map_fixed;
     D map_dynamic;
 
-    auto operator()(storage::node::identifier::LiteralType const fixed) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
+    auto operator()(storage::node::identifier::LiteralType const fixed) noexcept(std::is_nothrow_invocable_v<F, storage::node::identifier::LiteralType const>) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
         return std::invoke(this->map_fixed, fixed);
     }
 
     template<typename S>
-    auto operator()(S &&other) -> std::invoke_result_t<D, decltype(std::forward<S>(other))> {
+    auto operator()(S &&other) noexcept(std::is_nothrow_invocable_v<S, decltype(std::forward<S>(other))>) -> std::invoke_result_t<D, decltype(std::forward<S>(other))> {
         return std::invoke(this->map_dynamic, std::forward<S>(other));
     }
 };
