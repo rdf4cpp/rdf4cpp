@@ -119,6 +119,14 @@ target_link_libraries(tests_LangString
 set_property(TARGET tests_LangString PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_LangString COMMAND tests_LangString)
 
+add_executable(tests_NumOpResults datatype/tests_NumOpResults.cpp)
+target_link_libraries(tests_NumOpResults
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_NumOpResults PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_NumOpResults COMMAND tests_NumOpResults)
+
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

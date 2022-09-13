@@ -337,7 +337,7 @@ template<typename T>
     if (e.has_value()) {
         return *e;
     } else {
-        return e.error();
+        return nonstd::make_unexpected(e.error());
     }
 }
 
