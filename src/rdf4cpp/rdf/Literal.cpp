@@ -185,7 +185,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(op_res.result_value),
-                       IRI::from_datatype_id(op_res.result_type_id, node_storage), // todo translate
+                       IRI::from_datatype_id(op_res.result_type_id, node_storage),
                        node_storage};
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
@@ -202,7 +202,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};  // not convertible
         }
 
-        auto const [equalized_entry, equalized_iri] = [&]() {
+        auto const [equalized_entry, equalized_id] = [&]() {
             if (equalizer->target_type_id == this_datatype) {
                 return std::make_pair(this_entry, this_datatype);
             } else if (equalizer->target_type_id == other_datatype) {
@@ -218,9 +218,13 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
                                                                                                   equalizer->convert_rhs(other.value()));
 
-        auto const to_string_fptr = op_res.result_type_id == equalized_iri
-                                            ? equalized_entry->to_string_fptr
-                                            : DatatypeRegistry::get_to_string(op_res.result_type_id);
+        auto const to_string_fptr = [&op_res, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
+            if (op_res.result_type_id == equalized_id.get()) [[likely]] {
+                return equalized_entry->to_string_fptr;
+            } else [[unlikely]] {
+                return DatatypeRegistry::get_to_string(op_res.result_type_id);
+            }
+        }();
 
         assert(to_string_fptr != nullptr);
 
