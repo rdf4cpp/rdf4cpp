@@ -4,7 +4,6 @@
 #include <concepts>
 #include <tuple>
 #include <type_traits>
-#include <variant>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>

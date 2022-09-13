@@ -24,8 +24,6 @@ public:
     static std::pair<NodeID, std::string_view> const xsd_string_iri;
     static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
 
-    //static util::StaticVec<std::pair<NodeID, std::string_view>, 64> const predefined_iris;
-
     static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
     static NodeID const min_variable_id;

@@ -68,8 +68,7 @@ public:
     }
 
     constexpr const_iterator find(key_type const &search_key) const noexcept {
-        // todo: maybe do a linear find to reduce compiletime overhead?
-        auto res = std::ranges::lower_bound(this->begin(), this->end(), search_key, {},
+        auto const res = std::ranges::lower_bound(this->begin(), this->end(), search_key, {},
                                             [](auto const &entry) {
                                                 return entry.first;
                                             });

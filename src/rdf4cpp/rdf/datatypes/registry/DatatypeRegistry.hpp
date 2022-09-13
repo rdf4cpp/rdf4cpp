@@ -248,7 +248,7 @@ public:
     inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) {
         auto const res = find_map_entry(datatype_id, [](auto const &entry) -> NumericOps const * {
             if (entry.numeric_ops.has_value()) {
-                return &*entry.numeric_ops;
+                return &entry.numeric_ops.value();
             }
 
             return nullptr;
