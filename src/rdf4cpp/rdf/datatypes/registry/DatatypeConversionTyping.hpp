@@ -6,9 +6,9 @@
 #include <type_traits>
 #include <variant>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -74,21 +74,21 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &);
 
-    DatatypeIRI target_type_iri;
+    DatatypeID target_type_id;
     convert_fptr_t convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() {
-        DatatypeIRI target_type_iri = []() {
+        DatatypeID target_type_iri = []() {
             if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
-                return DatatypeIRI{Entry::target_type::fixed_id};
+                return DatatypeID{Entry::target_type::fixed_id};
             } else {
-                return DatatypeIRI{std::string{Entry::target_type::identifier}};
+                return DatatypeID{std::string{Entry::target_type::identifier}};
             }
         }();
 
         return RuntimeConversionEntry{
-                .target_type_iri = std::move(target_type_iri),
+                .target_type_id = std::move(target_type_iri),
                 .convert = [](std::any const &value) -> std::any {
                     auto actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
@@ -111,7 +111,7 @@ private:
     {
         if (s_rank * max_p_rank > 0) {
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
-                                                      .target_type_iri = DatatypeIRI{storage::node::identifier::LiteralType{}},
+                                                      .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
                                                       .convert = nullptr});
         }
     }

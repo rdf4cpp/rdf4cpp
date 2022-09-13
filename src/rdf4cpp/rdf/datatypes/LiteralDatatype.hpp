@@ -1,8 +1,8 @@
 #ifndef RDF4CPP_LITERALDATATYPE_HPP
 #define RDF4CPP_LITERALDATATYPE_HPP
 
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/DatatypeIRI.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
@@ -11,7 +11,7 @@ template<typename LiteralDatatypeImpl>
 concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
-                              { LiteralDatatypeImpl::datatype_iri } -> std::convertible_to<registry::DatatypeIRIView>;
+                              { LiteralDatatypeImpl::datatype_id } -> std::convertible_to<registry::DatatypeIDView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                               { LiteralDatatypeImpl::to_string(cpp_value) } -> std::convertible_to<std::string>;
                           };
@@ -69,7 +69,7 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
                                                                           };
 
 /**
- * only exists to resolve a circular lookup problem in LiteralDatatypeImpl::datatype_iri
+ * only exists to resolve a circular lookup problem in LiteralDatatypeImpl::datatype_id
  */
 template<typename LiteralDatatypeImpl>
 concept HasFixedId = requires {

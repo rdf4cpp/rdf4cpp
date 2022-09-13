@@ -204,16 +204,16 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
     using typename capabilities::Default<type_iri>::cpp_type;
 
     // todo: find better name
-    static constexpr DatatypeIRIView const datatype_iri = []() {
+    static constexpr DatatypeIDView const datatype_id = []() {
         if constexpr (HasFixedId<LiteralDatatypeImpl>) {
-            return DatatypeIRIView{LiteralDatatypeImpl::fixed_id};
+            return DatatypeIDView{LiteralDatatypeImpl::fixed_id};
         } else {
-            return DatatypeIRIView{LiteralDatatypeImpl::identifier};
+            return DatatypeIDView{LiteralDatatypeImpl::identifier};
         }
     }();
 
-    static_assert((datatype_iri.is_dynamic() && !reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier))
-                          || (datatype_iri.is_fixed() && reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier)),
+    static_assert((datatype_id.is_dynamic() && !reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier))
+                          || (datatype_id.is_fixed() && reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier)),
                   "Mismatch between declared and actual fixed id mapping state. "
                   "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
                   "Note: this would cause inconsistency between registry and node storage");
