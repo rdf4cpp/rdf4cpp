@@ -173,6 +173,10 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
                                                                                              other.value());
 
+        if (!op_res.result_value.has_value()) {
+            return Literal{};
+        }
+
         auto const to_string_fptr = [&]() {
             if (op_res.result_type_iri == this_datatype) [[likely]] {
                 return this_entry->to_string_fptr;
@@ -183,7 +187,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(op_res.result_value),
+        return Literal{to_string_fptr(*op_res.result_value),
                        IRI{op_res.result_type_iri, node_storage},
                        node_storage};
     } else {
@@ -217,6 +221,10 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
                                                                                                   equalizer->convert_rhs(other.value()));
 
+        if (!op_res.result_value.has_value()) {
+            return Literal{};
+        }
+
         auto const to_string_fptr = [&]() {
             if (op_res.result_type_iri == equalized_entry->datatype_iri) [[likely]] {
                 return equalized_entry->to_string_fptr;
@@ -227,7 +235,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(op_res.result_value),
+        return Literal{to_string_fptr(*op_res.result_value),
                        IRI{op_res.result_type_iri, node_storage},
                        node_storage};
     }
@@ -250,6 +258,10 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
     DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
 
+    if (!op_res.result_value.has_value()) {
+        return Literal{};
+    }
+
     auto const to_string_fptr = [&]() {
         if (op_res.result_type_iri == entry->datatype_iri) [[likely]] {
             return entry->to_string_fptr;
@@ -260,7 +272,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
     assert(to_string_fptr != nullptr);
 
-    return Literal{to_string_fptr(op_res.result_value),
+    return Literal{to_string_fptr(*op_res.result_value),
                    IRI{op_res.result_type_iri, node_storage},
                    node_storage};
 }

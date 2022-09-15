@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/ConstexprString.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
+#include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 
 #include <cstddef>
 #include <sstream>
@@ -128,28 +129,77 @@ struct Numeric {
     using pos_result_cpp_type = typename detail::SelectOpResult<pos_result, cpp_type>::type;
     using neg_result_cpp_type = typename detail::SelectOpResult<neg_result, cpp_type>::type;
 
-    inline static add_result_cpp_type add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-        return lhs + rhs;
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-add
+    inline static nonstd::expected<add_result_cpp_type, NumericOpError> add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+        if constexpr (std::is_integral_v<cpp_type>) {
+            cpp_type res;
+            bool const overflowed = __builtin_add_overflow(lhs, rhs, &res);
+
+            if (overflowed) {
+                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+            }
+
+            return res;
+        } else {
+            return lhs + rhs;
+        }
     }
 
-    inline static sub_result_cpp_type sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-        return lhs - rhs;
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-subtract
+    inline static nonstd::expected<sub_result_cpp_type, NumericOpError> sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+        if constexpr (std::is_integral_v<cpp_type>) {
+            cpp_type res;
+            bool const overflowed = __builtin_sub_overflow(lhs, rhs, &res);
+
+            if (overflowed) {
+                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+            }
+
+            return res;
+        } else {
+            return lhs - rhs;
+        }
     }
 
-    inline static mul_result_cpp_type mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-        return lhs * rhs;
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-multiply
+    inline static nonstd::expected<mul_result_cpp_type, NumericOpError> mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+        if constexpr (std::is_integral_v<cpp_type>) {
+            cpp_type res;
+            bool const overflowed = __builtin_mul_overflow(lhs, rhs, &res);
+
+            if (overflowed) {
+                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+            }
+
+            return res;
+        } else {
+            return lhs * rhs;
+        }
     }
 
-    inline static div_result_cpp_type div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
+    inline static nonstd::expected<div_result_cpp_type, NumericOpError> div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+        if constexpr (std::is_integral_v<cpp_type>) {
+            if (rhs == 0) {
+                return nonstd::make_unexpected(NumericOpError::DivideByZero);
+            }
+        }
+
         return lhs / rhs;
     }
 
-    inline static pos_result_cpp_type pos(cpp_type const &operand) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-unary-plus
+    inline static nonstd::expected<pos_result_cpp_type, NumericOpError> pos(cpp_type const &operand) noexcept {
         return +operand;
     }
 
-    inline static neg_result_cpp_type neg(cpp_type const &operand) noexcept {
-        return -operand;
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-unary-minus
+    inline static nonstd::expected<neg_result_cpp_type, NumericOpError> neg(cpp_type const &operand) noexcept {
+        if constexpr (std::is_unsigned_v<cpp_type>) {
+            return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+        } else {
+            return -operand;
+        }
     }
 };
 

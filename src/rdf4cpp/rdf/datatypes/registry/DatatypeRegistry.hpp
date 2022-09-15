@@ -30,7 +30,7 @@ public:
 
     struct NumericOpResult {
         std::string_view result_type_iri;
-        std::any result_value;
+        nonstd::expected<std::any, NumericOpError> result_value;
     };
 
     using unop_fptr_t = NumericOpResult (*)(std::any const &);
@@ -332,6 +332,15 @@ struct SelectOpRes<std::false_type, Fallback> {
     using type = Fallback;
 };
 
+template<typename T>
+[[nodiscard]] nonstd::expected<std::any, NumericOpError> map_expected(nonstd::expected<T, NumericOpError> const &e) noexcept {
+    if (e.has_value()) {
+        return *e;
+    } else {
+        return nonstd::make_unexpected(e.error());
+    }
+}
+
 }  // namespace detail
 
 template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
@@ -344,7 +353,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::add(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -353,7 +362,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::sub(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -362,7 +371,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::mul(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -371,7 +380,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::div(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
             [](std::any const &operand) -> NumericOpResult {
@@ -379,7 +388,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::pos(operand_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
             [](std::any const &operand) -> NumericOpResult {
@@ -387,7 +396,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::type::identifier,
-                        .result_value = LiteralDatatype_t::neg(operand_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
             }};
 }
 
