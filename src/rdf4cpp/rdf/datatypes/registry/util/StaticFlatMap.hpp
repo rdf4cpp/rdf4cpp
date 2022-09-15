@@ -18,37 +18,26 @@ namespace rdf4cpp::rdf::datatypes::registry::util {
  */
 template<typename Key, typename Value, size_t capacity>
 struct StaticFlatMap {
-private:
-    using storage_t = std::array<std::pair<Key, Value>, capacity>;
-
-    size_t max_init;
-    storage_t storage;
-
-    constexpr void sort() noexcept {
-        std::ranges::sort(this->storage.begin(), this->storage.begin() + this->max_init, {},
-                          [](auto const &entry) {
-                              return entry.first;
-                          });
-    }
-
-public:
     using key_type = Key;
     using mapped_type = Value;
     using value_type = std::pair<Key, Value>;
     using const_reference = value_type const &;
     using const_pointer = value_type const *;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using const_iterator = value_type const *;
 
-    using size_type = typename storage_t::size_type;
-    using difference_type = typename storage_t::difference_type;
-    using const_iterator = typename storage_t::const_iterator;
+private:
+    using storage_t = std::array<value_type, capacity>;
+    storage_t storage;
+    size_t max_init;
 
-    constexpr StaticFlatMap(std::initializer_list<std::pair<Key, Value>> const inits) {
+public:
+    constexpr StaticFlatMap(std::initializer_list<std::pair<Key, Value>> const inits) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+        : max_init{inits.size()} {
+
         assert(inits.size() <= capacity);
-
         std::copy(inits.begin(), inits.end(), this->storage.begin());
-
-        this->max_init = inits.size();
-        this->sort();
     }
 
     [[nodiscard]] constexpr size_type size() const noexcept {
@@ -68,16 +57,9 @@ public:
     }
 
     constexpr const_iterator find(key_type const &search_key) const noexcept {
-        auto const res = std::ranges::lower_bound(this->begin(), this->end(), search_key, {},
-                                            [](auto const &entry) {
-                                                return entry.first;
-                                            });
-
-        if (res != this->end() && res->first == search_key) {
-            return res;
-        } else {
-            return this->end();
-        }
+        return std::ranges::find(this->begin(), this->end(), search_key, [](auto const &entry) {
+            return entry.first;
+        });
     }
 
     constexpr bool contains(key_type const &search_key) const noexcept {
