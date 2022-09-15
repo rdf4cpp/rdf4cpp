@@ -21,8 +21,8 @@ concept LiteralDatatypeOrUndefined = LiteralDatatype<LiteralDatatypeImpl> || std
  * Errors that can be returned from numeric operations
  */
 enum struct NumericOpError {
-    DivideByZero,   // https://www.w3.org/TR/xpath-functions/#ERRFOAR0001
-    OverOrUnderFlow // https://www.w3.org/TR/xpath-functions/#ERRFOAR0002
+    DivideByZero = 0, // https://www.w3.org/TR/xpath-functions/#ERRFOAR0001
+    OverOrUnderFlow   // https://www.w3.org/TR/xpath-functions/#ERRFOAR0002
 };
 
 template<typename LiteralDatatypeImpl>
