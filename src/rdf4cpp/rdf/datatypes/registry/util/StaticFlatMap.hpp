@@ -62,11 +62,11 @@ struct StaticFlatMap {
     /**
      * Finds the entry with the key `key`.
      *
-     * @note this function is marked consteval as it can and will exhibit ub during runtime
-     *   when the map does not contain the key. In constexpr contexts this is no problem since compilers are required
-     *   to report ub there.
+     * @note this function can and will exhibit ub during runtime when the map does not contain the search key.
+     *   Be careful when calling this function during runtime.
+     *   In constexpr contexts this is no problem since compilers are required to report ub there.
      */
-    consteval mapped_type const &operator[](key_type const &key) const noexcept {
+    constexpr mapped_type const &operator[](key_type const &key) const noexcept {
         auto it = this->find(key);
         return it->second;
     }
