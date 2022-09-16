@@ -127,7 +127,7 @@ public:
 
 static_assert(sizeof(NodeID) == 6);
 
-inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{NodeID{1}, ""};
+inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri].to_underlying(), datatypes::registry::default_graph_iri};
 inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{datatypes::xsd::String::fixed_id.to_underlying(), datatypes::xsd::String::identifier};
 inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{datatypes::rdf::LangString::fixed_id.to_underlying(), datatypes::rdf::LangString::identifier};
 

@@ -1,20 +1,23 @@
 #ifndef RDF4CPP_REGISTRY_UTIL_STATICFLATMAP_HPP
 #define RDF4CPP_REGISTRY_UTIL_STATICFLATMAP_HPP
 
-#include <cstddef>
 #include <algorithm>
 #include <array>
-#include <utility>
 #include <cassert>
+#include <cstddef>
+#include <type_traits>
+#include <utility>
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
 /**
  * A map with fixed/static (maximum) capacity that can be used in constexpr contexts
+ * @note aggregate initialization will not deduplicate entries in the map. It is unspecified
+ *   which of the elements (with same key) will be found by find or operator[].
  *
  * @tparam Key key type
  * @tparam Value mapped type
- * @tparam capacity maximum number of mappings that can be contained in the map
+ * @tparam capacity number of mappings that are contained in the map
  */
 template<typename Key, typename Value, size_t capacity>
 struct StaticFlatMap {
@@ -27,21 +30,11 @@ struct StaticFlatMap {
     using difference_type = ptrdiff_t;
     using const_iterator = value_type const *;
 
-private:
     using storage_t = std::array<value_type, capacity>;
     storage_t storage;
-    size_t max_init;
-
-public:
-    constexpr StaticFlatMap(std::initializer_list<std::pair<Key, Value>> const inits) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-        : max_init{inits.size()} {
-
-        assert(inits.size() <= capacity);
-        std::copy(inits.begin(), inits.end(), this->storage.begin());
-    }
 
     [[nodiscard]] constexpr size_type size() const noexcept {
-        return this->max_init;
+        return capacity;
     }
 
     [[nodiscard]] constexpr size_type max_size() const noexcept {
@@ -53,7 +46,7 @@ public:
     }
 
     constexpr const_iterator end() const noexcept {
-        return this->storage.begin() + this->max_init;
+        return this->storage.end();
     }
 
     constexpr const_iterator find(key_type const &search_key) const noexcept {
@@ -66,11 +59,22 @@ public:
         return this->find(search_key) != this->end();
     }
 
-    constexpr mapped_type const &operator[](key_type const &key) const noexcept {
+    /**
+     * Finds the entry with the key `key`.
+     *
+     * @note this function is marked consteval as it can and will exhibit ub during runtime
+     *   when the map does not contain the key. In constexpr contexts this is no problem since compilers are required
+     *   to report ub there.
+     */
+    consteval mapped_type const &operator[](key_type const &key) const noexcept {
         auto it = this->find(key);
         return it->second;
     }
 };
+
+template<typename ...Ps>
+StaticFlatMap(Ps &&...) -> StaticFlatMap<std::common_type_t<typename std::remove_cvref_t<Ps>::first_type...>, std::common_type_t<typename std::remove_cvref_t<Ps>::second_type...>, sizeof...(Ps)>;
+
 } // rdf4cpp::rdf::datatypes::registry::util
 
 #endif  //RDF4CPP_REGISTRY_UTIL_STATICFLATMAP_HPP
