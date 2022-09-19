@@ -152,7 +152,7 @@ private:
      * Creates NumericOps based on a NumericLiteralDatatype
      * by generating type-erased versions of all necessary functions (add, sub, ...).
      */
-    template<datatypes::NumericLiteralDatatype datatype_info>
+    template<datatypes::NumericImplLiteralDatatype datatype_info>
     static NumericOpsImpl make_numeric_ops_impl();
 
 public:
@@ -339,15 +339,13 @@ inline void DatatypeRegistry::add() {
     using conversion_table_t = decltype(make_conversion_table_for<LiteralDatatype_t>());
 
     auto const num_ops = []() -> std::optional<NumericOps> {
-        if constexpr (datatypes::NumericLiteralDatatype<LiteralDatatype_t>) {
-            if constexpr (datatypes::NumericImpl<LiteralDatatype_t>) {
-                return NumericOps{make_numeric_ops_impl<LiteralDatatype_t>()};
-            } else {
-                constexpr auto soff = conversion_detail::calculate_subtype_offset<typename LiteralDatatype_t::numeric_impl_type, conversion_table_t>();
-                static_assert(soff.has_value(), "a stub-numeric type must define linearly reachable supertype that is impl-numeric as numeric_impl_type");
+        if constexpr (datatypes::NumericImpl<LiteralDatatype_t>) {
+            return NumericOps{make_numeric_ops_impl<LiteralDatatype_t>()};
+        } else if constexpr (datatypes::NumericStub<LiteralDatatype_t>) {
+            constexpr auto soff = conversion_detail::calculate_subtype_offset<typename LiteralDatatype_t::numeric_impl_type, conversion_table_t>();
+            static_assert(soff.has_value(), "a stub-numeric type must define linearly reachable supertype that is impl-numeric as numeric_impl_type");
 
-                return NumericOps{NumericOpsStub{.start_s_off = *soff}};
-            }
+            return NumericOps{NumericOpsStub{.start_s_off = *soff}};
         } else {
             return std::nullopt;
         }
@@ -414,7 +412,7 @@ template<typename T>
 
 }  // namespace detail
 
-template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
+template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
 inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() {
     return NumericOpsImpl{
             // a + b
