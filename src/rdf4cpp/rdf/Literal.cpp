@@ -1,7 +1,6 @@
 #include "Literal.hpp"
 
 #include <sstream>
-#include <iostream>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
@@ -188,8 +187,6 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         }();
 
         assert(to_string_fptr != nullptr);
-
-        std::cout << op_res.result_value->type().name() << std::endl;
 
         return Literal{to_string_fptr(*op_res.result_value),
                        IRI::from_datatype_id(op_res.result_type_id, node_storage),
