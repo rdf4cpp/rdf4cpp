@@ -56,6 +56,18 @@ constexpr Acc tuple_type_fold_impl(Acc init, F &&f, std::index_sequence<Ixs...>)
     return init;
 }
 
+template<typename TupleLike, typename Pred, size_t Ix, size_t ...Ixs>
+constexpr std::optional<size_t> tuple_type_find_if_impl(Pred &&pred, std::index_sequence<Ix, Ixs...>) {
+    if (pred.template operator()<std::tuple_element_t<Ix, TupleLike>>()) {
+        return Ix;
+    }
+
+    if constexpr (sizeof...(Ixs) > 0) {
+        return tuple_type_find_if_impl<TupleLike>(std::forward<Pred>(pred), std::index_sequence<Ixs...>{});
+    } else {
+        return std::nullopt;
+    }
+}
 
 }  // namespace tuple_util_detail
 
@@ -140,6 +152,36 @@ template<typename Tuple, typename Acc, typename F>
 constexpr Acc tuple_type_fold(Acc init, F &&f) {
     constexpr size_t tup_size = std::tuple_size_v<Tuple>;
     return tuple_util_detail::tuple_type_fold_impl<Tuple>(std::move(init), std::forward<F>(f), std::make_index_sequence<tup_size>{});
+}
+
+/**
+ * Tries to find the index in the tuple where the type matches the predicated pred.
+ * @note Pred will be called as pred.template operator()<Element>() on each element of the tuple and is expected to
+ *      return a boolean indicating if the predicate matched.
+ *
+ * @example
+ * @code
+ * using tuple_t = std::tuple<std::string, double, int>;
+ *
+ * constexpr std::optional<size_t> ix = tuple_type_find_if<tuple_t>([]<typename T>() {
+ *     return std::is_integral_v<T>;
+ * });
+ *
+ * static_assert(ix.has_value() && *ix == 2);
+ * @endcode
+ *
+ * @return the index of the first type matching the predicate if there is one, else std::nullopt
+ */
+template<typename Tuple, typename Pred>
+    requires HasTupleTraits<Tuple>
+constexpr std::optional<size_t> tuple_type_find_if(Pred &&pred) {
+    constexpr size_t tup_size = std::tuple_size_v<Tuple>;
+
+    if constexpr (tup_size == 0) {
+        return std::nullopt;
+    } else {
+        return tuple_util_detail::tuple_type_find_if_impl<Tuple>(std::forward<Pred>(pred), std::make_index_sequence<tup_size>{});
+    }
 }
 
 /**

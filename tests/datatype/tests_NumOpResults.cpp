@@ -13,19 +13,6 @@ using datatypes::NumericOpError;
 // https://www.w3.org/TR/xpath-functions/#op.numeric
 TEST_SUITE("numeric op results") {
     TEST_CASE("integral") {
-        SUBCASE("int") {
-            Int::cpp_type const zero{0};
-            Int::cpp_type const one{1};
-            Int::cpp_type const two{2};
-            Int::cpp_type const min{std::numeric_limits<Int::cpp_type>::min()};
-            Int::cpp_type const max{std::numeric_limits<Int::cpp_type>::max()};
-
-            CHECK(Int::add(max, one) == nonstd::make_unexpected(NumericOpError::OverOrUnderFlow));
-            CHECK(Int::sub(min, one) == nonstd::make_unexpected(NumericOpError::OverOrUnderFlow));
-            CHECK(Int::mul(max, two) == nonstd::make_unexpected(NumericOpError::OverOrUnderFlow));
-            CHECK(Int::div(one, zero) == nonstd::make_unexpected(NumericOpError::DivideByZero));
-        }
-
         SUBCASE("integer") {
             Integer::cpp_type const zero{0};
             Integer::cpp_type const one{1};

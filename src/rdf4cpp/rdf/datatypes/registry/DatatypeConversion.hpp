@@ -71,6 +71,13 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
         static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>) || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
                       "conversion must preserve numericity");
 
+        // conversion cannot downgrade impl-numericity class back to stub-numericity, so:
+        // NumericImplLiteralDatatype<Type> -> NumericImplLiteralDatatype<typename next::converted>
+        // This is required so that skipping to a numeric-impl in the hierarchy will guarantee
+        // that we can only find numeric impls from now on, which ensures the search algorithm can be single pass.
+        static_assert(!NumericImplLiteralDatatype<Type> || NumericImplLiteralDatatype<typename next::converted>,
+                      "conversion must preserve impl-numericity");
+
         // conversion must preserve comparability, so:
         // ComparableLiteralDatatype<Type> <-> ComparableLiteralDatatype<typename next::converted>
         // The reasoning is the same as in the static_assert for numericity.
@@ -310,6 +317,23 @@ consteval ConversionTable auto make_conversion_table() {
 
         return std::tuple_cat(std::make_tuple(level_0_table), other_level_tables);
     }
+}
+
+/**
+ * Calculates the subtype offset from a subtype to a supertype, so the
+ * number of steps to traverse upwards in the hierarchy until the supertype
+ * is reached from the subtype.
+ *
+ * @tparam Supertype the to be searched supertype
+ * @tparam SubtypeTable the conversion table of the subtype
+ * @return equivalent to: subtype.subtype_rank - supertype.subtype_rank if sub- and supertype are in the same subtype hierarchy, else nullopt
+ */
+template<LiteralDatatype Supertype, ConversionTable SubtypeTable>
+consteval std::optional<size_t> calculate_subtype_offset() {
+    return util::tuple_type_find_if<SubtypeTable>([]<ConversionLayer Layer>() {
+        using target_t = typename std::tuple_element_t<0, Layer>::target_type;
+        return std::is_same_v<target_t, Supertype>;
+    });
 }
 
 }  // namespace conversion_detail

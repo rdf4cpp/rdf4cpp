@@ -17,7 +17,7 @@ struct DatatypeMapping {
 
 /**
  * Mapping type_iri -> promoted version of itself
- * Note: promoted must be LiteralDatatype
+ * @note promoted must be LiteralDatatype
  */
 template<ConstexprString type_iri>
 struct DatatypePromotionMapping {
@@ -26,7 +26,7 @@ struct DatatypePromotionMapping {
 
 /**
  * Mapping type_iri -> supertype of itself
- * Note: supertype must be LiteralDatatype
+ * @note supertype must be LiteralDatatype
  */
 template<ConstexprString type_iri>
 struct DatatypeSupertypeMapping {
@@ -34,8 +34,17 @@ struct DatatypeSupertypeMapping {
 };
 
 /**
+ * Mapping type_iri of numeric stub -> a supertype that is the numeric impl that should be used for this type
+ * @note numeric_impl_type must be LiteralDatatype and NumericImpl
+ */
+template<ConstexprString type_iri>
+struct DatatypeNumericStubMapping {
+    using numeric_impl_type = std::false_type;
+};
+
+/**
  * Mapping type_iri -> result of addition operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypeAddResultMapping {
@@ -44,7 +53,7 @@ struct DatatypeAddResultMapping {
 
 /**
  * Mapping type_iri -> result of subtraction operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypeSubResultMapping {
@@ -53,7 +62,7 @@ struct DatatypeSubResultMapping {
 
 /**
  * Mapping type_iri -> result of multiplication operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypeMulResultMapping {
@@ -62,7 +71,7 @@ struct DatatypeMulResultMapping {
 
 /**
  * Mapping type_iri -> result of division operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypeDivResultMapping {
@@ -71,7 +80,7 @@ struct DatatypeDivResultMapping {
 
 /**
  * Mapping type_iri -> result of unary plus operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypePosResultMapping {
@@ -80,7 +89,7 @@ struct DatatypePosResultMapping {
 
 /**
  * Mapping type_iri -> result of unary minus operation
- * Node: op_result must be LiteralDatatypeOrUndefined
+ * @note op_result must be LiteralDatatypeOrUndefined
  */
 template<ConstexprString type_iri>
 struct DatatypeNegResultMapping {
