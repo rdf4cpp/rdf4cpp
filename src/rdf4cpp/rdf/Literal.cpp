@@ -1,6 +1,7 @@
 #include "Literal.hpp"
 
 #include <sstream>
+#include <iostream>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
@@ -174,6 +175,10 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
                                                                                              other.value());
 
+        if (!op_res.result_value.has_value()) {
+            return Literal{};
+        }
+
         auto const to_string_fptr = [&]() {
             if (op_res.result_type_id == this_datatype) [[likely]] {
                 return this_entry->to_string_fptr;
@@ -184,7 +189,9 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(op_res.result_value),
+        std::cout << op_res.result_value->type().name() << std::endl;
+
+        return Literal{to_string_fptr(*op_res.result_value),
                        IRI::from_datatype_id(op_res.result_type_id, node_storage),
                        node_storage};
     } else {
@@ -218,6 +225,10 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         DatatypeRegistry::NumericOpResult const op_res = op_select(*equalized_entry->numeric_ops)(equalizer->convert_lhs(this->value()),
                                                                                                   equalizer->convert_rhs(other.value()));
 
+        if (!op_res.result_value.has_value()) {
+            return Literal{};
+        }
+
         auto const to_string_fptr = [&op_res, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
             if (op_res.result_type_id == equalized_id.get()) [[likely]] {
                 return equalized_entry->to_string_fptr;
@@ -228,7 +239,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(op_res.result_value),
+        return Literal{to_string_fptr(*op_res.result_value),
                        IRI::from_datatype_id(op_res.result_type_id, node_storage),
                        node_storage};
     }
@@ -252,15 +263,22 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
     DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value());
 
-    auto const to_string_fptr = op_res.result_type_id == this_datatype
-                                        ? this_entry->to_string_fptr
-                                        : DatatypeRegistry::get_to_string(op_res.result_type_id);
+    if (!op_res.result_value.has_value()) {
+        return Literal{};
+    }
+
+    auto const to_string_fptr = [&]() {
+        if (op_res.result_type_id == this_datatype) [[likely]] {
+            return this_entry->to_string_fptr;
+        } else [[unlikely]] {
+            return DatatypeRegistry::get_to_string(op_res.result_type_id);
+        }
+    }();
 
     assert(to_string_fptr != nullptr);
 
-    return Literal{to_string_fptr(op_res.result_value),
-                   IRI::from_datatype_id(op_res.result_type_id, node_storage),
-                   node_storage};
+    return Literal{to_string_fptr(*op_res.result_value),
+                     IRI::from_datatype_id(op_res.result_type_id, node_storage)};
 }
 
 util::TriBool Literal::get_ebv_impl() const {

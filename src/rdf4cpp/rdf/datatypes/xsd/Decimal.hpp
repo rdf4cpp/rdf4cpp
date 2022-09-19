@@ -89,6 +89,18 @@ inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type 
 }
 
 template<>
+inline nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
+    // decimal needs error (and cpp_type is not integral)
+
+    if (rhs == 0) {
+        return nonstd::make_unexpected(NumericOpError::DivideByZero);
+    }
+
+    return lhs / rhs;
+}
+
+template<>
 inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept {
     return !std::isnan(value) && value != 0.0;
 }

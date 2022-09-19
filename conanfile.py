@@ -20,7 +20,8 @@ class Recipe(ConanFile):
     default_options = {"shared": False, "fPIC": True}
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*"
     requires = (("serd/0.30.12", "private"),
-                ("fmt/9.0.0", "private"))  # format must only be used within cpp files
+                ("fmt/9.0.0", "private"), # format must only be used within cpp files
+                ("expected-lite/0.6.2"))
 
     generators = ("CMakeDeps", "CMakeToolchain")
 

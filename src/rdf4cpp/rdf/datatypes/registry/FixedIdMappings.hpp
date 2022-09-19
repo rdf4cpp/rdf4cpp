@@ -65,7 +65,7 @@ inline constexpr uint64_t min_dynamic_datatype_id = reserved_datatype_ids.size()
                                                             : 1 + std::ranges::max_element(reserved_datatype_ids, {},
                                                                                            [](auto const &entry) {
                                                                                                return entry.second.to_underlying();
-                                                                                           }) -> second.to_underlying();
+                                                                                           })->second.to_underlying();
 
 } // rdf4cpp::rdf::datatypes::registry
 

@@ -61,7 +61,13 @@ inline bool capabilities::Logical<xsd_int>::effective_boolean_value(cpp_type con
 }
 
 template<>
-inline capabilities::Numeric<xsd_int>::div_result_cpp_type capabilities::Numeric<xsd_int>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+inline nonstd::expected<capabilities::Numeric<xsd_int>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_int>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    if (rhs == 0) {
+        return nonstd::make_unexpected(NumericOpError::DivideByZero);
+    }
+
+    // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
+    // integer needs to return decimal on division
     return static_cast<div_result_cpp_type>(lhs) / static_cast<div_result_cpp_type>(rhs);
 }
 

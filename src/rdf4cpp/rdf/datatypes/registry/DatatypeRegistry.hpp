@@ -22,7 +22,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 class DatatypeRegistry {
 public:
-    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id;
+    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id - 1; // ids from 1 to n stored in places 0 to n-1
 
     /**
      * Constructs an instance of a type from a string.
@@ -33,7 +33,7 @@ public:
 
     struct NumericOpResult {
         DatatypeID result_type_id;
-        std::any result_value;
+        nonstd::expected<std::any, NumericOpError> result_value;
     };
 
     using unop_fptr_t = NumericOpResult (*)(std::any const &);
@@ -107,7 +107,7 @@ private:
     inline static registered_datatypes_t &get_mutable() {
         static registered_datatypes_t registry_ = []() {
             registered_datatypes_t r;
-            r.resize(dynamic_datatype_offset, DatatypeEntry::placeholder()); // 2^6 placeholders for fixed id datatypes
+            r.resize(dynamic_datatype_offset, DatatypeEntry::placeholder()); // placeholders for fixed id datatypes
 
             return r;
         }();
@@ -131,10 +131,10 @@ private:
 
         return visit(DatatypeIDVisitor{
                              [&registry, f](LiteralType const fixed_id) -> ret_type {
-                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying());
+                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
                                  assert(id_as_index < dynamic_datatype_offset);
 
-                                 return f(registry[id_as_index - 1]); // ids from 1 to 64 stored in places 0 to 63
+                                 return f(registry[id_as_index]);
                              },
                              [&registry, f](std::string_view const other_iri) -> ret_type {
                                  auto found = std::lower_bound(registry.begin() + dynamic_datatype_offset, registry.end(),
@@ -158,10 +158,10 @@ private:
     static NumericOps make_numeric_ops();
 
     inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) {
-        auto const id_as_index = static_cast<size_t>(type_id.to_underlying());
+        auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
         assert(id_as_index < dynamic_datatype_offset);
 
-        auto &slot = DatatypeRegistry::get_mutable()[id_as_index - 1];
+        auto &slot = DatatypeRegistry::get_mutable()[id_as_index];
         assert(slot.datatype_iri.empty()); // is placeholder
         slot = std::move(entry_to_add);
     }
@@ -400,6 +400,14 @@ struct SelectOpResIRI {
     }
 };
 
+template<typename T>
+[[nodiscard]] nonstd::expected<std::any, NumericOpError> map_expected(nonstd::expected<T, NumericOpError> const &e) noexcept {
+    if (e.has_value()) {
+        return *e;
+    } else {
+        return nonstd::make_unexpected(e.error());
+    }
+}
 }  // namespace detail
 
 template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
@@ -412,7 +420,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::add(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -421,7 +429,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::sub(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -430,7 +438,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::mul(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
@@ -439,7 +447,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::div(lhs_val, rhs_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
             [](std::any const &operand) -> NumericOpResult {
@@ -447,7 +455,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::pos(operand_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
             [](std::any const &operand) -> NumericOpResult {
@@ -455,7 +463,7 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::select(),
-                        .result_value = LiteralDatatype_t::neg(operand_val)};
+                        .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
             }};
 }
 
