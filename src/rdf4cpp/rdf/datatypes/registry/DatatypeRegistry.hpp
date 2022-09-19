@@ -241,7 +241,17 @@ public:
             return &entry.numeric_ops;
         });
 
-        return res.has_value() && (**res).has_value() ? &***res : nullptr;
+        // res is nullopt if no datatype matching given datatype_iri was found
+        if (res.has_value()) {
+            // contained ptr cannot be nullptr as by return in lambda for find_map_entry above
+            // optional behind contained ptr can be nullopt if type is not numeric
+            if (auto const ops_ptr = res.value(); ops_ptr->has_value()) {
+                return &ops_ptr->value();
+            }
+        }
+
+        // no datatype found or not numeric
+        return nullptr;
     }
 
     /**
