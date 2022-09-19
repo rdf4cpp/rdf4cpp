@@ -92,7 +92,10 @@ bool Literal::is_variable() const { return false; }
 bool Literal::is_blank_node() const { return false; }
 bool Literal::is_iri() const { return false; }
 bool Literal::is_numeric() const {
-    return datatypes::registry::DatatypeRegistry::get_numerical_ops(this->datatype().identifier()).has_value();
+    using namespace datatypes::registry;
+
+    return this->handle_.node_id().literal_type().is_numeric()
+           || DatatypeRegistry::get_numerical_ops(this->get_datatype_id()) != nullptr;
 }
 
 Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
@@ -104,9 +107,9 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
 std::any Literal::value() const {
     using namespace datatypes;
 
-    auto const datatype = this->datatype().identifier();
+    auto const datatype = this->get_datatype_id();
 
-    if (datatype == rdf::LangString::identifier) {
+    if (datatype == rdf::LangString::datatype_id) {
         auto const &lit = this->handle_.literal_backend();
 
         return registry::LangStringRepr{
@@ -122,18 +125,16 @@ std::any Literal::value() const {
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
-    // retrieving the datatype.identifier() requires a lookup in the backend -> cache
-    auto const datatype_id = datatype.identifier();
+    DatatypeIDView const datatype_identifier = datatype.to_datatype_id();
 
-    if (datatype_id == datatypes::rdf::LangString::identifier) {
+    if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
         // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
         throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other constructors"};
     }
 
-    if (auto const *entry = DatatypeRegistry::get_entry(datatype_id); entry != nullptr) {
+    if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
         // exists => canonize
         auto const cpp_type = entry->factory_fptr(lexical_form);
-
         return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                                  .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                                  .lexical_form = entry->to_string_fptr(cpp_type),
@@ -153,13 +154,13 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
-    using datatypes::registry::DatatypeRegistry;
+    using namespace datatypes::registry;
 
-    if (this->null() || other.null()) {
+    if (this->null() || other.null() || this->is_fixed_not_numeric() || other.is_fixed_not_numeric()) {
         return Literal{};
     }
 
-    auto const this_datatype = this->datatype().identifier();
+    auto const this_datatype = this->get_datatype_id();
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
@@ -167,7 +168,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         return Literal{};  // not numeric
     }
 
-    auto const other_datatype = other.datatype().identifier();
+    auto const other_datatype = other.get_datatype_id();
 
     if (this_datatype == other_datatype) {
         DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value(),
@@ -178,17 +179,17 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         }
 
         auto const to_string_fptr = [&]() {
-            if (op_res.result_type_iri == this_datatype) [[likely]] {
+            if (op_res.result_type_id == this_datatype) [[likely]] {
                 return this_entry->to_string_fptr;
             } else [[unlikely]] {
-                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+                return DatatypeRegistry::get_to_string(op_res.result_type_id);
             }
         }();
 
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(*op_res.result_value),
-                       IRI{op_res.result_type_iri, node_storage},
+                       IRI::from_datatype_id(op_res.result_type_id, node_storage),
                        node_storage};
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
@@ -205,13 +206,13 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};  // not convertible
         }
 
-        auto const equalized_entry = [&]() {
-            if (equalizer->target_type_iri == this_datatype) {
-                return this_entry;
-            } else if (equalizer->target_type_iri == other_datatype) {
-                return other_entry;
+        auto const [equalized_entry, equalized_id] = [&]() {
+            if (equalizer->target_type_id == this_datatype) {
+                return std::make_pair(this_entry, this_datatype);
+            } else if (equalizer->target_type_id == other_datatype) {
+                return std::make_pair(other_entry, other_datatype);
             } else {
-                return DatatypeRegistry::get_entry(equalizer->target_type_iri);
+                return std::make_pair(DatatypeRegistry::get_entry(equalizer->target_type_id), equalizer->target_type_id);
             }
         }();
 
@@ -225,56 +226,56 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};
         }
 
-        auto const to_string_fptr = [&]() {
-            if (op_res.result_type_iri == equalized_entry->datatype_iri) [[likely]] {
+        auto const to_string_fptr = [&op_res, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
+            if (op_res.result_type_id == equalized_id.get()) [[likely]] {
                 return equalized_entry->to_string_fptr;
             } else [[unlikely]] {
-                return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+                return DatatypeRegistry::get_to_string(op_res.result_type_id);
             }
         }();
 
         assert(to_string_fptr != nullptr);
 
         return Literal{to_string_fptr(*op_res.result_value),
-                       IRI{op_res.result_type_iri, node_storage},
+                       IRI::from_datatype_id(op_res.result_type_id, node_storage),
                        node_storage};
     }
 }
 
 template<typename OpSelect>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
-    using datatypes::registry::DatatypeRegistry;
+    using namespace datatypes::registry;
 
     if (this->null()) {
         return Literal{};
     }
 
-    auto const entry = DatatypeRegistry::get_entry(this->datatype().identifier());
-    assert(entry != nullptr);
+    auto const this_datatype = this->get_datatype_id();
+    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    assert(this_entry != nullptr);
 
-    if (!entry->numeric_ops.has_value()) {
-        return Literal{};  // datatype not numeric
+    if (!this_entry->numeric_ops.has_value()) {
+        return Literal{};  // this_datatype not numeric
     }
 
-    DatatypeRegistry::NumericOpResult const op_res = op_select(*entry->numeric_ops)(this->value());
+    DatatypeRegistry::NumericOpResult const op_res = op_select(*this_entry->numeric_ops)(this->value());
 
     if (!op_res.result_value.has_value()) {
         return Literal{};
     }
 
     auto const to_string_fptr = [&]() {
-        if (op_res.result_type_iri == entry->datatype_iri) [[likely]] {
-            return entry->to_string_fptr;
+        if (op_res.result_type_id == this_datatype) [[likely]] {
+            return this_entry->to_string_fptr;
         } else [[unlikely]] {
-            return DatatypeRegistry::get_to_string(op_res.result_type_iri);
+            return DatatypeRegistry::get_to_string(op_res.result_type_id);
         }
     }();
 
     assert(to_string_fptr != nullptr);
 
     return Literal{to_string_fptr(*op_res.result_value),
-                   IRI{op_res.result_type_iri, node_storage},
-                   node_storage};
+                     IRI::from_datatype_id(op_res.result_type_id, node_storage)};
 }
 
 util::TriBool Literal::get_ebv_impl() const {
@@ -282,7 +283,7 @@ util::TriBool Literal::get_ebv_impl() const {
         return util::TriBool::Err;
     }
 
-    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype().identifier());
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_id());
 
     if (ebv == nullptr) {
         return util::TriBool::Err;
@@ -309,8 +310,8 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
         }
     }
 
-    auto const this_datatype = this->datatype().identifier();
-    auto const other_datatype = other.datatype().identifier();
+    auto const this_datatype = this->get_datatype_id();
+    auto const other_datatype = other.get_datatype_id();
 
     std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
 
@@ -347,12 +348,12 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
         }
 
         auto const equalized_compare_fptr = [&]() {
-            if (equalizer->target_type_iri == this_datatype) {
+            if (equalizer->target_type_id == this_datatype) {
                 return this_entry->compare_fptr;
-            }  else if (equalizer->target_type_iri == other_datatype) {
+            }  else if (equalizer->target_type_id == other_datatype) {
                 return other_entry->compare_fptr;
             } else {
-                return DatatypeRegistry::get_compare(equalizer->target_type_iri);
+                return DatatypeRegistry::get_compare(equalizer->target_type_id);
             }
         }();
 
@@ -457,6 +458,23 @@ bool Literal::gt_with_extensions(Literal const &other) const {
 
 bool Literal::ge_with_extensions(Literal const &other) const {
     return this->compare_with_extensions(other) != std::weak_ordering::less;
+}
+
+datatypes::registry::DatatypeIDView Literal::get_datatype_id() const noexcept {
+    auto const lit_type = this->handle_.node_id().literal_type();
+
+    if (lit_type.is_fixed()) {
+        return datatypes::registry::DatatypeIDView{lit_type};
+    } else {
+        return datatypes::registry::DatatypeIDView{this->datatype().identifier()};
+    }
+}
+
+bool Literal::is_fixed_not_numeric() const noexcept {
+    using namespace datatypes::registry;
+
+    auto const lit_type = this->handle_.node_id().literal_type();
+    return lit_type.is_fixed() && !lit_type.is_numeric();
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {

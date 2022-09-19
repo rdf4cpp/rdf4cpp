@@ -1,7 +1,10 @@
 #ifndef RDF4CPP_LITERALDATATYPE_HPP
 #define RDF4CPP_LITERALDATATYPE_HPP
 
-#include <rdf4cpp/rdf/datatypes/registry/ConstexprString.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
+
 #include <nonstd/expected.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
@@ -10,6 +13,7 @@ template<typename LiteralDatatypeImpl>
 concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
+                              { LiteralDatatypeImpl::datatype_id } -> std::convertible_to<registry::DatatypeIDView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                               { LiteralDatatypeImpl::to_string(cpp_value) } -> std::convertible_to<std::string>;
                           };
@@ -73,6 +77,17 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
                                                                               { LiteralDatatypeImpl::subtype_rank } -> std::convertible_to<unsigned>;
                                                                               { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
                                                                           };
+
+/**
+ * only exists to resolve a circular lookup problem in LiteralDatatypeImpl::datatype_id
+ */
+template<typename LiteralDatatypeImpl>
+concept HasFixedId = requires {
+                         { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::node::identifier::LiteralType>;
+                     };
+
+template<typename LiteralDatatypeImpl>
+concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && HasFixedId<LiteralDatatypeImpl>;
 
 }  // namespace rdf4cpp::rdf::datatypes
 #endif  //RDF4CPP_LITERALDATATYPE_HPP
