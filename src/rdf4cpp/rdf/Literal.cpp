@@ -287,7 +287,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     assert(to_string_fptr != nullptr);
 
     return Literal{to_string_fptr(*op_res.result_value),
-                     IRI::from_datatype_id(op_res.result_type_id, node_storage)};
+                   IRI::from_datatype_id(op_res.result_type_id, node_storage)};
 }
 
 util::TriBool Literal::get_ebv_impl() const {
