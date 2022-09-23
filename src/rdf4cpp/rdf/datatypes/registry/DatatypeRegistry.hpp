@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <algorithm>
 #include <any>
@@ -22,6 +23,8 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 class DatatypeRegistry {
 public:
+    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id - 1; // ids from 1 to n stored in places 0 to n-1
+
     /**
      * Constructs an instance of a type from a string.
      */
@@ -30,7 +33,7 @@ public:
     using ebv_fptr_t = bool (*)(std::any const &);
 
     struct NumericOpResult {
-        std::string_view result_type_iri;
+        DatatypeID result_type_id;
         nonstd::expected<std::any, NumericOpError> result_value;
     };
 
@@ -90,6 +93,17 @@ public:
 
         RuntimeConversionTable conversion_table;
 
+        inline static DatatypeEntry placeholder() {
+            return DatatypeEntry{
+                    .datatype_iri = "",
+                    .factory_fptr = nullptr,
+                    .to_string_fptr = nullptr,
+                    .ebv_fptr = nullptr,
+                    .numeric_ops = std::nullopt,
+                    .compare_fptr = nullptr,
+                    .conversion_table = RuntimeConversionTable::empty()};
+        }
+
         inline static DatatypeEntry for_search(std::string_view const datatype_iri) {
             return DatatypeEntry{
                     .datatype_iri = std::string{datatype_iri},
@@ -103,15 +117,15 @@ public:
     };
 
     struct DatatypeConverter {
-        std::string_view target_type_iri;
+        DatatypeIDView target_type_id;
         RuntimeConversionEntry::convert_fptr_t convert_lhs;
         RuntimeConversionEntry::convert_fptr_t convert_rhs;
 
         inline static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
-            assert(l.target_type_iri == r.target_type_iri);
+            assert(l.target_type_id == r.target_type_id);
 
             return DatatypeConverter{
-                    .target_type_iri = l.target_type_iri,
+                    .target_type_id = l.target_type_id,
                     .convert_lhs = l.convert,
                     .convert_rhs = r.convert};
         }
@@ -121,12 +135,18 @@ private:
     using registered_datatypes_t = std::vector<DatatypeEntry>;
 
     inline static registered_datatypes_t &get_mutable() {
-        static registered_datatypes_t registry_;
+        static registered_datatypes_t registry_ = []() {
+            registered_datatypes_t r;
+            r.resize(dynamic_datatype_offset, DatatypeEntry::placeholder()); // placeholders for fixed id datatypes
+
+            return r;
+        }();
+
         return registry_;
     }
 
     /**
-     * Tries to find the datatype corresponding to datatype_iri
+     * Tries to find the datatype corresponding to datatype_id
      * if found `f` is applied to it to form the function result.
      *
      * @param datatype_iri the datatype to search
@@ -135,17 +155,29 @@ private:
      */
     template<typename Map>
         requires std::invocable<Map, DatatypeEntry const &>
-    static std::optional<std::invoke_result_t<Map, DatatypeEntry const &>> find_map_entry(std::string_view const datatype_iri, Map f) {
+    static std::optional<std::invoke_result_t<Map, DatatypeEntry const &>> find_map_entry(DatatypeIDView const datatype_id, Map f) {
+        using ret_type = std::optional<std::invoke_result_t<Map, DatatypeEntry const &>>;
         auto const &registry = registered_datatypes();
-        auto found = std::lower_bound(registry.begin(), registry.end(),
-                                      DatatypeEntry::for_search(datatype_iri),
-                                      [](const auto &left, const auto &right) { return left.datatype_iri < right.datatype_iri; });
 
-        if (found != registry.end() and found->datatype_iri == datatype_iri) {
-            return f(*found);
-        } else {
-            return std::nullopt;
-        }
+        return visit(DatatypeIDVisitor{
+                             [&registry, f](LiteralType const fixed_id) -> ret_type {
+                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
+                                 assert(id_as_index < dynamic_datatype_offset);
+
+                                 return f(registry[id_as_index]);
+                             },
+                             [&registry, f](std::string_view const other_iri) -> ret_type {
+                                 auto found = std::lower_bound(registry.begin() + dynamic_datatype_offset, registry.end(),
+                                                               DatatypeEntry::for_search(other_iri),
+                                                               [](const auto &left, const auto &right) { return left.datatype_iri < right.datatype_iri; });
+
+                                 if (found != registry.end() and found->datatype_iri == other_iri) {
+                                     return f(*found);
+                                 } else {
+                                     return std::nullopt;
+                                 }
+                             }},
+                     datatype_id);
     }
 
     /**
@@ -154,6 +186,15 @@ private:
      */
     template<datatypes::NumericImplLiteralDatatype datatype_info>
     static NumericOpsImpl make_numeric_ops_impl();
+
+    inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) {
+        auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
+        assert(id_as_index < dynamic_datatype_offset);
+
+        auto &slot = DatatypeRegistry::get_mutable()[id_as_index];
+        assert(slot.datatype_iri.empty()); // is placeholder
+        slot = std::move(entry_to_add);
+    }
 
 public:
     /**
@@ -165,38 +206,36 @@ public:
 
     /**
      * Register an datatype manually
-     * @param datatype_iri datatypes iri
-     * @param factory_fptr factory function to construct an instance from a string
-     * @param to_string_fptr converts type instance to its string representation
      */
     inline static void add(DatatypeEntry entry_to_add) {
         auto &registry = DatatypeRegistry::get_mutable();
-        auto found = std::find_if(registry.begin(), registry.end(), [&](const auto &entry) { return entry.datatype_iri == entry_to_add.datatype_iri; });
-        if (found == registry.end()) {
-            registry.push_back(entry_to_add);
 
-            std::sort(registry.begin(), registry.end(),
+        auto found = std::find_if(registry.begin() + dynamic_datatype_offset, registry.end(), [&](const auto &entry) { return entry.datatype_iri == entry_to_add.datatype_iri; });
+        if (found == registry.end()) {
+            registry.push_back(std::move(entry_to_add));
+
+            std::sort(registry.begin() + dynamic_datatype_offset, registry.end(),
                       [](const auto &left, const auto &right) { return left.datatype_iri < right.datatype_iri; });
         } else {
-            *found = entry_to_add;
+            *found = std::move(entry_to_add);
         }
     }
 
     /**
      * Retrieve all registered datatypes.
-     * @return vector of pairs mapping datatype IRI std::string to factory_fptr_t
+     * @return vector of DatatypeEntries
      */
     inline static const registered_datatypes_t &registered_datatypes() {
         return DatatypeRegistry::get_mutable();
     }
 
     /**
-     * Get the database entry for a datatype_iri.
-     * @param datatype_iri datatype IRI string
+     * Get the database entry for a datatype_id.
+     * @param datatype_id datatype IRI string
      * @return if available database entry else nullopt
      */
-    inline static DatatypeEntry const *get_entry(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    inline static DatatypeEntry const *get_entry(DatatypeIDView const datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return &entry;
         });
 
@@ -204,12 +243,12 @@ public:
     }
 
     /**
-     * Get a factory_fptr_t for a datatype IRI std::string. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string representation")`.
-     * @param datatype_iri datatype IRI std::string
+     * Get a factory_fptr_t for a datatype. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string representation")`.
+     * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    inline static factory_fptr_t get_factory(std::string_view datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    inline static factory_fptr_t get_factory(DatatypeIDView datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return entry.factory_fptr;
         });
 
@@ -217,12 +256,12 @@ public:
     }
 
     /**
-     * Get a to_string function for a datatype IRI std::string. The factory_fptr_t can be used like `std::string str_repr = to_string_fptr(any_typed_arg)`.
-     * @param datatype_iri datatype IRI std::string
+     * Get a to_string function for a datatype. The factory_fptr_t can be used like `std::string str_repr = to_string_fptr(any_typed_arg)`.
+     * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    inline static to_string_fptr_t get_to_string(std::string_view datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    inline static to_string_fptr_t get_to_string(DatatypeIDView datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return entry.to_string_fptr;
         });
 
@@ -230,14 +269,14 @@ public:
     }
 
     /**
-     * Try to get the numerical ops function table for a datatype IRI.
+     * Try to get the numerical ops function table for a datatype.
      * Returns nullopt if the datatype is not numeric, or does not exist.
      *
-     * @param datatype_iri datatype IRI string
+     * @param datatype_id datatype id for the corresponding datatype
      * @return if available a structure containing function pointers for all numeric ops
      */
-    inline static NumericOps const *get_numerical_ops(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return &entry.numeric_ops;
         });
 
@@ -255,22 +294,29 @@ public:
     }
 
     /**
-     * Try to get the logical ops function table for a datatype IRI.
+     * Try to get the conversion function that converts a value of a datatype to it's effective boolean value.
      * Returns nullptr if the datatype is not logical, or does not exist.
      *
-     * @param datatype_iri datatype IRI string
-     * @return if available a structure containing function pointers for all logical ops
+     * @param datatype_id datatype id for the corresponding datatype
+     * @return if available a the conversion function
      */
-    inline static ebv_fptr_t get_ebv(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    inline static ebv_fptr_t get_ebv(DatatypeIDView const datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return entry.ebv_fptr;
         });
 
         return res.has_value() ? *res : nullptr;
     }
 
-    inline static compare_fptr_t get_compare(std::string_view const datatype_iri) {
-        auto const res = find_map_entry(datatype_iri, [](auto const &entry) {
+    /**
+     * Try to get the comparison function for a datatype.
+     * Returns nullptr if the datatype is not comparable, or does not exist.
+     *
+     * @param datatype_id datatype id for the corresponding datatype
+     * @return if available the comparison function
+     */
+    inline static compare_fptr_t get_compare(DatatypeIDView const datatype_id) {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
             return entry.compare_fptr;
         });
 
@@ -279,7 +325,6 @@ public:
 
     /**
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
-     *
      * @return the found conversion if there is a viable one
      */
     static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0);
@@ -295,7 +340,7 @@ public:
     inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) {
         assert(lhs_entry.numeric_ops.has_value());
         assert(rhs_entry.numeric_ops.has_value());
-        
+
         size_t const lhs_init_soff = lhs_entry.numeric_ops->is_stub() ? lhs_entry.numeric_ops->get_stub().start_s_off : 0;
         size_t const rhs_init_soff = rhs_entry.numeric_ops->is_stub() ? rhs_entry.numeric_ops->get_stub().start_s_off : 0;
 
@@ -317,19 +362,19 @@ public:
     }
 
     /**
-     * Tries to find a conversion to convert lhs_type_iri and rhs_type_iri into a
+     * Tries to find a conversion to convert lhs_type_id and rhs_type_id into a
      * common type to be used in e.g. numeric calculations.
      *
-     * @return nullopt if any of lhs_type_iri or rhs_type_iri does not have a datatype registered
+     * @return nullopt if any of lhs_type_id or rhs_type_id does not have a datatype registered
      * or there is no viable conversion, else the found conversion
      */
-    inline static std::optional<DatatypeConverter> get_common_type_conversion(std::string_view lhs_type_iri, std::string_view rhs_type_iri) {
-        auto const lhs_entry = get_entry(lhs_type_iri);
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) {
+        auto const lhs_entry = get_entry(lhs_type_id);
         if (lhs_entry == nullptr) {
             return std::nullopt;
         }
 
-        auto const &rhs_entry = get_entry(rhs_type_iri);
+        auto const &rhs_entry = get_entry(rhs_type_id);
         if (rhs_entry == nullptr) {
             return std::nullopt;
         }
@@ -385,7 +430,7 @@ inline void DatatypeRegistry::add() {
         }
     }();
 
-    DatatypeRegistry::add(DatatypeEntry {
+    DatatypeEntry entry{
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return std::any(LiteralDatatype_t::from_string(string_repr));
@@ -396,12 +441,18 @@ inline void DatatypeRegistry::add() {
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,
             .compare_fptr = compare_fptr,
-            .conversion_table = RuntimeConversionTable::from_concrete<conversion_table_t>()});
+            .conversion_table = make_runtime_conversion_table_for<LiteralDatatype_t>()};
+
+    if constexpr (FixedIdLiteralDatatype<LiteralDatatype_t>) {
+        DatatypeRegistry::add_fixed(std::move(entry), LiteralDatatype_t::fixed_id);
+    } else {
+        DatatypeRegistry::add(std::move(entry));
+    }
 }
 
 namespace detail {
 
-template<typename OpRes, LiteralDatatype Fallback>
+template<LiteralDatatypeOrUndefined OpRes, LiteralDatatype Fallback>
 struct SelectOpRes {
     using type = OpRes;
 };
@@ -409,6 +460,19 @@ struct SelectOpRes {
 template<LiteralDatatype Fallback>
 struct SelectOpRes<std::false_type, Fallback> {
     using type = Fallback;
+};
+
+template<LiteralDatatypeOrUndefined OpRes, LiteralDatatype Fallback>
+struct SelectOpResIRI {
+    inline static DatatypeID select() {
+        using op_res = typename detail::SelectOpRes<OpRes, Fallback>::type;
+
+        if constexpr (FixedIdLiteralDatatype<op_res>) {
+            return DatatypeID{op_res::fixed_id};
+        } else {
+            return DatatypeID{std::string{op_res::identifier}};
+        }
+    }
 };
 
 template<typename T>
@@ -419,7 +483,6 @@ template<typename T>
         return nonstd::make_unexpected(e.error());
     }
 }
-
 }  // namespace detail
 
 template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
@@ -431,7 +494,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
@@ -440,7 +503,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
@@ -449,7 +512,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
@@ -458,7 +521,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
@@ -466,7 +529,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
@@ -474,7 +537,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
-                        .result_type_iri = detail::SelectOpRes<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::type::identifier,
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
             }};
 }
@@ -508,7 +571,7 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
                 RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, 0);
                 RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, 0);
 
-                if (lconv.target_type_iri == gconv.target_type_iri) {
+                if (lconv.target_type_id == gconv.target_type_id) {
                     // correct conversion found
                     return DatatypeConverter::from_individuals(lconv, gconv);
                 }
@@ -524,7 +587,7 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
                 RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, lesser_p_off);
                 RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, greater_p_off);
 
-                if (lconv.target_type_iri == gconv.target_type_iri) {
+                if (lconv.target_type_id == gconv.target_type_id) {
                     // correct conversion found
                     return DatatypeConverter::from_individuals(lconv, gconv);
                 }

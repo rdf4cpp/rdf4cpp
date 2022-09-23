@@ -12,6 +12,7 @@ TEST_CASE("boolean capabilities") {
     static_assert(!datatypes::PromotableLiteralDatatype<datatypes::xsd::Boolean>);
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Boolean>);
     static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::Boolean>);
+    static_assert(datatypes::FixedIdLiteralDatatype<datatypes::xsd::Boolean>);
 }
 
 TEST_CASE("Datatype Boolean") {

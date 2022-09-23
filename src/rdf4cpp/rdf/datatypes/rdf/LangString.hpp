@@ -13,11 +13,6 @@ struct LangStringRepr {
     auto operator<=>(LangStringRepr const &) const = default;
 };
 
-/*
- * Name of the datatype. This is kept so that we won't need to type it over and over again.
- */
-constexpr static registry::ConstexprString rdf_lang_string{"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
-
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
@@ -49,7 +44,8 @@ namespace rdf4cpp::rdf::datatypes::rdf {
  * Implementation of rdf::langString
  */
 struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
-                                                  registry::capabilities::Comparable> {
+                                                  registry::capabilities::Comparable,
+                                                  registry::capabilities::FixedId> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf

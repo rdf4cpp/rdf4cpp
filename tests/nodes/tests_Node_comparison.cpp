@@ -10,7 +10,7 @@ using namespace rdf4cpp::rdf;
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
-constexpr static registry::ConstexprString Incomparable{"Incomparable"};
+constexpr static util::ConstexprString Incomparable{"Incomparable"};
 
 // Z
 template<>
@@ -86,11 +86,11 @@ TEST_SUITE("comparisions") {
         SUBCASE("incomparability") {
             CHECK(Literal::make<Incomparable>(5).compare_with_extensions(Literal::make<Incomparable>(10)) == std::weak_ordering::greater);
 
-            // reason: "http://www.w3.org/2001/XMLSchema#float" > "Incomparable" (with ascii lexicographical compare)
-            CHECK(Literal::make<Float>(10.f).compare_with_extensions(Literal::make<Incomparable>(1)) == std::weak_ordering::greater);
+            // reason: float has fixed id and any fixed id type is always less than a dynamic one
+            CHECK(Literal::make<Float>(10.f).compare_with_extensions(Literal::make<Incomparable>(1)) == std::weak_ordering::less);
 
-            // reason: "Incomparable" < "http://www.w3.org/2001/XMLSchema#decimal" (with ascii lexicographical compare)
-            CHECK(Literal::make<Incomparable>(1).compare_with_extensions(Literal::make<Decimal>(10.0)) == std::weak_ordering::less);
+            // reason: decimal has fixed id and any fixed id type is always less than a dynamic one
+            CHECK(Literal::make<Incomparable>(1).compare_with_extensions(Literal::make<Decimal>(10.0)) == std::weak_ordering::greater);
         }
 
         SUBCASE("nulls") {
@@ -102,19 +102,19 @@ TEST_SUITE("comparisions") {
         }
 
         SUBCASE("test type ordering extensions") {
-            // expected: decimal < float < int < integer < string
+            // expected: string < float < decimal < integer < int
 
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Float>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Float>(1)) == std::weak_ordering::greater);
             CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::less);
+            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
 
             CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::less);
+            CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
 
-            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::less);
+            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
         }
 
         SUBCASE("test ordering extensions ignored when not equal") {
@@ -138,9 +138,10 @@ TEST_SUITE("comparisions") {
 
         std::vector<Node> const v{s.begin(), s.end()};
 
-        // lexical order of types, and null smallest
-        // and null Node has type BNode
-        std::vector<Node> const expected{node, null_iri, blank_node, iri, lit, lit3, lit4, variable};
+        // - lexical order of types, and null smallest
+        // - null Node has type BNode
+        // - literal comparison
+        std::vector<Node> const expected{node, null_iri, blank_node, iri, lit4, lit, lit3, variable};
 
         CHECK(v == expected);
     }

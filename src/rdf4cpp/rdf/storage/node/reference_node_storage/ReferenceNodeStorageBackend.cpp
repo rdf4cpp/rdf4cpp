@@ -6,7 +6,10 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend() {
     // some iri's like xsd:string are there by default
-    for (const auto &[id, iri] : NodeID::predefined_iris) {
+
+    for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
+        auto const id = literal_type.to_underlying();
+
         auto [iter, inserted_successfully] = iri_storage_.data2id.emplace(std::make_unique<IRIBackend>(iri), id);
         assert(inserted_successfully);
         iri_storage_.id2data.emplace(id, iter->first.get());
@@ -59,8 +62,8 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
     return lookup_or_insert_impl<LiteralBackend, true>(
             view, literal_storage_,
             [this]([[maybe_unused]] view::LiteralBackendView const &literal_view) {
-                // TODO: actually use LiteralType (therefore, we will need literal_view)
-                return identifier::NodeID{next_literal_id++, identifier::LiteralType::OTHER};
+                return identifier::NodeID{next_literal_id++,
+                                          identifier::iri_node_id_to_literal_type(literal_view.datatype_id)};
             });
 }
 

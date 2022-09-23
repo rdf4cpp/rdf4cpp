@@ -151,3 +151,12 @@ TEST_CASE("Literal - ctor edge-case") {
     Literal const expected{"3", iri};
     CHECK(lit1 + lit2 == expected);
 }
+
+TEST_CASE("Literal - check fixed id") {
+    IRI const iri{datatypes::registry::xsd_string};
+    Literal const lit{"hello", iri};
+
+    CHECK(lit.backend_handle().node_id().literal_type().is_fixed());
+    CHECK(lit.datatype().backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
+    CHECK(iri.backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
+}

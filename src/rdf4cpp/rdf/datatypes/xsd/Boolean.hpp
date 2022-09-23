@@ -7,17 +7,13 @@
 #define RDF4CPP_XSD_BOOLEAN_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 #include <sstream>
 #include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-/*
- * Name of the datatype. This is kept so that we won't need to type it over and over again.
- */
-constexpr static registry::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSchema#boolean"};
-
 /**
  * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
  */
@@ -65,7 +61,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  */
 struct Boolean : registry::LiteralDatatypeImpl<registry::xsd_boolean,
                                                registry::capabilities::Logical,
-                                               registry::capabilities::Comparable> {
+                                               registry::capabilities::Comparable,
+                                               registry::capabilities::FixedId> {
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd

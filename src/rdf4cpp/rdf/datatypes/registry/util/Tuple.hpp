@@ -1,6 +1,7 @@
-#ifndef RDF4CPP_UTIL_HPP
-#define RDF4CPP_UTIL_HPP
+#ifndef RDF4CPP_REGISTRY_UTIL_TUPLE_HPP
+#define RDF4CPP_REGISTRY_UTIL_TUPLE_HPP
 
+#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -200,4 +201,4 @@ struct AllSame<T, Ts...> : std::bool_constant<(std::is_same_v<T, Ts> && ...)> {}
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::util
 
-#endif  //RDF4CPP_UTIL_HPP
+#endif  //RDF4CPP_REGISTRY_UTIL_TUPLE_HPP

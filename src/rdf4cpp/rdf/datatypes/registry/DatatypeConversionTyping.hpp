@@ -6,7 +6,8 @@
 #include <type_traits>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -66,20 +67,27 @@ concept ConversionLayer = conversion_typing_detail::IsConversionLayer<T>::value;
 template<typename T>
 concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
 
-
 /**
  * A type erased version of a ConversionEntry.
  */
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &);
 
-    std::string target_type_iri;
+    DatatypeID target_type_id;
     convert_fptr_t convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() {
+        DatatypeID target_type_iri = []() {
+            if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
+                return DatatypeID{Entry::target_type::fixed_id};
+            } else {
+                return DatatypeID{std::string{Entry::target_type::identifier}};
+            }
+        }();
+
         return RuntimeConversionEntry{
-                .target_type_iri = std::string{Entry::target_type::identifier},
+                .target_type_id = std::move(target_type_iri),
                 .convert = [](std::any const &value) -> std::any {
                     auto actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
@@ -98,7 +106,14 @@ private:
     std::vector<RuntimeConversionEntry> table;
 
     RuntimeConversionTable(size_t const s_rank, size_t const max_p_rank)
-        : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank), table(s_rank * max_p_rank) {}
+        : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank)
+    {
+        if (s_rank * max_p_rank > 0) {
+            table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
+                                                      .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
+                                                      .convert = nullptr});
+        }
+    }
 
     inline static RuntimeConversionTable empty() {
         return RuntimeConversionTable{0, 0};
@@ -121,9 +136,9 @@ private:
 public:
     template<ConversionTable Table>
     static RuntimeConversionTable from_concrete() {
-        constexpr size_t s_rank = std::tuple_size_v<Table>;
+        static constexpr size_t s_rank = std::tuple_size_v<Table>;
 
-        constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
+        static constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
             return std::max(acc, std::tuple_size_v<Layer>);
         });
 

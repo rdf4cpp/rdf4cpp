@@ -238,13 +238,13 @@ TEST_CASE("debug") {
 // create fake hierarchy
 namespace rdf4cpp::rdf::datatypes::registry {
 
-constexpr static registry::ConstexprString Z{"Z"};
-constexpr static registry::ConstexprString Y{"Y"};
+constexpr static util::ConstexprString Z{"Z"};
+constexpr static util::ConstexprString Y{"Y"};
 
-constexpr static registry::ConstexprString A{"A"};
-constexpr static registry::ConstexprString B{"B"};
-constexpr static registry::ConstexprString B2{"B2"};
-constexpr static registry::ConstexprString C{"C"};
+constexpr static util::ConstexprString A{"A"};
+constexpr static util::ConstexprString B{"B"};
+constexpr static util::ConstexprString B2{"B2"};
+constexpr static util::ConstexprString C{"C"};
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 

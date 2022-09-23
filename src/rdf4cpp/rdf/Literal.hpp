@@ -56,6 +56,19 @@ private:
      * @return the ordering of the values of this and other; if there is a value ordering
      */
     std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
+
+    /**
+     * get the DatatypeIDView for the datatype of *this,
+     * it will always contain the appropriate id type
+     * and can be used to index the registry
+     */
+    [[nodiscard]] datatypes::registry::DatatypeIDView get_datatype_id() const noexcept;
+
+    /**
+     * @return if the datatype of this is simultaneously fixed but not numeric
+     */
+    [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
