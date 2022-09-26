@@ -29,6 +29,10 @@ enum struct NumericOpError {
     OverOrUnderFlow   // https://www.w3.org/TR/xpath-functions/#ERRFOAR0002
 };
 
+
+/**
+ * A type that is not explicitly a LiteralDatatype but fulfills the requirements for being impl-numeric (see NumericStubLiteralDatatype)
+ */
 template<typename LiteralDatatypeImpl>
 concept NumericImpl = requires(typename LiteralDatatypeImpl::cpp_type const &lhs, typename LiteralDatatypeImpl::cpp_type const &rhs) {
                           requires LiteralDatatypeOrUndefined<typename LiteralDatatypeImpl::add_result>;
@@ -59,6 +63,9 @@ concept NumericImpl = requires(typename LiteralDatatypeImpl::cpp_type const &lhs
 template<typename LiteralDatatypeImpl>
 concept NumericImplLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && NumericImpl<LiteralDatatypeImpl>;
 
+/**
+ * A type that is not explicitly a LiteralDatatype but fulfills the requirements for being stub-numeric (see NumericStubLiteralDatatype)
+ */
 template<typename LiteralDatatypeImpl>
 concept NumericStub = requires {
                           requires NumericImplLiteralDatatype<typename LiteralDatatypeImpl::numeric_impl_type>;
@@ -72,6 +79,9 @@ concept NumericStub = requires {
 template<typename LiteralDatatypeImpl>
 concept NumericStubLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && NumericStub<LiteralDatatypeImpl>;
 
+/**
+ * A LiteralDatatype that is either stub-numeric (see NumericStubLiteralDatatype) or impl-numeric (see NumericImplLiteralDatatype).
+ */
 template<typename LiteralDatatypeImpl>
 concept NumericLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && (NumericImpl<LiteralDatatypeImpl> || NumericStub<LiteralDatatypeImpl>);
 

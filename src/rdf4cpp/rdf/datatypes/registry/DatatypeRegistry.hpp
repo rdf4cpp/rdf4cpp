@@ -63,7 +63,7 @@ public:
         size_t start_s_off;
     };
 
-    struct NumericOps : std::variant<NumericOpsStub, NumericOpsImpl> {
+    struct NumericOps : public std::variant<NumericOpsStub, NumericOpsImpl> {
         [[nodiscard]] constexpr bool is_stub() const noexcept {
             return this->index() == 0;
         }
@@ -270,10 +270,10 @@ public:
 
     /**
      * Try to get the numerical ops function table for a datatype.
-     * Returns nullopt if the datatype is not numeric, or does not exist.
+     * Returns nullptr if the datatype is not numeric, or does not exist.
      *
      * @param datatype_id datatype id for the corresponding datatype
-     * @return if available a structure containing function pointers for all numeric ops
+     * @return if available a pointer to a structure containing function pointers for all numeric ops; otherwise a null pointer
      */
     inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) {
         auto const res = find_map_entry(datatype_id, [](auto const &entry) {
