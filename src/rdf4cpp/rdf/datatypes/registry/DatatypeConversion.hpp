@@ -8,12 +8,11 @@
 #include <type_traits>
 #include <utility>
 
+#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/Util.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-
 
 namespace conversion_detail {
 

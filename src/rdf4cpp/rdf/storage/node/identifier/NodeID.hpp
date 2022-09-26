@@ -5,10 +5,14 @@
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
 
+#include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/datatypes/rdf.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+
 #include <cassert>
 #include <compare>
-#include <tuple>
-#include <vector>
+#include <utility>
+#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
@@ -16,21 +20,21 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  */
 class __attribute__((__packed__)) NodeID {
 public:
-    static std::pair<NodeID, std::string> const default_graph_iri;
-    static std::pair<NodeID, std::string> const xsd_string_iri;
-    static std::pair<NodeID, std::string> const rdf_langstring_iri;
+    static std::pair<NodeID, std::string_view> const default_graph_iri;
+    static std::pair<NodeID, std::string_view> const xsd_string_iri;
+    static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
 
-    static std::vector<std::pair<NodeID, std::string>> const predefined_iris;
+    static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
+    static NodeID const min_variable_id;
+
     // TODO: that might be specified further for specific LiteralTypes
     static LiteralID const min_literal_id;
-    static NodeID const min_bnode_id;
-    static NodeID const min_variable_id;
 
 private:
     struct __attribute__((__packed__)) FullLiteralID {
         LiteralID::underlying_type literal_id : LiteralID::width;
-        LiteralType literal_type : 6;
+        LiteralType::underlying_type literal_type : LiteralType::width;
     };
 
     union __attribute__((__packed__)) {
@@ -58,7 +62,7 @@ public:
      * @param literal_id the LiteralID
      * @param literal_type the LiteralType
      */
-    constexpr NodeID(LiteralID literal_id, LiteralType literal_type) noexcept : literal_{literal_id.value, literal_type} {}
+    constexpr NodeID(LiteralID literal_id, LiteralType literal_type) noexcept : literal_{literal_id.value, literal_type.to_underlying()} {}
 
     /**
      * Get LiteralID. This method does not check if the NodeID actually represents a literal.
@@ -70,7 +74,7 @@ public:
      * Get LiteralType. This method does not check if the NodeID actually represents a literal.
      * @return
      */
-    [[nodiscard]] constexpr LiteralType literal_type() const noexcept { return literal_.literal_type; }
+    [[nodiscard]] constexpr LiteralType literal_type() const noexcept { return LiteralType::from_underlying(literal_.literal_type); }
     [[nodiscard]] constexpr uint64_t value() const noexcept { return value_; }
     //    void value(uint64_t val) { assert(val < (1UL << 48)); value_ = val; }
 
@@ -123,7 +127,32 @@ public:
 
 static_assert(sizeof(NodeID) == 6);
 
-}  // namespace rdf4cpp::rdf::storage::node::identifier
+inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri].to_underlying(), datatypes::registry::default_graph_iri};
+inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{datatypes::xsd::String::fixed_id.to_underlying(), datatypes::xsd::String::identifier};
+inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{datatypes::rdf::LangString::fixed_id.to_underlying(), datatypes::rdf::LangString::identifier};
 
+inline constexpr NodeID NodeID::min_bnode_id{1};
+inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};
+inline constexpr NodeID NodeID::min_variable_id{1};
+inline constexpr LiteralID NodeID::min_literal_id{1};
+
+/**
+ * Convert a NodeId for an IRI
+ * to a LiteralType.
+ *
+ * SAFETY: caller must ensure the node id actually refers to an IRI
+ *
+ * @param id IRI NodeId
+ * @return the LiteralType associated with that IRI
+ */
+constexpr LiteralType iri_node_id_to_literal_type(NodeID const id) noexcept {
+    auto const value = id.value();
+
+    return value < datatypes::registry::min_dynamic_datatype_id && value != 0
+                   ? LiteralType::from_underlying(static_cast<LiteralType::underlying_type>(value))
+                   : LiteralType::other();
+}
+
+}  // namespace rdf4cpp::rdf::storage::node::identifier
 
 #endif  //RDF4CPP_NODEID_HPP

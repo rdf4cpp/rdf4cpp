@@ -1,13 +1,12 @@
-#ifndef RDF4CPP_CONSTEXPRSTRING_HPP
-#define RDF4CPP_CONSTEXPRSTRING_HPP
-
+#ifndef RDF4CPP_REGISTRY_UTIL_CONSTEXPRSTRING_HPP
+#define RDF4CPP_REGISTRY_UTIL_CONSTEXPRSTRING_HPP
 
 #include <algorithm>
 #include <cstddef>
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::rdf::datatypes::registry::util {
 /**
  * Literal class type that wraps a constant expression string.
  *
@@ -51,5 +50,6 @@ struct ConstexprString {
         return N;
     }
 };
-}  // namespace rdf4cpp::rdf::datatypes::registry
-#endif  //RDF4CPP_CONSTEXPRSTRING_HPP
+}  // namespace rdf4cpp::rdf::datatypes::registry::util
+
+#endif  //RDF4CPP_REGISTRY_UTIL_CONSTEXPRSTRING_HPP

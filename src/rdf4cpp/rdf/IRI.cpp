@@ -9,6 +9,29 @@ IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
                              storage::node::identifier::RDFNodeType::IRI,
                              node_storage.id()}) {}
 
+IRI IRI::from_datatype_id(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept {
+    if (id.is_fixed()) {
+        return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(id.get_fixed().to_underlying())},
+                                     storage::node::identifier::RDFNodeType::IRI,
+                                     node_storage.id()}};
+    } else {
+        return IRI{id.get_dynamic(), node_storage};
+    }
+}
+
+datatypes::registry::DatatypeIDView IRI::to_datatype_id() const noexcept {
+    using namespace storage::node::identifier;
+
+    auto const id = this->handle_.node_id();
+    LiteralType const type = iri_node_id_to_literal_type(id);
+
+    if (type.is_fixed()) {
+        return datatypes::registry::DatatypeIDView{type};
+    } else {
+        return datatypes::registry::DatatypeIDView{this->identifier()};
+    }
+}
+
 IRI::operator std::string() const { return handle_.iri_backend().n_string(); }
 
 bool IRI::is_literal() const { return false; }
