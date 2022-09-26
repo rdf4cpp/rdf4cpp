@@ -3,6 +3,8 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <limits>
+
 using namespace rdf4cpp::rdf;
 
 TEST_CASE("Literal - logical ops") {
@@ -147,12 +149,12 @@ TEST_CASE("Literal - logical ops") {
         CHECK(lhs_lit op rhs_lit == expected_lit);                                         \
     }
 
-#define GENERATE_UNOP_TESTCASE(type, value, op, expected)                         \
-    SUBCASE(#op " type") {                                                          \
-        auto const value_lit = Literal::make<datatypes::xsd::type>(value);        \
-                                                                                  \
-        auto const expected_lit = Literal::make<datatypes::xsd::type>(expected);  \
-        CHECK(op value_lit == expected_lit);                                      \
+#define GENERATE_UNOP_TESTCASE(type, value, op, expected_type, expected)                  \
+    SUBCASE(#op " type") {                                                                \
+        auto const value_lit = Literal::make<datatypes::xsd::type>(value);                \
+                                                                                          \
+        auto const expected_lit = Literal::make<datatypes::xsd::expected_type>(expected); \
+        CHECK(op value_lit == expected_lit);                                              \
     }
 
 TEST_CASE("Literal - numeric ops") {
@@ -171,12 +173,22 @@ TEST_CASE("Literal - numeric ops") {
     GENERATE_BINOP_TESTCASE(Integer, 12, -, Integer, 1, Integer, 11);
     GENERATE_BINOP_TESTCASE(Integer, 3, *, Integer, 6, Integer, 18);
     GENERATE_BINOP_TESTCASE(Integer, 12, /, Integer, 4, Decimal, 3.0);
-    GENERATE_UNOP_TESTCASE(Integer, 1, +, 1);
-    GENERATE_UNOP_TESTCASE(Integer, 1, -, -1);
-
     GENERATE_BINOP_TESTCASE(Int, 1, +, Integer, 3, Integer, 4);
     GENERATE_BINOP_TESTCASE(Int, 1, +, Decimal, 2, Decimal, 3);
+    GENERATE_UNOP_TESTCASE(Integer, 1, +, Integer, 1);
+    GENERATE_UNOP_TESTCASE(Integer, 1, -, Integer, -1);
+
+    // unary stub tests
+    GENERATE_UNOP_TESTCASE(Int, 1, -, Integer, -1);
+    GENERATE_UNOP_TESTCASE(Int, 5, +, Integer, 5);
+
+    // binary stub tests
+    GENERATE_BINOP_TESTCASE(Int, 1, +, Int, 5, Integer, 6);
+    GENERATE_BINOP_TESTCASE(Int, 10, -, Int, 2, Integer, 8);
     GENERATE_BINOP_TESTCASE(Int, 1, /, Int, 5, Decimal, 1.0/5);
+
+    auto const int_max = std::numeric_limits<datatypes::xsd::Int::cpp_type>::max();
+    GENERATE_BINOP_TESTCASE(Int, int_max, *, Int, 2, Integer, static_cast<int64_t>(int_max) * 2);
 
     SUBCASE("boolean not add") {
         auto const lhs = Literal::make<datatypes::xsd::Boolean>(true);
@@ -211,6 +223,15 @@ TEST_CASE("Literal - numeric ops") {
             CHECK((-lit).null());
         }
     }
+}
+
+TEST_CASE("debug") {
+    Literal i = Literal::make<datatypes::xsd::Int>(5);
+    Literal d = Literal::make<datatypes::xsd::Decimal>(1.2);
+
+    Literal r = i + d;
+
+    CHECK(r == Literal::make<datatypes::xsd::Decimal>(6.2));
 }
 
 

@@ -30,8 +30,8 @@ struct DatatypeSupertypeMapping<xsd_int> {
 };
 
 template<>
-struct DatatypeDivResultMapping<xsd_int> {
-    using op_result = xsd::Decimal;
+struct DatatypeNumericStubMapping<xsd_int> {
+    using numeric_impl_type = xsd::Integer;
 };
 
 /**
@@ -60,17 +60,6 @@ inline bool capabilities::Logical<xsd_int>::effective_boolean_value(cpp_type con
     return value != 0;
 }
 
-template<>
-inline nonstd::expected<capabilities::Numeric<xsd_int>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_int>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    if (rhs == 0) {
-        return nonstd::make_unexpected(NumericOpError::DivideByZero);
-    }
-
-    // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
-    // integer needs to return decimal on division
-    return static_cast<div_result_cpp_type>(lhs) / static_cast<div_result_cpp_type>(rhs);
-}
-
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 
@@ -80,7 +69,7 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  */
 struct Int : registry::LiteralDatatypeImpl<registry::xsd_int,
                                            registry::capabilities::Logical,
-                                           registry::capabilities::Numeric,
+                                           registry::capabilities::NumericStub,
                                            registry::capabilities::Comparable,
                                            registry::capabilities::Subtype,
                                            registry::capabilities::FixedId> {

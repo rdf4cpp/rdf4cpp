@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -41,7 +42,7 @@ public:
 
     using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &);
 
-    struct NumericOps {
+    struct NumericOpsImpl {
         binop_fptr_t add_fptr;  // a + b
         binop_fptr_t sub_fptr;  // a - b
         binop_fptr_t mul_fptr;  // a * b
@@ -49,6 +50,35 @@ public:
 
         unop_fptr_t pos_fptr;  // +a
         unop_fptr_t neg_fptr;  // -a
+    };
+
+    struct NumericOpsStub {
+        /**
+         * Determines the number of subtype levels to immediately skip up in
+         * the hierarchy, if searching for a _numeric_ type conversion.
+         *
+         * @example if start_s_off = 1 then the search will _start_ at the immediate supertype
+         *      of the type this NumericOpsStub belongs to.
+         */
+        size_t start_s_off;
+    };
+
+    struct NumericOps : public std::variant<NumericOpsStub, NumericOpsImpl> {
+        [[nodiscard]] constexpr bool is_stub() const noexcept {
+            return this->index() == 0;
+        }
+
+        [[nodiscard]] constexpr bool is_impl() const noexcept {
+            return this->index() == 1;
+        }
+
+        [[nodiscard]] constexpr NumericOpsStub const &get_stub() const noexcept {
+            return std::get<NumericOpsStub>(*this);
+        }
+
+        [[nodiscard]] constexpr NumericOpsImpl const &get_impl() const noexcept {
+            return std::get<NumericOpsImpl>(*this);
+        }
     };
 
     struct DatatypeEntry {
@@ -154,8 +184,8 @@ private:
      * Creates NumericOps based on a NumericLiteralDatatype
      * by generating type-erased versions of all necessary functions (add, sub, ...).
      */
-    template<datatypes::NumericLiteralDatatype datatype_info>
-    static NumericOps make_numeric_ops();
+    template<datatypes::NumericImplLiteralDatatype datatype_info>
+    static NumericOpsImpl make_numeric_ops_impl();
 
     inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) {
         auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
@@ -240,21 +270,27 @@ public:
 
     /**
      * Try to get the numerical ops function table for a datatype.
-     * Returns nullopt if the datatype is not numeric, or does not exist.
+     * Returns nullptr if the datatype is not numeric, or does not exist.
      *
      * @param datatype_id datatype id for the corresponding datatype
-     * @return if available a structure containing function pointers for all numeric ops
+     * @return if available a pointer to a structure containing function pointers for all numeric ops; otherwise a null pointer
      */
     inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) -> NumericOps const * {
-            if (entry.numeric_ops.has_value()) {
-                return &entry.numeric_ops.value();
-            }
-
-            return nullptr;
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+            return &entry.numeric_ops;
         });
 
-        return res.has_value() ? *res : nullptr;
+        // res is nullopt if no datatype matching given datatype_iri was found
+        if (res.has_value()) {
+            // contained ptr cannot be nullptr as by return in lambda for find_map_entry above
+            // optional behind contained ptr can be nullopt if type is not numeric
+            if (auto const ops_ptr = res.value(); ops_ptr->has_value()) {
+                return &ops_ptr->value();
+            }
+        }
+
+        // no datatype found or not numeric
+        return nullptr;
     }
 
     /**
@@ -291,7 +327,39 @@ public:
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
      * @return the found conversion if there is a viable one
      */
-    inline static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv);
+    static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0);
+
+    /**
+     * Tries to find a conversion to a common type in the context of numeric operations.
+     * This function is similar to get_common_type_conversion except that it is aware of numeric-stubs
+     * and will always return a conversion to a numeric-impl or none at all.
+     *
+     * @note must be called with datatypes that are numeric
+     * @return A conversion to a common type that is also a numeric-impl if there is a viable one
+     */
+    inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) {
+        assert(lhs_entry.numeric_ops.has_value());
+        assert(rhs_entry.numeric_ops.has_value());
+
+        size_t const lhs_init_soff = lhs_entry.numeric_ops->is_stub() ? lhs_entry.numeric_ops->get_stub().start_s_off : 0;
+        size_t const rhs_init_soff = rhs_entry.numeric_ops->is_stub() ? rhs_entry.numeric_ops->get_stub().start_s_off : 0;
+
+        return get_common_type_conversion(lhs_entry.conversion_table, rhs_entry.conversion_table, lhs_init_soff, rhs_init_soff);
+    }
+
+    /**
+     * Returns the conversion that turns a value for a numeric-stub DatatypeEntry into
+     * a value of it's corresponding impl-type.
+     *
+     * @note must be called with a datatype that is stub-numeric
+     * @return the conversion to the corresponding impl-type
+     */
+    inline static RuntimeConversionEntry const &get_numeric_op_impl_conversion(DatatypeEntry const &entry) {
+        assert(entry.numeric_ops.has_value());
+        assert(entry.numeric_ops->is_stub());
+
+        return entry.conversion_table.conversion_at_index(entry.numeric_ops->get_stub().start_s_off, 0);
+    }
 
     /**
      * Tries to find a conversion to convert lhs_type_id and rhs_type_id into a
@@ -323,9 +391,16 @@ public:
  */
 template<datatypes::LiteralDatatype LiteralDatatype_t>
 inline void DatatypeRegistry::add() {
+    using conversion_table_t = decltype(make_conversion_table_for<LiteralDatatype_t>());
+
     auto const num_ops = []() -> std::optional<NumericOps> {
-        if constexpr (datatypes::NumericLiteralDatatype<LiteralDatatype_t>) {
-            return make_numeric_ops<LiteralDatatype_t>();
+        if constexpr (datatypes::NumericImpl<LiteralDatatype_t>) {
+            return NumericOps{make_numeric_ops_impl<LiteralDatatype_t>()};
+        } else if constexpr (datatypes::NumericStub<LiteralDatatype_t>) {
+            constexpr auto soff = conversion_detail::calculate_subtype_offset<typename LiteralDatatype_t::numeric_impl_type, conversion_table_t>();
+            static_assert(soff.has_value(), "a stub-numeric type must define linearly reachable supertype that is impl-numeric as numeric_impl_type");
+
+            return NumericOps{NumericOpsStub{.start_s_off = *soff}};
         } else {
             return std::nullopt;
         }
@@ -410,9 +485,9 @@ template<typename T>
 }
 }  // namespace detail
 
-template<datatypes::NumericLiteralDatatype LiteralDatatype_t>
-inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
-    return NumericOps{
+template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
+inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() {
+    return NumericOpsImpl{
             // a + b
             [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
@@ -469,20 +544,23 @@ inline DatatypeRegistry::NumericOps DatatypeRegistry::make_numeric_ops() {
 
 inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_type_conversion(
         RuntimeConversionTable const &lhs_conv,
-        RuntimeConversionTable const &rhs_conv) {
+        RuntimeConversionTable const &rhs_conv,
+        size_t const lhs_init_soff,
+        size_t const rhs_init_soff) {
 
-    auto const find_conv_impl = [](RuntimeConversionTable const &lesser, RuntimeConversionTable const &greater) -> std::optional<DatatypeConverter> {
-        auto const lesser_s_rank = lesser.subtype_rank();
-        auto const greater_s_rank = greater.subtype_rank();
+    auto const find_conv_impl = [](RuntimeConversionTable const &lesser, RuntimeConversionTable const &greater,
+                                   size_t const lesser_init_soff, size_t const greater_init_soff) -> std::optional<DatatypeConverter> {
+        auto const lesser_s_rank = lesser.subtype_rank() - lesser_init_soff;
+        auto const greater_s_rank = greater.subtype_rank() - greater_init_soff;
 
         // lesser should be the conversion table of the type with lower subtype rank
         assert(lesser_s_rank <= greater_s_rank);
 
         // calculate initial subtype offsets to equalize subtype rank
-        size_t lesser_s_off = 0;
-        size_t greater_s_off = greater_s_rank - lesser_s_rank;
+        size_t lesser_s_off = lesser_init_soff;
+        size_t greater_s_off = greater_init_soff + greater_s_rank - lesser_s_rank;
 
-        while (lesser_s_off < lesser_s_rank && greater_s_off < greater_s_rank) {
+        while (lesser_s_off < lesser.subtype_rank() && greater_s_off < greater.subtype_rank()) {
             auto const lesser_p_rank = lesser.promotion_rank_at_level(lesser_s_off);
             auto const greater_p_rank = greater.promotion_rank_at_level(greater_s_off);
 
@@ -524,10 +602,10 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
     };
 
     // call find_conv_impl with entries in correct order (lesser s rank, greater s rank)
-    if (lhs_conv.subtype_rank() < rhs_conv.subtype_rank()) {
-        return find_conv_impl(lhs_conv, rhs_conv);
+    if (lhs_conv.subtype_rank() - lhs_init_soff < rhs_conv.subtype_rank() - rhs_init_soff) {
+        return find_conv_impl(lhs_conv, rhs_conv, lhs_init_soff, rhs_init_soff);
     } else {
-        auto res = find_conv_impl(rhs_conv, lhs_conv);
+        auto res = find_conv_impl(rhs_conv, lhs_conv, rhs_init_soff, lhs_init_soff);
 
         if (res.has_value()) {
             // swap functions to reverse the ordering change
