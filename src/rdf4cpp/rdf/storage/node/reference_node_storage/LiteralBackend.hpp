@@ -22,8 +22,6 @@ public:
     LiteralBackend(std::string_view lexical, identifier::NodeID dataType, std::string_view langTag = "") noexcept;
     explicit LiteralBackend(view::LiteralBackendView view) noexcept;
 
-    bool operator==(const LiteralBackend &) const noexcept;
-
     [[nodiscard]] std::string_view lexical_form() const noexcept;
 
     [[nodiscard]] const identifier::NodeID &datatype_id() const noexcept;
