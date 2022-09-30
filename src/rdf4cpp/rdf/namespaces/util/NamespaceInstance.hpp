@@ -14,7 +14,7 @@ struct NamespaceInstance {
         static storage::util::tsl::sparse_map<uint16_t, NamespaceClass> instances;
         uint16_t const node_storage_id = node_storage.id().value;
         if (auto found = instances.find(node_storage_id); found != instances.end()) {
-            return found->second;
+            return found.value();
         } else {
             NamespaceClass inst = instances[node_storage_id];
 
