@@ -139,6 +139,8 @@ private:
     explicit NodeStorage(INodeStorageBackend *backend) noexcept : backend_(backend) {}
 
 public:
+    using DependentAssetCleaner = INodeStorageBackend::DependentAssetCleaner;
+
     NodeStorage(NodeStorage &&other) noexcept;
     NodeStorage(const NodeStorage &node_context) noexcept;
     NodeStorage &operator=(const NodeStorage &other) noexcept;
@@ -168,6 +170,15 @@ public:
      * @return
      */
     [[nodiscard]] identifier::NodeStorageID id() const noexcept;
+
+    /**
+     * Registered dependent asset cleaners are called upon destruction of the INodeStorageBackend instance backing this NodeStorage.
+     * The user is responsible that only one dependent_asset_cleaner per asset to be removed is registered. The user is also responsible to make sure that no dangling references to the assets remain the NodeStorage was removed.
+     * @param dependent_asset_cleaner a function object that cleans up assets that depend on the NodeStorage.
+     */
+    void register_dependent_asset_cleaner(DependentAssetCleaner dependent_asset_cleaner) noexcept {
+        backend_->register_dependent_asset_cleaner(std::move(dependent_asset_cleaner));
+    }
 
 
     /**
