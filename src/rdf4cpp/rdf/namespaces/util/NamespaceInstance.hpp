@@ -9,7 +9,7 @@
 namespace rdf4cpp::rdf::namespaces::util {
 
 template<typename NamespaceClass>
-class NamespaceInstance {
+struct NamespaceInstance {
     static NamespaceClass &instance(storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) {
         static storage::util::tsl::sparse_map<uint16_t, NamespaceClass> instances;
         uint16_t const node_storage_id = node_storage.id().value;
