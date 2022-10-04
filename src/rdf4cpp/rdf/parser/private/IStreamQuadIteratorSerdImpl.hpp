@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <deque>
 #include <istream>
+#include <string>
 #include <utility>
 
 #if __has_include(<serd/serd.h>)
@@ -25,8 +26,7 @@ namespace util {
 /**
  * A wrapper type around std::istream which is
  * intended to be used as a serd source.
- *
- * @note If track_position == true will count lines, and reset col_off to 0 on newline (col_off is not tracked except for that).
+ * Will keep track of the current line and column.
  *
  * @example
  * @code
@@ -42,25 +42,28 @@ struct IStreamAdaptor {
     uint64_t line_off = 0;
     uint64_t col_off = 0;
 
-    template<bool track_position>
-    static size_t read(void *buf, size_t elem_size, size_t count, void *voided_self) {
+    static size_t read(void *buf, [[maybe_unused]] size_t elem_size, [[maybe_unused]] size_t count, void *voided_self) {
         assert(elem_size == 1);
         assert(count == 1);
 
         auto *self = reinterpret_cast<IStreamAdaptor *>(voided_self);
-        self->istream.get().read(reinterpret_cast<char *>(buf), static_cast<std::streamsize>(count));
+        self->istream.get().read(reinterpret_cast<char *>(buf), 1);
 
-        if constexpr (track_position) {
+        auto const bytes_read = self->istream.get().gcount();
+        if (bytes_read > 0) {
+            // TODO: remove when serd makes line and col 64bit uints; then: instead only update when an error is encountered and not end_at_first_error
             if (static_cast<char const *>(buf)[0] == '\n') {
                 self->line_off += 1;
                 self->col_off = 0;
+            } else {
+                self->col_off += 1;
             }
         }
 
-        return self->istream.get().gcount();
+        return bytes_read;
     }
 
-    inline static int is_ok(void *voided_self) {
+    inline static int is_ok(void *voided_self) noexcept {
         auto *self = reinterpret_cast<IStreamAdaptor *>(voided_self);
         return self->istream.get() ? 0 : 1;
     }

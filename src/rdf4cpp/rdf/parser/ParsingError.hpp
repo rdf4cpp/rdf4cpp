@@ -15,6 +15,8 @@ struct ParsingError {
         EofReached,
         BadSyntax,
         BadCurie,
+        BlankNodeIdClash,
+        Internal,
     };
 
     Type error_type;
@@ -32,6 +34,12 @@ struct ParsingError {
                 break;
             case Type::BadSyntax:
                 os << "bad syntax";
+                break;
+            case Type::BlankNodeIdClash:
+                os << "blank node id clash";
+                break;
+            case Type::Internal:
+                os << "internal error";
                 break;
         }
 
