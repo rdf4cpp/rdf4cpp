@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
+#include <rdf4cpp/rdf/parser/ByteSource.hpp>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -32,6 +33,7 @@ namespace rdf4cpp::rdf::parser {
  * }
  * @endcode
  */
+template<ByteSource Src>
 struct IStreamQuadIterator {
     using value_type = nonstd::expected<Quad, ParsingError>;
     using reference = value_type const &;
@@ -61,7 +63,7 @@ public:
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) = default;
 
-    explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+    explicit IStreamQuadIterator(Src src, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
     ~IStreamQuadIterator() noexcept;
 

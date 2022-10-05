@@ -20,7 +20,7 @@ TEST_SUITE("IStreamQuadIterator") {
         std::istringstream iss{triples};
 
         size_t n = 0;
-        for (auto qit = IStreamQuadIterator{iss}; qit != IStreamQuadIterator{}; ++qit) {
+        for (auto qit = IStreamQuadIterator<IStreamByteSource>{iss}; qit != IStreamQuadIterator<IStreamByteSource>{}; ++qit) {
             CHECK(qit->has_value());
             n += 1;
         }
@@ -36,8 +36,8 @@ TEST_SUITE("IStreamQuadIterator") {
 
         std::istringstream iss{triples};
 
-        auto qit = IStreamQuadIterator{iss, ParsingFlag::Strict | ParsingFlag::StopOnFirstError};
-        for (; qit != IStreamQuadIterator{}; ++qit) {
+        IStreamQuadIterator<IStreamByteSource> qit{iss, ParsingFlag::Strict | ParsingFlag::StopOnFirstError};
+        for (; qit != IStreamQuadIterator<IStreamByteSource>{}; ++qit) {
             CHECK(qit->has_value());
             std::cout << **qit << std::endl;
         }
@@ -54,7 +54,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
         std::istringstream iss{triples};
 
-        auto qit = IStreamQuadIterator{iss};
+        IStreamQuadIterator<IStreamByteSource> qit{iss};
 
         CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
         CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});

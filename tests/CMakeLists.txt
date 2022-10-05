@@ -127,14 +127,13 @@ target_link_libraries(tests_NumOpResults
 set_property(TARGET tests_NumOpResults PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_NumOpResults COMMAND tests_NumOpResults)
 
-add_executable(tests_SerdIterator parser/tests_IStreamQuadIterator.cpp)
-target_link_libraries(tests_SerdIterator
+add_executable(tests_IStreamQuadIterator parser/tests_IStreamQuadIterator.cpp)
+target_link_libraries(tests_IStreamQuadIterator
         doctest
         rdf4cpp
         )
-set_property(TARGET tests_SerdIterator PROPERTY CXX_STANDARD 20)
-add_test(NAME tests_SerdIterator COMMAND tests_SerdIterator)
-
+set_property(TARGET tests_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

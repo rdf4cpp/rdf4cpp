@@ -4,11 +4,13 @@
 
 namespace rdf4cpp::rdf::parser {
 
-std::string_view IStreamQuadIterator::Impl::node_into_string_view(SerdNode const *node) noexcept {
+template<ByteSource Src>
+std::string_view IStreamQuadIterator<Src>::Impl::node_into_string_view(SerdNode const *node) noexcept {
     return std::string_view{reinterpret_cast<char const *>(node->buf), static_cast<size_t>(node->n_bytes)};
 }
 
-ParsingError::Type IStreamQuadIterator::Impl::parsing_error_type_from_serd(SerdStatus const st) noexcept {
+template<ByteSource Src>
+ParsingError::Type IStreamQuadIterator<Src>::Impl::parsing_error_type_from_serd(SerdStatus const st) noexcept {
     switch (st) {
         case SerdStatus::SERD_ERR_BAD_SYNTAX:
             return ParsingError::Type::BadSyntax;
@@ -23,20 +25,24 @@ ParsingError::Type IStreamQuadIterator::Impl::parsing_error_type_from_serd(SerdS
     }
 }
 
-void IStreamQuadIterator::Impl::destroy_serd_reader(SerdReader *reader) noexcept {
+template<ByteSource Src>
+void IStreamQuadIterator<Src>::Impl::destroy_serd_reader(SerdReader *reader) noexcept {
     serd_reader_end_stream(reader);
     serd_reader_free(reader);
 }
 
-BlankNode IStreamQuadIterator::Impl::get_bnode(SerdNode const *node) {
+template<ByteSource Src>
+BlankNode IStreamQuadIterator<Src>::Impl::get_bnode(SerdNode const *node) const {
     return BlankNode{node_into_string_view(node), this->node_storage.get()};
 }
 
-IRI IStreamQuadIterator::Impl::get_uri(SerdNode const *node) {
+template<ByteSource Src>
+IRI IStreamQuadIterator<Src>::Impl::get_uri(SerdNode const *node) const {
     return IRI{node_into_string_view(node), this->node_storage.get()};
 }
 
-nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_uri(SerdNode const *node) const {
+template<ByteSource Src>
+nonstd::expected<IRI, SerdStatus> IStreamQuadIterator<Src>::Impl::get_prefixed_uri(SerdNode const *node) const {
     auto const uri_node_view = node_into_string_view(node);
 
     auto const sep_pos = uri_node_view.find(':');
@@ -56,7 +62,8 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_uri(Se
     }
 }
 
-Literal IStreamQuadIterator::Impl::get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) {
+template<ByteSource Src>
+Literal IStreamQuadIterator<Src>::Impl::get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) const {
     auto const literal_value = node_into_string_view(literal);
 
     if (datatype != nullptr) {
@@ -68,7 +75,8 @@ Literal IStreamQuadIterator::Impl::get_literal(SerdNode const *literal, SerdNode
     }
 }
 
-SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError const *error) noexcept {
+template<ByteSource Src>
+SerdStatus IStreamQuadIterator<Src>::Impl::on_error(void *voided_self, SerdError const *error) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
 
     auto const buf_sz = vsnprintf(nullptr, 0, error->fmt, *error->args);
@@ -87,26 +95,29 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
     return SerdStatus::SERD_SUCCESS;
 }
 
-SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
+template<ByteSource Src>
+SerdStatus IStreamQuadIterator<Src>::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace("", node_into_string_view(uri));
     return SERD_SUCCESS;
 }
 
-SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
+template<ByteSource Src>
+SerdStatus IStreamQuadIterator<Src>::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
     return SERD_SUCCESS;
 }
 
-SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
+template<ByteSource Src>
+SerdStatus IStreamQuadIterator<Src>::Impl::on_stmt(void *voided_self,
                                               SerdStatementFlags,
                                               SerdNode const *graph,
                                               SerdNode const *subj,
                                               SerdNode const *pred,
                                               SerdNode const *obj,
                                               SerdNode const *obj_datatype,
-                                              SerdNode const *obj_lang) {
+                                              SerdNode const *obj_lang) noexcept {
 
     auto *self = reinterpret_cast<Impl *>(voided_self);
 
@@ -186,24 +197,30 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     return SERD_SUCCESS;
 }
 
+template<ByteSource Src>
+void IStreamQuadIterator<Src>::Impl::start_stream() noexcept {
+    auto read_fptr = this->end_at_first_error
+                             ? &util::ByteSourceAdaptor<Src>::read_untracked
+                             : &util::ByteSourceAdaptor<Src>::read_tracked;
 
-void IStreamQuadIterator::Impl::start_stream() noexcept {
-    serd_reader_start_source_stream(this->reader.get(), &util::IStreamAdaptor::read, &util::IStreamAdaptor::is_ok, &this->istream, nullptr, 1);
+    serd_reader_start_source_stream(this->reader.get(), read_fptr, &util::ByteSourceAdaptor<Src>::is_ok, &this->istream, nullptr, this->end_at_first_error ? 4096 : 1);
 }
 
-void IStreamQuadIterator::Impl::try_skip_error() {
+template<ByteSource Src>
+void IStreamQuadIterator<Src>::Impl::try_skip_error() noexcept {
     serd_reader_end_stream(this->reader.get());
 
     char buf;
-    while (util::IStreamAdaptor::read(&buf, 1, 1, &this->istream) > 0 && buf != '.') {
+    while (util::ByteSourceAdaptor<Src>::read_tracked(&buf, 1, 1, &this->istream) > 0 && buf != '.') {
         // noop
     }
 
     this->start_stream();
 }
 
-IStreamQuadIterator::Impl::Impl(std::istream &istream, bool strict, bool end_at_first_error, storage::node::NodeStorage &node_storage) noexcept
-    : istream{std::ref(istream)},
+template<ByteSource Src>
+IStreamQuadIterator<Src>::Impl::Impl(Src src, bool strict, bool end_at_first_error, storage::node::NodeStorage &node_storage) noexcept
+    : istream{std::move(src)},
       node_storage{node_storage},
       reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr), &Impl::destroy_serd_reader},
       end_at_first_error{end_at_first_error} {
@@ -213,15 +230,16 @@ IStreamQuadIterator::Impl::Impl(std::istream &istream, bool strict, bool end_at_
     this->start_stream();
 }
 
-std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::next() {
-    if (this->is_at_end()) {
+template<ByteSource Src>
+std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator<Src>::Impl::next() noexcept {
+    if (this->is_at_end()) [[unlikely]] {
         return std::nullopt;
     }
 
-    if (this->quad_buffer.empty()) {
+    if (this->quad_buffer.empty()) [[likely]] {
         serd_reader_read_chunk(this->reader.get());
 
-        if (this->quad_buffer.empty()) {
+        if (this->quad_buffer.empty()) [[unlikely]] {
             auto ret = nonstd::make_unexpected(this->last_error);
 
             if (this->end_at_first_error) {
