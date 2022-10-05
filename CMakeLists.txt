@@ -70,7 +70,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/parser/SerdParsing.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
-        src/rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
