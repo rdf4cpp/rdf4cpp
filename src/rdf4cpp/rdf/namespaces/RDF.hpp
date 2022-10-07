@@ -17,7 +17,7 @@ public:
 
     explicit RDF(NodeStorage &node_storage = NodeStorage::default_instance());
 
-    IRI operator+(std::string_view suffix) override;
+    IRI operator+(std::string_view suffix) const override;
 };
 
 }  // namespace rdf4cpp::rdf::namespaces
