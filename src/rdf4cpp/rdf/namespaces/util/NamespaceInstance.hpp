@@ -16,14 +16,14 @@ struct NamespaceInstance {
         if (auto found = instances.find(node_storage_id); found != instances.end()) {
             return found.value();
         } else {
-            NamespaceClass inst = instances[node_storage_id];
+            instances.emplace(node_storage_id, node_storage);
 
             node_storage.register_dependent_asset_cleaner(
                     [instances = &instances, node_storage_id = node_storage_id]() {
                         instances->erase(node_storage_id);
                     });
         }
-        return instances[node_storage.id().value];
+        return instances.find(node_storage.id().value).value();
     }
 };
 }  // namespace rdf4cpp::rdf::namespaces::util

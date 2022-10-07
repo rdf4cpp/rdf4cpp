@@ -47,6 +47,8 @@ protected:
 
     std::vector<DependentAssetCleaner> dependent_asset_cleaners_;
 
+    bool destruction_ongoing = false;
+
     /**
      * Increment the use count. Is called by NodeStorage constructor. Synchronized.
      */

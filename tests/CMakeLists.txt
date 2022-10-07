@@ -127,6 +127,14 @@ target_link_libraries(tests_NumOpResults
 set_property(TARGET tests_NumOpResults PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_NumOpResults COMMAND tests_NumOpResults)
 
+add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
+target_link_libraries(tests_Namespace_life_cycle
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Namespace_life_cycle PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Namespace_life_cycle COMMAND tests_Namespace_life_cycle)
+
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
