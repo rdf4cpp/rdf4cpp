@@ -11,19 +11,8 @@ if (IS_TOP_LEVEL AND USE_CONAN)
 endif ()
 
 # find packages
-find_package(serd 0 QUIET)
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
-
-# find system libraries
-if (NOT serd_FOUND)
-    find_library(serd
-            NAMES serd-0
-            NO_CACHE REQUIRED)
-    message(DEBUG "serd system library used: ${serd}")
-else ()
-    message(DEBUG "serd cmake package found")
-endif ()
 
 include(FetchContent)
 
@@ -49,6 +38,43 @@ if (NOT expected-lite_FOUND)
     FetchContent_MakeAvailable(expected-lite)
     message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
+
+set(serd_source_files
+        include/serd/serd.h
+        src/attributes.h
+        src/base64.c
+        src/base64.h
+        src/byte_sink.h
+        src/byte_source.c
+        src/byte_source.h
+        src/env.c
+        src/n3.c
+        src/node.c
+        src/node.h
+        src/reader.c
+        src/reader.h
+        src/serd_config.h
+        src/serd_internal.h
+        src/stack.h
+        src/string.c
+        src/string_utils.h
+        src/system.c
+        src/system.h
+        src/uri.c
+        src/uri_utils.h
+        src/writer.c)
+
+foreach(serd_source_file ${serd_source_files})
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e0793b13aa37b1a3d7e67854c4807/${serd_source_file}"
+            "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
+            TLS_VERIFY ON)
+endforeach()
+file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e0793b13aa37b1a3d7e67854c4807/COPYING"
+        "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
+        TLS_VERIFY ON)
+
+list(FILTER serd_source_files INCLUDE REGEX "^.+\\.c$")
+list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
@@ -101,19 +127,22 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        ${serd_source_files}
         )
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
 target_include_directories(
         rdf4cpp PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
-        )
+        PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
+)
 
 target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         PRIVATE
-        $<IF:${serd_FOUND},serd::serd,${serd}> # ${VAR}_FOUND is only defined if the system library is used
         fmt::fmt-header-only
         )
 

@@ -1,10 +1,6 @@
 #include "rdf4cpp/rdf/Dataset.hpp"
 
-#if __has_include(<serd/serd.h>)
 #include <serd/serd.h>
-#else
-#include <serd-0/serd/serd.h>
-#endif
 
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 #include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
