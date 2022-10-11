@@ -8,7 +8,6 @@ namespace rdf4cpp::rdf::parser {
 
 enum struct ParsingFlag : uint8_t {
     Strict = 1 << 0,
-    StopOnFirstError = 1 << 1,
 };
 
 struct ParsingFlags {

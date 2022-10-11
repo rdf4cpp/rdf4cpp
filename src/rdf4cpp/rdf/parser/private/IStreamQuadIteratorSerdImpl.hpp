@@ -41,12 +41,11 @@ private:
 
     OwnedSerdReader reader;
 
-    bool end_at_first_error;
-
     PrefixMap prefixes;
     std::deque<Quad> quad_buffer;
     std::optional<ParsingError> last_error;
     bool end_flag = false;
+    bool last_read_success = false;
 
 private:
     static std::string_view node_into_string_view(SerdNode const *node) noexcept;
@@ -64,7 +63,7 @@ private:
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
 
 public:
-    Impl(std::istream &istream, bool strict, bool end_at_first_error, storage::node::NodeStorage node_storage) noexcept;
+    Impl(std::istream &istream, bool strict, storage::node::NodeStorage node_storage) noexcept;
 
     /**
      * @return true if this will no longer yield values

@@ -28,23 +28,6 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(n == 4);
     }
 
-    TEST_CASE("stop after first error") {
-        constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
-                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/ontology/bibo/authorList> <http://data.semanticweb.org/workshop/admire/2012/paper/12/authorlist> .\n"
-                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> http://purl.org/dc/elements/1.1/subject> \"web applications\" .\n"
-                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://xmlns.com/foaf/0.1/maker> <http://data.semanticweb.org/person/ichiro-fujinaga> .\n";
-
-        std::istringstream iss{triples};
-
-        IStreamQuadIterator qit{iss, ParsingFlag::Strict | ParsingFlag::StopOnFirstError};
-        for (; qit != IStreamQuadIterator{}; ++qit) {
-            CHECK(qit->has_value());
-            std::cout << **qit << std::endl;
-        }
-
-        CHECK(qit == IStreamQuadIterator{});
-    }
-
     TEST_CASE("continue after error") {
         constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\"^^<http://www.w3.org/2001/XMLSchema#string> .\n"
                                         "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/ontology/bibo/authorList> <http://data.semanticweb.org/workshop/admire/2012/paper/12/authorlist> .\n"
@@ -110,5 +93,70 @@ TEST_SUITE("IStreamQuadIterator") {
             ++qit;
             CHECK(qit == IStreamQuadIterator{});
         }
+    }
+
+    TEST_CASE("continue after error turtle") {
+        constexpr char const *triples = "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+                                        "@prefix dc: <http://purl.org/dc/elements/1.1/> .\n"
+                                        "@prefix ex: <http://example.org/stuff/1.0/> .\n"
+                                        "\n"
+                                        "<http://www.w3.org/TR/rdf-syntax-grammar>\n"
+                                        "  dc:title \"RDF/XML Syntax Specification (Revised)\" ;\n"
+                                        "  ex:editor [\n"
+                                        "    ERRORHERE \"Dave Beckett\";\n"
+                                        "    ex:homePage <http://purl.org/net/dajobe/>\n"
+                                        "  ] .\n"
+                                        "\n"
+                                        "<http://www.w3.org/TR/rdf-syntax-grammar>\n"
+                                        "  dc:title \"RDF/XML Syntax Specification (Revised)\" ;\n"
+                                        "  ex:editor [\n"
+                                        "    ex:fullname \"Dave Beckett\";\n"
+                                        "  ] .";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
+                                   IRI{"http://purl.org/dc/elements/1.1/title"},
+                                   Literal::make<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
+                                   IRI{"http://example.org/stuff/1.0/editor"},
+                                   BlankNode{"b1"}});
+
+        // error here, rest of this spec gets dropped
+
+        ++qit;
+        CHECK(!qit->has_value());
+
+        ++qit;
+        CHECK(!qit->has_value());
+
+        // start of new spec
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
+                                   IRI{"http://purl.org/dc/elements/1.1/title"},
+                                   Literal::make<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
+                                   IRI{"http://example.org/stuff/1.0/editor"},
+                                   BlankNode{"b2"}});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value() == Quad{BlankNode{"b2"},
+                                   IRI{"http://example.org/stuff/1.0/fullname"},
+                                   Literal::make<datatypes::xsd::String>("Dave Beckett")});
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
     }
 }

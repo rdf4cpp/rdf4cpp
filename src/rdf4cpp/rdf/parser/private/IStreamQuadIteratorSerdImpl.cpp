@@ -110,12 +110,14 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
 SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace("", node_into_string_view(uri));
+    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
+    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
@@ -203,14 +205,14 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     }
 
     self->quad_buffer.emplace_back(*graph_node, *subj_node, *pred_node, *obj_node);
+    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
-IStreamQuadIterator::Impl::Impl(std::istream &istream, bool strict, bool end_at_first_error, storage::node::NodeStorage node_storage) noexcept
+IStreamQuadIterator::Impl::Impl(std::istream &istream, bool strict, storage::node::NodeStorage node_storage) noexcept
     : istream{std::ref(istream)},
       node_storage{std::move(node_storage)},
-      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
-      end_at_first_error{end_at_first_error} {
+      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)} {
 
     serd_reader_set_strict(this->reader.get(), strict);
     serd_reader_set_error_sink(this->reader.get(), &Impl::on_error, this);
@@ -222,18 +224,22 @@ std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::n
         return std::nullopt;
     }
 
-    if (this->quad_buffer.empty()) [[likely]] {
+    while (this->quad_buffer.empty()) {
         this->last_error = std::nullopt;
+        this->last_read_success = false; // will be set by the callbacks
         serd_reader_read_chunk(this->reader.get());
 
-        if (this->quad_buffer.empty()) [[unlikely]] {
-            if (this->end_at_first_error || !this->last_error.has_value()) {
+        if (!this->last_read_success) {
+            // was not able to read stmt, prefix or base
+
+            if (!this->last_error.has_value()) {
+                // did not receive error either => must be eof
                 this->end_flag = true;
-                return std::nullopt;
+                return std::nullopt; // eof reached
             }
 
             serd_reader_skip_error(this->reader.get());
-            return nonstd::make_unexpected(*this->last_error);;
+            return nonstd::make_unexpected(*this->last_error);
         }
     }
 
