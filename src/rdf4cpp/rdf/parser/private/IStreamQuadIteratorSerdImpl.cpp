@@ -110,14 +110,12 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
 SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace("", node_into_string_view(uri));
-    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
     self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
-    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
@@ -205,7 +203,6 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     }
 
     self->quad_buffer.emplace_back(*graph_node, *subj_node, *pred_node, *obj_node);
-    self->last_read_success = true;
     return SERD_SUCCESS;
 }
 
@@ -226,10 +223,9 @@ std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::n
 
     while (this->quad_buffer.empty()) {
         this->last_error = std::nullopt;
-        this->last_read_success = false; // will be set by the callbacks
-        serd_reader_read_chunk(this->reader.get());
+        SerdStatus const st = serd_reader_read_chunk(this->reader.get());
 
-        if (!this->last_read_success) {
+        if (st != SerdStatus::SERD_SUCCESS && quad_buffer.empty()) {
             // was not able to read stmt, prefix or base
 
             if (!this->last_error.has_value()) {

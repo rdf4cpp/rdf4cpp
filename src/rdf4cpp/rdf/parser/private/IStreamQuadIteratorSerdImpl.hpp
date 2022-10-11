@@ -29,12 +29,14 @@ private:
             rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
             std::equal_to<>>;
 
-    using OwnedSerdReader = std::unique_ptr<
-            SerdReader,
-            decltype([](SerdReader *reader) {
-                serd_reader_end_stream(reader);
-                serd_reader_free(reader);
-            })>;
+    struct SerdReaderDelete {
+        inline void operator()(SerdReader *rdr) const noexcept {
+            serd_reader_end_stream(rdr);
+            serd_reader_free(rdr);
+        }
+    };
+
+    using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
 
     std::reference_wrapper<std::istream> istream;
     mutable storage::node::NodeStorage node_storage;
@@ -45,7 +47,6 @@ private:
     std::deque<Quad> quad_buffer;
     std::optional<ParsingError> last_error;
     bool end_flag = false;
-    bool last_read_success = false;
 
 private:
     static std::string_view node_into_string_view(SerdNode const *node) noexcept;

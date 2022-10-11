@@ -128,16 +128,15 @@ TEST_SUITE("IStreamQuadIterator") {
                                    IRI{"http://example.org/stuff/1.0/editor"},
                                    BlankNode{"b1"}});
 
-        // error here, rest of this spec gets dropped
-
+        // error here, rest of this spec gets dropped because parsing state is now messed up
         ++qit;
         CHECK(!qit->has_value());
 
+        // second error is a result of parsing state being messed up
         ++qit;
         CHECK(!qit->has_value());
 
         // start of new spec
-
         ++qit;
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
