@@ -11,7 +11,7 @@ std::string_view Namespace::name_space() const noexcept {
 const Namespace::NodeStorage &Namespace::node_storage() const noexcept {
     return node_storage_;
 }
-rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) {
+rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) const {
     if (auto found = cache_.find(suffix); found != cache_.end()) {
         return IRI(found->second);
     } else {
@@ -20,7 +20,7 @@ rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) {
         return iri;
     }
 }
-void Namespace::clear() {
+void Namespace::clear() const {
     cache_.clear();
     cache_.rehash(0);
 }

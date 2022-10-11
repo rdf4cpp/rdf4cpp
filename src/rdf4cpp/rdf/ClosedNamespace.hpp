@@ -32,12 +32,12 @@ public:
      * @return the constructed IRI
      * @throws std::runtime_exception if a suffix is available within the namespace
      */
-    IRI operator+(std::string_view suffix) override;
+    IRI operator+(std::string_view suffix) const override;
 
     /**
      * Clear has no effect on a ClosedNamespace.
      */
-    void clear() override;
+    void clear() const override;
 };
 
 }  // namespace rdf4cpp::rdf

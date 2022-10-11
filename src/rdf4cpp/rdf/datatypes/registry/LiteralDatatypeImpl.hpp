@@ -123,6 +123,13 @@ struct Numeric {
     using pos_result = typename DatatypePosResultMapping<type_iri>::op_result;
     using neg_result = typename DatatypeNegResultMapping<type_iri>::op_result;
 
+    static_assert(LiteralDatatypeOrUndefined<add_result>, "add result must be a literal datatype");
+    static_assert(LiteralDatatypeOrUndefined<sub_result>, "sub result must be a literal datatype");
+    static_assert(LiteralDatatypeOrUndefined<mul_result>, "mul result must be a literal datatype");
+    static_assert(LiteralDatatypeOrUndefined<div_result>, "div result must be a literal datatype");
+    static_assert(LiteralDatatypeOrUndefined<pos_result>, "pos result must be a literal datatype");
+    static_assert(LiteralDatatypeOrUndefined<neg_result>, "neg result must be a literal datatype");
+
     using add_result_cpp_type = typename detail::SelectOpResult<add_result, cpp_type>::type;
     using sub_result_cpp_type = typename detail::SelectOpResult<sub_result, cpp_type>::type;
     using mul_result_cpp_type = typename detail::SelectOpResult<mul_result, cpp_type>::type;
@@ -202,6 +209,17 @@ struct Numeric {
             return -operand;
         }
     }
+};
+
+/**
+ * The capability to be used in numeric operations.
+ * Except that this type itself does not implement the operations
+ * and instead delegates to another type that does.
+ */
+template<util::ConstexprString type_iri>
+struct NumericStub {
+    using numeric_impl_type = typename DatatypeNumericStubMapping<type_iri>::numeric_impl_type;
+    static_assert(NumericImplLiteralDatatype<numeric_impl_type>, "numeric_impl_type must actually be impl-numeric");
 };
 
 /**

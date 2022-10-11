@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include <mutex>
 
 namespace rdf4cpp::rdf::storage::node {
@@ -22,6 +23,9 @@ class NodeStorage;
 class INodeStorageBackend {
     friend NodeStorage;
     static identifier::NodeStorageID register_node_context(INodeStorageBackend *);
+
+public:
+    using DependentAssetCleaner = std::function<void()>;
 
 protected:
     /**
@@ -40,6 +44,10 @@ protected:
      * The NodeStorageID of this. Using the constructor ensures that it is registered and unique.
      */
     identifier::NodeStorageID manager_id;
+
+    std::vector<DependentAssetCleaner> dependent_asset_cleaners_;
+
+    bool destruction_ongoing = false;
 
     /**
      * Increment the use count. Is called by NodeStorage constructor. Synchronized.
@@ -78,6 +86,8 @@ public:
      * @return
      */
     [[nodiscard]] size_t nodes_in_use() const noexcept;
+
+    void register_dependent_asset_cleaner(DependentAssetCleaner dependent_asset_cleaner) noexcept;
 
     /**
       * Backend for NodeStorage::find_or_make_id(view::BNodeBackendView const &)

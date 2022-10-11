@@ -67,18 +67,7 @@ NodeStorage::~NodeStorage() {
     if (backend_ != nullptr) backend_->dec_use_count();
 }
 NodeStorage::NodeStorage(NodeStorage &&other) noexcept {
-    if (this->backend_ != other.backend_) {
-        if (this->backend_ != nullptr)
-            this->backend_->dec_use_count();
-        this->backend_ = other.backend_;
-        if (this->backend_ != nullptr)
-            this->backend_->inc_use_count();
-    } else {
-        if (other.backend_ != nullptr) {
-            other.backend_->dec_use_count();
-        }
-    }
-
+    this->backend_ = other.backend_;
     other.backend_ = nullptr;
 }
 NodeStorage::NodeStorage(const NodeStorage &other) noexcept : backend_(other.backend_) {
@@ -96,18 +85,9 @@ NodeStorage &NodeStorage::operator=(const NodeStorage &other) noexcept {
 }
 NodeStorage &NodeStorage::operator=(NodeStorage &&other) noexcept {
     if (this != &other) {
-        if (this->backend_ != other.backend_) {
-            if (this->backend_ != nullptr)
-                this->backend_->dec_use_count();
-            this->backend_ = other.backend_;
-            if (this->backend_ != nullptr)
-                this->backend_->inc_use_count();
-        } else {
-            if (other.backend_ != nullptr) {
-                other.backend_->dec_use_count();
-            }
-        }
-
+        if (this->backend_ != nullptr)
+            this->backend_->dec_use_count();
+        this->backend_ = other.backend_;
         other.backend_ = nullptr;
     }
     return *this;

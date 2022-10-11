@@ -135,5 +135,13 @@ target_link_libraries(tests_IStreamQuadIterator
 set_property(TARGET tests_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
+add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
+target_link_libraries(tests_Namespace_life_cycle
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Namespace_life_cycle PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Namespace_life_cycle COMMAND tests_Namespace_life_cycle)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
