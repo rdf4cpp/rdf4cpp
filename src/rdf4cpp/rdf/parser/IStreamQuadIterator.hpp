@@ -9,7 +9,6 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
-#include <rdf4cpp/rdf/parser/ByteSource.hpp>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -19,6 +18,7 @@ namespace rdf4cpp::rdf::parser {
  *
  * @note the iterator _starts on_ the first Quad
  * @note An exhausted iterator becomes the end-of-stream iterator.
+ * @warning The value pointed to by an end-of-stream iterator is undefined
  *
  * @example
  * @code
@@ -33,7 +33,6 @@ namespace rdf4cpp::rdf::parser {
  * }
  * @endcode
  */
-template<ByteSource Src>
 struct IStreamQuadIterator {
     using value_type = nonstd::expected<Quad, ParsingError>;
     using reference = value_type const &;
@@ -63,8 +62,7 @@ public:
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) = default;
 
-    explicit IStreamQuadIterator(Src src, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) noexcept;
-
+    explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
     ~IStreamQuadIterator() noexcept;
 
     reference operator*() const noexcept;
