@@ -27,7 +27,7 @@ static int istream_is_ok(void *voided_self) noexcept {
     return *self ? 0 : 1;
 }
 
-} // namespace util
+}  // namespace util
 
 std::string_view IStreamQuadIterator::Impl::node_into_string_view(SerdNode const *node) noexcept {
     return std::string_view{reinterpret_cast<char const *>(node->buf), static_cast<size_t>(node->n_bytes)};
@@ -94,9 +94,9 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
     auto const buf_sz = vsnprintf(nullptr, 0, error->fmt, *error->args);
     std::string message;
 
-    message.resize(buf_sz + 1); // +1 for null-terminator
+    message.resize(buf_sz + 1);  // +1 for null-terminator
     vsnprintf(message.data(), message.size(), error->fmt, *error->args);
-    message.resize(buf_sz - 1); // drop null-terminator from vsnprintf and newline from serd
+    message.resize(buf_sz - 1);  // drop null-terminator from vsnprintf and newline from serd
 
     self->last_error = ParsingError{
             .error_type = parsing_error_type_from_serd(error->status),
@@ -231,7 +231,7 @@ std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::n
             if (!this->last_error.has_value()) {
                 // did not receive error either => must be eof
                 this->end_flag = true;
-                return std::nullopt; // eof reached
+                return std::nullopt;  // eof reached
             }
 
             serd_reader_skip_error(this->reader.get());

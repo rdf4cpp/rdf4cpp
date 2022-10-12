@@ -45,9 +45,10 @@ private:
     struct Impl;
 
     std::unique_ptr<Impl> impl;
-    nonstd::expected<Quad, ParsingError> cur = nonstd::make_unexpected(ParsingError{ .error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached" });
+    nonstd::expected<Quad, ParsingError> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
 
     [[nodiscard]] bool is_at_end() const noexcept;
+
 public:
     /**
      * Constructs the end-of-stream iterator
@@ -73,6 +74,6 @@ public:
     bool operator!=(IStreamQuadIterator const &) const noexcept;
 };
 
-} // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::rdf::parser
 
 #endif  //RDF4CPP_PARSER_ISTREAMQUADITERATOR_HPP

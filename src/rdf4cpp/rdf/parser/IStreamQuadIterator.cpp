@@ -47,4 +47,4 @@ bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noe
 }
 
 
-} // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::rdf::parser
