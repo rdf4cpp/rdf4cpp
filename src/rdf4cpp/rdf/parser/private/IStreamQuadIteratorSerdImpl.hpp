@@ -1,8 +1,6 @@
 #ifndef RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 #define RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 
-#include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
-
 #include <cassert>
 #include <cstddef>
 #include <deque>
@@ -10,13 +8,10 @@
 #include <string>
 #include <utility>
 
-#if __has_include(<serd/serd.h>)
 #include <serd/serd.h>
-#else
-#include <serd-0/serd/serd.h>
-#endif
 
 #include <rdf4cpp/rdf/Quad.hpp>
+#include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::parser {
@@ -80,8 +75,7 @@ public:
 
     /**
      * Tries to extract the next element from the serd backend.
-     * If end_at_first_error is not set, will try to skip over the error
-     * so that the next call might be able to return a value.
+     * Will try to skip over errors so that the next call might be able to return a value.
      *
      * @note Call until std::nullopt is returned
      * @return
