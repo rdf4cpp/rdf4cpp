@@ -7,24 +7,20 @@
 
 namespace rdf4cpp::rdf {
 
-Literal::Literal() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
+Literal::Literal() noexcept
+    : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
+
+Literal::Literal(Node::NodeBackendHandle handle)
+    : Node(handle) {}
+
 Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                     .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
-                                     .lexical_form = lexical_form,
-                                     .language_tag = ""}),
-                             storage::node::identifier::RDFNodeType::Literal,
-                             node_storage.id()}) {}
+    : Literal{make_simple_unchecked(lexical_form, node_storage)} {}
 
 Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
     : Literal(make(lexical_form, datatype, node_storage)) {}
+
 Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                     .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                     .lexical_form = lexical_form,
-                                     .language_tag = lang}),
-                             storage::node::identifier::RDFNodeType::Literal,
-                             node_storage.id()}) {}
+    : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
 
 IRI Literal::datatype() const {
     NodeBackendHandle iri_handle{handle_.literal_backend().datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()};
@@ -98,8 +94,6 @@ bool Literal::is_numeric() const {
            || DatatypeRegistry::get_numerical_ops(this->get_datatype_id()) != nullptr;
 }
 
-Literal::Literal(Node::NodeBackendHandle handle) : Node(handle) {}
-
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << static_cast<std::string>(literal);
     return os;
@@ -122,6 +116,33 @@ std::any Literal::value() const {
     }
 }
 
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
+                                             .lexical_form = lexical_form,
+                                             .language_tag = ""}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
+Literal Literal::make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                             .lexical_form = lexical_form,
+                                             .language_tag = ""}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+                                             .lexical_form = lexical_form,
+                                             .language_tag = lang}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
@@ -134,21 +155,13 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
         // exists => canonize
-        auto const cpp_type = entry->factory_fptr(lexical_form);
-        return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                                 .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                                 .lexical_form = entry->to_string_fptr(cpp_type),
-                                                 .language_tag = ""}),
-                                         storage::node::identifier::RDFNodeType::Literal,
-                                         node_storage.id()});
+        auto const cpp_value = entry->factory_fptr(lexical_form);
+        auto const canonical_lexical_form = entry->to_string_fptr(cpp_value);
+
+        return Literal::make_typed_unchecked(canonical_lexical_form, datatype, node_storage);
     } else {
-        // datatype is not registered, so we cannot parse the lexical_form nor canonize it
-        return Literal(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                                 .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                                 .lexical_form = lexical_form,
-                                                 .language_tag = ""}),
-                                         storage::node::identifier::RDFNodeType::Literal,
-                                         node_storage.id()});
+        // doesn't exist in the registry no way to canonicalize
+        return Literal::make_typed_unchecked(lexical_form, datatype, node_storage);
     }
 }
 
@@ -600,5 +613,4 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
 Literal Literal::operator!() const {
     return this->logical_not();
 }
-
 }  // namespace rdf4cpp::rdf

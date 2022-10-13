@@ -50,5 +50,9 @@ std::ostream &operator<<(std::ostream &os, const IRI &iri) {
 std::string_view IRI::identifier() const {
     return handle_.iri_backend().identifier;
 }
+IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
+    : IRI{IRI::from_datatype_id(id, node_storage)}
+{
+}
 
 }  // namespace rdf4cpp::rdf
