@@ -15,10 +15,10 @@ private:
     using flag_u_type = std::underlying_type_t<ParsingFlag>;
     flag_u_type flags;
 
-    constexpr ParsingFlags(uint8_t const flags) : flags{flags} {}
+    constexpr ParsingFlags(uint8_t const flags) noexcept : flags{flags} {}
 
 public:
-    constexpr ParsingFlags(ParsingFlag const flag)
+    constexpr ParsingFlags(ParsingFlag const flag) noexcept
         : flags{static_cast<flag_u_type>(flag)} {
     }
 
