@@ -1,6 +1,7 @@
 #include <rdf4cpp/rdf.hpp>
 
 #include <iostream>
+#include <fstream>
 
 int main(int argc, char *argv[]) {
     using namespace rdf4cpp::rdf;
@@ -37,10 +38,23 @@ int main(int argc, char *argv[]) {
     }
 
     if (argc > 1) {
-        std::string ttl_file = argv[1];
         Dataset ds2;
-        ds2.add_ttl_file(ttl_file);
-        std::cout << "ds2 from " << ttl_file << ":" << std::endl;
+        std::ifstream ifs{argv[1]};
+
+        if (!ifs.is_open()) {
+            std::cerr << "unable to open provided file\n";
+            return 1;
+        }
+
+        for (parser::IStreamQuadIterator qit{ifs}; qit != parser::IStreamQuadIterator{}; ++qit) {
+            if (qit->has_value()) {
+                ds2.add(qit->value());
+            } else {
+                std::cerr << qit->error() << '\n';
+            }
+        }
+
+        std::cout << "ds2 from " << argv[1] << ":" << std::endl;
         std::cout << writer::NQuadsWriter(ds2) << std::endl;
     } else {
         std::cout << "no test file provided." << std::endl;
