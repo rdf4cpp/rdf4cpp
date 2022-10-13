@@ -69,6 +69,21 @@ private:
      */
     [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
 
+    /**
+     * Creates a simple Literal directly without any safety checks
+     */
+    static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage);
+
+    /**
+     * Creates a typed Literal without doing any safety checks or canonicalization.
+     */
+    static Literal make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage);
+
+    /**
+     * Creates a language-tagged Literal directly without any safety checks
+     */
+    static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage);
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -113,13 +128,13 @@ public:
                                NodeStorage &node_storage = NodeStorage::default_instance()) {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
-            return Literal{compatible_value.lexical_form,
-                           compatible_value.language_tag,
-                           node_storage};
+            return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
+                                                       compatible_value.language_tag,
+                                                       node_storage);
         } else {
-            return Literal{LiteralDatatype_t::to_string(compatible_value),
-                           IRI{LiteralDatatype_t::identifier, node_storage},
-                           node_storage};
+            return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
+                                                 IRI{LiteralDatatype_t::identifier, node_storage},
+                                                 node_storage);
         }
     }
 
