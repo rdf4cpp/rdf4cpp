@@ -45,10 +45,7 @@ bool IStreamQuadIterator::operator==(IStreamQuadIterator const &other) const noe
 bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noexcept {
     return !(*this == other);
 }
-IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept {
-    this->cur = other.cur;
-    std::swap(this->impl, other.impl);
-}
+IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
 
 
 }  // namespace rdf4cpp::rdf::parser
