@@ -61,7 +61,7 @@ public:
     IStreamQuadIterator(std::default_sentinel_t) noexcept;
 
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator(IStreamQuadIterator &&) = default;
+    IStreamQuadIterator(IStreamQuadIterator &&) noexcept ;
 
     explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
     ~IStreamQuadIterator() noexcept;
