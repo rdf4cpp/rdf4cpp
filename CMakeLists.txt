@@ -65,7 +65,7 @@ set(serd_source_files
         src/writer.c)
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e0793b13aa37b1a3d7e67854c4807/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/95f5929c06a85495513fceee568a08c3cafaae83/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()

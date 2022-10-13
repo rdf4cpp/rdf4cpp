@@ -1,6 +1,7 @@
 #include <rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.hpp>
 
-#include <string_view>
+#include <cassert>
+#include <cstddef>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -52,11 +53,11 @@ BlankNode IStreamQuadIterator::Impl::get_bnode(SerdNode const *node) const {
     return BlankNode{node_into_string_view(node), this->node_storage};
 }
 
-IRI IStreamQuadIterator::Impl::get_uri(SerdNode const *node) const {
+IRI IStreamQuadIterator::Impl::get_iri(SerdNode const *node) const {
     return IRI{node_into_string_view(node), this->node_storage};
 }
 
-nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_uri(SerdNode const *node) const {
+nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(SerdNode const *node) {
     auto const uri_node_view = node_into_string_view(node);
 
     auto const sep_pos = uri_node_view.find(':');
@@ -72,19 +73,57 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_uri(Se
         oss << prefix_it->second << suffix;
         return IRI{oss.view(), this->node_storage};
     } else {
+        // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
+        this->last_error = ParsingError{
+                .error_type = ParsingError::Type::BadCurie,
+                .line = serd_reader_get_current_line(this->reader.get()),
+                .col = serd_reader_get_current_col(this->reader.get()),
+                .message = "unknown prefix"};
+
         return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_CURIE);
     }
 }
 
-Literal IStreamQuadIterator::Impl::get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) const {
+nonstd::expected<Literal, SerdStatus> IStreamQuadIterator::Impl::get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) {
     auto const literal_value = node_into_string_view(literal);
 
-    if (datatype != nullptr) {
-        return Literal{literal_value, IRI{node_into_string_view(datatype), this->node_storage}, this->node_storage};
-    } else if (lang != nullptr) {
-        return Literal{literal_value, node_into_string_view(lang), this->node_storage};
-    } else {
-        return Literal{literal_value, this->node_storage};
+    auto const datatype_iri = [&]() -> std::optional<nonstd::expected<IRI, SerdStatus>> {
+        if (datatype != nullptr) {
+            switch (datatype->type) {
+                case SerdType::SERD_CURIE:
+                    return this->get_prefixed_iri(datatype);
+                case SerdType::SERD_URI:
+                    return this->get_iri(datatype);
+                default:
+                    assert(false);
+                    __builtin_unreachable();
+            }
+        } else {
+            return std::nullopt;
+        }
+    }();
+
+    try {
+        if (datatype_iri.has_value()) {
+            if (!datatype_iri->has_value()) {
+                return nonstd::make_unexpected(datatype_iri->error());
+            }
+
+            return Literal{literal_value, datatype_iri->value(), this->node_storage};
+        } else if (lang != nullptr) {
+            return Literal{literal_value, node_into_string_view(lang), this->node_storage};
+        } else {
+            return Literal{literal_value, this->node_storage};
+        }
+    } catch (std::runtime_error const &e) {
+        // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
+        this->last_error = ParsingError{
+                .error_type = ParsingError::Type::BadLiteral,
+                .line = serd_reader_get_current_line(this->reader.get()),
+                .col = serd_reader_get_current_col(this->reader.get()),
+                .message = e.what()};
+
+        return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_SYNTAX);
     }
 }
 
@@ -134,9 +173,9 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
         if (graph != nullptr) {
             switch (graph->type) {
                 case SERD_CURIE:
-                    return self->get_prefixed_uri(pred);
+                    return self->get_prefixed_iri(pred);
                 case SERD_URI:
-                    return self->get_uri(subj);
+                    return self->get_iri(subj);
                 case SERD_BLANK:
                     return self->get_bnode(subj);
                 default:
@@ -154,9 +193,9 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     auto const subj_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (subj->type) {
             case SERD_CURIE:
-                return self->get_prefixed_uri(subj);
+                return self->get_prefixed_iri(subj);
             case SERD_URI:
-                return self->get_uri(subj);
+                return self->get_iri(subj);
             case SERD_BLANK:
                 return self->get_bnode(subj);
             default:
@@ -171,9 +210,9 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     auto const pred_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (pred->type) {
             case SERD_CURIE:
-                return self->get_prefixed_uri(pred);
+                return self->get_prefixed_iri(pred);
             case SERD_URI:
-                return self->get_uri(pred);
+                return self->get_iri(pred);
             default:
                 return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
         }
@@ -186,13 +225,13 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     auto const obj_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (obj->type) {
             case SERD_CURIE:
-                return self->get_prefixed_uri(pred);
+                return self->get_prefixed_iri(pred);
             case SERD_LITERAL:
                 return self->get_literal(obj, obj_datatype, obj_lang);
             case SERD_BLANK:
                 return self->get_bnode(obj);
             case SERD_URI:
-                return self->get_uri(obj);
+                return self->get_iri(obj);
             default:
                 return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
         }

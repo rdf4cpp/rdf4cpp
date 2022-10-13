@@ -1,11 +1,12 @@
 #ifndef RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 #define RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 
-#include <cassert>
-#include <cstddef>
 #include <deque>
 #include <istream>
+#include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include <serd/serd.h>
@@ -13,6 +14,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -49,12 +51,12 @@ private:
 
 private:
     BlankNode get_bnode(SerdNode const *node) const;
-    IRI get_uri(SerdNode const *node) const;
-    nonstd::expected<IRI, SerdStatus> get_prefixed_uri(SerdNode const *node) const;
-    Literal get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) const;
+    IRI get_iri(SerdNode const *node) const;
+    nonstd::expected<IRI, SerdStatus> get_prefixed_iri(SerdNode const *node);
+    nonstd::expected<Literal, SerdStatus> get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang);
 
     static SerdStatus on_error(void *voided_self, SerdError const *error) noexcept;
-    static SerdStatus on_base(void *voided_self, const SerdNode *uri) noexcept;
+    static SerdStatus on_base(void *voided_self, SerdNode const *uri) noexcept;
     static SerdStatus on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept;
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
 
