@@ -124,8 +124,8 @@ public:
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
-    inline static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
-                               NodeStorage &node_storage = NodeStorage::default_instance()) {
+    static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
+                        NodeStorage &node_storage = NodeStorage::default_instance()) {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
@@ -133,7 +133,7 @@ public:
                                                        node_storage);
         } else {
             return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
-                                                 IRI{LiteralDatatype_t::identifier, node_storage},
+                                                 IRI{LiteralDatatype_t::datatype_id, node_storage},
                                                  node_storage);
         }
     }
@@ -278,7 +278,7 @@ public:
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             auto const &lit = this->handle_.literal_backend();
 
-            return datatypes::registry::LangStringRepr {
+            return datatypes::registry::LangStringRepr{
                     .lexical_form = std::string{lit.lexical_form},
                     .language_tag = std::string{lit.language_tag}};
         } else {

@@ -16,6 +16,12 @@ private:
      * Constructs the corresponding IRI from a given datatype id and places it into node_storage if
      * it does not exist already.
      */
+    explicit IRI(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * Constructs the corresponding IRI from a given datatype id and places it into node_storage if
+     * it does not exist already.
+     */
     static IRI from_datatype_id(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
 
     /**
@@ -23,6 +29,8 @@ private:
      * index the registry and yields the correct result.
      */
     [[nodiscard]] datatypes::registry::DatatypeIDView to_datatype_id() const noexcept;
+
+
 
 public:
     explicit IRI(Node::NodeBackendHandle handle) noexcept;
