@@ -50,10 +50,10 @@ private:
     static ParsingError::Type parsing_error_type_from_serd(SerdStatus st) noexcept;
 
 private:
-    BlankNode get_bnode(SerdNode const *node) const;
-    IRI get_iri(SerdNode const *node) const;
-    nonstd::expected<IRI, SerdStatus> get_prefixed_iri(SerdNode const *node);
-    nonstd::expected<Literal, SerdStatus> get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang);
+    nonstd::expected<BlankNode, SerdStatus> get_bnode(SerdNode const *node) noexcept;
+    nonstd::expected<IRI, SerdStatus> get_iri(SerdNode const *node) noexcept;
+    nonstd::expected<IRI, SerdStatus> get_prefixed_iri(SerdNode const *node) noexcept;
+    nonstd::expected<Literal, SerdStatus> get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) noexcept;
 
     static SerdStatus on_error(void *voided_self, SerdError const *error) noexcept;
     static SerdStatus on_base(void *voided_self, SerdNode const *uri) noexcept;

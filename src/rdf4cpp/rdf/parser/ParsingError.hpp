@@ -12,12 +12,13 @@ namespace rdf4cpp::rdf::parser {
  */
 struct ParsingError {
     enum struct Type : uint8_t {
+        Internal = 0,
         EofReached,
         BadSyntax,
+        BadIri,
         BadCurie,
         BadLiteral,
-        BlankNodeIdClash,
-        Internal,
+        BadBlankNode,
     };
 
     Type error_type;
@@ -27,8 +28,17 @@ struct ParsingError {
 
     inline friend std::ostream &operator<<(std::ostream &os, ParsingError::Type const &err_t) noexcept {
         switch (err_t) {
+            case Type::Internal:
+                os << "internal error";
+                break;
             case Type::EofReached:
                 os << "unexpected end of file";
+                break;
+            case Type::BadSyntax:
+                os << "bad syntax";
+                break;
+            case Type::BadIri:
+                os << "bad iri";
                 break;
             case Type::BadCurie:
                 os << "bad curie";
@@ -36,14 +46,8 @@ struct ParsingError {
             case Type::BadLiteral:
                 os << "bad literal";
                 break;
-            case Type::BadSyntax:
-                os << "bad syntax";
-                break;
-            case Type::BlankNodeIdClash:
-                os << "blank node id clash";
-                break;
-            case Type::Internal:
-                os << "internal error";
+            case Type::BadBlankNode:
+                os << "bad blank node";
                 break;
         }
 
