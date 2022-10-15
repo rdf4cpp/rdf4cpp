@@ -45,13 +45,6 @@ public:
 
     Graph graph();
 
-    /**
-     * Load turtle file into default graph.
-     * TODO: this is provisional until a native parser is implemented
-     * @param path path to ttl file
-     */
-    void add_ttl_file(const std::string &path);
-
     using const_interator = DatasetStorage::const_iterator;
 
     using iterator = const_interator;

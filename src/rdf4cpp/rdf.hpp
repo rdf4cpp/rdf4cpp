@@ -6,6 +6,7 @@
 #include <rdf4cpp/rdf/Namespace.hpp>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/namespaces.hpp>
+#include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/rdf/writer/NNodeWriter.hpp>
 #include <rdf4cpp/rdf/writer/NQuadsWriter.hpp>
 #include <rdf4cpp/rdf/writer/NTriplesWriter.hpp>
