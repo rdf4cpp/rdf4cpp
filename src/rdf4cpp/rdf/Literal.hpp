@@ -83,7 +83,6 @@ private:
      * Creates a language-tagged Literal directly without any safety checks
      */
     static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage);
-
 protected:
     explicit Literal(Node::NodeBackendHandle handle);
 
@@ -148,6 +147,24 @@ public:
      */
     static Literal make(std::string_view lexical_form, const IRI &datatype,
                         NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Tries to cast this literal to a literal of the given type IRI.
+     * Only widening casts are supported (e.g. xsd:integer -> xsd:int is not).
+     *
+     * @param target the IRI of the cast target
+     * @param node_storage where to store the literal resulting from the cast
+     * @return the literal with the same value as a different type if the cast was successful or the null literal
+     */
+    [[nodiscard]] Literal cast(IRI const &target, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * Identical to Literal::cast except with compile time specified target type.
+     */
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
+        return this->cast(IRI{LiteralDatatype_t::datatype_id}, node_storage);
+    }
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.

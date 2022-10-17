@@ -327,7 +327,7 @@ public:
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
      * @return the found conversion if there is a viable one
      */
-    static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0);
+    static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0) noexcept;
 
     /**
      * Tries to find a conversion to a common type in the context of numeric operations.
@@ -337,7 +337,7 @@ public:
      * @note must be called with datatypes that are numeric
      * @return A conversion to a common type that is also a numeric-impl if there is a viable one
      */
-    inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) {
+    inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) noexcept {
         assert(lhs_entry.numeric_ops.has_value());
         assert(rhs_entry.numeric_ops.has_value());
 
@@ -354,7 +354,7 @@ public:
      * @note must be called with a datatype that is stub-numeric
      * @return the conversion to the corresponding impl-type
      */
-    inline static RuntimeConversionEntry const &get_numeric_op_impl_conversion(DatatypeEntry const &entry) {
+    inline static RuntimeConversionEntry const &get_numeric_op_impl_conversion(DatatypeEntry const &entry) noexcept {
         assert(entry.numeric_ops.has_value());
         assert(entry.numeric_ops->is_stub());
 
@@ -368,7 +368,7 @@ public:
      * @return nullopt if any of lhs_type_id or rhs_type_id does not have a datatype registered
      * or there is no viable conversion, else the found conversion
      */
-    inline static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) {
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) noexcept {
         auto const lhs_entry = get_entry(lhs_type_id);
         if (lhs_entry == nullptr) {
             return std::nullopt;
@@ -381,6 +381,15 @@ public:
 
         return get_common_type_conversion(lhs_entry->conversion_table, rhs_entry->conversion_table);
     }
+
+    /**
+     * Tries to find a conversion to upcast source to target ex. xsd:int -> xsd:long
+     *
+     * @param source conversion table of type to cast
+     * @param target conversion table to type to cast to
+     * @return nullopt if no such conversion exists, or the found conversion
+     */
+    static std::optional<RuntimeConversionEntry> get_cast_conversion(RuntimeConversionTable const &source, RuntimeConversionTable const &target) noexcept;
 };
 
 
@@ -546,7 +555,7 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         RuntimeConversionTable const &lhs_conv,
         RuntimeConversionTable const &rhs_conv,
         size_t const lhs_init_soff,
-        size_t const rhs_init_soff) {
+        size_t const rhs_init_soff) noexcept {
 
     auto const find_conv_impl = [](RuntimeConversionTable const &lesser, RuntimeConversionTable const &greater,
                                    size_t const lesser_init_soff, size_t const greater_init_soff) -> std::optional<DatatypeConverter> {
@@ -584,12 +593,14 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
                                                                    ? std::make_pair(0ul, greater_p_rank - lesser_p_rank)
                                                                    : std::make_pair(lesser_p_rank - greater_p_rank, 0ul);
 
-                RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, lesser_p_off);
-                RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, greater_p_off);
+                if (lesser_p_off < lesser_p_rank && greater_p_off < greater_p_rank) {
+                    RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, lesser_p_off);
+                    RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, greater_p_off);
 
-                if (lconv.target_type_id == gconv.target_type_id) {
-                    // correct conversion found
-                    return DatatypeConverter::from_individuals(lconv, gconv);
+                    if (lconv.target_type_id == gconv.target_type_id) {
+                        // correct conversion found
+                        return DatatypeConverter::from_individuals(lconv, gconv);
+                    }
                 }
             }
 
@@ -614,6 +625,48 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
 
         return res;
     }
+}
+
+inline std::optional<RuntimeConversionEntry> DatatypeRegistry::get_cast_conversion(RuntimeConversionTable const &source, RuntimeConversionTable const &target) noexcept {
+    if (source.s_rank < target.s_rank) {
+        return std::nullopt;  // downcasting not supported
+    }
+
+    auto const s_off = source.s_rank - target.s_rank;
+    if (s_off >= source.s_rank) {
+        // subtype offset to large
+        return std::nullopt;
+    }
+
+    auto const source_p_rank = source.promotion_rank_at_level(s_off);
+    auto const target_p_rank = target.promotion_rank_at_level(0);
+
+    if (source_p_rank < target_p_rank) {
+        // source is right of target, demoting is not supported
+        return std::nullopt;
+    }
+
+    auto const conversion = [&]() -> std::optional<RuntimeConversionEntry> {
+        if (source_p_rank == target_p_rank) {
+            // found candidate
+            return source.conversion_at_index(s_off, 0);
+        } else {
+            auto const p_off = source_p_rank - target_p_rank;
+            if (p_off >= source_p_rank) {
+                // promotion offset to large
+                return std::nullopt;
+            }
+
+            return source.conversion_at_index(s_off, p_off);
+        }
+    }();
+
+    if (!conversion.has_value() || conversion->target_type_id != target.conversion_at_index(0, 0).target_type_id) {
+        // no conversion found or targets do not match
+        return std::nullopt;
+    }
+
+    return *conversion;
 }
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

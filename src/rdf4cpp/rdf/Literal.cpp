@@ -165,6 +165,31 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
+Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
+    using datatypes::registry::DatatypeRegistry;
+
+    auto const *this_e = DatatypeRegistry::get_entry(this->get_datatype_id());
+    if (this_e == nullptr) {
+        // this datatype not registered
+        return Literal{};
+    }
+
+    auto const *target_e = DatatypeRegistry::get_entry(target.to_datatype_id());
+    if (target_e == nullptr) {
+        // target not registered
+        return Literal{};
+    }
+
+    auto const conversion = DatatypeRegistry::get_cast_conversion(this_e->conversion_table, target_e->conversion_table);
+    if (!conversion.has_value()) {
+        // no conversion found
+        return Literal{};
+    }
+
+    auto const converted = conversion->convert(this->value());
+    return Literal::make_typed_unchecked(target_e->to_string_fptr(converted), target, node_storage);
+}
+
 template<typename OpSelect>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
     using namespace datatypes::registry;
@@ -486,6 +511,7 @@ bool Literal::ge_with_extensions(Literal const &other) const {
 }
 
 datatypes::registry::DatatypeIDView Literal::get_datatype_id() const noexcept {
+    assert(!this->null());
     auto const lit_type = this->handle_.node_id().literal_type();
 
     if (lit_type.is_fixed()) {
@@ -498,6 +524,7 @@ datatypes::registry::DatatypeIDView Literal::get_datatype_id() const noexcept {
 bool Literal::is_fixed_not_numeric() const noexcept {
     using namespace datatypes::registry;
 
+    assert(!this->null());
     auto const lit_type = this->handle_.node_id().literal_type();
     return lit_type.is_fixed() && !lit_type.is_numeric();
 }
@@ -613,4 +640,5 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
 Literal Literal::operator!() const {
     return this->logical_not();
 }
+
 }  // namespace rdf4cpp::rdf

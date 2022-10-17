@@ -160,3 +160,15 @@ TEST_CASE("Literal - check fixed id") {
     CHECK(lit.datatype().backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
     CHECK(iri.backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
 }
+
+TEST_CASE("Literal - casting") {
+    auto const lit1 = Literal::make<datatypes::xsd::Int>(123);
+
+    CHECK(lit1.template cast<datatypes::xsd::Integer>().datatype() == IRI{datatypes::xsd::Integer::identifier});
+    CHECK(lit1.template cast<datatypes::xsd::Float>().datatype() == IRI{datatypes::xsd::Float::identifier});
+    CHECK(lit1.template cast<datatypes::xsd::Boolean>().null());
+
+
+    auto const lit2 = Literal::make<datatypes::xsd::Integer>(420);
+    CHECK(lit2.template cast<datatypes::xsd::Int>().null());
+}
