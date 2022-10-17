@@ -25,11 +25,6 @@ TEST_CASE("Datatype Integer") {
     auto type_iri = IRI(datatypes::xsd::Integer::identifier);
     CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
-    using type = datatypes::xsd::Integer::cpp_type;
-
-    CHECK(std::is_same_v<type, int64_t>);
-
-
     int64_t value = 1.00;
     auto lit1 = Literal::make<datatypes::xsd::Integer>(value);
     CHECK(lit1.value<datatypes::xsd::Integer>() == value);
@@ -77,9 +72,8 @@ TEST_CASE("Datatype Integer") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("a23dg", type_iri), "XSD Parsing Error", std::runtime_error);
-
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.2e-308", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS(no_discard_dummy = Literal("a23dg", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal("2.2e-308", type_iri));
 }
 
 TEST_CASE("Datatype Integer overread UB") {
@@ -88,4 +82,11 @@ TEST_CASE("Datatype Integer overread UB") {
 
     Literal const lit{ sv, datatypes::xsd::Integer::identifier };
     CHECK(lit.value<datatypes::xsd::Integer>() == 123);
+}
+
+TEST_CASE("other int types serializing") {
+    using namespace datatypes::xsd;
+
+    auto lit1 = Literal::make<Int>(std::numeric_limits<Int::cpp_type>::min());
+    CHECK(lit1.lexical_form() == std::to_string(std::numeric_limits<Int::cpp_type>::min()));
 }

@@ -11,19 +11,22 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 
+#include <boost/multiprecision/cpp_dec_float.hpp>
+
 #include <charconv>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <regex>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-/**
- * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
- */
+
 template<>
 struct DatatypeMapping<xsd_decimal> {
-    using cpp_datatype = double;
+    // needs at least 18 decimal digits of precision
+    // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
+    using cpp_datatype = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<18, int16_t>>;
 };
 
 template<>
@@ -31,31 +34,23 @@ struct DatatypePromotionMapping<xsd_decimal> {
     using promoted = xsd::Float;
 };
 
-/**
- * Specialisation of from_string template function.
- */
 template<>
 inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
+    static std::regex const decimal_regex{R"#((\+|-)?[0-9]+\.[0-9]*)#"};
+
+    if (!std::regex_match(s.begin(), s.end(), decimal_regex)) {
+        throw std::runtime_error{"XSD Parsing Error"};
+    }
 
     if (s.starts_with('+')) {
-        // from_chars does not allow initial +
         s.remove_prefix(1);
     }
 
-    cpp_type value;
-    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::fixed);
-
-    if (res.ptr != s.data() + s.size()) {
-        // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{"XSD Parsing Error"};
+    try {
+        return cpp_type{s};
+    } catch (std::runtime_error const &e) {
+        throw std::runtime_error{std::string{"xsd:decimal parsing error: "} + e.what()};
     }
-
-    if (std::isnan(value) || std::isinf(value)) {
-        // nan and +-inf not permitted in decimal
-        throw std::runtime_error{"XSD Parsing Error"};
-    }
-
-    return value;
 }
 
 /**
@@ -64,7 +59,7 @@ inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_de
 template<>
 inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
 
-    double int_part, fract_part;
+    cpp_type int_part, fract_part;
     fract_part = modf(value, &int_part);
     bool remove_trailing_zeros = false;
     std::ostringstream str_os;
@@ -74,7 +69,7 @@ inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type 
         str_os << std::setprecision(1);
     } else {
         //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to the nearest possible representation
-        str_os << std::setprecision(std::numeric_limits<double>::max_digits10 + 2);
+        str_os << std::setprecision(std::numeric_limits<cpp_type>::digits10);
         remove_trailing_zeros = true;
     }
     str_os << value;
@@ -102,8 +97,20 @@ inline nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type,
 
 template<>
 inline bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept {
-    return !std::isnan(value) && value != 0.0;
+    return !isnan(value) && value != 0.0;
 }
+
+template<>
+inline std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+    if (lhs < rhs) {
+        return std::partial_ordering::less;
+    } else if (rhs < lhs) {
+        return std::partial_ordering::greater;
+    } else {
+        return std::partial_ordering::equivalent;
+    }
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::xsd {

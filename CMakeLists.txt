@@ -13,6 +13,7 @@ endif ()
 # find packages
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
+find_package(Boost QUIET COMPONENTS)
 
 include(FetchContent)
 
@@ -141,6 +142,7 @@ target_include_directories(
 target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
+        Boost::headers
         PRIVATE
         fmt::fmt-header-only
         )

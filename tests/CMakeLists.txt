@@ -103,6 +103,14 @@ target_link_libraries(tests_Integer
 set_property(TARGET tests_Integer PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Integer COMMAND tests_Integer)
 
+add_executable(tests_owl_Rational datatype/tests_owl_Rational.cpp)
+target_link_libraries(tests_owl_Rational
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_owl_Rational PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_owl_Rational COMMAND tests_owl_Rational)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest

@@ -11,17 +11,15 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
 
-#include <charconv>
-#include <cstdint>
 #include <stdexcept>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 namespace rdf4cpp::rdf::datatypes::registry {
-/**
- * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
- */
+
 template<>
 struct DatatypeMapping<xsd_integer> {
-    using cpp_datatype = int64_t;
+    using cpp_datatype = boost::multiprecision::cpp_int;
 };
 
 template<>
@@ -34,26 +32,22 @@ struct DatatypeDivResultMapping<xsd_integer> {
     using op_result = xsd::Decimal;
 };
 
-/**
- * Specialisation of from_string template function.
- */
 template<>
 inline capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_integer>::from_string(std::string_view s) {
-
     if (s.starts_with('+')) {
-        // from_chars does not allow initial +
         s.remove_prefix(1);
     }
 
-    cpp_type value;
-    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, 10);
-
-    if (res.ptr != s.data() + s.size()) {
-        // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{"XSD Parsing Error"};
+    try {
+        return cpp_type{s};
+    } catch (std::runtime_error const &e) {
+        throw std::runtime_error{std::string{"xsd:integer parsing error: "} + e.what()};
     }
+}
 
-    return value;
+template<>
+inline std::string capabilities::Default<xsd_integer>::to_string(cpp_type const &value) {
+    return boost::multiprecision::to_string(value);
 }
 
 template<>
@@ -70,6 +64,17 @@ inline nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type,
     // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
     // integer needs to return decimal on division
     return static_cast<div_result_cpp_type>(lhs) / static_cast<div_result_cpp_type>(rhs);
+}
+
+template<>
+inline std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+    if (lhs < rhs) {
+        return std::partial_ordering::less;
+    } else if (rhs < lhs) {
+        return std::partial_ordering::greater;
+    } else {
+        return std::partial_ordering::equivalent;
+    }
 }
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
