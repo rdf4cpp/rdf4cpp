@@ -29,7 +29,19 @@ struct DatatypeNumericStubMapping<xsd_non_positive_integer> {
 
 template<>
 inline capabilities::Default<xsd_non_positive_integer>::cpp_type capabilities::Default<xsd_non_positive_integer>::from_string(std::string_view s) {
-    return cpp_type{s};
+    cpp_type ret;
+
+    try {
+        ret = cpp_type{s};
+    } catch (std::runtime_error const &e) {
+        throw std::runtime_error{std::string{"xsd:nonPositiveInteger parsing error: "} + e.what()};
+    }
+
+    if (ret > 0) {
+        throw std::runtime_error{"xsd:nonPositiveInteger parsing error: found non-negative value"};
+    }
+
+    return ret;
 }
 
 template<>
@@ -39,7 +51,7 @@ inline std::string capabilities::Default<xsd_non_positive_integer>::to_string(cp
 
 template<>
 inline bool capabilities::Logical<xsd_non_positive_integer>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value == 0;
+    return value != 0;
 }
 
 template<>

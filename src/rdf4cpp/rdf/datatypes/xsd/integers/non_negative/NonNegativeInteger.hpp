@@ -50,7 +50,7 @@ inline std::string capabilities::Default<xsd_non_negative_integer>::to_string(cp
 
 template<>
 inline bool capabilities::Logical<xsd_non_negative_integer>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value == 0;
+    return value != 0;
 }
 
 template<>

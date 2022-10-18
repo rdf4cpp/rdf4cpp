@@ -15,10 +15,10 @@ I from_chars(std::string_view s) {
     }
 
     I value;
-    auto const parse_res = std::from_chars(s.data(), s.data() + s.size(), value);
+    auto const res = std::from_chars(s.data(), s.data() + s.size(), value);
 
-    if (parse_res.ptr != s.data() + s.size()) {
-        throw std::runtime_error{"integral parsing error: " + std::make_error_code(parse_res.ec).message()};
+    if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
+        throw std::runtime_error{"xsd integer parsing error: " + std::make_error_code(res.ec).message()};
     } else {
         return value;
     }
@@ -51,9 +51,9 @@ F from_chars(std::string_view s) {
     F value;
     std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
 
-    if (res.ptr != s.data() + s.size()) {
+    if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{"XSD Parsing Error"};
+        throw std::runtime_error{"xsd floating point parsing error: " + std::make_error_code(res.ec).message()};
     }
 
     return value;

@@ -111,6 +111,102 @@ target_link_libraries(tests_owl_Rational
 set_property(TARGET tests_owl_Rational PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_owl_Rational COMMAND tests_owl_Rational)
 
+add_executable(tests_Byte datatype/tests_Byte.cpp)
+target_link_libraries(tests_Byte
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Byte PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Byte COMMAND tests_Byte)
+
+add_executable(tests_Short datatype/tests_Short.cpp)
+target_link_libraries(tests_Short
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Short PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Short COMMAND tests_Short)
+
+add_executable(tests_Int datatype/tests_Int.cpp)
+target_link_libraries(tests_Int
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Int PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Int COMMAND tests_Int)
+
+add_executable(tests_Long datatype/tests_Long.cpp)
+target_link_libraries(tests_Long
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Long PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Long COMMAND tests_Long)
+
+add_executable(tests_UnsignedByte datatype/tests_UnsignedByte.cpp)
+target_link_libraries(tests_UnsignedByte
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_UnsignedByte PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_UnsignedByte COMMAND tests_UnsignedByte)
+
+add_executable(tests_UnsignedShort datatype/tests_UnsignedShort.cpp)
+target_link_libraries(tests_UnsignedShort
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_UnsignedShort PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_UnsignedShort COMMAND tests_UnsignedShort)
+
+add_executable(tests_UnsignedInt datatype/tests_UnsignedInt.cpp)
+target_link_libraries(tests_UnsignedInt
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_UnsignedInt PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_UnsignedInt COMMAND tests_UnsignedInt)
+
+add_executable(tests_UnsignedLong datatype/tests_UnsignedLong.cpp)
+target_link_libraries(tests_UnsignedLong
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_UnsignedLong PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_UnsignedLong COMMAND tests_UnsignedLong)
+
+add_executable(tests_PositiveInteger datatype/tests_PositiveInteger.cpp)
+target_link_libraries(tests_PositiveInteger
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_PositiveInteger PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_PositiveInteger COMMAND tests_PositiveInteger)
+
+add_executable(tests_NonPositiveInteger datatype/tests_NonPositiveInteger.cpp)
+target_link_libraries(tests_NonPositiveInteger
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_NonPositiveInteger PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_NonPositiveInteger COMMAND tests_NonPositiveInteger)
+
+add_executable(tests_NegativeInteger datatype/tests_NegativeInteger.cpp)
+target_link_libraries(tests_NegativeInteger
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_NegativeInteger PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_NegativeInteger COMMAND tests_NegativeInteger)
+
+add_executable(tests_NonNegativeInteger datatype/tests_NonNegativeInteger.cpp)
+target_link_libraries(tests_NonNegativeInteger
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_NonNegativeInteger PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_NonNegativeInteger COMMAND tests_NonNegativeInteger)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest
