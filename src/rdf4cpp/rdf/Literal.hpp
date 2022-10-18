@@ -251,13 +251,13 @@ public:
     /**
      * @return the effective boolean value of this
      */
-    [[nodiscard]] util::TriBool effective_boolean_value() const noexcept;
+    [[nodiscard]] virtual util::TriBool effective_boolean_value() const noexcept override;
 
     /**
      * Converts this literal to it's effective boolean value
      * @return Literal containing the ebv
      */
-    Literal as_effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] virtual Literal as_effective_boolean_value(NodeStorage &node_storage) const override;
 
     Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator&&(Literal const &other) const;

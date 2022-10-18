@@ -142,5 +142,12 @@ Node::NodeBackendHandle &Node::backend_handle() noexcept {
     return handle_;
 }
 
+util::TriBool Node::effective_boolean_value() const noexcept {
+    return util::TriBool::Err;
+}
+
+Literal Node::as_effective_boolean_value([[maybe_unused]] NodeStorage &node_storage) const {
+    return Literal{};
+}
 
 }  // namespace rdf4cpp::rdf
