@@ -118,10 +118,10 @@ jobs:
           # build and test package
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)
           conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version) -pr:b=default
-      - name: Install systemlib serd for FetchContent
+      - name: Install systemlib serd and boost for FetchContent
         run: |
           # FetchContent does not handle transitive dependencies and doesn't run conan.
-          sudo apt-get install libserd-dev
+          sudo apt-get install libserd-dev libboost-dev
       - name: Test cmake FetchContent
         run: |
           cd test_FetchContent
