@@ -162,13 +162,105 @@ TEST_CASE("Literal - check fixed id") {
 }
 
 TEST_CASE("Literal - casting") {
+    using namespace datatypes::xsd;
+
     auto const lit1 = Literal::make<datatypes::xsd::Int>(123);
 
-    CHECK(lit1.template cast<datatypes::xsd::Integer>().datatype() == IRI{datatypes::xsd::Integer::identifier});
-    CHECK(lit1.template cast<datatypes::xsd::Float>().datatype() == IRI{datatypes::xsd::Float::identifier});
-    CHECK(lit1.template cast<datatypes::xsd::Boolean>().null());
+    SUBCASE("id cast") {
+        auto const lit1 = Literal::make<String>("hello");
+        auto const lit2 = lit1.template cast<String>();
 
+        CHECK(lit1 == lit2);
+    }
 
-    auto const lit2 = Literal::make<datatypes::xsd::Integer>(420);
-    CHECK(lit2.template cast<datatypes::xsd::Int>().null());
+    SUBCASE("str -> any") {
+        auto const lit1 = Literal::make<String>("1.2");
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2 == Literal::make<Float>(1.2));
+        CHECK(lit1.template cast<Integer>().null());
+    }
+
+    SUBCASE("any -> str") {
+        auto const lit1 = Literal::make<Decimal>(1.5);
+        auto const lit2 = lit1.template cast<String>();
+
+        CHECK(lit2.value<String>() == "1.5");
+    }
+
+    SUBCASE("any -> bool") {
+        auto const lit1 = Literal::make<Float>(1.4);
+        auto const lit2 = lit1.template cast<Boolean>();
+
+        CHECK(lit2 == Literal::make<Boolean>(true));
+    }
+
+    SUBCASE("dbl -> flt") {
+        // TODO: !type hierarchy in wrong order; not sure how to fix that yet!
+    }
+
+    SUBCASE("dec -> flt") {
+        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("dec -> dbl") {
+        // double not yet implemented but should work
+        //auto const lit1 = Literal::make<Decimal>(1.0);
+        //auto const lit2 = lit1.template cast<Double>();
+        //
+        //CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("dec -> int") {
+        // TODO: !type hierarchy in wrong order; not sure how to fix that yet!
+    }
+
+    SUBCASE("int -> dec") {
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Decimal>();
+
+        CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("int -> flt") {
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("int -> dbl") {
+        // double not yet implemented but should work
+        //auto const lit1 = Literal::make<Integer>(1);
+        //auto const lit2 = lit1.template cast<Double>();
+        //
+        //CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("bool -> numeric") {
+        auto const lit1 = Literal::make<Boolean>(true);
+        auto const lit2 = lit1.template cast<Integer>();
+
+        CHECK(lit2 == Literal::make<Integer>(1));
+
+        auto const lit3 = Literal::make<Boolean>(false);
+        auto const lit4 = lit3.template cast<Float>();
+
+        CHECK(lit4 == Literal::make<Float>(0.f));
+    }
+
+    SUBCASE("IRI -> str") {
+        // TODO: possible with IRI::identifier but IRI would need cast function (?)
+    }
+
+    SUBCASE("subtypes") {
+        CHECK(lit1.template cast<datatypes::xsd::Integer>().datatype() == IRI{datatypes::xsd::Integer::identifier});
+        CHECK(lit1.template cast<datatypes::xsd::Float>().datatype() == IRI{datatypes::xsd::Float::identifier});
+
+        auto const lit2 = Literal::make<datatypes::xsd::Integer>(420);
+        CHECK(lit2.template cast<datatypes::xsd::Int>().null());
+    }
 }

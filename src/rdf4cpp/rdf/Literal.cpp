@@ -31,6 +31,10 @@ std::string_view Literal::lexical_form() const {
     return handle_.literal_backend().lexical_form;
 }
 
+Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
+    return Literal::make<datatypes::xsd::String>(std::string{this->lexical_form()}, node_storage);
+}
+
 std::string_view Literal::language_tag() const {
     return handle_.literal_backend().language_tag;
 }
@@ -167,7 +171,37 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
 Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
     using datatypes::registry::DatatypeRegistry;
+    using namespace datatypes::xsd;
 
+    if (this->null()) {
+        return Literal{};
+    }
+
+    if (target.to_datatype_id() == Boolean::datatype_id) {
+        // any -> bool
+        return this->effective_boolean_value(node_storage);
+    }
+
+    if (target.to_datatype_id() == String::datatype_id) {
+        // any -> string
+        return this->as_lexical_form(node_storage);
+    }
+
+    if (this->get_datatype_id() == Boolean::datatype_id && DatatypeRegistry::get_numerical_ops(target.to_datatype_id()) != nullptr) {
+        // bool -> numeric
+        return Literal::make(this->value<Boolean>() ? "1" : "0", target, node_storage);
+    }
+
+    if (this->get_datatype_id() == String::datatype_id) {
+        // string -> any
+        try {
+            return Literal::make(this->lexical_form(), target, node_storage);
+        } catch (std::runtime_error const &) {
+            return Literal{};
+        }
+    }
+
+    // general case
     auto const *this_e = DatatypeRegistry::get_entry(this->get_datatype_id());
     if (this_e == nullptr) {
         // this datatype not registered

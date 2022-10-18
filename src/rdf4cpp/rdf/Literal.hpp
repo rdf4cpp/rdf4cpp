@@ -174,6 +174,14 @@ public:
     [[nodiscard]] std::string_view lexical_form() const;
 
     /**
+     * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
+     *
+     * @param node_storage where to put the resulting literal
+     * @return lexical form of this as xsd:string
+     */
+    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
      * Returns the datatype IRI of this.
      * @return datatype IRI
      */
