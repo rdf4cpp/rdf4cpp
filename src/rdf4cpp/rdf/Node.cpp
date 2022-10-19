@@ -143,11 +143,19 @@ Node::NodeBackendHandle &Node::backend_handle() noexcept {
 }
 
 util::TriBool Node::effective_boolean_value() const noexcept {
-    return util::TriBool::Err;
+    if (this->null() || !this->is_literal()) {
+        return util::TriBool::Err;
+    }
+
+    return static_cast<Literal>(*this).effective_boolean_value();
 }
 
 Literal Node::as_effective_boolean_value([[maybe_unused]] NodeStorage &node_storage) const {
-    return Literal{};
+    if (this->null() || !this->is_literal()) {
+        return Literal{};
+    }
+
+    return static_cast<Literal>(*this).as_effective_boolean_value(node_storage);
 }
 
 }  // namespace rdf4cpp::rdf

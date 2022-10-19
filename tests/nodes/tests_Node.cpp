@@ -172,3 +172,21 @@ TEST_SUITE("comparisions") {
         CHECK(s.contains(variable));
     }
 }
+
+TEST_CASE("effective boolean value") {
+    Node const iri = IRI{"http://hello.com"};
+    Node const bnode = BlankNode{"asd"};
+    Node const var = query::Variable{"x"};
+    Node const falsy_lit = Literal::make<datatypes::xsd::Float>(0.f);
+    Node const truthy_lit = Literal::make<datatypes::xsd::Integer>(100);
+    Node const null_lit = Literal{};
+    Node const null_bnode = BlankNode{};
+
+    CHECK(iri.effective_boolean_value() == util::TriBool::Err);
+    CHECK(bnode.effective_boolean_value() == util::TriBool::Err);
+    CHECK(var.effective_boolean_value() == util::TriBool::Err);
+    CHECK(falsy_lit.effective_boolean_value() == util::TriBool::False);
+    CHECK(truthy_lit.effective_boolean_value() == util::TriBool::True);
+    CHECK(null_lit.effective_boolean_value() == util::TriBool::Err);
+    CHECK(null_bnode.effective_boolean_value() == util::TriBool::Err);
+}

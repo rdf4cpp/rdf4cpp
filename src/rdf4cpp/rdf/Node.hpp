@@ -89,12 +89,12 @@ public:
     /**
      * @return the effective boolean value of this
      */
-    [[nodiscard]] virtual util::TriBool effective_boolean_value() const noexcept;
+    [[nodiscard]] util::TriBool effective_boolean_value() const noexcept;
 
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] virtual Literal as_effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
