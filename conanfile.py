@@ -18,8 +18,9 @@ class Recipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
+    exports = "LICENSE",
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*"
-    requires = (("fmt/9.0.0", "private"), # format must only be used within cpp files
+    requires = (("fmt/9.0.0", "private"),  # format must only be used within cpp files
                 ("expected-lite/0.6.2"))
 
     generators = ("CMakeDeps", "CMakeToolchain")
@@ -52,7 +53,8 @@ class Recipe(ConanFile):
         self._configure_cmake().install()
         tools.rmdir(os.path.join(self.package_folder, "cmake"))
         tools.rmdir(os.path.join(self.package_folder, "share"))
-        self.copy("LICENSE", src=self.folders.base_source, dst="licenses")
+        self.copy("LICENSE", src=self.recipe_folder, dst="licenses")
+        self.copy(os.path.join("serd", "COPYING"), src=self.build_folder, dst="licenses")
 
     def package_info(self):
         self.cpp_info.libs = ["rdf4cpp"]
