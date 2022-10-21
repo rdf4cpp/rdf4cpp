@@ -53,13 +53,13 @@ target_link_libraries(tests_Literal_ops
 set_property(TARGET tests_Literal_ops PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Literal_ops COMMAND tests_Literal_ops)
 
-add_executable(tests_Node_comparison nodes/tests_Node_comparison.cpp)
-target_link_libraries(tests_Node_comparison
+add_executable(tests_Node nodes/tests_Node.cpp)
+target_link_libraries(tests_Node
         doctest
         rdf4cpp
         )
-set_property(TARGET tests_Node_comparison PROPERTY CXX_STANDARD 20)
-add_test(NAME tests_Node_comparison COMMAND tests_Node_comparison)
+set_property(TARGET tests_Node PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Node COMMAND tests_Node)
 
 # RDF Core Types
 add_executable(tests_String datatype/tests_String.cpp)

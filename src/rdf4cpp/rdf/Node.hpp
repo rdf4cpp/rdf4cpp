@@ -7,6 +7,7 @@
  */
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 
 #include <memory>
 #include <optional>
@@ -84,6 +85,16 @@ public:
     bool operator==(const Node &other) const noexcept;
 
     std::weak_ordering operator<=>(const Node &other) const noexcept;
+
+    /**
+     * @return the effective boolean value of this
+     */
+    [[nodiscard]] util::TriBool ebv() const noexcept;
+
+    /**
+     * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
+     */
+    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`

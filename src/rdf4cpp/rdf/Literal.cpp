@@ -303,20 +303,6 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
                    IRI::from_datatype_id(op_res.result_type_id, node_storage)};
 }
 
-util::TriBool Literal::get_ebv_impl() const {
-    if (this->null()) {
-        return util::TriBool::Err;
-    }
-
-    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_id());
-
-    if (ebv == nullptr) {
-        return util::TriBool::Err;
-    }
-
-    return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
-}
-
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const {
     using datatypes::registry::DatatypeRegistry;
 
@@ -562,8 +548,22 @@ Literal Literal::operator-() const {
     return this->neg();
 }
 
-Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
-    auto const ebv = this->get_ebv_impl();
+util::TriBool Literal::ebv() const noexcept {
+    if (this->null()) {
+        return util::TriBool::Err;
+    }
+
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_id());
+
+    if (ebv == nullptr) {
+        return util::TriBool::Err;
+    }
+
+    return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
+}
+
+Literal Literal::ebv_as_literal(NodeStorage &node_storage) const {
+    auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
         return Literal{};
@@ -573,7 +573,7 @@ Literal Literal::effective_boolean_value(NodeStorage &node_storage) const {
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    auto const res = this->get_ebv_impl() && other.get_ebv_impl();
+    auto const res = this->ebv() && other.ebv();
 
     if (res == util::TriBool::Err) {
         return Literal{};
@@ -587,7 +587,7 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    auto const res = this->get_ebv_impl() || other.get_ebv_impl();
+    auto const res = this->ebv() || other.ebv();
 
     if (res == util::TriBool::Err) {
         return Literal{};
@@ -601,7 +601,7 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    auto const ebv = this->get_ebv_impl();
+    auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
         return Literal{};

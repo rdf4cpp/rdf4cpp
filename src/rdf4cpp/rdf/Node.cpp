@@ -142,5 +142,20 @@ Node::NodeBackendHandle &Node::backend_handle() noexcept {
     return handle_;
 }
 
+util::TriBool Node::ebv() const noexcept {
+    if (this->null() || !this->is_literal()) {
+        return util::TriBool::Err;
+    }
+
+    return static_cast<Literal>(*this).ebv();
+}
+
+Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const {
+    if (this->null() || !this->is_literal()) {
+        return Literal{};
+    }
+
+    return static_cast<Literal>(*this).ebv_as_literal(node_storage);
+}
 
 }  // namespace rdf4cpp::rdf
