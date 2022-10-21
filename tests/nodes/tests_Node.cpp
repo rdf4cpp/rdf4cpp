@@ -182,11 +182,11 @@ TEST_CASE("effective boolean value") {
     Node const null_lit = Literal{};
     Node const null_bnode = BlankNode{};
 
-    CHECK(iri.effective_boolean_value() == util::TriBool::Err);
-    CHECK(bnode.effective_boolean_value() == util::TriBool::Err);
-    CHECK(var.effective_boolean_value() == util::TriBool::Err);
-    CHECK(falsy_lit.effective_boolean_value() == util::TriBool::False);
-    CHECK(truthy_lit.effective_boolean_value() == util::TriBool::True);
-    CHECK(null_lit.effective_boolean_value() == util::TriBool::Err);
-    CHECK(null_bnode.effective_boolean_value() == util::TriBool::Err);
+    CHECK(iri.ebv() == util::TriBool::Err);
+    CHECK(bnode.ebv() == util::TriBool::Err);
+    CHECK(var.ebv() == util::TriBool::Err);
+    CHECK(falsy_lit.ebv() == util::TriBool::False);
+    CHECK(truthy_lit.ebv() == util::TriBool::True);
+    CHECK(null_lit.ebv() == util::TriBool::Err);
+    CHECK(null_bnode.ebv() == util::TriBool::Err);
 }

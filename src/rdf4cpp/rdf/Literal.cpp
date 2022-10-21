@@ -548,7 +548,7 @@ Literal Literal::operator-() const {
     return this->neg();
 }
 
-util::TriBool Literal::effective_boolean_value() const noexcept {
+util::TriBool Literal::ebv() const noexcept {
     if (this->null()) {
         return util::TriBool::Err;
     }
@@ -562,8 +562,8 @@ util::TriBool Literal::effective_boolean_value() const noexcept {
     return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
 }
 
-Literal Literal::as_effective_boolean_value(NodeStorage &node_storage) const {
-    auto const ebv = this->effective_boolean_value();
+Literal Literal::ebv_as_literal(NodeStorage &node_storage) const {
+    auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
         return Literal{};
@@ -573,7 +573,7 @@ Literal Literal::as_effective_boolean_value(NodeStorage &node_storage) const {
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
-    auto const res = this->effective_boolean_value() && other.effective_boolean_value();
+    auto const res = this->ebv() && other.ebv();
 
     if (res == util::TriBool::Err) {
         return Literal{};
@@ -587,7 +587,7 @@ Literal Literal::operator&&(Literal const &other) const {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
-    auto const res = this->effective_boolean_value() || other.effective_boolean_value();
+    auto const res = this->ebv() || other.ebv();
 
     if (res == util::TriBool::Err) {
         return Literal{};
@@ -601,7 +601,7 @@ Literal Literal::operator||(Literal const &other) const {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
-    auto const ebv = this->effective_boolean_value();
+    auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
         return Literal{};
