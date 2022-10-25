@@ -53,34 +53,22 @@ inline capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_de
     }
 }
 
-/**
- * Specialisation of to_string template function.
- */
 template<>
 inline std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
+    auto s = value.str(std::numeric_limits<cpp_type>::digits10, std::ios_base::fixed | std::ios_base::showpoint);
+    auto const non_zero_pos = s.find_last_not_of('0');
 
-    cpp_type int_part, fract_part;
-    fract_part = modf(value, &int_part);
-    bool remove_trailing_zeros = false;
-    std::ostringstream str_os;
-    str_os << std::fixed;
-    if (fract_part == 0) {
-        //If the incoming value is a whole number (no fractional part) then precision is set to 1 to have a decimal representation (50 -> 50.0)
-        str_os << std::setprecision(1);
-    } else {
-        //If the incoming value has a fractional part which has a value greater than zero, then maximum precision is set, to convert it to the nearest possible representation
-        str_os << std::setprecision(std::numeric_limits<cpp_type>::digits10);
-        remove_trailing_zeros = true;
-    }
-    str_os << value;
-    std::string str = str_os.str();
+    // cannot be npos because, showpoint is set and '.' != '0'
+    assert(non_zero_pos != std::string::npos);
 
-    //Removes trailing zeros from fractional part if precision was set to maximum
-    if (remove_trailing_zeros && str.find('.') != std::string::npos) {
-        //Removes trailing zeroes
-        str = str.substr(0, str.find_last_not_of('0') + 1);
-    }
-    return str;
+    // dot was found char implies there is a char after the dot (because precision == digits10 > 0) and char after dot must be zero
+    assert(s[non_zero_pos] != '.' || (s.size() >= non_zero_pos + 2 && s[non_zero_pos + 1] == '0'));
+
+    // +1 for pos -> size conversion
+    // maybe +1 to include one zero after dot
+    s.resize(non_zero_pos + 1 + static_cast<std::string::size_type>(s[non_zero_pos] == '.'));
+
+    return s;
 }
 
 template<>

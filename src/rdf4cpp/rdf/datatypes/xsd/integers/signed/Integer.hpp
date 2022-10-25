@@ -46,11 +46,6 @@ inline capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_in
 }
 
 template<>
-inline std::string capabilities::Default<xsd_integer>::to_string(cpp_type const &value) {
-    return boost::multiprecision::to_string(value);
-}
-
-template<>
 inline bool capabilities::Logical<xsd_integer>::effective_boolean_value(cpp_type const &value) noexcept {
     return value != 0;
 }
