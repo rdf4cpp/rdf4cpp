@@ -95,6 +95,14 @@ target_link_libraries(tests_Float
 set_property(TARGET tests_Float PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_Float COMMAND tests_Float)
 
+add_executable(tests_Double datatype/tests_Double.cpp)
+target_link_libraries(tests_Double
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Double PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Double COMMAND tests_Double)
+
 add_executable(tests_Integer datatype/tests_Integer.cpp)
 target_link_libraries(tests_Integer
         doctest
