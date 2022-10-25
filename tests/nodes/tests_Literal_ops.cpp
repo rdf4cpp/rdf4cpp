@@ -3,6 +3,7 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <charconv>
 #include <limits>
 
 using namespace rdf4cpp::rdf;

@@ -16,45 +16,16 @@ struct DatatypeMapping<owl_rational> {
 };
 
 template<>
-inline capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s) {
-    if (auto pos = s.find_last_of('-'); pos != std::string_view::npos && pos != 0) {
-        // owl:rational only allows - at beginning
-        throw std::runtime_error{"owl:rational parsing error: invalid sign position"};
-    }
-
-    if (s.find_first_not_of("0123456789/-") != std::string_view::npos) {
-        throw std::runtime_error{"owl:rational parsing error: invalid character in string"};
-    }
-
-    try {
-        return cpp_type{s};
-    } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"owl:rational parsing error:"} + e.what()};
-    }
-}
+capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s);
 
 template<>
-inline std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) {
-    std::ostringstream oss;
-    oss << numerator(value) << '/' << denominator(value);
-    return oss.str();
-}
+std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value);
 
 template<>
-inline bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value != 0;
-}
+bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-inline std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs) {
-    if (lhs < rhs) {
-        return std::partial_ordering::less;
-    } else if (rhs < lhs) {
-        return std::partial_ordering::greater;
-    } else {
-        return std::partial_ordering::equivalent;
-    }
-}
+std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
 } // rdf4cpp::rdf::datatypes::registry
 
@@ -63,8 +34,7 @@ namespace rdf4cpp::rdf::datatypes::owl {
 struct Rational : registry::LiteralDatatypeImpl<registry::owl_rational,
                                                 registry::capabilities::Logical,
                                                 registry::capabilities::Numeric,
-                                                registry::capabilities::Comparable> {
-};
+                                                registry::capabilities::Comparable> {};
 
 } // rdf4cpp::rdf::datatypes::owl
 

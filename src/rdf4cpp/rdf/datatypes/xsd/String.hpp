@@ -1,8 +1,3 @@
-
-/**
- * @file Registers xsd:string with DatatypeRegistry
- */
-
 #ifndef RDF4CPP_XSD_STRING_HPP
 #define RDF4CPP_XSD_STRING_HPP
 
@@ -11,37 +6,31 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-/**
- * Defines the mapping between the LiteralDatatype IRI and the C++ datatype.
- */
+
 template<>
 struct DatatypeMapping<xsd_string> {
     using cpp_datatype = std::string;
 };
 
-/**
- * Specialisation of from_string template function.
- */
 template<>
-inline capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s) {
-    return std::string{s};
-}
+capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s);
 
 template<>
-inline bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept {
-    return !value.empty();
-}
-}  // namespace rdf4cpp::rdf::datatypes::registry
+std::string capabilities::Default<xsd_string>::to_string(cpp_type const &value);
+
+template<>
+bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept;
+
+} // namespace rdf4cpp::rdf::datatypes::registry
+
+
 namespace rdf4cpp::rdf::datatypes::xsd {
-/**
- * Implementation of xsd::string
- */
+
 struct String : registry::LiteralDatatypeImpl<registry::xsd_string,
                                               registry::capabilities::Logical,
                                               registry::capabilities::Comparable,
-                                              registry::capabilities::FixedId> {
-};
+                                              registry::capabilities::FixedId> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+} // namespace rdf4cpp::rdf::datatypes::xsd
 
 #endif  //RDF4CPP_XSD_STRING_HPP

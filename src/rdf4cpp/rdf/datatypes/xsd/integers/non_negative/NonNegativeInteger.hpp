@@ -5,8 +5,6 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
 
-#include <stdexcept>
-
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -27,37 +25,13 @@ struct DatatypeNumericStubMapping<xsd_non_negative_integer> {
 };
 
 template<>
-inline capabilities::Default<xsd_non_negative_integer>::cpp_type capabilities::Default<xsd_non_negative_integer>::from_string(std::string_view s) {
-    cpp_type ret;
-
-    try {
-        ret = cpp_type{s};
-    } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"xsd:nonNegativeInteger parsing error: "} + e.what()};
-    }
-
-    if (ret < 0) {
-        throw std::runtime_error{"xsd:nonNegativeInteger parsing error: found negative value"};
-    }
-
-    return ret;
-}
+capabilities::Default<xsd_non_negative_integer>::cpp_type capabilities::Default<xsd_non_negative_integer>::from_string(std::string_view s);
 
 template<>
-inline bool capabilities::Logical<xsd_non_negative_integer>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value != 0;
-}
+bool capabilities::Logical<xsd_non_negative_integer>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-inline std::partial_ordering capabilities::Comparable<xsd_non_negative_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) {
-    if (lhs < rhs) {
-        return std::partial_ordering::less;
-    } else if (rhs < lhs) {
-        return std::partial_ordering::greater;
-    } else {
-        return std::partial_ordering::equivalent;
-    }
-}
+std::partial_ordering capabilities::Comparable<xsd_non_negative_integer>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -69,8 +43,7 @@ struct NonNegativeInteger : registry::LiteralDatatypeImpl<registry::xsd_non_nega
                                                           registry::capabilities::NumericStub,
                                                           registry::capabilities::Comparable,
                                                           registry::capabilities::Subtype,
-                                                          registry::capabilities::FixedId> {
-};
+                                                          registry::capabilities::FixedId> {};
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
 

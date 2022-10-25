@@ -11,7 +11,7 @@ function(install_cpp_library TARGET_NAME INCLUDE_PATH)
     target_include_directories(
             ${TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-    install(TARGETS ${TARGET_NAME}
+    install(TARGETS ${TARGET_NAME} rdf4cpp_datatypes custom_serd #TODO FIX THAT PROPERLY
             EXPORT ${TARGET_NAME}-targets
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

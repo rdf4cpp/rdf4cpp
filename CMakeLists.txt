@@ -77,6 +77,20 @@ file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e079
 list(FILTER serd_source_files INCLUDE REGEX "^.+\\.c$")
 list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 
+add_library(custom_serd OBJECT ${serd_source_files})
+
+target_include_directories(custom_serd
+        PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
+        PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>")
+
+set_target_properties(custom_serd PROPERTIES
+        POSITION_INDEPENDENT_CODE ON)
+
+
+add_subdirectory(src/rdf4cpp/rdf/datatypes)
+
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
         src/rdf4cpp/rdf/BlankNode.cpp
@@ -126,26 +140,22 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
-        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
-        ${serd_source_files}
-        )
+        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp)
+
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
 target_include_directories(
         rdf4cpp PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
-        PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
-)
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
 
 target_link_libraries(rdf4cpp
         PUBLIC
+        custom_serd
+        rdf4cpp_datatypes
         nonstd::expected-lite
         Boost::headers
         PRIVATE
-        fmt::fmt-header-only
-        )
+        fmt::fmt-header-only)
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}

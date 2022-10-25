@@ -40,13 +40,10 @@ inline std::string capabilities::Default<rdf_lang_string>::to_string(cpp_type co
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 namespace rdf4cpp::rdf::datatypes::rdf {
-/**
- * Implementation of rdf::langString
- */
+
 struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
                                                   registry::capabilities::Comparable,
-                                                  registry::capabilities::FixedId> {
-};
+                                                  registry::capabilities::FixedId> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 

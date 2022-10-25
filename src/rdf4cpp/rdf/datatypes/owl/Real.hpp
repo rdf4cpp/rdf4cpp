@@ -16,29 +16,13 @@ struct DatatypeMapping<owl_real> {
 };
 
 template<>
-inline capabilities::Default<owl_real>::cpp_type capabilities::Default<owl_real>::from_string(std::string_view s) {
-    try {
-        return cpp_type{s};
-    } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"owl:real parsing error:"} + e.what()};
-    }
-}
+capabilities::Default<owl_real>::cpp_type capabilities::Default<owl_real>::from_string(std::string_view s);
 
 template<>
-inline bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value != 0;
-}
+bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-inline std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs) {
-    if (lhs < rhs) {
-        return std::partial_ordering::less;
-    } else if (rhs < lhs) {
-        return std::partial_ordering::greater;
-    } else {
-        return std::partial_ordering::equivalent;
-    }
-}
+std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
 } // rdf4cpp::rdf::datatypes::registry
 
@@ -47,8 +31,7 @@ namespace rdf4cpp::rdf::datatypes::owl {
 struct Real : registry::LiteralDatatypeImpl<registry::owl_real,
                                             registry::capabilities::Logical,
                                             registry::capabilities::Numeric,
-                                            registry::capabilities::Comparable> {
-};
+                                            registry::capabilities::Comparable> {};
 
 } // rdf4cpp::rdf::datatypes::owl
 

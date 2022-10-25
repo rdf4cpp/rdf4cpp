@@ -29,6 +29,10 @@ TEST_SUITE("owl:rational") {
             auto const lit2 = Literal::make<Rational>(value2);
             CHECK(lit2.value<Rational>() == value2);
             CHECK(lit2.lexical_form() == "-1/10");
+
+            cpp_type const non_canonical{-10, -20};
+            auto const lit3 = Literal::make<Rational>(non_canonical);
+            CHECK(lit3.lexical_form() == "1/2");
         }
 
         SUBCASE("from string") {

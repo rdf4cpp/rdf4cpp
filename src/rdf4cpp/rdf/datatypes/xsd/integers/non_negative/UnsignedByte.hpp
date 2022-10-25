@@ -5,7 +5,6 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <cstdint>
@@ -27,22 +26,14 @@ struct DatatypeNumericStubMapping<xsd_unsigned_byte> {
     using numeric_impl_type = xsd::Integer;
 };
 
+template<>
+capabilities::Default<xsd_unsigned_byte>::cpp_type capabilities::Default<xsd_unsigned_byte>::from_string(std::string_view s);
 
 template<>
-inline capabilities::Default<xsd_unsigned_byte>::cpp_type capabilities::Default<xsd_unsigned_byte>::from_string(std::string_view s) {
-    return util::from_chars<cpp_type>(s);
-}
+std::string capabilities::Default<xsd_unsigned_byte>::to_string(cpp_type const &value);
 
 template<>
-inline std::string capabilities::Default<xsd_unsigned_byte>::to_string(cpp_type const &value) {
-    return util::to_chars(value);
-}
-
-
-template<>
-inline bool capabilities::Logical<xsd_unsigned_byte>::effective_boolean_value(cpp_type const &value) noexcept {
-    return value != 0;
-}
+bool capabilities::Logical<xsd_unsigned_byte>::effective_boolean_value(cpp_type const &value) noexcept;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -54,8 +45,7 @@ struct UnsignedByte : registry::LiteralDatatypeImpl<registry::xsd_unsigned_byte,
                                                     registry::capabilities::NumericStub,
                                                     registry::capabilities::Subtype,
                                                     registry::capabilities::Comparable,
-                                                    registry::capabilities::FixedId> {
-};
+                                                    registry::capabilities::FixedId> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
