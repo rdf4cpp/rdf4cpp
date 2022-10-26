@@ -33,6 +33,13 @@ bool capabilities::Logical<xsd_non_negative_integer>::effective_boolean_value(cp
 template<>
 std::partial_ordering capabilities::Comparable<xsd_non_negative_integer>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
+extern template struct LiteralDatatypeImpl<xsd_non_negative_integer,
+                                           capabilities::Logical,
+                                           capabilities::NumericStub,
+                                           capabilities::Comparable,
+                                           capabilities::Subtype,
+                                           capabilities::FixedId>;
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

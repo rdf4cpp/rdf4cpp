@@ -26,6 +26,4 @@ template struct LiteralDatatypeImpl<xsd_byte,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
 
-template ConversionTable auto make_conversion_table_for<xsd::Byte>();
-
 }  // namespace rdf4cpp::rdf::datatypes::registry

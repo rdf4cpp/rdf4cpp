@@ -35,6 +35,13 @@ std::string capabilities::Default<xsd_unsigned_short>::to_string(cpp_type const 
 template<>
 bool capabilities::Logical<xsd_unsigned_short>::effective_boolean_value(cpp_type const &value) noexcept;
 
+extern template struct LiteralDatatypeImpl<xsd_unsigned_short,
+                                           capabilities::Logical,
+                                           capabilities::NumericStub,
+                                           capabilities::Subtype,
+                                           capabilities::Comparable,
+                                           capabilities::FixedId>;
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

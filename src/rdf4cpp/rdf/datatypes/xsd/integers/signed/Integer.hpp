@@ -37,6 +37,13 @@ nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, Numeri
 template<>
 std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
+extern template struct LiteralDatatypeImpl<xsd_integer,
+                                           capabilities::Logical,
+                                           capabilities::Numeric,
+                                           capabilities::Comparable,
+                                           capabilities::Subtype,
+                                           capabilities::FixedId>;
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

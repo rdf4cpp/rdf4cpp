@@ -21,6 +21,12 @@ std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value);
 template<>
 bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &value) noexcept;
 
+extern template struct LiteralDatatypeImpl<xsd_double,
+                                           capabilities::Logical,
+                                           capabilities::Numeric,
+                                           capabilities::Comparable,
+                                           capabilities::FixedId>;
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 

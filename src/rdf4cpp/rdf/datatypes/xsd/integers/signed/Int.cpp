@@ -25,6 +25,4 @@ template struct LiteralDatatypeImpl<xsd_int,
                                     capabilities::Subtype,
                                     capabilities::FixedId>;
 
-template ConversionTable auto make_conversion_table_for<xsd::Int>();
-
 }  // namespace rdf4cpp::rdf::datatypes::registry

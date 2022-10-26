@@ -44,6 +44,4 @@ template struct LiteralDatatypeImpl<xsd_non_positive_integer,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
 
-template ConversionTable auto make_conversion_table_for<xsd::NonPositiveInteger>();
-
 }  // namespace rdf4cpp::rdf::datatypes::registry

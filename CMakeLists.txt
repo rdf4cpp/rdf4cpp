@@ -77,20 +77,6 @@ file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e079
 list(FILTER serd_source_files INCLUDE REGEX "^.+\\.c$")
 list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 
-add_library(custom_serd OBJECT ${serd_source_files})
-
-target_include_directories(custom_serd
-        PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
-        PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>")
-
-set_target_properties(custom_serd PROPERTIES
-        POSITION_INDEPENDENT_CODE ON)
-
-
-add_subdirectory(src/rdf4cpp/rdf/datatypes)
-
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
         src/rdf4cpp/rdf/BlankNode.cpp
@@ -100,6 +86,32 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/IRI.cpp
         src/rdf4cpp/rdf/Literal.cpp
         src/rdf4cpp/rdf/Namespace.cpp
+        src/rdf4cpp/rdf/Node.cpp
+        src/rdf4cpp/rdf/Quad.cpp
+        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
+        src/rdf4cpp/rdf/datatypes/owl/Real.cpp
+        src/rdf4cpp/rdf/datatypes/rdf/LangString.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Boolean.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Decimal.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Double.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Float.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/String.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedByte.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedInt.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
@@ -108,22 +120,19 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDF.cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
-        src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
         src/rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.cpp
-        src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
-        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeID.cpp
         src/rdf4cpp/rdf/storage/node/identifier/RDFNodeType.cpp
-        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.cpp
@@ -140,18 +149,21 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
-        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp)
+        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        ${serd_source_files})
 
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
 target_include_directories(
-        rdf4cpp PUBLIC
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+        rdf4cpp
+        PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+        PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>")
 
 target_link_libraries(rdf4cpp
         PUBLIC
-        custom_serd
-        rdf4cpp_datatypes
         nonstd::expected-lite
         Boost::headers
         PRIVATE

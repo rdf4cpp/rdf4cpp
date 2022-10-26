@@ -79,6 +79,4 @@ template struct LiteralDatatypeImpl<xsd_decimal,
                                     capabilities::Promotable,
                                     capabilities::FixedId>;
 
-template ConversionTable auto make_conversion_table_for<xsd::Decimal>();
-
 }  // namespace rdf4cpp::rdf::datatypes::registry

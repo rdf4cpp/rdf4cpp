@@ -24,6 +24,11 @@ bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &va
 template<>
 std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs);
 
+extern template struct LiteralDatatypeImpl<owl_real,
+                                           capabilities::Logical,
+                                           capabilities::Numeric,
+                                           capabilities::Comparable>;
+
 } // rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::owl {
