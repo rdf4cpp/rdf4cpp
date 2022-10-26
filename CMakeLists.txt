@@ -13,7 +13,7 @@ endif ()
 # find packages
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
-find_package(Boost QUIET COMPONENTS)
+find_package(Boost REQUIRED)
 
 include(FetchContent)
 
