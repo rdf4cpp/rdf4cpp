@@ -63,7 +63,8 @@ set(serd_source_files
         src/system.h
         src/uri.c
         src/uri_utils.h
-        src/writer.c)
+        src/writer.c
+)
 
 foreach(serd_source_file ${serd_source_files})
     file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/95f5929c06a85495513fceee568a08c3cafaae83/${serd_source_file}"
@@ -150,7 +151,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
-        ${serd_source_files})
+        ${serd_source_files}
+)
 
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
@@ -160,21 +162,24 @@ target_include_directories(
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>")
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
+)
 
 target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
         PRIVATE
-        fmt::fmt-header-only)
+        fmt::fmt-header-only
+)
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         CXX_STANDARD 20
         CXX_EXTENSIONS OFF
-        CXX_STANDARD_REQUIRED ON)
+        CXX_STANDARD_REQUIRED ON
+)
 
 if (IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
