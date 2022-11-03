@@ -47,4 +47,4 @@ struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 
-#endif  //RDF4CPP_LANGSTRING_HPP
+#endif  //RDF4CPP_RDF_LANGSTRING_HPP

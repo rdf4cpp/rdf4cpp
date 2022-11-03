@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_XSD_HPP
-#define RDF4CPP_XSD_HPP
+#ifndef RDF4CPP_DATATYPES_XSD_HPP
+#define RDF4CPP_DATATYPES_XSD_HPP
 
 #include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
@@ -31,4 +31,4 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 //
 }
 
-#endif  //RDF4CPP_XSD_HPP
+#endif  //RDF4CPP_DATATYPES_XSD_HPP

@@ -5,11 +5,12 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s) {
     if (auto pos = s.find_last_of('-'); pos != std::string_view::npos && pos != 0) {
-        // owl:rational only allows - at beginning
+        // owl:rational only allows - at beginning, boost also allows it in the denominator
         throw std::runtime_error{"owl:rational parsing error: invalid sign position"};
     }
 
     if (s.find_first_not_of("0123456789/-") != std::string_view::npos) {
+        // owl:rational does not allow hex, boost does
         throw std::runtime_error{"owl:rational parsing error: invalid character in string"};
     }
 
@@ -23,6 +24,7 @@ capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational
 template<>
 std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) {
     if (auto den = denominator(value); den < 0) {
+        // canonicalize x/-y to -x/y and -x/-y to x/y
         cpp_type const canonical{-numerator(value), -std::move(den)};
         return canonical.str();
     }
