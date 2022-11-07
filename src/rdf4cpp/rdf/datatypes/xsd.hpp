@@ -1,12 +1,27 @@
-#ifndef RDF4CPP_XSD_HPP
-#define RDF4CPP_XSD_HPP
+#ifndef RDF4CPP_DATATYPES_XSD_HPP
+#define RDF4CPP_DATATYPES_XSD_HPP
 
 #include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Double.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/Int.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/Integer.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
+
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedByte.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedInt.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.hpp>
+
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.hpp>
+
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.hpp>
 
 /**
  * Namespace where datatypes from XSD are implemented.
@@ -16,4 +31,4 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 //
 }
 
-#endif  //RDF4CPP_XSD_HPP
+#endif  //RDF4CPP_DATATYPES_XSD_HPP

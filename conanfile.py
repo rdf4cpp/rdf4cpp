@@ -21,7 +21,8 @@ class Recipe(ConanFile):
     exports = "LICENSE",
     exports_sources = "src/*", "CMakeLists.txt", "cmake/*"
     requires = (("fmt/9.0.0", "private"),  # format must only be used within cpp files
-                ("expected-lite/0.6.2"))
+                "expected-lite/0.6.2",
+                "boost/1.79.0")
 
     generators = ("CMakeDeps", "CMakeToolchain")
 

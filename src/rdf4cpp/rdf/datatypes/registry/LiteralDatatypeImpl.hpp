@@ -284,9 +284,9 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
                   "Mismatch between declared and actual fixed id mapping state. "
                   "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
                   "Note: this would cause inconsistency between registry and node storage");
-private:
-    inline static std::nullptr_t init();
-    inline static const auto dummy = init();
+protected:
+    static std::nullptr_t init();
+    inline static std::nullptr_t const dummy = init();
 
     // Force `dummy` to be instantiated, even though it's unused.
     static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};

@@ -10,7 +10,7 @@ TEST_CASE("decimal capabilities") {
     static_assert(datatypes::NumericLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::LogicalLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::PromotableLiteralDatatype<datatypes::xsd::Decimal>);
-    static_assert(datatypes::xsd::Decimal::promotion_rank == 1);
+    static_assert(datatypes::xsd::Decimal::promotion_rank == 2);
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::FixedIdLiteralDatatype<datatypes::xsd::Decimal>);
@@ -27,12 +27,10 @@ TEST_CASE("Datatype Decimal") {
 
     using type = datatypes::xsd::Decimal::cpp_type;
 
-    CHECK(std::is_same_v<type, double>);
-
     std::string rdf_dbl_1_0{"1.0"};
     std::string rdf_dbl_0_0{"0.0"};
 
-    auto value = 1.00;
+    type value = 1.00;
     auto lit1 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit1.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit1.lexical_form() == rdf_dbl_1_0);
@@ -46,16 +44,16 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit3.value<datatypes::xsd::Decimal>() == value);
 
     value = 1.0;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal{to_string(value), type_iri};
     CHECK(lit4.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit4.lexical_form() == rdf_dbl_1_0);
 
-    value = 64582165456988.235046;
+    value = type{"64582165456988.235046"};
     auto lit5 = Literal{"64582165456988.235046", type_iri};
     CHECK(lit5.value<datatypes::xsd::Decimal>() == value);
 
     value = 1;
-    auto lit6 = Literal{"1", type_iri};
+    auto lit6 = Literal{"1.", type_iri};
     CHECK(lit6.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit6.lexical_form() == rdf_dbl_1_0);
 
@@ -68,10 +66,10 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit8.lexical_form() == rdf_dbl_1_0);
 
     value = std::numeric_limits<double>::max();
-    auto lit9 = Literal{std::to_string(value), type_iri};
+    auto lit9 = Literal{to_string(value), type_iri};
     CHECK(lit9.value<datatypes::xsd::Decimal>() == value);
 
-    value = 3.111;
+    value = type{"3.111"};
     auto lit10 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit10.value<datatypes::xsd::Decimal>() == value);
 
@@ -85,7 +83,7 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit12.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit12.lexical_form() == rdf_dbl_1_0);
 
-    value = 0.000000005;
+    value = type{"0.000000005"};
     auto lit13 = Literal::make<datatypes::xsd::Decimal>(value);
     CHECK(lit13.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit13.lexical_form() == "0.000000005");
@@ -118,14 +116,31 @@ TEST_CASE("Datatype Decimal") {
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("INF", type_iri), "XSD Parsing Error", std::runtime_error);
 
     value = INFINITY;
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(std::to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
 
     value = NAN;
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(std::to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal(to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("454sdsd", type_iri), "XSD Parsing Error", std::runtime_error);
 
     CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("2.225E-307", type_iri), "XSD Parsing Error", std::runtime_error);
+}
+
+TEST_CASE("precision") {
+    // xsd:decimal requires totalDigits to be >= 18
+    // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
+
+    using datatypes::xsd::Decimal;
+    using cpp_type = Decimal::cpp_type;
+
+    static_assert(std::numeric_limits<cpp_type>::digits10 >= 18);
+
+    cpp_type const i = pow(cpp_type{10}, cpp_type{18}) - 1;
+    cpp_type const n = 18;
+    cpp_type const x = i * pow(cpp_type{10}, -n);
+
+    Literal const lit = Literal::make<datatypes::xsd::Decimal>(x);
+    CHECK(lit.lexical_form() == "0.999999999999999999");
 }
 
 TEST_CASE("Datatype Decimal buffer overread UB") {
@@ -133,5 +148,5 @@ TEST_CASE("Datatype Decimal buffer overread UB") {
     std::string_view const sv{ s.data(), 5 };
 
     Literal const lit{ sv, datatypes::xsd::Decimal::identifier };
-    CHECK(lit.value<datatypes::xsd::Decimal>() == 123.4);
+    CHECK(lit.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type{"123.4"});
 }

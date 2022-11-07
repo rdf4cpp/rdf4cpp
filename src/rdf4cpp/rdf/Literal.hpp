@@ -7,6 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf {
