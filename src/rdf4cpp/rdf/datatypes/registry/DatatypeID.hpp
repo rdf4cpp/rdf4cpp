@@ -79,7 +79,7 @@ public:
         : inner{other} {
     }
 
-    [[nodiscard]] constexpr bool is_fixed() const {
+    [[nodiscard]] constexpr bool is_fixed() const noexcept {
         return this->inner.index() == 0;
     }
 

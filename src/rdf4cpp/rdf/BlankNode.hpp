@@ -21,15 +21,15 @@ public:
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
-    [[nodiscard]] std::string_view identifier() const;
+    [[nodiscard]] std::string_view identifier() const noexcept;
 
     [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
-    [[nodiscard]] bool is_literal() const;
-    [[nodiscard]] bool is_variable() const;
-    [[nodiscard]] bool is_blank_node() const;
-    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_literal() const noexcept;
+    [[nodiscard]] bool is_variable() const noexcept;
+    [[nodiscard]] bool is_blank_node() const noexcept;
+    [[nodiscard]] bool is_iri() const noexcept;
     friend class Node;
 };
 }  // namespace rdf4cpp::rdf

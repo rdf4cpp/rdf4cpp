@@ -49,16 +49,16 @@ public:
      * Get the IRI string of this.
      * @return IRI string
      */
-    [[nodiscard]] std::string_view identifier() const;
+    [[nodiscard]] std::string_view identifier() const noexcept;
 
     [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, const IRI &iri);
 
-    [[nodiscard]] bool is_literal() const;
-    [[nodiscard]] bool is_variable() const;
-    [[nodiscard]] bool is_blank_node() const;
-    [[nodiscard]] bool is_iri() const;
+    [[nodiscard]] bool is_literal() const noexcept;
+    [[nodiscard]] bool is_variable() const noexcept;
+    [[nodiscard]] bool is_blank_node() const noexcept;
+    [[nodiscard]] bool is_iri() const noexcept;
 
     friend class Node;
     friend class Literal;

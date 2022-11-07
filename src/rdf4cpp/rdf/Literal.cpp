@@ -10,28 +10,28 @@ namespace rdf4cpp::rdf {
 Literal::Literal() noexcept
     : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
 
-Literal::Literal(Node::NodeBackendHandle handle)
-    : Node(handle) {}
+Literal::Literal(Node::NodeBackendHandle handle) noexcept
+    : Node{handle} {}
 
 Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
     : Literal{make_simple_unchecked(lexical_form, node_storage)} {}
 
 Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
-    : Literal(make(lexical_form, datatype, node_storage)) {}
+    : Literal{make(lexical_form, datatype, node_storage)} {}
 
 Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
     : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
 
-IRI Literal::datatype() const {
+IRI Literal::datatype() const noexcept {
     NodeBackendHandle iri_handle{handle_.literal_backend().datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()};
-    return IRI(iri_handle);
+    return IRI{iri_handle};
 }
 
-std::string_view Literal::lexical_form() const {
+std::string_view Literal::lexical_form() const noexcept {
     return handle_.literal_backend().lexical_form;
 }
 
-std::string_view Literal::language_tag() const {
+std::string_view Literal::language_tag() const noexcept {
     return handle_.literal_backend().language_tag;
 }
 Literal::operator std::string() const {
@@ -83,11 +83,11 @@ Literal::operator std::string() const {
 
     return oss.str();
 }
-bool Literal::is_literal() const { return true; }
-bool Literal::is_variable() const { return false; }
-bool Literal::is_blank_node() const { return false; }
-bool Literal::is_iri() const { return false; }
-bool Literal::is_numeric() const {
+bool Literal::is_literal() const noexcept { return true; }
+bool Literal::is_variable() const noexcept { return false; }
+bool Literal::is_blank_node() const noexcept { return false; }
+bool Literal::is_iri() const noexcept { return false; }
+bool Literal::is_numeric() const noexcept {
     using namespace datatypes::registry;
 
     return this->handle_.node_id().literal_type().is_numeric()
@@ -116,7 +116,7 @@ std::any Literal::value() const {
     }
 }
 
-Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) {
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
                                              .lexical_form = lexical_form,
@@ -125,7 +125,7 @@ Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::Node
                                      node_storage.id()}};
 }
 
-Literal Literal::make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
+Literal Literal::make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                              .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                              .lexical_form = lexical_form,
@@ -134,7 +134,7 @@ Literal Literal::make_typed_unchecked(std::string_view lexical_form, IRI const &
                                      node_storage.id()}};
 }
 
-Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) {
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
                                              .lexical_form = lexical_form,
@@ -166,7 +166,7 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 }
 
 template<typename OpSelect>
-Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const {
+Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
 
     if (this->null() || other.null() || this->is_fixed_not_numeric() || other.is_fixed_not_numeric()) {
@@ -201,9 +201,9 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(*op_res.result_value),
-                       IRI::from_datatype_id(op_res.result_type_id, node_storage),
-                       node_storage};
+        return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
+                                             IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                             node_storage);
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
         assert(other_entry != nullptr);
@@ -250,14 +250,14 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 
         assert(to_string_fptr != nullptr);
 
-        return Literal{to_string_fptr(*op_res.result_value),
-                       IRI::from_datatype_id(op_res.result_type_id, node_storage),
-                       node_storage};
+        return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
+                                             IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                             node_storage);
     }
 }
 
 template<typename OpSelect>
-Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const {
+Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
 
     if (this->null()) {
@@ -299,11 +299,12 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
     assert(to_string_fptr != nullptr);
 
-    return Literal{to_string_fptr(*op_res.result_value),
-                   IRI::from_datatype_id(op_res.result_type_id, node_storage)};
+    return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
+                                         IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                         node_storage);
 }
 
-std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const {
+std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const noexcept {
     using datatypes::registry::DatatypeRegistry;
 
     if (this->handle_.null() || other.handle_.null()) {
@@ -375,15 +376,15 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
     }
 }
 
-std::partial_ordering Literal::compare(Literal const &other) const {
+std::partial_ordering Literal::compare(Literal const &other) const noexcept {
     return this->compare_impl(other);
 }
 
-std::partial_ordering Literal::operator<=>(Literal const &other) const {
+std::partial_ordering Literal::operator<=>(Literal const &other) const noexcept {
     return this->compare(other);
 }
 
-std::weak_ordering Literal::compare_with_extensions(Literal const &other) const {
+std::weak_ordering Literal::compare_with_extensions(Literal const &other) const noexcept {
     // default to equivalent; as required by compare_impl
     // see doc for compare_impl
     std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent;
@@ -399,75 +400,75 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
     }
 }
 
-util::TriBool Literal::eq(Literal const &other) const {
+util::TriBool Literal::eq(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
-util::TriBool Literal::operator==(Literal const &other) const {
+util::TriBool Literal::operator==(Literal const &other) const noexcept {
     return this->eq(other);
 }
 
-util::TriBool Literal::ne(Literal const &other) const {
+util::TriBool Literal::ne(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
-util::TriBool Literal::operator!=(Literal const &other) const {
+util::TriBool Literal::operator!=(Literal const &other) const noexcept {
     return this->ne(other);
 }
 
-util::TriBool Literal::lt(Literal const &other) const {
+util::TriBool Literal::lt(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
-util::TriBool Literal::operator<(Literal const &other) const {
+util::TriBool Literal::operator<(Literal const &other) const noexcept {
     return this->lt(other);
 }
 
-util::TriBool Literal::le(Literal const &other) const {
+util::TriBool Literal::le(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
-util::TriBool Literal::operator<=(Literal const &other) const {
+util::TriBool Literal::operator<=(Literal const &other) const noexcept {
     return this->le(other);
 }
 
-util::TriBool Literal::gt(Literal const &other) const {
+util::TriBool Literal::gt(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
-util::TriBool Literal::operator>(Literal const &other) const {
+util::TriBool Literal::operator>(Literal const &other) const noexcept {
     return this->gt(other);
 }
 
-util::TriBool Literal::ge(Literal const &other) const {
+util::TriBool Literal::ge(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
-util::TriBool Literal::operator>=(Literal const &other) const {
+util::TriBool Literal::operator>=(Literal const &other) const noexcept {
     return this->ge(other);
 }
 
-bool Literal::eq_with_extensions(Literal const &other) const {
+bool Literal::eq_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) == std::weak_ordering::equivalent;
 }
 
-bool Literal::ne_with_extensions(Literal const &other) const {
+bool Literal::ne_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) != std::weak_ordering::equivalent;
 }
 
-bool Literal::lt_with_extensions(Literal const &other) const {
+bool Literal::lt_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) == std::weak_ordering::less;
 }
 
-bool Literal::le_with_extensions(Literal const &other) const {
+bool Literal::le_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) != std::weak_ordering::greater;
 }
 
-bool Literal::gt_with_extensions(Literal const &other) const {
+bool Literal::gt_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) == std::weak_ordering::greater;
 }
 
-bool Literal::ge_with_extensions(Literal const &other) const {
+bool Literal::ge_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) != std::weak_ordering::less;
 }
 
@@ -488,63 +489,63 @@ bool Literal::is_fixed_not_numeric() const noexcept {
     return lit_type.is_fixed() && !lit_type.is_numeric();
 }
 
-Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) {
         return num_ops.add_fptr;
     }, other, node_storage);
 }
 
-Literal Literal::operator+(Literal const &other) const {
+Literal Literal::operator+(Literal const &other) const noexcept {
     return this->add(other);
 }
 
-Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) {
         return num_ops.sub_fptr;
     }, other, node_storage);
 }
 
-Literal Literal::operator-(Literal const &other) const {
+Literal Literal::operator-(Literal const &other) const noexcept {
     return this->sub(other);
 }
 
-Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) {
         return num_ops.mul_fptr;
     }, other, node_storage);
 }
 
-Literal Literal::operator*(Literal const &other) const {
+Literal Literal::operator*(Literal const &other) const noexcept {
     return this->mul(other);
 }
 
-Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) {
         return num_ops.div_fptr;
     }, other, node_storage);
 }
 
-Literal Literal::operator/(Literal const &other) const {
+Literal Literal::operator/(Literal const &other) const noexcept {
     return this->div(other);
 }
 
-Literal Literal::pos(Node::NodeStorage &node_storage) const {
+Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_unop_impl([](auto const &num_ops) {
         return num_ops.pos_fptr;
     }, node_storage);
 }
 
-Literal Literal::operator+() const {
+Literal Literal::operator+() const noexcept {
     return this->pos();
 }
 
-Literal Literal::neg(Node::NodeStorage &node_storage) const {
+Literal Literal::neg(Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_unop_impl([](auto const &num_ops) {
         return num_ops.neg_fptr;
     }, node_storage);
 }
 
-Literal Literal::operator-() const {
+Literal Literal::operator-() const noexcept {
     return this->neg();
 }
 
@@ -562,7 +563,7 @@ util::TriBool Literal::ebv() const noexcept {
     return ebv(this->value()) ? util::TriBool::True : util::TriBool::False;
 }
 
-Literal Literal::ebv_as_literal(NodeStorage &node_storage) const {
+Literal Literal::ebv_as_literal(NodeStorage &node_storage) const noexcept {
     auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
@@ -572,7 +573,7 @@ Literal Literal::ebv_as_literal(NodeStorage &node_storage) const {
     return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
 }
 
-Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     auto const res = this->ebv() && other.ebv();
 
     if (res == util::TriBool::Err) {
@@ -582,11 +583,11 @@ Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_stora
     return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
-Literal Literal::operator&&(Literal const &other) const {
+Literal Literal::operator&&(Literal const &other) const noexcept {
     return this->logical_and(other);
 }
 
-Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const {
+Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     auto const res = this->ebv() || other.ebv();
 
     if (res == util::TriBool::Err) {
@@ -596,11 +597,11 @@ Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storag
     return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
 }
 
-Literal Literal::operator||(Literal const &other) const {
+Literal Literal::operator||(Literal const &other) const noexcept {
     return this->logical_or(other);
 }
 
-Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
+Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
     auto const ebv = this->ebv();
 
     if (ebv == util::TriBool::Err) {
@@ -610,7 +611,7 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const {
     return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
 }
 
-Literal Literal::operator!() const {
+Literal Literal::operator!() const noexcept {
     return this->logical_not();
 }
 }  // namespace rdf4cpp::rdf

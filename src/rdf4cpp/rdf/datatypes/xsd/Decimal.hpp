@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value);
+std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) noexcept;
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept;
@@ -35,7 +35,7 @@ template<>
 bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs);
+std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_decimal,
                                            capabilities::Logical,

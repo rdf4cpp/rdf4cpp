@@ -8,16 +8,16 @@ BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storag
                              node_storage.id()}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
 
-std::string_view BlankNode::identifier() const { return handle_.bnode_backend().identifier; }
+std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
 BlankNode::operator std::string() const {
     return "_:" + std::string{handle_.bnode_backend().identifier};
 }
 
-bool BlankNode::is_literal() const { return false; }
-bool BlankNode::is_variable() const { return false; }
-bool BlankNode::is_blank_node() const { return true; }
-bool BlankNode::is_iri() const { return false; }
+bool BlankNode::is_literal() const noexcept { return false; }
+bool BlankNode::is_variable() const noexcept { return false; }
+bool BlankNode::is_blank_node() const noexcept { return true; }
+bool BlankNode::is_iri() const noexcept { return false; }
 std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
     os << static_cast<std::string>(node);
     return os;

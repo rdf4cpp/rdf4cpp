@@ -30,7 +30,7 @@ template<>
 capabilities::Default<xsd_unsigned_long>::cpp_type capabilities::Default<xsd_unsigned_long>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_unsigned_long>::to_string(cpp_type const &value);
+std::string capabilities::Default<xsd_unsigned_long>::to_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_unsigned_long>::effective_boolean_value(cpp_type const &value) noexcept;

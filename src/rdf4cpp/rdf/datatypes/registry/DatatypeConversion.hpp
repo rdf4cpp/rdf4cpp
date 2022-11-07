@@ -88,7 +88,7 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 using source_type = Type;
                 using target_type = typename next::converted;
 
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(value);
                 }
             };
@@ -105,7 +105,7 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 using source_type = typename prev_promotion_t::source_type;
                 using target_type = typename next::converted;
 
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(prev_promotion_t::convert(value));
                 }
             };
@@ -280,7 +280,7 @@ consteval ConversionTable auto make_conversion_table() {
         using source_type = Type;
         using target_type = Type;
 
-        inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+        inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
             return value;
         }
     };
@@ -303,7 +303,7 @@ consteval ConversionTable auto make_conversion_table() {
                     using source_type = typename ToSuper::source_type;
                     using target_type = typename PromoteSuper::target_type;
 
-                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                         return PromoteSuper::convert(ToSuper::convert(value));
                     }
                 };
@@ -370,7 +370,7 @@ consteval ConversionTable auto make_conversion_table_for() {
  * @return the generated runtime table
  */
 template<LiteralDatatype T>
-RuntimeConversionTable make_runtime_conversion_table_for() {
+RuntimeConversionTable make_runtime_conversion_table_for() noexcept {
     using convert_table_t = decltype(make_conversion_table_for<T>());
     return RuntimeConversionTable::from_concrete<convert_table_t>();
 }

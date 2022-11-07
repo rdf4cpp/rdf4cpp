@@ -27,7 +27,7 @@ capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>:
 }
 
 template<>
-std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) {
+std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) noexcept {
     auto s = value.str(std::numeric_limits<cpp_type>::digits10, std::ios_base::fixed | std::ios_base::showpoint);
     auto const non_zero_pos = s.find_last_not_of('0');
 
@@ -62,7 +62,7 @@ bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const 
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (lhs < rhs) {
         return std::partial_ordering::less;
     } else if (rhs < lhs) {

@@ -29,18 +29,18 @@ public:
      * Constructs an instance of a type from a string.
      */
     using factory_fptr_t = std::any (*)(std::string_view);
-    using to_string_fptr_t = std::string (*)(const std::any &);
-    using ebv_fptr_t = bool (*)(std::any const &);
+    using to_string_fptr_t = std::string (*)(const std::any &) noexcept;
+    using ebv_fptr_t = bool (*)(std::any const &) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
         nonstd::expected<std::any, NumericOpError> result_value;
     };
 
-    using unop_fptr_t = NumericOpResult (*)(std::any const &);
-    using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &);
+    using unop_fptr_t = NumericOpResult (*)(std::any const &) noexcept;
+    using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &) noexcept;
 
-    using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &);
+    using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &) noexcept;
 
     struct NumericOpsImpl {
         binop_fptr_t add_fptr;  // a + b
@@ -93,7 +93,7 @@ public:
 
         RuntimeConversionTable conversion_table;
 
-        inline static DatatypeEntry placeholder() {
+        inline static DatatypeEntry placeholder() noexcept {
             return DatatypeEntry{
                     .datatype_iri = "",
                     .factory_fptr = nullptr,
@@ -104,7 +104,7 @@ public:
                     .conversion_table = RuntimeConversionTable::empty()};
         }
 
-        inline static DatatypeEntry for_search(std::string_view const datatype_iri) {
+        inline static DatatypeEntry for_search(std::string_view const datatype_iri) noexcept {
             return DatatypeEntry{
                     .datatype_iri = std::string{datatype_iri},
                     .factory_fptr = nullptr,
@@ -134,7 +134,7 @@ public:
 private:
     using registered_datatypes_t = std::vector<DatatypeEntry>;
 
-    inline static registered_datatypes_t &get_mutable() {
+    inline static registered_datatypes_t &get_mutable() noexcept {
         static registered_datatypes_t registry_ = []() {
             registered_datatypes_t r;
             r.resize(dynamic_datatype_offset, DatatypeEntry::placeholder()); // placeholders for fixed id datatypes
@@ -155,13 +155,13 @@ private:
      */
     template<typename Map>
         requires std::invocable<Map, DatatypeEntry const &>
-    static std::optional<std::invoke_result_t<Map, DatatypeEntry const &>> find_map_entry(DatatypeIDView const datatype_id, Map f) {
+    static std::optional<std::invoke_result_t<Map, DatatypeEntry const &>> find_map_entry(DatatypeIDView const datatype_id, Map f) noexcept(std::is_nothrow_invocable_v<Map, DatatypeEntry const &>) {
         using ret_type = std::optional<std::invoke_result_t<Map, DatatypeEntry const &>>;
         auto const &registry = registered_datatypes();
 
         return visit(DatatypeIDVisitor{
                              [&registry, f](LiteralType const fixed_id) -> ret_type {
-                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
+                                 auto const id_as_index = static_cast<size_t>(fixed_id.to_underlying()) - 1;  // ids from 1 to n stored in places 0 to n-1
                                  assert(id_as_index < dynamic_datatype_offset);
 
                                  return f(registry[id_as_index]);
@@ -185,7 +185,7 @@ private:
      * by generating type-erased versions of all necessary functions (add, sub, ...).
      */
     template<datatypes::NumericImplLiteralDatatype datatype_info>
-    static NumericOpsImpl make_numeric_ops_impl();
+    static NumericOpsImpl make_numeric_ops_impl() noexcept;
 
     inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) noexcept {
         auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
@@ -225,7 +225,7 @@ public:
      * Retrieve all registered datatypes.
      * @return vector of DatatypeEntries
      */
-    inline static const registered_datatypes_t &registered_datatypes() {
+    inline static const registered_datatypes_t &registered_datatypes() noexcept {
         return DatatypeRegistry::get_mutable();
     }
 
@@ -234,8 +234,8 @@ public:
      * @param datatype_id datatype IRI string
      * @return if available database entry else nullopt
      */
-    inline static DatatypeEntry const *get_entry(DatatypeIDView const datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static DatatypeEntry const *get_entry(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return &entry;
         });
 
@@ -247,8 +247,8 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    inline static factory_fptr_t get_factory(DatatypeIDView datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static factory_fptr_t get_factory(DatatypeIDView datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return entry.factory_fptr;
         });
 
@@ -260,8 +260,8 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    inline static to_string_fptr_t get_to_string(DatatypeIDView datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static to_string_fptr_t get_to_string(DatatypeIDView datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return entry.to_string_fptr;
         });
 
@@ -275,8 +275,8 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return if available a pointer to a structure containing function pointers for all numeric ops; otherwise a null pointer
      */
-    inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static NumericOps const *get_numerical_ops(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return &entry.numeric_ops;
         });
 
@@ -300,8 +300,8 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return if available a the conversion function
      */
-    inline static ebv_fptr_t get_ebv(DatatypeIDView const datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static ebv_fptr_t get_ebv(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return entry.ebv_fptr;
         });
 
@@ -315,8 +315,8 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return if available the comparison function
      */
-    inline static compare_fptr_t get_compare(DatatypeIDView const datatype_id) {
-        auto const res = find_map_entry(datatype_id, [](auto const &entry) {
+    inline static compare_fptr_t get_compare(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
             return entry.compare_fptr;
         });
 
@@ -327,7 +327,7 @@ public:
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
      * @return the found conversion if there is a viable one
      */
-    static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0);
+    static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0) noexcept;
 
     /**
      * Tries to find a conversion to a common type in the context of numeric operations.
@@ -337,7 +337,7 @@ public:
      * @note must be called with datatypes that are numeric
      * @return A conversion to a common type that is also a numeric-impl if there is a viable one
      */
-    inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) {
+    inline static std::optional<DatatypeConverter> get_common_numeric_op_type_conversion(DatatypeEntry const &lhs_entry, DatatypeEntry const &rhs_entry) noexcept {
         assert(lhs_entry.numeric_ops.has_value());
         assert(rhs_entry.numeric_ops.has_value());
 
@@ -354,7 +354,7 @@ public:
      * @note must be called with a datatype that is stub-numeric
      * @return the conversion to the corresponding impl-type
      */
-    inline static RuntimeConversionEntry const &get_numeric_op_impl_conversion(DatatypeEntry const &entry) {
+    inline static RuntimeConversionEntry const &get_numeric_op_impl_conversion(DatatypeEntry const &entry) noexcept {
         assert(entry.numeric_ops.has_value());
         assert(entry.numeric_ops->is_stub());
 
@@ -368,7 +368,7 @@ public:
      * @return nullopt if any of lhs_type_id or rhs_type_id does not have a datatype registered
      * or there is no viable conversion, else the found conversion
      */
-    inline static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) {
+    inline static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) noexcept {
         auto const lhs_entry = get_entry(lhs_type_id);
         if (lhs_entry == nullptr) {
             return std::nullopt;
@@ -408,7 +408,7 @@ inline void DatatypeRegistry::add() noexcept {
 
     auto const ebv_fptr = []() -> ebv_fptr_t {
         if constexpr (datatypes::LogicalLiteralDatatype<LiteralDatatype_t>) {
-            return [](std::any const &operand) -> bool {
+            return [](std::any const &operand) noexcept -> bool {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
                 return LiteralDatatype_t::effective_boolean_value(operand_val);
             };
@@ -419,7 +419,7 @@ inline void DatatypeRegistry::add() noexcept {
 
     auto const compare_fptr = []() -> compare_fptr_t {
         if constexpr (datatypes::ComparableLiteralDatatype<LiteralDatatype_t>) {
-            return [](std::any const &lhs, std::any const &rhs) -> std::partial_ordering {
+            return [](std::any const &lhs, std::any const &rhs) noexcept -> std::partial_ordering {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -433,9 +433,9 @@ inline void DatatypeRegistry::add() noexcept {
     DatatypeEntry entry{
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
-                return std::any(LiteralDatatype_t::from_string(string_repr));
+                return std::any{LiteralDatatype_t::from_string(string_repr)};
             },
-            .to_string_fptr = [](const std::any &value) -> std::string {
+            .to_string_fptr = [](const std::any &value) noexcept -> std::string {
                 return LiteralDatatype_t::to_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
             },
             .ebv_fptr = ebv_fptr,
@@ -464,7 +464,7 @@ struct SelectOpRes<std::false_type, Fallback> {
 
 template<LiteralDatatypeOrUndefined OpRes, LiteralDatatype Fallback>
 struct SelectOpResIRI {
-    inline static DatatypeID select() {
+    inline static DatatypeID select() noexcept {
         using op_res = typename detail::SelectOpRes<OpRes, Fallback>::type;
 
         if constexpr (FixedIdLiteralDatatype<op_res>) {
@@ -486,10 +486,10 @@ template<typename T>
 }  // namespace detail
 
 template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
-inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() {
+inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexcept {
     return NumericOpsImpl{
             // a + b
-            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
+            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -498,7 +498,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
-            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
+            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -507,7 +507,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
-            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
+            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -516,7 +516,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
-            [](std::any const &lhs, std::any const &rhs) -> NumericOpResult {
+            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -525,7 +525,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
-            [](std::any const &operand) -> NumericOpResult {
+            [](std::any const &operand) noexcept -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
@@ -533,7 +533,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
-            [](std::any const &operand) -> NumericOpResult {
+            [](std::any const &operand) noexcept -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
@@ -546,10 +546,10 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         RuntimeConversionTable const &lhs_conv,
         RuntimeConversionTable const &rhs_conv,
         size_t const lhs_init_soff,
-        size_t const rhs_init_soff) {
+        size_t const rhs_init_soff) noexcept {
 
     auto const find_conv_impl = [](RuntimeConversionTable const &lesser, RuntimeConversionTable const &greater,
-                                   size_t const lesser_init_soff, size_t const greater_init_soff) -> std::optional<DatatypeConverter> {
+                                   size_t const lesser_init_soff, size_t const greater_init_soff) noexcept -> std::optional<DatatypeConverter> {
         auto const lesser_s_rank = lesser.subtype_rank() - lesser_init_soff;
         auto const greater_s_rank = greater.subtype_rank() - greater_init_soff;
 

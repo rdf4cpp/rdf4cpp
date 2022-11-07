@@ -150,7 +150,7 @@ util::TriBool Node::ebv() const noexcept {
     return static_cast<Literal>(*this).ebv();
 }
 
-Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const {
+Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const noexcept {
     if (this->null() || !this->is_literal()) {
         return Literal{};
     }

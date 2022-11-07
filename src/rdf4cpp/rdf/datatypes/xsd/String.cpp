@@ -12,7 +12,7 @@ capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::f
 }
 
 template<>
-std::string capabilities::Default<xsd_string>::to_string(cpp_type const &value) {
+std::string capabilities::Default<xsd_string>::to_string(cpp_type const &value) noexcept {
     return value;
 }
 

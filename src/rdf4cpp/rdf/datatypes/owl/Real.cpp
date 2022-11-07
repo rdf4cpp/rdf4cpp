@@ -17,7 +17,7 @@ bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &va
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (lhs < rhs) {
         return std::partial_ordering::less;
     } else if (rhs < lhs) {

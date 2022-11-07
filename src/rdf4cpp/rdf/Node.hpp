@@ -94,7 +94,7 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
