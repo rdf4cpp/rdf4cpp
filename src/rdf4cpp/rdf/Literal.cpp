@@ -34,9 +34,9 @@ std::string_view Literal::lexical_form() const noexcept {
 std::string_view Literal::language_tag() const noexcept {
     return handle_.literal_backend().language_tag;
 }
-Literal::operator std::string() const {
+Literal::operator std::string() const noexcept {
     // TODO: escape non-standard chars correctly
-    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) {
+    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) noexcept {
         // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
 
         out << "\"";
@@ -166,6 +166,7 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 }
 
 template<typename OpSelect>
+    requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
 
@@ -257,6 +258,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
 }
 
 template<typename OpSelect>
+    requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::unop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
 Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
 
@@ -490,7 +492,7 @@ bool Literal::is_fixed_not_numeric() const noexcept {
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) {
+    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.add_fptr;
     }, other, node_storage);
 }
@@ -500,7 +502,7 @@ Literal Literal::operator+(Literal const &other) const noexcept {
 }
 
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) {
+    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.sub_fptr;
     }, other, node_storage);
 }
@@ -510,7 +512,7 @@ Literal Literal::operator-(Literal const &other) const noexcept {
 }
 
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) {
+    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.mul_fptr;
     }, other, node_storage);
 }
@@ -520,7 +522,7 @@ Literal Literal::operator*(Literal const &other) const noexcept {
 }
 
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) {
+    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.div_fptr;
     }, other, node_storage);
 }
@@ -530,7 +532,7 @@ Literal Literal::operator/(Literal const &other) const noexcept {
 }
 
 Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
         return num_ops.pos_fptr;
     }, node_storage);
 }
@@ -540,7 +542,7 @@ Literal Literal::operator+() const noexcept {
 }
 
 Literal Literal::neg(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
         return num_ops.neg_fptr;
     }, node_storage);
 }

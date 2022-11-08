@@ -10,7 +10,7 @@ namespace rdf4cpp::rdf {
 
 Node::Node(Node::NodeBackendHandle id) noexcept : handle_(id) {}
 
-Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
+Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
     if (this->backend_handle().node_storage_id() == node_storage.id())
         return *this;
     else {
@@ -43,7 +43,7 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const {
     }
 }
 
-Node::operator std::string() const {
+Node::operator std::string() const noexcept {
     switch (handle_.type()) {
         case RDFNodeType::IRI:
             return handle_.iri_backend().n_string();
@@ -113,19 +113,19 @@ bool Node::operator==(const Node &other) const noexcept {
     return *this <=> other == std::strong_ordering::equivalent;
 }
 
-Node::operator BlankNode() const {
+Node::operator BlankNode() const noexcept {
     assert(is_blank_node());
     return BlankNode{handle_};
 }
-Node::operator IRI() const {
+Node::operator IRI() const noexcept {
     assert(is_iri());
     return IRI(handle_);
 }
-Node::operator Literal() const {
+Node::operator Literal() const noexcept {
     assert(is_literal());
     return Literal(handle_);
 }
-Node::operator query::Variable() const {
+Node::operator query::Variable() const noexcept {
     assert(is_variable());
     return query::Variable(handle_);
 }

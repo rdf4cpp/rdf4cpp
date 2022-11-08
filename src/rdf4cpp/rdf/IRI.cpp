@@ -32,7 +32,7 @@ datatypes::registry::DatatypeIDView IRI::to_datatype_id() const noexcept {
     }
 }
 
-IRI::operator std::string() const { return handle_.iri_backend().n_string(); }
+IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
 
 bool IRI::is_literal() const noexcept { return false; }
 bool IRI::is_variable() const noexcept { return false; }

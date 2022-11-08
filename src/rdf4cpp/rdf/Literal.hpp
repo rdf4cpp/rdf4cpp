@@ -3,6 +3,7 @@
 
 #include <any>
 #include <ostream>
+#include <type_traits>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
@@ -24,6 +25,7 @@ private:
      *      convertible to a common type or the common type is not numeric
      */
     template<typename OpSelect>
+        requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
     [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
@@ -35,6 +37,7 @@ private:
      * @return the literal resulting from the selected unop or Literal{} if this is not numeric
      */
     template<typename OpSelect>
+        requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::unop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
     [[nodiscard]] Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
@@ -164,7 +167,7 @@ public:
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
-    [[nodiscard]] explicit operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 

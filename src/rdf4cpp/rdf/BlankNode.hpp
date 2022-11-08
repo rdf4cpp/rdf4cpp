@@ -23,7 +23,7 @@ public:
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
-    [[nodiscard]] explicit operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
     [[nodiscard]] bool is_literal() const noexcept;

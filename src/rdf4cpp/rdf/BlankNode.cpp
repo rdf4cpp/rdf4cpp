@@ -10,7 +10,7 @@ BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-BlankNode::operator std::string() const {
+BlankNode::operator std::string() const noexcept {
     return "_:" + std::string{handle_.bnode_backend().identifier};
 }
 
