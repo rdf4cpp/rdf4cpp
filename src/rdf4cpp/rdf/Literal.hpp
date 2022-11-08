@@ -124,7 +124,7 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
-                        NodeStorage &node_storage = NodeStorage::default_instance()) {
+                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
