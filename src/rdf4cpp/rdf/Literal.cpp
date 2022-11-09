@@ -179,7 +179,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
 
     if (target.to_datatype_id() == Boolean::datatype_id) {
         // any -> bool
-        return this->effective_boolean_value(node_storage);
+        return this->ebv_as_literal(node_storage);
     }
 
     if (target.to_datatype_id() == String::datatype_id) {
@@ -201,7 +201,8 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         }
     }
 
-    // general case
+    // general cases
+
     auto const *this_e = DatatypeRegistry::get_entry(this->get_datatype_id());
     if (this_e == nullptr) {
         // this datatype not registered
@@ -214,14 +215,30 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         return Literal{};
     }
 
-    auto const conversion = DatatypeRegistry::get_cast_conversion(this_e->conversion_table, target_e->conversion_table);
-    if (!conversion.has_value()) {
-        // no conversion found
-        return Literal{};
+    if (auto const conversion = DatatypeRegistry::get_cast_conversion(this_e->conversion_table, target_e->conversion_table); conversion.has_value()) {
+        // normal upcast
+        auto const converted = conversion->convert(this->value());
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(converted), target, node_storage);
     }
 
-    auto const converted = conversion->convert(this->value());
-    return Literal::make_typed_unchecked(target_e->to_string_fptr(converted), target, node_storage);
+    if (auto const inverse_conversion = DatatypeRegistry::get_cast_conversion(target_e->conversion_table, this_e->conversion_table); inverse_conversion.has_value()) {
+        // normal downcast
+        auto const inverse_converted = inverse_conversion->inverse_convert(this->value());
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(inverse_converted), target, node_storage);
+    }
+
+    if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+        // casting across hierarchies
+        // need common type above both types
+
+        auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
+        auto const target_value = common_conversion->inverse_convert_rhs(common_type_value); // downcast to target
+
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(target_value), target, node_storage);
+    }
+
+    // no conversion found
+    return Literal{};
 }
 
 template<typename OpSelect>

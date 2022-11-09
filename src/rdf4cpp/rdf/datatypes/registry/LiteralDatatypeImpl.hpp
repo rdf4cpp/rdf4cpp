@@ -90,6 +90,10 @@ struct Promotable {
     inline static promoted_cpp_type promote(cpp_type const &value) noexcept {
         return static_cast<promoted_cpp_type>(value);
     }
+
+    inline static cpp_type demote(promoted_cpp_type const &value) noexcept {
+        return static_cast<cpp_type>(value);
+    }
 };
 
 /**
@@ -106,6 +110,10 @@ struct Subtype {
 
     inline static super_cpp_type into_supertype(cpp_type const &value) noexcept {
         return static_cast<super_cpp_type>(value);
+    }
+
+    inline static cpp_type from_supertype(super_cpp_type const &value) noexcept {
+        return static_cast<cpp_type>(value);
     }
 };
 

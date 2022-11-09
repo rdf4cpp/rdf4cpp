@@ -119,7 +119,10 @@ public:
     struct DatatypeConverter {
         DatatypeIDView target_type_id;
         RuntimeConversionEntry::convert_fptr_t convert_lhs;
+        RuntimeConversionEntry::convert_fptr_t inverse_convert_lhs;
+
         RuntimeConversionEntry::convert_fptr_t convert_rhs;
+        RuntimeConversionEntry::convert_fptr_t inverse_convert_rhs;
 
         inline static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
             assert(l.target_type_id == r.target_type_id);
@@ -127,7 +130,9 @@ public:
             return DatatypeConverter{
                     .target_type_id = l.target_type_id,
                     .convert_lhs = l.convert,
-                    .convert_rhs = r.convert};
+                    .inverse_convert_lhs = l.inverse_convert,
+                    .convert_rhs = r.convert,
+                    .inverse_convert_rhs = r.inverse_convert};
         }
     };
 

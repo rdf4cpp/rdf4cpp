@@ -170,86 +170,109 @@ TEST_CASE("Literal - casting") {
         auto const lit1 = Literal::make<String>("hello");
         auto const lit2 = lit1.template cast<String>();
 
-        CHECK(lit1 == lit2);
+        CHECK(lit2.datatype() == IRI{String::identifier});
+        CHECK(lit2.template value<String>() == "hello");
     }
 
     SUBCASE("str -> any") {
         auto const lit1 = Literal::make<String>("1.2");
         auto const lit2 = lit1.template cast<Float>();
 
-        CHECK(lit2 == Literal::make<Float>(1.2));
-        CHECK(lit1.template cast<Integer>().null());
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.value<Float>() == 1.2f);
     }
 
     SUBCASE("any -> str") {
         auto const lit1 = Literal::make<Decimal>(1.5);
         auto const lit2 = lit1.template cast<String>();
 
-        CHECK(lit2.value<String>() == "1.5");
+        CHECK(lit2.template value<String>() == "1.5");
     }
 
     SUBCASE("any -> bool") {
         auto const lit1 = Literal::make<Float>(1.4);
         auto const lit2 = lit1.template cast<Boolean>();
 
-        CHECK(lit2 == Literal::make<Boolean>(true));
+        CHECK(lit2.datatype() == IRI{Boolean::identifier});
+        CHECK(lit2.template value<Boolean>() == true);
     }
 
-    SUBCASE("dbl -> flt") {
-        // TODO: !type hierarchy in wrong order; not sure how to fix that yet!
+    SUBCASE("downcast: dbl -> flt") {
+        auto const lit1 = Literal::make<Double>(1.4);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.4f);
     }
 
     SUBCASE("dec -> flt") {
         auto const lit1 = Literal::make<Decimal>(1.0);
         auto const lit2 = lit1.template cast<Float>();
 
-        CHECK(lit1 == lit2);
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.f);
     }
 
     SUBCASE("dec -> dbl") {
-        // double not yet implemented but should work
-        //auto const lit1 = Literal::make<Decimal>(1.0);
-        //auto const lit2 = lit1.template cast<Double>();
-        //
-        //CHECK(lit1 == lit2);
+        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit2 = lit1.template cast<Double>();
+
+        CHECK(lit2.datatype() == IRI{Double::identifier});
+        CHECK(lit2.template value<Double>() == 1.0);
     }
 
     SUBCASE("dec -> int") {
-        // TODO: !type hierarchy in wrong order; not sure how to fix that yet!
+        auto const lit1 = Literal::make<Decimal>(1.2);
+        auto const lit2 = lit1.template cast<Int>();
+
+        CHECK(lit2.datatype() == IRI{Int::identifier});
+        CHECK(lit2.template value<Int>() == 1);
     }
 
-    SUBCASE("int -> dec") {
+    SUBCASE("downcast: int -> dec") {
         auto const lit1 = Literal::make<Integer>(1);
         auto const lit2 = lit1.template cast<Decimal>();
 
-        CHECK(lit1 == lit2);
+        CHECK(lit2.datatype() == IRI{Decimal::identifier});
+        CHECK(lit2.template value<Decimal>() == 1);
     }
 
     SUBCASE("int -> flt") {
         auto const lit1 = Literal::make<Integer>(1);
         auto const lit2 = lit1.template cast<Float>();
 
-        CHECK(lit1 == lit2);
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.f);
     }
 
     SUBCASE("int -> dbl") {
-        // double not yet implemented but should work
-        //auto const lit1 = Literal::make<Integer>(1);
-        //auto const lit2 = lit1.template cast<Double>();
-        //
-        //CHECK(lit1 == lit2);
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Double>();
+
+        CHECK(lit2.datatype() == IRI{Double::identifier});
+        CHECK(lit2.template value<Double>() == 1.0);
     }
 
     SUBCASE("bool -> numeric") {
         auto const lit1 = Literal::make<Boolean>(true);
         auto const lit2 = lit1.template cast<Integer>();
 
-        CHECK(lit2 == Literal::make<Integer>(1));
+        CHECK(lit2.datatype() == IRI{Integer::identifier});
+        CHECK(lit2.value<Integer>() == 1);
 
         auto const lit3 = Literal::make<Boolean>(false);
         auto const lit4 = lit3.template cast<Float>();
 
-        CHECK(lit4 == Literal::make<Float>(0.f));
+        CHECK(lit4.datatype() == IRI{Float::identifier});
+        CHECK(lit4.value<Float>() == 0.f);
+    }
+
+    SUBCASE("cross hierarchy: int -> unsignedInt") {
+        auto const lit1 = Literal::make<Int>(1);
+        auto const lit2 = lit1.template cast<UnsignedInt>();
+
+        CHECK(lit2.datatype() == IRI{UnsignedInt::identifier});
+        CHECK(lit2.value<UnsignedInt>() == 1);
     }
 
     SUBCASE("IRI -> str") {
@@ -257,10 +280,10 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("subtypes") {
-        CHECK(lit1.template cast<datatypes::xsd::Integer>().datatype() == IRI{datatypes::xsd::Integer::identifier});
-        CHECK(lit1.template cast<datatypes::xsd::Float>().datatype() == IRI{datatypes::xsd::Float::identifier});
+        CHECK(lit1.template cast<Integer>().datatype() == IRI{Integer::identifier});
+        CHECK(lit1.template cast<Float>().datatype() == IRI{Float::identifier});
 
-        auto const lit2 = Literal::make<datatypes::xsd::Integer>(420);
-        CHECK(lit2.template cast<datatypes::xsd::Int>().null());
+        auto const lit2 = Literal::make<Integer>(420);
+        CHECK(lit2.template cast<Int>() == Literal::make<Int>(420));
     }
 }

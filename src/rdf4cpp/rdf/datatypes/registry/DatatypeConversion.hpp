@@ -88,8 +88,12 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 using source_type = Type;
                 using target_type = typename next::converted;
 
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(value);
+                }
+
+                inline static typename source_type::cpp_type inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                    return next::inverse_convert(value);
                 }
             };
 
@@ -105,8 +109,12 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 using source_type = typename prev_promotion_t::source_type;
                 using target_type = typename next::converted;
 
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(prev_promotion_t::convert(value));
+                }
+
+                inline static typename source_type::cpp_type inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                    return prev_promotion_t::inverse_convert(next::inverse_convert(value));
                 }
             };
 
@@ -134,6 +142,10 @@ struct PromoteConversion<LiteralDatatypeImpl> {
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::promote(value);
     }
+
+    inline static cpp_type inverse_convert(converted_cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::demote(value);
+    }
 };
 
 /**
@@ -151,6 +163,10 @@ struct SupertypeConversion<LiteralDatatypeImpl> {
 
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::into_supertype(value);
+    }
+
+    inline static cpp_type inverse_convert(converted_cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::from_supertype(value);
     }
 };
 
@@ -280,7 +296,11 @@ consteval ConversionTable auto make_conversion_table() {
         using source_type = Type;
         using target_type = Type;
 
-        inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+        inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
+            return value;
+        }
+
+        inline static typename source_type::cpp_type inverse_convert(typename target_type::cpp_type const &value) noexcept {
             return value;
         }
     };
@@ -303,8 +323,12 @@ consteval ConversionTable auto make_conversion_table() {
                     using source_type = typename ToSuper::source_type;
                     using target_type = typename PromoteSuper::target_type;
 
-                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) {
+                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                         return PromoteSuper::convert(ToSuper::convert(value));
+                    }
+
+                    inline static typename source_type::cpp_type inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                        return ToSuper::inverse_convert(PromoteSuper::inverse_convert(value));
                     }
                 };
 

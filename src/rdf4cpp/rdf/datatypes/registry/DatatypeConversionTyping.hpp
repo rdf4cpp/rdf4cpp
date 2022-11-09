@@ -71,13 +71,14 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
  * A type erased version of a ConversionEntry.
  */
 struct RuntimeConversionEntry {
-    using convert_fptr_t = std::any (*)(std::any const &);
+    using convert_fptr_t = std::any (*)(std::any const &) noexcept;
 
     DatatypeID target_type_id;
     convert_fptr_t convert;
+    convert_fptr_t inverse_convert;
 
     template<ConversionEntry Entry>
-    static RuntimeConversionEntry from_concrete() {
+    static RuntimeConversionEntry from_concrete() noexcept {
         DatatypeID target_type_iri = []() {
             if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
                 return DatatypeID{Entry::target_type::fixed_id};
@@ -88,9 +89,13 @@ struct RuntimeConversionEntry {
 
         return RuntimeConversionEntry{
                 .target_type_id = std::move(target_type_iri),
-                .convert = [](std::any const &value) -> std::any {
-                    auto actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
+                .convert = [](std::any const &value) noexcept -> std::any {
+                    auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
+                },
+                .inverse_convert = [](std::any const &value) noexcept -> std::any {
+                    auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
+                    return Entry::inverse_convert(actual_value);
                 }};
     }
 };
@@ -111,7 +116,8 @@ private:
         if (s_rank * max_p_rank > 0) {
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
                                                       .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
-                                                      .convert = nullptr});
+                                                      .convert = nullptr,
+                                                      .inverse_convert = nullptr});
         }
     }
 
