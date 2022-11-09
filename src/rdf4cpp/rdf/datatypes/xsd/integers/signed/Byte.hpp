@@ -30,7 +30,7 @@ template<>
 capabilities::Default<xsd_byte>::cpp_type capabilities::Default<xsd_byte>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_byte>::to_string(cpp_type const &value);
+std::string capabilities::Default<xsd_byte>::to_string(cpp_type const &value) noexcept;
 
 
 template<>

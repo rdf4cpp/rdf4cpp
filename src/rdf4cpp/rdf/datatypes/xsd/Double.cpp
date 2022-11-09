@@ -11,7 +11,7 @@ capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::f
 }
 
 template<>
-std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value) {
+std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value) noexcept {
     return util::to_chars(value);
 }
 

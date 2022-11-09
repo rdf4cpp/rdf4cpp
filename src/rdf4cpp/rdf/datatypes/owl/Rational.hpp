@@ -19,13 +19,13 @@ template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value);
+std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs);
+std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<owl_rational,
                                            capabilities::Logical,

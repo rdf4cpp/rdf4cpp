@@ -34,7 +34,7 @@ nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, Numeri
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (lhs < rhs) {
         return std::partial_ordering::less;
     } else if (rhs < lhs) {

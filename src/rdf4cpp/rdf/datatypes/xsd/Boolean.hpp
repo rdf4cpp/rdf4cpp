@@ -21,7 +21,7 @@ template<>
 capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_boolean>::to_string(const cpp_type &value);
+std::string capabilities::Default<xsd_boolean>::to_string(const cpp_type &value) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) noexcept;
