@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.5)
+project(rdf4cpp VERSION 0.0.6)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -13,6 +13,7 @@ endif ()
 # find packages
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
+find_package(Boost REQUIRED)
 
 include(FetchContent)
 
@@ -62,7 +63,8 @@ set(serd_source_files
         src/system.h
         src/uri.c
         src/uri_utils.h
-        src/writer.c)
+        src/writer.c
+)
 
 foreach(serd_source_file ${serd_source_files})
     file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/95f5929c06a85495513fceee568a08c3cafaae83/${serd_source_file}"
@@ -85,6 +87,32 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/IRI.cpp
         src/rdf4cpp/rdf/Literal.cpp
         src/rdf4cpp/rdf/Namespace.cpp
+        src/rdf4cpp/rdf/Node.cpp
+        src/rdf4cpp/rdf/Quad.cpp
+        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
+        src/rdf4cpp/rdf/datatypes/owl/Real.cpp
+        src/rdf4cpp/rdf/datatypes/rdf/LangString.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Boolean.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Decimal.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Double.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Float.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/String.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedByte.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedInt.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
@@ -93,22 +121,19 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDF.cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
-        src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
         src/rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.cpp
-        src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
-        src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeID.cpp
         src/rdf4cpp/rdf/storage/node/identifier/RDFNodeType.cpp
-        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.cpp
@@ -127,30 +152,34 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         ${serd_source_files}
-        )
+)
+
 add_library(rdf4cpp::rdf4cpp ALIAS rdf4cpp)
 
 target_include_directories(
-        rdf4cpp PUBLIC
+        rdf4cpp
+        PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         PRIVATE
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
 )
 
 target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
+        Boost::headers
         PRIVATE
         fmt::fmt-header-only
-        )
+)
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         CXX_STANDARD 20
         CXX_EXTENSIONS OFF
-        CXX_STANDARD_REQUIRED ON)
+        CXX_STANDARD_REQUIRED ON
+)
 
 if (IS_TOP_LEVEL)
     include(cmake/install_library.cmake)

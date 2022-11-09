@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#include <charconv>
 #include <set>
 #include <unordered_set>
 
@@ -171,4 +172,22 @@ TEST_SUITE("comparisions") {
         CHECK(s.contains(blank_node));
         CHECK(s.contains(variable));
     }
+}
+
+TEST_CASE("effective boolean value") {
+    Node const iri = IRI{"http://hello.com"};
+    Node const bnode = BlankNode{"asd"};
+    Node const var = query::Variable{"x"};
+    Node const falsy_lit = Literal::make<datatypes::xsd::Float>(0.f);
+    Node const truthy_lit = Literal::make<datatypes::xsd::Integer>(100);
+    Node const null_lit = Literal{};
+    Node const null_bnode = BlankNode{};
+
+    CHECK(iri.ebv() == util::TriBool::Err);
+    CHECK(bnode.ebv() == util::TriBool::Err);
+    CHECK(var.ebv() == util::TriBool::Err);
+    CHECK(falsy_lit.ebv() == util::TriBool::False);
+    CHECK(truthy_lit.ebv() == util::TriBool::True);
+    CHECK(null_lit.ebv() == util::TriBool::Err);
+    CHECK(null_bnode.ebv() == util::TriBool::Err);
 }

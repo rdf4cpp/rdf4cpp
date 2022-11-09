@@ -3,6 +3,7 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <charconv>
 #include <limits>
 
 using namespace rdf4cpp::rdf;
@@ -185,7 +186,7 @@ TEST_CASE("Literal - numeric ops") {
     // binary stub tests
     GENERATE_BINOP_TESTCASE(Int, 1, +, Int, 5, Integer, 6);
     GENERATE_BINOP_TESTCASE(Int, 10, -, Int, 2, Integer, 8);
-    GENERATE_BINOP_TESTCASE(Int, 1, /, Int, 5, Decimal, 1.0/5);
+    GENERATE_BINOP_TESTCASE(Int, 1, /, Int, 5, Decimal, datatypes::xsd::Decimal::cpp_type{"1.0"} / datatypes::xsd::Decimal::cpp_type{"5.0"});
 
     auto const int_max = std::numeric_limits<datatypes::xsd::Int::cpp_type>::max();
     GENERATE_BINOP_TESTCASE(Int, int_max, *, Int, 2, Integer, static_cast<int64_t>(int_max) * 2);
@@ -224,16 +225,6 @@ TEST_CASE("Literal - numeric ops") {
         }
     }
 }
-
-TEST_CASE("debug") {
-    Literal i = Literal::make<datatypes::xsd::Int>(5);
-    Literal d = Literal::make<datatypes::xsd::Decimal>(1.2);
-
-    Literal r = i + d;
-
-    CHECK(r == Literal::make<datatypes::xsd::Decimal>(6.2));
-}
-
 
 // create fake hierarchy
 namespace rdf4cpp::rdf::datatypes::registry {

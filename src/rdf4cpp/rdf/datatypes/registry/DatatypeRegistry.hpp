@@ -187,7 +187,7 @@ private:
     template<datatypes::NumericImplLiteralDatatype datatype_info>
     static NumericOpsImpl make_numeric_ops_impl();
 
-    inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) {
+    inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) noexcept {
         auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
         assert(id_as_index < dynamic_datatype_offset);
 
@@ -202,12 +202,12 @@ public:
      * @tparam datatype_info type that is registered.
      */
     template<datatypes::LiteralDatatype datatype_info>
-    inline static void add();
+    inline static void add() noexcept;
 
     /**
      * Register an datatype manually
      */
-    inline static void add(DatatypeEntry entry_to_add) {
+    inline static void add(DatatypeEntry entry_to_add) noexcept {
         auto &registry = DatatypeRegistry::get_mutable();
 
         auto found = std::find_if(registry.begin() + dynamic_datatype_offset, registry.end(), [&](const auto &entry) { return entry.datatype_iri == entry_to_add.datatype_iri; });
@@ -399,7 +399,7 @@ public:
  * @tparam LiteralDatatype_t datatype that is being registered
  */
 template<datatypes::LiteralDatatype LiteralDatatype_t>
-inline void DatatypeRegistry::add() {
+inline void DatatypeRegistry::add() noexcept {
     using conversion_table_t = decltype(make_conversion_table_for<LiteralDatatype_t>());
 
     auto const num_ops = []() -> std::optional<NumericOps> {
@@ -450,7 +450,7 @@ inline void DatatypeRegistry::add() {
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,
             .compare_fptr = compare_fptr,
-            .conversion_table = make_runtime_conversion_table_for<LiteralDatatype_t>()};
+            .conversion_table = RuntimeConversionTable::from_concrete<conversion_table_t>()};
 
     if constexpr (FixedIdLiteralDatatype<LiteralDatatype_t>) {
         DatatypeRegistry::add_fixed(std::move(entry), LiteralDatatype_t::fixed_id);

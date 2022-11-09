@@ -19,8 +19,22 @@ inline constexpr util::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSc
 
 inline constexpr util::ConstexprString xsd_decimal{"http://www.w3.org/2001/XMLSchema#decimal"};
 inline constexpr util::ConstexprString xsd_float{"http://www.w3.org/2001/XMLSchema#float"};
+inline constexpr util::ConstexprString xsd_double{"http://www.w3.org/2001/XMLSchema#double"};
+
+inline constexpr util::ConstexprString xsd_byte{"http://www.w3.org/2001/XMLSchema#byte"};
+inline constexpr util::ConstexprString xsd_short{"http://www.w3.org/2001/XMLSchema#short"};
 inline constexpr util::ConstexprString xsd_int{"http://www.w3.org/2001/XMLSchema#int"};
+inline constexpr util::ConstexprString xsd_long{"http://www.w3.org/2001/XMLSchema#long"};
 inline constexpr util::ConstexprString xsd_integer{"http://www.w3.org/2001/XMLSchema#integer"};
+
+inline constexpr util::ConstexprString xsd_unsigned_byte{"http://www.w3.org/2001/XMLSchema#unsignedByte"};
+inline constexpr util::ConstexprString xsd_unsigned_short{"http://www.w3.org/2001/XMLSchema#unsignedShort"};
+inline constexpr util::ConstexprString xsd_unsigned_int{"http://www.w3.org/2001/XMLSchema#unsignedInt"};
+inline constexpr util::ConstexprString xsd_unsigned_long{"http://www.w3.org/2001/XMLSchema#unsignedLong"};
+inline constexpr util::ConstexprString xsd_non_negative_integer{"http://www.w3.org/2001/XMLSchema#nonNegativeInteger"};
+inline constexpr util::ConstexprString xsd_positive_integer{"http://www.w3.org/2001/XMLSchema#positiveInteger"};
+inline constexpr util::ConstexprString xsd_non_positive_integer{"http://www.w3.org/2001/XMLSchema#nonPositiveInteger"};
+inline constexpr util::ConstexprString xsd_negative_integer{"http://www.w3.org/2001/XMLSchema#negativeInteger"};
 
 using ReservedDatatypeIdEntry = std::pair<std::string_view, LiteralType>;
 
@@ -36,22 +50,22 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
         ReservedDatatypeIdEntry{xsd_boolean,       LiteralType::from_parts(false, 4)},
 
         ReservedDatatypeIdEntry{xsd_float,   LiteralType::from_parts(true, 0)},
-        // ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},
+        ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},
         ReservedDatatypeIdEntry{xsd_decimal, LiteralType::from_parts(true, 2)},
 
         ReservedDatatypeIdEntry{xsd_integer,              LiteralType::from_parts(true, 3)},
-        // ReservedDatatypeIdEntry{xsd_non_positive_integer, LiteralType::from_parts(true, 4)},
-        // ReservedDatatypeIdEntry{xsd_long,                 LiteralType::from_parts(true, 5)},
-        // ReservedDatatypeIdEntry{xsd_non_negative_integer, LiteralType::from_parts(true, 6)},
-        // ReservedDatatypeIdEntry{xsd_negative_integer,     LiteralType::from_parts(true, 7)},
-        ReservedDatatypeIdEntry{xsd_int,                  LiteralType::from_parts(true, 8)}
-        // ReservedDatatypeIdEntry{xsd_unsigned_long,        LiteralType::from_parts(true, 9)},
-        // ReservedDatatypeIdEntry{xsd_positive_integer,     LiteralType::from_parts(true, 10)},
-        // ReservedDatatypeIdEntry{xsd_short,                LiteralType::from_parts(true, 11)},
-        // ReservedDatatypeIdEntry{xsd_unsigned_int,         LiteralType::from_parts(true, 12)},
-        // ReservedDatatypeIdEntry{xsd_byte,                 LiteralType::from_parts(true, 13)},
-        // ReservedDatatypeIdEntry{xsd_unsigned_short,       LiteralType::from_parts(true, 14)},
-        // ReservedDatatypeIdEntry{xsd_unsigned_byte,        LiteralType::from_parts(true, 15)}
+        ReservedDatatypeIdEntry{xsd_non_positive_integer, LiteralType::from_parts(true, 4)},
+        ReservedDatatypeIdEntry{xsd_long,                 LiteralType::from_parts(true, 5)},
+        ReservedDatatypeIdEntry{xsd_non_negative_integer, LiteralType::from_parts(true, 6)},
+        ReservedDatatypeIdEntry{xsd_negative_integer,     LiteralType::from_parts(true, 7)},
+        ReservedDatatypeIdEntry{xsd_int,                  LiteralType::from_parts(true, 8)},
+        ReservedDatatypeIdEntry{xsd_unsigned_long,        LiteralType::from_parts(true, 9)},
+        ReservedDatatypeIdEntry{xsd_positive_integer,     LiteralType::from_parts(true, 10)},
+        ReservedDatatypeIdEntry{xsd_short,                LiteralType::from_parts(true, 11)},
+        ReservedDatatypeIdEntry{xsd_unsigned_int,         LiteralType::from_parts(true, 12)},
+        ReservedDatatypeIdEntry{xsd_byte,                 LiteralType::from_parts(true, 13)},
+        ReservedDatatypeIdEntry{xsd_unsigned_short,       LiteralType::from_parts(true, 14)},
+        ReservedDatatypeIdEntry{xsd_unsigned_byte,        LiteralType::from_parts(true, 15)}
 };
 
 /**

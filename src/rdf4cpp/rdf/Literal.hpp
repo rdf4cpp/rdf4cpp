@@ -7,6 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf {
@@ -35,11 +36,6 @@ private:
      */
     template<typename OpSelect>
     Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-
-    /**
-     * @return the effective boolean value of this
-     */
-    [[nodiscard]] util::TriBool get_ebv_impl() const;
 
     /**
      * @brief the implementation of the value comparison function
@@ -279,10 +275,15 @@ public:
     Literal operator-() const;
 
     /**
+     * @return the effective boolean value of this
+     */
+    [[nodiscard]] util::TriBool ebv() const noexcept;
+
+    /**
      * Converts this literal to it's effective boolean value
      * @return Literal containing the ebv
      */
-    Literal effective_boolean_value(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
     Literal operator&&(Literal const &other) const;
