@@ -70,12 +70,12 @@ private:
     using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
     variant_t inner;
 public:
-    explicit constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed)
+    explicit constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed) noexcept
         : inner{fixed} {
         assert(fixed.is_fixed());
     }
 
-    explicit constexpr DatatypeIDView(std::string_view const other)
+    explicit constexpr DatatypeIDView(std::string_view const other) noexcept
         : inner{other} {
     }
 
@@ -124,7 +124,7 @@ public:
                   iri)} {
     }
 
-    explicit inline DatatypeID(storage::node::identifier::LiteralType const fixed)
+    explicit inline DatatypeID(storage::node::identifier::LiteralType const fixed) noexcept
         : inner{fixed} {
     }
 
@@ -132,7 +132,7 @@ public:
         : inner{other} {
     }
 
-    explicit inline DatatypeID(std::string &&other)
+    explicit inline DatatypeID(std::string &&other) noexcept
         : inner{std::move(other)} {
     }
 
@@ -159,7 +159,7 @@ public:
         return std::get<1>(this->inner);
     }
 
-    inline std::strong_ordering operator<=>(DatatypeID const &other) const noexcept = default;
+    std::strong_ordering operator<=>(DatatypeID const &other) const noexcept = default;
 
     template<typename F>
     friend decltype(auto) visit(F && f, DatatypeID const &self) noexcept(noexcept(std::visit(std::forward<F>(f), std::declval<variant_t const &>()))) {
