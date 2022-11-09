@@ -32,7 +32,7 @@ template<>
 bool capabilities::Logical<xsd_positive_integer>::effective_boolean_value(cpp_type const &) noexcept;
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_positive_integer>::compare(cpp_type const &lhs, cpp_type const &rhs);
+std::partial_ordering capabilities::Comparable<xsd_positive_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_positive_integer,
                                            capabilities::Logical,

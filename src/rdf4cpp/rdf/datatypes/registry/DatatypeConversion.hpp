@@ -394,7 +394,7 @@ consteval ConversionTable auto make_conversion_table_for() {
  * @return the generated runtime table
  */
 template<LiteralDatatype T>
-RuntimeConversionTable make_runtime_conversion_table_for() {
+RuntimeConversionTable make_runtime_conversion_table_for() noexcept {
     using convert_table_t = decltype(make_conversion_table_for<T>());
     return RuntimeConversionTable::from_concrete<convert_table_t>();
 }

@@ -37,7 +37,7 @@ protected:
     explicit Node(NodeBackendHandle id) noexcept;
 
 public:
-    [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const;
+    [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const noexcept;
 
     // TODO: revisit comparison implementation
     // TODO: support comparison between NodeStorages
@@ -51,7 +51,7 @@ public:
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      * @return string representation in N-format
      */
-    [[nodiscard]] explicit operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const noexcept;
 
     /**
      * @see operator std::string() const
@@ -94,28 +94,28 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
      * @return a copy of type BlankNode
      */
-    explicit operator BlankNode() const;
+    explicit operator BlankNode() const noexcept;
     /**
      * Conversion to IRI is only safe if `(is_iri() == true)`
      * @return a copy of type IRI
      */
-    explicit operator IRI() const;
+    explicit operator IRI() const noexcept;
     /**
      * Conversion to Literal is only safe if `(is_literal() == true)`
      * @return a copy of type Literal
      */
-    explicit operator Literal() const;
+    explicit operator Literal() const noexcept;
     /**
      * Conversion to Variable is only safe if `(is_variable() == true)`
      * @return a copy of type Variable
      */
-    explicit operator query::Variable() const;
+    explicit operator query::Variable() const noexcept;
 
 
     /**

@@ -22,7 +22,7 @@ template<>
 bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs);
+std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<owl_real,
                                            capabilities::Logical,

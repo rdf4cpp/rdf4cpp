@@ -110,7 +110,7 @@ private:
     std::vector<size_t> p_ranks;
     std::vector<RuntimeConversionEntry> table;
 
-    RuntimeConversionTable(size_t const s_rank, size_t const max_p_rank)
+    RuntimeConversionTable(size_t const s_rank, size_t const max_p_rank) noexcept
         : s_rank{s_rank}, max_p_rank{max_p_rank}, p_ranks(s_rank)
     {
         if (s_rank * max_p_rank > 0) {
@@ -121,7 +121,7 @@ private:
         }
     }
 
-    inline static RuntimeConversionTable empty() {
+    inline static RuntimeConversionTable empty() noexcept {
         return RuntimeConversionTable{0, 0};
     }
 
@@ -141,7 +141,7 @@ private:
 
 public:
     template<ConversionTable Table>
-    static RuntimeConversionTable from_concrete() {
+    static RuntimeConversionTable from_concrete() noexcept {
         static constexpr size_t s_rank = std::tuple_size_v<Table>;
 
         static constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
@@ -150,10 +150,10 @@ public:
 
         RuntimeConversionTable table{s_rank, max_p_rank};
 
-        util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) {
+        util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) noexcept {
             table.p_ranks[s_off] = std::tuple_size_v<Layer>;
 
-            util::tuple_type_fold<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) {
+            util::tuple_type_fold<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) noexcept {
                 table.conversion_at_index(s_off, p_off) = RuntimeConversionEntry::from_concrete<Entry>();
                 return p_off + 1;
             });

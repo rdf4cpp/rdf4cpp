@@ -67,7 +67,7 @@ struct Default {
      * @param value the value
      * @return <div>value</div>'s canonical string representation
      */
-    inline static std::string to_string(cpp_type const &value) {
+    inline static std::string to_string(cpp_type const &value) noexcept {
         // If not further specified, to_string is instantiated via operator<<. If operator<< is not defined for cpp_type instantiation will fail.
         std::stringstream str_s;
         str_s << value;
@@ -253,7 +253,7 @@ template<util::ConstexprString type_iri>
 struct Comparable {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
-    inline static std::partial_ordering compare(cpp_type const &lhs, cpp_type const &rhs) {
+    inline static std::partial_ordering compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         return lhs <=> rhs;
     }
 };
@@ -293,7 +293,7 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
                   "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
                   "Note: this would cause inconsistency between registry and node storage");
 protected:
-    static std::nullptr_t init();
+    static std::nullptr_t init() noexcept;
     inline static std::nullptr_t const dummy = init();
 
     // Force `dummy` to be instantiated, even though it's unused.
@@ -301,7 +301,7 @@ protected:
 };
 
 template<util::ConstexprString type_iri, template<util::ConstexprString> typename... Capabilities>
-std::nullptr_t LiteralDatatypeImpl<type_iri, Capabilities...>::init() {
+std::nullptr_t LiteralDatatypeImpl<type_iri, Capabilities...>::init() noexcept {
     DatatypeRegistry::add<LiteralDatatypeImpl<type_iri, Capabilities...>>();
     return nullptr;
 }

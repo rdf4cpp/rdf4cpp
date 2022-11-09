@@ -22,7 +22,7 @@ template<>
 capabilities::Default<xsd_float>::cpp_type capabilities::Default<xsd_float>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_float>::to_string(cpp_type const &value);
+std::string capabilities::Default<xsd_float>::to_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_float>::effective_boolean_value(cpp_type const &value) noexcept;

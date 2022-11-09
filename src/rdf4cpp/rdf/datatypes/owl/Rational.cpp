@@ -22,7 +22,7 @@ capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational
 }
 
 template<>
-std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) {
+std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) noexcept {
     if (auto den = denominator(value); den < 0) {
         // canonicalize x/-y to -x/y and -x/-y to x/y
         cpp_type const canonical{-numerator(value), -std::move(den)};
@@ -38,7 +38,7 @@ bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs) {
+std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (lhs < rhs) {
         return std::partial_ordering::less;
     } else if (rhs < lhs) {

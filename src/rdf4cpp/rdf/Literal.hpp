@@ -3,6 +3,7 @@
 
 #include <any>
 #include <ostream>
+#include <type_traits>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
@@ -24,7 +25,8 @@ private:
      *      convertible to a common type or the common type is not numeric
      */
     template<typename OpSelect>
-    Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+        requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
+    [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @brief the implementation for all numeric, unary operations
@@ -35,7 +37,8 @@ private:
      * @return the literal resulting from the selected unop or Literal{} if this is not numeric
      */
     template<typename OpSelect>
-    Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const;
+        requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::unop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
+    [[nodiscard]] Literal numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @brief the implementation of the value comparison function
@@ -51,7 +54,7 @@ private:
      *
      * @return the ordering of the values of this and other; if there is a value ordering
      */
-    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
+    std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const noexcept;
 
     /**
      * get the DatatypeIDView for the datatype of *this,
@@ -68,19 +71,20 @@ private:
     /**
      * Creates a simple Literal directly without any safety checks
      */
-    static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage);
+    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a typed Literal without doing any safety checks or canonicalization.
      */
-    static Literal make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage);
+    [[nodiscard]] static Literal make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
      */
-    static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage);
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
+
 protected:
-    explicit Literal(Node::NodeBackendHandle handle);
+    explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
     Literal() noexcept;
@@ -120,7 +124,7 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
-                        NodeStorage &node_storage = NodeStorage::default_instance()) {
+                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
@@ -167,7 +171,7 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-    [[nodiscard]] std::string_view lexical_form() const;
+    [[nodiscard]] std::string_view lexical_form() const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -181,15 +185,15 @@ public:
      * Returns the datatype IRI of this.
      * @return datatype IRI
      */
-    [[nodiscard]] IRI datatype() const;
+    [[nodiscard]] IRI datatype() const noexcept;
 
     /**
      * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
      * @return language tag
      */
-    [[nodiscard]] std::string_view language_tag() const;
+    [[nodiscard]] std::string_view language_tag() const noexcept;
 
-    [[nodiscard]] explicit operator std::string() const;
+    [[nodiscard]] explicit operator std::string() const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
@@ -199,11 +203,11 @@ public:
      */
     [[nodiscard]] std::any value() const;
 
-    [[nodiscard]] bool is_literal() const;
-    [[nodiscard]] bool is_variable() const;
-    [[nodiscard]] bool is_blank_node() const;
-    [[nodiscard]] bool is_iri() const;
-    [[nodiscard]] bool is_numeric() const;
+    [[nodiscard]] bool is_literal() const noexcept;
+    [[nodiscard]] bool is_variable() const noexcept;
+    [[nodiscard]] bool is_blank_node() const noexcept;
+    [[nodiscard]] bool is_iri() const noexcept;
+    [[nodiscard]] bool is_numeric() const noexcept;
 
     /**
      * The default (value-only) comparison function
@@ -211,12 +215,12 @@ public:
      *
      * @return the value ordering of this and other
      */
-    [[nodiscard]] std::partial_ordering compare(Literal const &other) const;
+    [[nodiscard]] std::partial_ordering compare(Literal const &other) const noexcept;
 
     /**
      * A convenient (and equivalent) alternative to compare.
      */
-    std::partial_ordering operator<=>(Literal const &other) const;
+    std::partial_ordering operator<=>(Literal const &other) const noexcept;
 
     /**
      * The comparison function with SPARQL operator extensions.
@@ -229,50 +233,50 @@ public:
      *          - at least one of the value's types is not comparable
      *          - there is no viable conversion to a common type to check for equality
      */
-    [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const;
+    [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const noexcept;
 
-    util::TriBool eq(Literal const &other) const;
-    util::TriBool operator==(Literal const &other) const;
+    [[nodiscard]] util::TriBool eq(Literal const &other) const noexcept;
+    util::TriBool operator==(Literal const &other) const noexcept;
 
-    util::TriBool ne(Literal const &other) const;
-    util::TriBool operator!=(Literal const &other) const;
+    [[nodiscard]] util::TriBool ne(Literal const &other) const noexcept;
+    util::TriBool operator!=(Literal const &other) const noexcept;
 
-    util::TriBool lt(Literal const &other) const;
-    util::TriBool operator<(Literal const &other) const;
+    [[nodiscard]] util::TriBool lt(Literal const &other) const noexcept;
+    util::TriBool operator<(Literal const &other) const noexcept;
 
-    util::TriBool le(Literal const &other) const;
-    util::TriBool operator<=(Literal const &other) const;
+    [[nodiscard]] util::TriBool le(Literal const &other) const noexcept;
+    util::TriBool operator<=(Literal const &other) const noexcept;
 
-    util::TriBool gt(Literal const &other) const;
-    util::TriBool operator>(Literal const &other) const;
+    [[nodiscard]] util::TriBool gt(Literal const &other) const noexcept;
+    util::TriBool operator>(Literal const &other) const noexcept;
 
-    util::TriBool ge(Literal const &other) const;
-    util::TriBool operator>=(Literal const &other) const;
+    [[nodiscard]] util::TriBool ge(Literal const &other) const noexcept;
+    util::TriBool operator>=(Literal const &other) const noexcept;
 
-    bool eq_with_extensions(Literal const &other) const;
-    bool ne_with_extensions(Literal const &other) const;
-    bool lt_with_extensions(Literal const &other) const;
-    bool le_with_extensions(Literal const &other) const;
-    bool gt_with_extensions(Literal const &other) const;
-    bool ge_with_extensions(Literal const &other) const;
+    [[nodiscard]] bool eq_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] bool ne_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] bool lt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] bool le_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] bool gt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] bool ge_with_extensions(Literal const &other) const noexcept;
 
-    Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator+(Literal const &other) const;
+    [[nodiscard]] Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator+(Literal const &other) const noexcept;
 
-    Literal sub(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator-(Literal const &other) const;
+    [[nodiscard]] Literal sub(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator-(Literal const &other) const noexcept;
 
-    Literal mul(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator*(Literal const &other) const;
+    [[nodiscard]] Literal mul(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator*(Literal const &other) const noexcept;
 
-    Literal div(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator/(Literal const &other) const;
+    [[nodiscard]] Literal div(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator/(Literal const &other) const noexcept;
 
-    Literal pos(NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator+() const;
+    [[nodiscard]] Literal pos(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator+() const noexcept;
 
-    Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator-() const;
+    [[nodiscard]] Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator-() const noexcept;
 
     /**
      * @return the effective boolean value of this
@@ -283,16 +287,16 @@ public:
      * Converts this literal to it's effective boolean value
      * @return Literal containing the ebv
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-    Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator&&(Literal const &other) const;
+    [[nodiscard]] Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator&&(Literal const &other) const noexcept;
 
-    Literal logical_or(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator||(Literal const &other) const;
+    [[nodiscard]] Literal logical_or(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator||(Literal const &other) const noexcept;
 
-    Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const;
-    Literal operator!() const;
+    [[nodiscard]] Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal operator!() const noexcept;
 
     /**
      * Get the value of an literal. T must be the registered datatype for the datatype iri.

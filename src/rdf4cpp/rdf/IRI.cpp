@@ -32,12 +32,12 @@ datatypes::registry::DatatypeIDView IRI::to_datatype_id() const noexcept {
     }
 }
 
-IRI::operator std::string() const { return handle_.iri_backend().n_string(); }
+IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
 
-bool IRI::is_literal() const { return false; }
-bool IRI::is_variable() const { return false; }
-bool IRI::is_blank_node() const { return false; }
-bool IRI::is_iri() const { return true; }
+bool IRI::is_literal() const noexcept { return false; }
+bool IRI::is_variable() const noexcept { return false; }
+bool IRI::is_blank_node() const noexcept { return false; }
+bool IRI::is_iri() const noexcept { return true; }
 
 
 IRI IRI::default_graph(NodeStorage &node_storage) {
@@ -47,7 +47,7 @@ std::ostream &operator<<(std::ostream &os, const IRI &iri) {
     os << static_cast<std::string>(iri);
     return os;
 }
-std::string_view IRI::identifier() const {
+std::string_view IRI::identifier() const noexcept {
     return handle_.iri_backend().identifier;
 }
 IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept

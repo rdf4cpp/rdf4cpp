@@ -9,7 +9,7 @@ capabilities::Default<xsd_unsigned_int>::cpp_type capabilities::Default<xsd_unsi
 }
 
 template<>
-std::string capabilities::Default<xsd_unsigned_int>::to_string(cpp_type const &value) {
+std::string capabilities::Default<xsd_unsigned_int>::to_string(cpp_type const &value) noexcept {
     return util::to_chars(value);
 }
 
