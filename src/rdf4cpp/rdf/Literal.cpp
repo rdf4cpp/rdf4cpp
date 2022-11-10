@@ -178,22 +178,20 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         return Literal{};
     }
 
-    if (target.to_datatype_id() == Boolean::datatype_id) {
+    auto const this_dtid = this->get_datatype_id();
+    auto const target_dtid = target.to_datatype_id();
+
+    if (target_dtid == Boolean::datatype_id) {
         // any -> bool
         return this->ebv_as_literal(node_storage);
     }
 
-    if (target.to_datatype_id() == String::datatype_id) {
+    if (target_dtid == String::datatype_id) {
         // any -> string
         return this->as_lexical_form(node_storage);
     }
 
-    if (this->get_datatype_id() == Boolean::datatype_id && DatatypeRegistry::get_numerical_ops(target.to_datatype_id()) != nullptr) {
-        // bool -> numeric
-        return Literal::make(this->value<Boolean>() ? "1" : "0", target, node_storage);
-    }
-
-    if (this->get_datatype_id() == String::datatype_id) {
+    if (this_dtid == String::datatype_id) {
         // string -> any
         try {
             return Literal::make(this->lexical_form(), target, node_storage);
@@ -202,17 +200,39 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         }
     }
 
-    // general cases
-
-    auto const *this_e = DatatypeRegistry::get_entry(this->get_datatype_id());
-    if (this_e == nullptr) {
-        // this datatype not registered
+    auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+    if (target_e == nullptr) {
+        // target not registered
         return Literal{};
     }
 
-    auto const *target_e = DatatypeRegistry::get_entry(target.to_datatype_id());
-    if (target_e == nullptr) {
-        // target not registered
+    if (this_dtid == Boolean::datatype_id && target_e->numeric_ops.has_value()) {
+        // bool -> numeric
+        // fuseki behaviour
+
+        auto const &[target_num_impl_dtid, target_num_impl_e] = [&]() {
+            // fetch corresponding impl type
+            if (target_e->numeric_ops->is_stub()) {
+                auto const impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
+                auto const *target_num_impl = DatatypeRegistry::get_entry(impl_converter.target_type_id);
+
+                return std::make_pair(datatypes::registry::DatatypeIDView{impl_converter.target_type_id}, target_num_impl);
+            } else {
+                return std::make_pair(target_dtid, target_e);
+            }
+        }();
+
+        auto const value = this->template value<Boolean>() ? target_num_impl_e->numeric_ops->get_impl().one_value_fptr()
+                                                           : target_num_impl_e->numeric_ops->get_impl().zero_value_fptr();
+
+        return Literal::make_typed_unchecked(target_num_impl_e->to_string_fptr(value), IRI{target_num_impl_dtid, node_storage}, node_storage);
+    }
+
+    // general cases
+
+    auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+    if (this_e == nullptr) {
+        // this datatype not registered
         return Literal{};
     }
 
@@ -225,7 +245,12 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
     if (auto const inverse_conversion = DatatypeRegistry::get_cast_conversion(target_e->conversion_table, this_e->conversion_table); inverse_conversion.has_value()) {
         // normal downcast
         auto const inverse_converted = inverse_conversion->inverse_convert(this->value());
-        return Literal::make_typed_unchecked(target_e->to_string_fptr(inverse_converted), target, node_storage);
+        if (!inverse_converted.has_value()) {
+            // conversion found but failed
+            return Literal{};
+        }
+
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(*inverse_converted), target, node_storage);
     }
 
     if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
@@ -235,7 +260,12 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
         auto const target_value = common_conversion->inverse_convert_rhs(common_type_value); // downcast to target
 
-        return Literal::make_typed_unchecked(target_e->to_string_fptr(target_value), target, node_storage);
+        if (!target_value.has_value()) {
+            // conversion found but failed
+            return Literal{};
+        }
+
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
     }
 
     // no conversion found

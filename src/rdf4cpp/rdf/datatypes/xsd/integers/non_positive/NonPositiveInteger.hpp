@@ -34,6 +34,9 @@ bool capabilities::Logical<xsd_non_positive_integer>::effective_boolean_value(cp
 template<>
 std::partial_ordering capabilities::Comparable<xsd_non_positive_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
+template<>
+nonstd::expected<capabilities::Default<xsd_non_positive_integer>::cpp_type, DynamicError> capabilities::Subtype<xsd_non_positive_integer>::from_supertype(super_cpp_type const &value) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_non_positive_integer,
                                            capabilities::Logical,
                                            capabilities::NumericStub,

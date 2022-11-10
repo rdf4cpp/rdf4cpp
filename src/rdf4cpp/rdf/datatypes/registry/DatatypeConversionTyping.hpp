@@ -72,10 +72,11 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
  */
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &) noexcept;
+    using inverse_convert_fptr_t = nonstd::expected<std::any, DynamicError> (*)(std::any const &) noexcept;
 
     DatatypeID target_type_id;
     convert_fptr_t convert;
-    convert_fptr_t inverse_convert;
+    inverse_convert_fptr_t inverse_convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() noexcept {
@@ -93,9 +94,15 @@ struct RuntimeConversionEntry {
                     auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
                 },
-                .inverse_convert = [](std::any const &value) noexcept -> std::any {
+                .inverse_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
                     auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
-                    return Entry::inverse_convert(actual_value);
+                    auto const maybe_converted = Entry::inverse_convert(actual_value);
+
+                    if (!maybe_converted.has_value()) {
+                        return nonstd::make_unexpected(maybe_converted.error());
+                    }
+
+                    return *maybe_converted;
                 }};
     }
 };

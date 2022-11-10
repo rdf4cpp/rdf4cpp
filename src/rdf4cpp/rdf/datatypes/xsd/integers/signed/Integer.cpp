@@ -23,9 +23,9 @@ bool capabilities::Logical<xsd_integer>::effective_boolean_value(cpp_type const 
 }
 
 template<>
-nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_integer>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, DynamicError> capabilities::Numeric<xsd_integer>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (rhs == 0) {
-        return nonstd::make_unexpected(NumericOpError::DivideByZero);
+        return nonstd::make_unexpected(DynamicError::DivideByZero);
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-divide

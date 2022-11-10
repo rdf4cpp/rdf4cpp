@@ -254,17 +254,43 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("bool -> numeric") {
-        auto const lit1 = Literal::make<Boolean>(true);
-        auto const lit2 = lit1.template cast<Integer>();
+        SUBCASE("integers") {
+            auto const lit1 = Literal::make<Boolean>(true);
+            auto const lit2 = lit1.template cast<Byte>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Integer::identifier});
+            CHECK(lit2.template value<Integer>() == 1);
 
-        CHECK(lit2.datatype() == IRI{Integer::identifier});
-        CHECK(lit2.value<Integer>() == 1);
+            auto const lit3 = Literal::make<Boolean>(false);
+            auto const lit4 = lit3.template cast<NonPositiveInteger>();
+            CHECK(!lit4.null());
+            CHECK(lit4.datatype() == IRI{Integer::identifier});
+            CHECK(lit4.template value<Integer>() == 0);
+        }
 
-        auto const lit3 = Literal::make<Boolean>(false);
-        auto const lit4 = lit3.template cast<Float>();
+        SUBCASE("decimal") {
+            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit2 = lit1.template cast<Decimal>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Decimal::identifier});
+            CHECK(lit2.template value<Decimal>() == 0.0);
+        }
 
-        CHECK(lit4.datatype() == IRI{Float::identifier});
-        CHECK(lit4.value<Float>() == 0.f);
+        SUBCASE("float") {
+            auto const lit1 = Literal::make<Boolean>(true);
+            auto const lit2 = lit1.template cast<Float>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Float::identifier});
+            CHECK(lit2.template value<Float>() == 1.f);
+        }
+
+        SUBCASE("double") {
+            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit2 = lit1.template cast<Double>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Double::identifier});
+            CHECK(lit2.template value<Double>() == 0.0);
+        }
     }
 
     SUBCASE("cross hierarchy: int -> unsignedInt") {
@@ -275,15 +301,25 @@ TEST_CASE("Literal - casting") {
         CHECK(lit2.value<UnsignedInt>() == 1);
     }
 
-    SUBCASE("IRI -> str") {
-        // TODO: possible with IRI::identifier but IRI would need cast function (?)
-    }
-
     SUBCASE("subtypes") {
         CHECK(lit1.template cast<Integer>().datatype() == IRI{Integer::identifier});
         CHECK(lit1.template cast<Float>().datatype() == IRI{Float::identifier});
 
         auto const lit2 = Literal::make<Integer>(420);
         CHECK(lit2.template cast<Int>() == Literal::make<Int>(420));
+    }
+
+    SUBCASE("value too large") {
+        auto const lit1 = Literal::make<Int>(67000);
+        auto const lit2 = lit1.template cast<Short>();
+
+        CHECK(lit2.null());
+    }
+
+    SUBCASE("negative to unsigned") {
+        auto const lit1 = Literal::make<Int>(-10);
+        auto const lit2 = lit1.template cast<UnsignedInt>();
+
+        CHECK(lit2.null());
     }
 }

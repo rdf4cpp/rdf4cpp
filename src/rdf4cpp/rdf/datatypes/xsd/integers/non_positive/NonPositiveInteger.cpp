@@ -37,6 +37,15 @@ std::partial_ordering capabilities::Comparable<xsd_non_positive_integer>::compar
     }
 }
 
+template<>
+nonstd::expected<capabilities::Default<xsd_non_positive_integer>::cpp_type, DynamicError> capabilities::Subtype<xsd_non_positive_integer>::from_supertype(super_cpp_type const &value) noexcept {
+    if (value > 0) {
+        return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+    }
+
+    return value;
+}
+
 template struct LiteralDatatypeImpl<xsd_non_positive_integer,
                                     capabilities::Logical,
                                     capabilities::NumericStub,

@@ -34,6 +34,9 @@ std::string capabilities::Default<xsd_long>::to_string(cpp_type const &value) no
 template<>
 bool capabilities::Logical<xsd_long>::effective_boolean_value(cpp_type const &value) noexcept;
 
+template<>
+nonstd::expected<capabilities::Default<xsd_long>::cpp_type, DynamicError> capabilities::Subtype<xsd_long>::from_supertype(super_cpp_type const &value) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_long,
                                            capabilities::Logical,
                                            capabilities::NumericStub,

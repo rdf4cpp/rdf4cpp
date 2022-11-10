@@ -8,7 +8,7 @@
 
 using namespace rdf4cpp::rdf;
 using namespace datatypes::xsd;
-using datatypes::NumericOpError;
+using datatypes::DynamicError;
 
 // https://www.w3.org/TR/xpath-functions/#op.numeric
 TEST_SUITE("numeric op results") {
@@ -17,7 +17,7 @@ TEST_SUITE("numeric op results") {
             Integer::cpp_type const zero{0};
             Integer::cpp_type const one{1};
 
-            CHECK(Integer::div(one, zero) == nonstd::make_unexpected(NumericOpError::DivideByZero));
+            CHECK(Integer::div(one, zero) == nonstd::make_unexpected(DynamicError::DivideByZero));
         }
 
         // TODO: comment-in when decimal is properly implemented
@@ -28,10 +28,10 @@ TEST_SUITE("numeric op results") {
         //    Decimal::cpp_type const min{std::numeric_limits<Decimal::cpp_type>::min()};
         //    Decimal::cpp_type const max{std::numeric_limits<Decimal::cpp_type>::max()};
         //
-        //    CHECK(Decimal::add(max, one) == nonstd::make_unexpected(NumericOpError::OverOrUnderFlow));
+        //    CHECK(Decimal::add(max, one) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
         //    CHECK(Decimal::sub(min, one) == zero);
-        //    CHECK(Decimal::mul(max, two) == nonstd::make_unexpected(NumericOpError::OverOrUnderFlow));
-        //    CHECK(Decimal::div(max, zero) == nonstd::make_unexpected(NumericOpError::DivideByZero));
+        //    CHECK(Decimal::mul(max, two) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+        //    CHECK(Decimal::div(max, zero) == nonstd::make_unexpected(DynamicError::DivideByZero));
         //}
     }
 
