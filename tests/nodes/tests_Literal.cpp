@@ -255,17 +255,27 @@ TEST_CASE("Literal - casting") {
 
     SUBCASE("bool -> numeric") {
         SUBCASE("integers") {
-            auto const lit1 = Literal::make<Boolean>(true);
-            auto const lit2 = lit1.template cast<Byte>();
-            CHECK(!lit2.null());
-            CHECK(lit2.datatype() == IRI{Integer::identifier});
-            CHECK(lit2.template value<Integer>() == 1);
+            SUBCASE("regular case") {
+                auto const lit1 = Literal::make<Boolean>(true);
+                auto const lit2 = lit1.template cast<Byte>();
+                CHECK(!lit2.null());
+                CHECK(lit2.datatype() == IRI{Byte::identifier});
+                CHECK(lit2.template value<Byte>() == 1);
+            }
 
-            auto const lit3 = Literal::make<Boolean>(false);
-            auto const lit4 = lit3.template cast<NonPositiveInteger>();
-            CHECK(!lit4.null());
-            CHECK(lit4.datatype() == IRI{Integer::identifier});
-            CHECK(lit4.template value<Integer>() == 0);
+            SUBCASE("partially representable - representable case") {
+                auto const lit3 = Literal::make<Boolean>(false);
+                auto const lit4 = lit3.template cast<NonPositiveInteger>();
+                CHECK(!lit4.null());
+                CHECK(lit4.datatype() == IRI{NonPositiveInteger::identifier});
+                CHECK(lit4.template value<NonPositiveInteger>() == 0);
+            }
+
+            SUBCASE("partially representable - unrepresentable case") {
+                auto const lit3 = Literal::make<Boolean>(true);
+                auto const lit4 = lit3.template cast<NegativeInteger>();
+                CHECK(lit4.null());
+            }
         }
 
         SUBCASE("decimal") {
