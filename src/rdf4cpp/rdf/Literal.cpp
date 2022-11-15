@@ -181,6 +181,10 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
     auto const this_dtid = this->datatype_id();
     DatatypeIDView const target_dtid{target};
 
+    if (this_dtid == target_dtid) {
+        return static_cast<Literal>(this->to_node_storage(node_storage));
+    }
+
     if (target_dtid == Boolean::datatype_id) {
         // any -> bool
         return this->ebv_as_literal(node_storage);
@@ -234,43 +238,22 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         }
     }
 
-    // general cases
-
     auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
     if (this_e == nullptr) {
         // this datatype not registered
         return Literal{};
     }
 
-    if (auto const conversion = DatatypeRegistry::get_cast_conversion(this_e->conversion_table, target_e->conversion_table); conversion.has_value()) {
-        // try normal upcast
-        auto const converted = conversion->convert(this->value());
-        return Literal::make_typed_unchecked(target_e->to_string_fptr(converted), target, node_storage);
-    }
-
-    if (auto const inverse_conversion = DatatypeRegistry::get_cast_conversion(target_e->conversion_table, this_e->conversion_table); inverse_conversion.has_value()) {
-        // try normal downcast
-        auto const inverse_converted = inverse_conversion->inverted_convert(this->value());
-        if (!inverse_converted.has_value()) {
-            // conversion found but failed
-            return Literal{};
-        }
-
-        return Literal::make_typed_unchecked(target_e->to_string_fptr(*inverse_converted), target, node_storage);
-    }
-
     if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
-        // try casting across hierarchies
-        // need common type above both types
+        // general cast
+        // TODO: if performance is bad split into separate cases for up-, down- and cross-casting to avoid one set of std::any wrapping and unwrapping for the former 2
 
         auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
         auto const target_value = common_conversion->inverted_convert_rhs(common_type_value); // downcast to target
-
         if (!target_value.has_value()) {
             // downcast failed
             return Literal{};
         }
-
         return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
     }
 

@@ -391,15 +391,6 @@ public:
 
         return get_common_type_conversion(lhs_entry->conversion_table, rhs_entry->conversion_table);
     }
-
-    /**
-     * Tries to find a conversion to upcast source to target ex. xsd:int -> xsd:long
-     *
-     * @param source conversion table of type to cast
-     * @param target conversion table to type to cast to
-     * @return nullopt if no such conversion exists, or the found conversion
-     */
-    static std::optional<RuntimeConversionEntry> get_cast_conversion(RuntimeConversionTable const &source, RuntimeConversionTable const &target) noexcept;
 };
 
 
@@ -639,52 +630,11 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         if (res.has_value()) {
             // swap functions to reverse the ordering change
             std::swap(res->convert_lhs, res->convert_rhs);
+            std::swap(res->inverted_convert_lhs, res->inverted_convert_rhs);
         }
 
         return res;
     }
-}
-
-inline std::optional<RuntimeConversionEntry> DatatypeRegistry::get_cast_conversion(RuntimeConversionTable const &source, RuntimeConversionTable const &target) noexcept {
-    if (source.s_rank < target.s_rank) {
-        return std::nullopt;  // downcasting not supported
-    }
-
-    auto const s_off = source.s_rank - target.s_rank;
-    if (s_off >= source.s_rank) {
-        // subtype offset to large
-        return std::nullopt;
-    }
-
-    auto const source_p_rank = source.promotion_rank_at_level(s_off);
-    auto const target_p_rank = target.promotion_rank_at_level(0);
-
-    if (source_p_rank < target_p_rank) {
-        // source is right of target, demoting is not supported
-        return std::nullopt;
-    }
-
-    auto const conversion = [&]() -> std::optional<RuntimeConversionEntry> {
-        if (source_p_rank == target_p_rank) {
-            // found candidate
-            return source.conversion_at_index(s_off, 0);
-        } else {
-            auto const p_off = source_p_rank - target_p_rank;
-            if (p_off >= source_p_rank) {
-                // promotion offset to large
-                return std::nullopt;
-            }
-
-            return source.conversion_at_index(s_off, p_off);
-        }
-    }();
-
-    if (!conversion.has_value() || conversion->target_type_id != target.conversion_at_index(0, 0).target_type_id) {
-        // no conversion found or targets do not match
-        return std::nullopt;
-    }
-
-    return *conversion;
 }
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -253,6 +253,13 @@ TEST_CASE("Literal - casting") {
         CHECK(lit2.template value<Double>() == 1.0);
     }
 
+    SUBCASE("id cast") {
+        auto const lit1 = Literal::make<Int>(5);
+        auto const lit2 = lit1.template cast<Int>();
+
+        CHECK(lit1 == lit2);
+    }
+
     SUBCASE("bool -> numeric") {
         SUBCASE("integers") {
             SUBCASE("regular case") {
