@@ -150,7 +150,6 @@ public:
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.
-     * Only widening casts are supported (e.g. xsd:integer -> xsd:int is not).
      *
      * @param target the IRI of the cast target
      * @param node_storage where to store the literal resulting from the cast
