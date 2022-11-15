@@ -62,7 +62,7 @@ DatatypeIDVisitor(F, D) -> DatatypeIDVisitor<F, D>;
  *
  * Caution: You need to use the correct variant for the type you are searching, otherwise the registry
  *   will not find it. So usually this type should not be constructed manually, but instead obtained from a helper function, e.g.:
- *   - Literal::get_datatype_id
+ *   - Literal::datatype_id
  *   - IRI::from_datatype_id
  */
 struct DatatypeIDView {

@@ -61,7 +61,7 @@ private:
      * it will always contain the appropriate id type
      * and can be used to index the registry
      */
-    [[nodiscard]] datatypes::registry::DatatypeIDView get_datatype_id() const noexcept;
+    [[nodiscard]] datatypes::registry::DatatypeIDView datatype_id() const noexcept;
 
     /**
      * @return if the datatype of this is simultaneously fixed but not numeric
@@ -163,7 +163,7 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
-        return this->cast(IRI{LiteralDatatype_t::datatype_id}, node_storage);
+        return this->cast(IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
     }
 
     /**

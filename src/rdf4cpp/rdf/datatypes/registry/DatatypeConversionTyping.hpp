@@ -72,11 +72,11 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
  */
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &) noexcept;
-    using inverse_convert_fptr_t = nonstd::expected<std::any, DynamicError> (*)(std::any const &) noexcept;
+    using inverted_convert_fptr_t = nonstd::expected<std::any, DynamicError> (*)(std::any const &) noexcept;
 
     DatatypeID target_type_id;
     convert_fptr_t convert;
-    inverse_convert_fptr_t inverse_convert;
+    inverted_convert_fptr_t inverted_convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() noexcept {
@@ -94,7 +94,7 @@ struct RuntimeConversionEntry {
                     auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
                 },
-                .inverse_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
+                .inverted_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
                     auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
                     auto const maybe_converted = Entry::inverse_convert(actual_value);
 
@@ -124,7 +124,7 @@ private:
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
                                                       .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
                                                       .convert = nullptr,
-                                                      .inverse_convert = nullptr});
+                                                      .inverted_convert = nullptr});
         }
     }
 

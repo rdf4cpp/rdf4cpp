@@ -9,17 +9,30 @@ IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
                              storage::node::identifier::RDFNodeType::IRI,
                              node_storage.id()}) {}
 
-IRI IRI::from_datatype_id(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept {
-    if (id.is_fixed()) {
-        return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(id.get_fixed().to_underlying())},
-                                     storage::node::identifier::RDFNodeType::IRI,
-                                     node_storage.id()}};
-    } else {
-        return IRI{id.get_dynamic(), node_storage};
-    }
+IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
+    : IRI{visit(datatypes::registry::DatatypeIDVisitor{
+                        [&](storage::node::identifier::LiteralType const fixed) -> IRI {
+                            return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(fixed.to_underlying())},
+                                                         storage::node::identifier::RDFNodeType::IRI,
+                                                         node_storage.id()}};
+                        },
+                        [&](std::string_view const dynamic) -> IRI {
+                            return IRI{dynamic, node_storage};
+                        }},
+                id)} {
 }
 
-datatypes::registry::DatatypeIDView IRI::to_datatype_id() const noexcept {
+//IRI IRI::from_datatype_id(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept {
+//    if (id.is_fixed()) {
+//        return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(id.get_fixed().to_underlying())},
+//                                     storage::node::identifier::RDFNodeType::IRI,
+//                                     node_storage.id()}};
+//    } else {
+//        return IRI{id.get_dynamic(), node_storage};
+//    }
+//}
+
+IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::node::identifier;
 
     auto const id = this->handle_.node_id();
@@ -50,9 +63,6 @@ std::ostream &operator<<(std::ostream &os, const IRI &iri) {
 std::string_view IRI::identifier() const noexcept {
     return handle_.iri_backend().identifier;
 }
-IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
-    : IRI{IRI::from_datatype_id(id, node_storage)}
-{
-}
+
 
 }  // namespace rdf4cpp::rdf
