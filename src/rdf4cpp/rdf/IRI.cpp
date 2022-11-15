@@ -22,16 +22,6 @@ IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage
                 id)} {
 }
 
-//IRI IRI::from_datatype_id(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept {
-//    if (id.is_fixed()) {
-//        return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(id.get_fixed().to_underlying())},
-//                                     storage::node::identifier::RDFNodeType::IRI,
-//                                     node_storage.id()}};
-//    } else {
-//        return IRI{id.get_dynamic(), node_storage};
-//    }
-//}
-
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::node::identifier;
 
