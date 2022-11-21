@@ -34,15 +34,19 @@ public:
 
     struct NumericOpResult {
         DatatypeID result_type_id;
-        nonstd::expected<std::any, NumericOpError> result_value;
+        nonstd::expected<std::any, DynamicError> result_value;
     };
 
+    using nullop_fptr_t = std::any (*)() noexcept;
     using unop_fptr_t = NumericOpResult (*)(std::any const &) noexcept;
     using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &) noexcept;
 
     using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &) noexcept;
 
     struct NumericOpsImpl {
+        nullop_fptr_t zero_value_fptr; // 0
+        nullop_fptr_t one_value_fptr; // 1
+
         binop_fptr_t add_fptr;  // a + b
         binop_fptr_t sub_fptr;  // a - b
         binop_fptr_t mul_fptr;  // a * b
@@ -89,6 +93,7 @@ public:
         ebv_fptr_t ebv_fptr; // convert to effective boolean value
 
         std::optional<NumericOps> numeric_ops;
+
         compare_fptr_t compare_fptr;
 
         RuntimeConversionTable conversion_table;
@@ -119,7 +124,10 @@ public:
     struct DatatypeConverter {
         DatatypeIDView target_type_id;
         RuntimeConversionEntry::convert_fptr_t convert_lhs;
+        RuntimeConversionEntry::inverted_convert_fptr_t inverted_convert_lhs;
+
         RuntimeConversionEntry::convert_fptr_t convert_rhs;
+        RuntimeConversionEntry::inverted_convert_fptr_t inverted_convert_rhs;
 
         inline static DatatypeConverter from_individuals(RuntimeConversionEntry const &l, RuntimeConversionEntry const &r) noexcept {
             assert(l.target_type_id == r.target_type_id);
@@ -127,7 +135,9 @@ public:
             return DatatypeConverter{
                     .target_type_id = l.target_type_id,
                     .convert_lhs = l.convert,
-                    .convert_rhs = r.convert};
+                    .inverted_convert_lhs = l.inverted_convert,
+                    .convert_rhs = r.convert,
+                    .inverted_convert_rhs = r.inverted_convert};
         }
     };
 
@@ -476,7 +486,7 @@ struct SelectOpResIRI {
 };
 
 template<typename T>
-[[nodiscard]] nonstd::expected<std::any, NumericOpError> map_expected(nonstd::expected<T, NumericOpError> const &e) noexcept {
+[[nodiscard]] nonstd::expected<std::any, DynamicError> map_expected(nonstd::expected<T, DynamicError> const &e) noexcept {
     if (e.has_value()) {
         return *e;
     } else {
@@ -488,8 +498,16 @@ template<typename T>
 template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
 inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexcept {
     return NumericOpsImpl{
+            // 0
+            .zero_value_fptr = []() noexcept -> std::any {
+                return LiteralDatatype_t::zero_value();
+            },
+            // 1
+            .one_value_fptr = []() noexcept -> std::any {
+                return LiteralDatatype_t::one_value();
+            },
             // a + b
-            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+            .add_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -498,7 +516,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
-            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+            .sub_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -507,7 +525,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
-            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+            .mul_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -516,7 +534,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
-            [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+            .div_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
                 auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
                 auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
@@ -525,7 +543,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
-            [](std::any const &operand) noexcept -> NumericOpResult {
+            .pos_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
@@ -533,7 +551,7 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
-            [](std::any const &operand) noexcept -> NumericOpResult {
+            .neg_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
@@ -584,12 +602,14 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
                                                                    ? std::make_pair(0ul, greater_p_rank - lesser_p_rank)
                                                                    : std::make_pair(lesser_p_rank - greater_p_rank, 0ul);
 
-                RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, lesser_p_off);
-                RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, greater_p_off);
+                if (lesser_p_off < lesser_p_rank && greater_p_off < greater_p_rank) {
+                    RuntimeConversionEntry const &lconv = lesser.conversion_at_index(lesser_s_off, lesser_p_off);
+                    RuntimeConversionEntry const &gconv = greater.conversion_at_index(greater_s_off, greater_p_off);
 
-                if (lconv.target_type_id == gconv.target_type_id) {
-                    // correct conversion found
-                    return DatatypeConverter::from_individuals(lconv, gconv);
+                    if (lconv.target_type_id == gconv.target_type_id) {
+                        // correct conversion found
+                        return DatatypeConverter::from_individuals(lconv, gconv);
+                    }
                 }
             }
 
@@ -610,6 +630,7 @@ inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_
         if (res.has_value()) {
             // swap functions to reverse the ordering change
             std::swap(res->convert_lhs, res->convert_rhs);
+            std::swap(res->inverted_convert_lhs, res->inverted_convert_rhs);
         }
 
         return res;

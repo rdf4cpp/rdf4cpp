@@ -90,6 +90,16 @@ struct Promotable {
     inline static promoted_cpp_type promote(cpp_type const &value) noexcept {
         return static_cast<promoted_cpp_type>(value);
     }
+
+    inline static nonstd::expected<cpp_type, DynamicError> demote(promoted_cpp_type const &value) noexcept {
+        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<promoted_cpp_type>) {
+            if (!std::in_range<cpp_type>(value)) {
+                return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+            }
+        }
+
+        return static_cast<cpp_type>(value);
+    }
 };
 
 /**
@@ -106,6 +116,16 @@ struct Subtype {
 
     inline static super_cpp_type into_supertype(cpp_type const &value) noexcept {
         return static_cast<super_cpp_type>(value);
+    }
+
+    inline static nonstd::expected<cpp_type, DynamicError> from_supertype(super_cpp_type const &value) noexcept {
+        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<super_cpp_type>) {
+            if (!std::in_range<cpp_type>(value)) {
+                return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+            }
+        }
+
+        return static_cast<cpp_type>(value);
     }
 };
 
@@ -137,14 +157,22 @@ struct Numeric {
     using pos_result_cpp_type = typename detail::SelectOpResult<pos_result, cpp_type>::type;
     using neg_result_cpp_type = typename detail::SelectOpResult<neg_result, cpp_type>::type;
 
+    inline static cpp_type zero_value() noexcept {
+        return 0;
+    }
+
+    inline static cpp_type one_value() noexcept {
+        return 1;
+    }
+
     // https://www.w3.org/TR/xpath-functions/#func-numeric-add
-    inline static nonstd::expected<add_result_cpp_type, NumericOpError> add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static nonstd::expected<add_result_cpp_type, DynamicError> add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         if constexpr (std::is_integral_v<cpp_type>) {
             cpp_type res;
             bool const overflowed = __builtin_add_overflow(lhs, rhs, &res);
 
             if (overflowed) {
-                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+                return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
             }
 
             return res;
@@ -154,13 +182,13 @@ struct Numeric {
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-subtract
-    inline static nonstd::expected<sub_result_cpp_type, NumericOpError> sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static nonstd::expected<sub_result_cpp_type, DynamicError> sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         if constexpr (std::is_integral_v<cpp_type>) {
             cpp_type res;
             bool const overflowed = __builtin_sub_overflow(lhs, rhs, &res);
 
             if (overflowed) {
-                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+                return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
             }
 
             return res;
@@ -170,13 +198,13 @@ struct Numeric {
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-multiply
-    inline static nonstd::expected<mul_result_cpp_type, NumericOpError> mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static nonstd::expected<mul_result_cpp_type, DynamicError> mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         if constexpr (std::is_integral_v<cpp_type>) {
             cpp_type res;
             bool const overflowed = __builtin_mul_overflow(lhs, rhs, &res);
 
             if (overflowed) {
-                return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+                return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
             }
 
             return res;
@@ -186,10 +214,10 @@ struct Numeric {
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
-    inline static nonstd::expected<div_result_cpp_type, NumericOpError> div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    inline static nonstd::expected<div_result_cpp_type, DynamicError> div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
         if constexpr (std::is_integral_v<cpp_type>) {
             if (rhs == 0) {
-                return nonstd::make_unexpected(NumericOpError::DivideByZero);
+                return nonstd::make_unexpected(DynamicError::DivideByZero);
             }
         }
 
@@ -197,14 +225,14 @@ struct Numeric {
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-unary-plus
-    inline static nonstd::expected<pos_result_cpp_type, NumericOpError> pos(cpp_type const &operand) noexcept {
+    inline static nonstd::expected<pos_result_cpp_type, DynamicError> pos(cpp_type const &operand) noexcept {
         return +operand;
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-unary-minus
-    inline static nonstd::expected<neg_result_cpp_type, NumericOpError> neg(cpp_type const &operand) noexcept {
+    inline static nonstd::expected<neg_result_cpp_type, DynamicError> neg(cpp_type const &operand) noexcept {
         if constexpr (std::is_unsigned_v<cpp_type>) {
-            return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+            return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
         } else {
             return -operand;
         }

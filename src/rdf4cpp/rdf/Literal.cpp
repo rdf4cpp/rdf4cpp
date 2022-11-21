@@ -31,9 +31,14 @@ std::string_view Literal::lexical_form() const noexcept {
     return handle_.literal_backend().lexical_form;
 }
 
+Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
+    return Literal::make<datatypes::xsd::String>(std::string{this->lexical_form()}, node_storage);
+}
+
 std::string_view Literal::language_tag() const noexcept {
     return handle_.literal_backend().language_tag;
 }
+
 Literal::operator std::string() const noexcept {
     // TODO: escape non-standard chars correctly
     auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) noexcept {
@@ -91,7 +96,7 @@ bool Literal::is_numeric() const noexcept {
     using namespace datatypes::registry;
 
     return this->handle_.node_id().literal_type().is_numeric()
-           || DatatypeRegistry::get_numerical_ops(this->get_datatype_id()) != nullptr;
+           || DatatypeRegistry::get_numerical_ops(this->datatype_id()) != nullptr;
 }
 
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
@@ -101,7 +106,7 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
 std::any Literal::value() const {
     using namespace datatypes;
 
-    auto const datatype = this->get_datatype_id();
+    auto const datatype = this->datatype_id();
 
     if (datatype == rdf::LangString::datatype_id) {
         auto const &lit = this->handle_.literal_backend();
@@ -146,7 +151,7 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
-    DatatypeIDView const datatype_identifier = datatype.to_datatype_id();
+    DatatypeIDView const datatype_identifier{datatype};
 
     if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
         // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
@@ -165,6 +170,97 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
     }
 }
 
+Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
+    using namespace datatypes::registry;
+    using namespace datatypes::xsd;
+
+    if (this->null()) {
+        return Literal{};
+    }
+
+    auto const this_dtid = this->datatype_id();
+    DatatypeIDView const target_dtid{target};
+
+    if (this_dtid == target_dtid) {
+        return static_cast<Literal>(this->to_node_storage(node_storage));
+    }
+
+    if (target_dtid == Boolean::datatype_id) {
+        // any -> bool
+        return this->ebv_as_literal(node_storage);
+    }
+
+    if (target_dtid == String::datatype_id) {
+        // any -> string
+        return this->as_lexical_form(node_storage);
+    }
+
+    if (this_dtid == String::datatype_id) {
+        // string -> any
+        try {
+            return Literal::make(this->lexical_form(), target, node_storage);
+        } catch (std::runtime_error const &) {
+            return Literal{};
+        }
+    }
+
+    auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+    if (target_e == nullptr) {
+        // target not registered
+        return Literal{};
+    }
+
+    if (this_dtid == Boolean::datatype_id && target_e->numeric_ops.has_value()) {
+        // bool -> numeric
+        if (target_e->numeric_ops->is_impl()) {
+            auto const value = this->template value<Boolean>() ? target_e->numeric_ops->get_impl().one_value_fptr()
+                                                               : target_e->numeric_ops->get_impl().zero_value_fptr();
+
+            return Literal::make_typed_unchecked(target_e->to_string_fptr(value), target, node_storage);
+        } else {
+            auto const &impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
+            auto const *target_num_impl = DatatypeRegistry::get_numerical_ops(impl_converter.target_type_id);
+            assert(target_num_impl != nullptr);
+
+            // perform conversion as impl numeric type
+            auto const value = this->template value<Boolean>() ? target_num_impl->get_impl().one_value_fptr()
+                                                               : target_num_impl->get_impl().zero_value_fptr();
+
+            // downcast to target
+            auto const target_value = impl_converter.inverted_convert(value);
+
+            if (!target_value.has_value()) {
+                // not representable as target type
+                return Literal{};
+            }
+
+            return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
+        }
+    }
+
+    auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+    if (this_e == nullptr) {
+        // this datatype not registered
+        return Literal{};
+    }
+
+    if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+        // general cast
+        // TODO: if performance is bad split into separate cases for up-, down- and cross-casting to avoid one set of std::any wrapping and unwrapping for the former 2
+
+        auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
+        auto const target_value = common_conversion->inverted_convert_rhs(common_type_value); // downcast to target
+        if (!target_value.has_value()) {
+            // downcast failed
+            return Literal{};
+        }
+        return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
+    }
+
+    // no conversion found
+    return Literal{};
+}
+
 template<typename OpSelect>
     requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage) const noexcept {
@@ -174,7 +270,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         return Literal{};
     }
 
-    auto const this_datatype = this->get_datatype_id();
+    auto const this_datatype = this->datatype_id();
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
@@ -182,7 +278,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         return Literal{};  // not numeric
     }
 
-    auto const other_datatype = other.get_datatype_id();
+    auto const other_datatype = other.datatype_id();
 
     if (this_datatype == other_datatype && this_entry->numeric_ops->is_impl()) {
         DatatypeRegistry::NumericOpResult const op_res = op_select(this_entry->numeric_ops->get_impl())(this->value(),
@@ -203,7 +299,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                             IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                             IRI{op_res.result_type_id, node_storage},
                                              node_storage);
     } else {
         auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
@@ -252,7 +348,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
         assert(to_string_fptr != nullptr);
 
         return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                             IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                             IRI{op_res.result_type_id, node_storage},
                                              node_storage);
     }
 }
@@ -266,7 +362,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
         return Literal{};
     }
 
-    auto const this_datatype = this->get_datatype_id();
+    auto const this_datatype = this->datatype_id();
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
@@ -302,7 +398,7 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
     assert(to_string_fptr != nullptr);
 
     return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                         IRI::from_datatype_id(op_res.result_type_id, node_storage),
+                                         IRI{op_res.result_type_id, node_storage},
                                          node_storage);
 }
 
@@ -324,8 +420,8 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
         }
     }
 
-    auto const this_datatype = this->get_datatype_id();
-    auto const other_datatype = other.get_datatype_id();
+    auto const this_datatype = this->datatype_id();
+    auto const other_datatype = other.datatype_id();
 
     std::strong_ordering const datatype_cmp_res = this_datatype <=> other_datatype;
 
@@ -474,7 +570,8 @@ bool Literal::ge_with_extensions(Literal const &other) const noexcept {
     return this->compare_with_extensions(other) != std::weak_ordering::less;
 }
 
-datatypes::registry::DatatypeIDView Literal::get_datatype_id() const noexcept {
+datatypes::registry::DatatypeIDView Literal::datatype_id() const noexcept {
+    assert(!this->null());
     auto const lit_type = this->handle_.node_id().literal_type();
 
     if (lit_type.is_fixed()) {
@@ -487,6 +584,7 @@ datatypes::registry::DatatypeIDView Literal::get_datatype_id() const noexcept {
 bool Literal::is_fixed_not_numeric() const noexcept {
     using namespace datatypes::registry;
 
+    assert(!this->null());
     auto const lit_type = this->handle_.node_id().literal_type();
     return lit_type.is_fixed() && !lit_type.is_numeric();
 }
@@ -556,7 +654,7 @@ util::TriBool Literal::ebv() const noexcept {
         return util::TriBool::Err;
     }
 
-    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->get_datatype_id());
+    auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype_id());
 
     if (ebv == nullptr) {
         return util::TriBool::Err;
@@ -616,4 +714,5 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
 Literal Literal::operator!() const noexcept {
     return this->logical_not();
 }
+
 }  // namespace rdf4cpp::rdf

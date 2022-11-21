@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <nonstd/expected.hpp>
+
 #include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
@@ -30,8 +32,7 @@ namespace conversion_detail {
  * @tparam Conversion a common interface to carry out a conversion (see adaptor namespace)
  * @tparam HasConversion check if a LiteralDatatype has a next conversion, e.g. if it is promotable
  * @tparam RankRule a boolean predicate to check if the defined conversion is valid
- * @tparam LayerAcc TODO
- * @param table_acc accumulator for ConversionEntries
+ * @param table_acc accumulator for ConversionEntries that will eventually be returned
  * @return a std::tuple<ConversionEntry, ...> containing all linear conversions reachable from BaseType
  */
 template<LiteralDatatype BaseType,
@@ -91,6 +92,10 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(value);
                 }
+
+                inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                    return next::inverse_convert(value);
+                }
             };
 
             auto next_table = std::tuple_cat(table_acc, std::make_tuple(FirstConversion{}));
@@ -107,6 +112,15 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
 
                 inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                     return next::convert(prev_promotion_t::convert(value));
+                }
+
+                inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                    auto const converted = next::inverse_convert(value);
+                    if (!converted.has_value()) {
+                        return nonstd::make_unexpected(converted.error());
+                    }
+
+                    return prev_promotion_t::inverse_convert(*converted);
                 }
             };
 
@@ -134,6 +148,10 @@ struct PromoteConversion<LiteralDatatypeImpl> {
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::promote(value);
     }
+
+    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::demote(value);
+    }
 };
 
 /**
@@ -151,6 +169,10 @@ struct SupertypeConversion<LiteralDatatypeImpl> {
 
     inline static converted_cpp_type convert(cpp_type const &value) noexcept {
         return LiteralDatatypeImpl::into_supertype(value);
+    }
+
+    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::from_supertype(value);
     }
 };
 
@@ -283,6 +305,10 @@ consteval ConversionTable auto make_conversion_table() {
         inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
             return value;
         }
+
+        inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+            return value;
+        }
     };
 
     auto level_0_table = std::tuple_cat(std::make_tuple(IdConversion{}), make_promotion_layer<Type>());
@@ -305,6 +331,15 @@ consteval ConversionTable auto make_conversion_table() {
 
                     inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
                         return PromoteSuper::convert(ToSuper::convert(value));
+                    }
+
+                    inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                        auto const demoted = PromoteSuper::inverse_convert(value);
+                        if (!demoted.has_value()) {
+                            return nonstd::make_unexpected(demoted.error());
+                        }
+
+                        return ToSuper::inverse_convert(*demoted);
                     }
                 };
 

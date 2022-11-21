@@ -39,12 +39,12 @@ struct DatatypeIDVisitor {
     F map_fixed;
     D map_dynamic;
 
-    auto operator()(storage::node::identifier::LiteralType const fixed) noexcept(std::is_nothrow_invocable_v<F, storage::node::identifier::LiteralType const>) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
+    constexpr auto operator()(storage::node::identifier::LiteralType const fixed) noexcept(std::is_nothrow_invocable_v<F, storage::node::identifier::LiteralType const>) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
         return std::invoke(this->map_fixed, fixed);
     }
 
     template<typename S>
-    auto operator()(S &&other) noexcept(std::is_nothrow_invocable_v<S, decltype(std::forward<S>(other))>) -> std::invoke_result_t<D, decltype(std::forward<S>(other))> {
+    constexpr auto operator()(S &&other) noexcept(std::is_nothrow_invocable_v<S, decltype(std::forward<S>(other))>) -> std::invoke_result_t<D, decltype(std::forward<S>(other))> {
         return std::invoke(this->map_dynamic, std::forward<S>(other));
     }
 };
@@ -62,7 +62,7 @@ DatatypeIDVisitor(F, D) -> DatatypeIDVisitor<F, D>;
  *
  * Caution: You need to use the correct variant for the type you are searching, otherwise the registry
  *   will not find it. So usually this type should not be constructed manually, but instead obtained from a helper function, e.g.:
- *   - Literal::get_datatype_id
+ *   - Literal::datatype_id
  *   - IRI::from_datatype_id
  */
 struct DatatypeIDView {
@@ -70,12 +70,12 @@ private:
     using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
     variant_t inner;
 public:
-    explicit constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed)
+    explicit constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed) noexcept
         : inner{fixed} {
         assert(fixed.is_fixed());
     }
 
-    explicit constexpr DatatypeIDView(std::string_view const other)
+    explicit constexpr DatatypeIDView(std::string_view const other) noexcept
         : inner{other} {
     }
 
@@ -124,7 +124,7 @@ public:
                   iri)} {
     }
 
-    explicit inline DatatypeID(storage::node::identifier::LiteralType const fixed)
+    explicit inline DatatypeID(storage::node::identifier::LiteralType const fixed) noexcept
         : inner{fixed} {
     }
 
@@ -132,7 +132,7 @@ public:
         : inner{other} {
     }
 
-    explicit inline DatatypeID(std::string &&other)
+    explicit inline DatatypeID(std::string &&other) noexcept
         : inner{std::move(other)} {
     }
 
@@ -159,7 +159,7 @@ public:
         return std::get<1>(this->inner);
     }
 
-    inline std::strong_ordering operator<=>(DatatypeID const &other) const noexcept = default;
+    std::strong_ordering operator<=>(DatatypeID const &other) const noexcept = default;
 
     template<typename F>
     friend decltype(auto) visit(F && f, DatatypeID const &self) noexcept(noexcept(std::visit(std::forward<F>(f), std::declval<variant_t const &>()))) {

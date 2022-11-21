@@ -72,9 +72,11 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
  */
 struct RuntimeConversionEntry {
     using convert_fptr_t = std::any (*)(std::any const &) noexcept;
+    using inverted_convert_fptr_t = nonstd::expected<std::any, DynamicError> (*)(std::any const &) noexcept;
 
     DatatypeID target_type_id;
     convert_fptr_t convert;
+    inverted_convert_fptr_t inverted_convert;
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() noexcept {
@@ -91,6 +93,16 @@ struct RuntimeConversionEntry {
                 .convert = [](std::any const &value) noexcept -> std::any {
                     auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
                     return Entry::convert(actual_value);
+                },
+                .inverted_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
+                    auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
+                    auto const maybe_converted = Entry::inverse_convert(actual_value);
+
+                    if (!maybe_converted.has_value()) {
+                        return nonstd::make_unexpected(maybe_converted.error());
+                    }
+
+                    return *maybe_converted;
                 }};
     }
 };
@@ -111,7 +123,8 @@ private:
         if (s_rank * max_p_rank > 0) {
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
                                                       .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
-                                                      .convert = nullptr});
+                                                      .convert = nullptr,
+                                                      .inverted_convert = nullptr});
         }
     }
 
@@ -144,10 +157,10 @@ public:
 
         RuntimeConversionTable table{s_rank, max_p_rank};
 
-        util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) {
+        util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) noexcept {
             table.p_ranks[s_off] = std::tuple_size_v<Layer>;
 
-            util::tuple_type_fold<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) {
+            util::tuple_type_fold<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) noexcept {
                 table.conversion_at_index(s_off, p_off) = RuntimeConversionEntry::from_concrete<Entry>();
                 return p_off + 1;
             });
