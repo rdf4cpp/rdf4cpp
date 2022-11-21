@@ -32,8 +32,7 @@ namespace conversion_detail {
  * @tparam Conversion a common interface to carry out a conversion (see adaptor namespace)
  * @tparam HasConversion check if a LiteralDatatype has a next conversion, e.g. if it is promotable
  * @tparam RankRule a boolean predicate to check if the defined conversion is valid
- * @tparam LayerAcc TODO
- * @param table_acc accumulator for ConversionEntries
+ * @param table_acc accumulator for ConversionEntries that will eventually be returned
  * @return a std::tuple<ConversionEntry, ...> containing all linear conversions reachable from BaseType
  */
 template<LiteralDatatype BaseType,
