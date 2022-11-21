@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <limits>
+#include <iostream>
 
 using namespace rdf4cpp::rdf;
 using namespace datatypes::xsd;
@@ -20,19 +21,37 @@ TEST_SUITE("numeric op results") {
             CHECK(Integer::div(one, zero) == nonstd::make_unexpected(DynamicError::DivideByZero));
         }
 
-        // TODO: comment-in when decimal is properly implemented
-        //SUBCASE("decimal") {
-        //    Decimal::cpp_type const zero{0};
-        //    Decimal::cpp_type const one{1};
-        //    Decimal::cpp_type const two{2};
-        //    Decimal::cpp_type const min{std::numeric_limits<Decimal::cpp_type>::min()};
-        //    Decimal::cpp_type const max{std::numeric_limits<Decimal::cpp_type>::max()};
-        //
-        //    CHECK(Decimal::add(max, one) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
-        //    CHECK(Decimal::sub(min, one) == zero);
-        //    CHECK(Decimal::mul(max, two) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
-        //    CHECK(Decimal::div(max, zero) == nonstd::make_unexpected(DynamicError::DivideByZero));
-        //}
+        SUBCASE("decimal") {
+            // https://www.w3.org/TR/xpath-functions/#op.numeric
+
+            Decimal::cpp_type const zero{0};
+            Decimal::cpp_type const one{1};
+            Decimal::cpp_type const two{2};
+            Decimal::cpp_type const min{std::numeric_limits<Decimal::cpp_type>::min()};
+            Decimal::cpp_type const max{std::numeric_limits<Decimal::cpp_type>::max()};
+            Decimal::cpp_type const big_number{"100000000000"};
+
+            // "If the number of digits in the mathematical result exceeds the number of digits
+            // that the implementation retains for that operation, the result is truncated or rounded in an ·implementation-defined· manner."
+            CHECK(Decimal::add(max, one) == max);
+            CHECK(Decimal::sub(max, -one) == max);
+
+            // "For xs:decimal operations, overflow behavior must raise a dynamic error [err:FOAR0002]."
+            CHECK(Decimal::add(max, max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+            CHECK(Decimal::sub(max, -max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+            CHECK(Decimal::mul(max, big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+            CHECK(Decimal::div(max, one/big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+
+            // "On underflow, 0.0 must be returned."
+            CHECK(Decimal::sub(min, min) == zero);
+            CHECK(Decimal::div(min, two) == zero);
+            CHECK(Decimal::div(min, big_number) == zero);
+            CHECK(Decimal::mul(min, one/two) == zero);
+
+            // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
+            // "A dynamic error is raised [err:FOAR0001] for xs:decimal and xs:integer operands, if the divisor is (positive or negative) zero."
+            CHECK(Decimal::div(one, zero) == nonstd::make_unexpected(DynamicError::DivideByZero));
+        }
     }
 
     // checking for required IEEE conformance, realistically all compilers will fulfill this
