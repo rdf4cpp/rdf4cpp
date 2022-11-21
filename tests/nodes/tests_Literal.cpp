@@ -160,3 +160,183 @@ TEST_CASE("Literal - check fixed id") {
     CHECK(lit.datatype().backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
     CHECK(iri.backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
 }
+
+TEST_CASE("Literal - casting") {
+    using namespace datatypes::xsd;
+
+    auto const lit1 = Literal::make<datatypes::xsd::Int>(123);
+
+    SUBCASE("id cast") {
+        auto const lit1 = Literal::make<String>("hello");
+        auto const lit2 = lit1.template cast<String>();
+
+        CHECK(lit2.datatype() == IRI{String::identifier});
+        CHECK(lit2.template value<String>() == "hello");
+    }
+
+    SUBCASE("str -> any") {
+        auto const lit1 = Literal::make<String>("1.2");
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.value<Float>() == 1.2f);
+    }
+
+    SUBCASE("any -> str") {
+        auto const lit1 = Literal::make<Decimal>(1.5);
+        auto const lit2 = lit1.template cast<String>();
+
+        CHECK(lit2.template value<String>() == "1.5");
+    }
+
+    SUBCASE("any -> bool") {
+        auto const lit1 = Literal::make<Float>(1.4);
+        auto const lit2 = lit1.template cast<Boolean>();
+
+        CHECK(lit2.datatype() == IRI{Boolean::identifier});
+        CHECK(lit2.template value<Boolean>() == true);
+    }
+
+    SUBCASE("downcast: dbl -> flt") {
+        auto const lit1 = Literal::make<Double>(1.4);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.4f);
+    }
+
+    SUBCASE("dec -> flt") {
+        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.f);
+    }
+
+    SUBCASE("dec -> dbl") {
+        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit2 = lit1.template cast<Double>();
+
+        CHECK(lit2.datatype() == IRI{Double::identifier});
+        CHECK(lit2.template value<Double>() == 1.0);
+    }
+
+    SUBCASE("dec -> int") {
+        auto const lit1 = Literal::make<Decimal>(1.2);
+        auto const lit2 = lit1.template cast<Int>();
+
+        CHECK(lit2.datatype() == IRI{Int::identifier});
+        CHECK(lit2.template value<Int>() == 1);
+    }
+
+    SUBCASE("downcast: int -> dec") {
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Decimal>();
+
+        CHECK(lit2.datatype() == IRI{Decimal::identifier});
+        CHECK(lit2.template value<Decimal>() == 1);
+    }
+
+    SUBCASE("int -> flt") {
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Float>();
+
+        CHECK(lit2.datatype() == IRI{Float::identifier});
+        CHECK(lit2.template value<Float>() == 1.f);
+    }
+
+    SUBCASE("int -> dbl") {
+        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit2 = lit1.template cast<Double>();
+
+        CHECK(lit2.datatype() == IRI{Double::identifier});
+        CHECK(lit2.template value<Double>() == 1.0);
+    }
+
+    SUBCASE("id cast") {
+        auto const lit1 = Literal::make<Int>(5);
+        auto const lit2 = lit1.template cast<Int>();
+
+        CHECK(lit1 == lit2);
+    }
+
+    SUBCASE("bool -> numeric") {
+        SUBCASE("integers") {
+            SUBCASE("regular case") {
+                auto const lit1 = Literal::make<Boolean>(true);
+                auto const lit2 = lit1.template cast<Byte>();
+                CHECK(!lit2.null());
+                CHECK(lit2.datatype() == IRI{Byte::identifier});
+                CHECK(lit2.template value<Byte>() == 1);
+            }
+
+            SUBCASE("partially representable - representable case") {
+                auto const lit3 = Literal::make<Boolean>(false);
+                auto const lit4 = lit3.template cast<NonPositiveInteger>();
+                CHECK(!lit4.null());
+                CHECK(lit4.datatype() == IRI{NonPositiveInteger::identifier});
+                CHECK(lit4.template value<NonPositiveInteger>() == 0);
+            }
+
+            SUBCASE("partially representable - unrepresentable case") {
+                auto const lit3 = Literal::make<Boolean>(true);
+                auto const lit4 = lit3.template cast<NegativeInteger>();
+                CHECK(lit4.null());
+            }
+        }
+
+        SUBCASE("decimal") {
+            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit2 = lit1.template cast<Decimal>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Decimal::identifier});
+            CHECK(lit2.template value<Decimal>() == 0.0);
+        }
+
+        SUBCASE("float") {
+            auto const lit1 = Literal::make<Boolean>(true);
+            auto const lit2 = lit1.template cast<Float>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Float::identifier});
+            CHECK(lit2.template value<Float>() == 1.f);
+        }
+
+        SUBCASE("double") {
+            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit2 = lit1.template cast<Double>();
+            CHECK(!lit2.null());
+            CHECK(lit2.datatype() == IRI{Double::identifier});
+            CHECK(lit2.template value<Double>() == 0.0);
+        }
+    }
+
+    SUBCASE("cross hierarchy: int -> unsignedInt") {
+        auto const lit1 = Literal::make<Int>(1);
+        auto const lit2 = lit1.template cast<UnsignedInt>();
+
+        CHECK(lit2.datatype() == IRI{UnsignedInt::identifier});
+        CHECK(lit2.value<UnsignedInt>() == 1);
+    }
+
+    SUBCASE("subtypes") {
+        CHECK(lit1.template cast<Integer>().datatype() == IRI{Integer::identifier});
+        CHECK(lit1.template cast<Float>().datatype() == IRI{Float::identifier});
+
+        auto const lit2 = Literal::make<Integer>(420);
+        CHECK(lit2.template cast<Int>() == Literal::make<Int>(420));
+    }
+
+    SUBCASE("value too large") {
+        auto const lit1 = Literal::make<Int>(67000);
+        auto const lit2 = lit1.template cast<Short>();
+
+        CHECK(lit2.null());
+    }
+
+    SUBCASE("negative to unsigned") {
+        auto const lit1 = Literal::make<Int>(-10);
+        auto const lit2 = lit1.template cast<UnsignedInt>();
+
+        CHECK(lit2.null());
+    }
+}

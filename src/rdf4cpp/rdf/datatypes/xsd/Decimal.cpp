@@ -45,12 +45,12 @@ std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value)
 }
 
 template<>
-nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
     // decimal needs error (and cpp_type is not integral)
 
     if (rhs == 0) {
-        return nonstd::make_unexpected(NumericOpError::DivideByZero);
+        return nonstd::make_unexpected(DynamicError::DivideByZero);
     }
 
     return lhs / rhs;

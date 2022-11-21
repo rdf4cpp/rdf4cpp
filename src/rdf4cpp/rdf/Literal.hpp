@@ -61,7 +61,7 @@ private:
      * it will always contain the appropriate id type
      * and can be used to index the registry
      */
-    [[nodiscard]] datatypes::registry::DatatypeIDView get_datatype_id() const noexcept;
+    [[nodiscard]] datatypes::registry::DatatypeIDView datatype_id() const noexcept;
 
     /**
      * @return if the datatype of this is simultaneously fixed but not numeric
@@ -149,11 +149,36 @@ public:
                         NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
+     * Tries to cast this literal to a literal of the given type IRI.
+     *
+     * @param target the IRI of the cast target
+     * @param node_storage where to store the literal resulting from the cast
+     * @return the literal with the same value as a different type if the cast was successful or the null literal
+     */
+    [[nodiscard]] Literal cast(IRI const &target, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * Identical to Literal::cast except with compile time specified target type.
+     */
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
+        return this->cast(IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
+    }
+
+    /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
     [[nodiscard]] std::string_view lexical_form() const noexcept;
+
+    /**
+     * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
+     *
+     * @param node_storage where to put the resulting literal
+     * @return lexical form of this as xsd:string
+     */
+    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * Returns the datatype IRI of this.
