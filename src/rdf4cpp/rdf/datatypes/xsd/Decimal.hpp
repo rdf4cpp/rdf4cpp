@@ -29,7 +29,16 @@ template<>
 std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) noexcept;
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::add_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::add(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::sub_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::sub(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::mul(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept;

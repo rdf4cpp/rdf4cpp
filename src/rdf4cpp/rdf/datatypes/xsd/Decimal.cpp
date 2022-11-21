@@ -45,15 +45,59 @@ std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value)
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::add_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#op.numeric
+    // decimal needs overflow protection
+
+    auto res = lhs + rhs;
+    if (isinf(res)) [[unlikely]] {
+        return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+    }
+
+    return res;
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::sub_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::sub(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#op.numeric
+    // decimal needs overflow protection
+
+    auto res = lhs - rhs;
+    if (isinf(res)) [[unlikely]] {
+        return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+    }
+
+    return res;
+}
+
+template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::div(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
-    // decimal needs error (and cpp_type is not integral)
+    // decimal needs error (and cpp_type is not integral) && overflow protection
 
     if (rhs == 0) {
         return nonstd::make_unexpected(NumericOpError::DivideByZero);
     }
 
-    return lhs / rhs;
+    auto res = lhs / rhs;
+    if (isinf(res)) [[unlikely]] {
+        return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+    }
+
+    return res;
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, NumericOpError> capabilities::Numeric<xsd_decimal>::mul(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    // https://www.w3.org/TR/xpath-functions/#op.numeric
+    // decimal needs overflow protection
+
+    auto res = lhs * rhs;
+    if (isinf(res)) [[unlikely]] {
+        return nonstd::make_unexpected(NumericOpError::OverOrUnderFlow);
+    }
+
+    return res;
 }
 
 template<>
