@@ -262,7 +262,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     auto const obj_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (obj->type) {
             case SERD_CURIE:
-                return self->get_prefixed_iri(pred);
+                return self->get_prefixed_iri(obj);
             case SERD_LITERAL:
                 return self->get_literal(obj, obj_datatype, obj_lang);
             case SERD_BLANK:
