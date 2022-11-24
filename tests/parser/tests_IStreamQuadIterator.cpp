@@ -49,7 +49,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
         ++qit;
         CHECK(qit != IStreamQuadIterator{});
-        CHECK(qit->value().subject() == IRI{"http://www.example.org/s1"});
+        CHECK(qit->value().subject() == IRI{"http://www.example.org/s2"});
         CHECK(qit->value().predicate() == IRI{"http://www.example.org/p3"});
         CHECK(qit->value().object() == Literal{"test"});
 

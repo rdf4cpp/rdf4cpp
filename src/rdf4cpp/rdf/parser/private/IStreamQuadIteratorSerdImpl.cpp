@@ -210,11 +210,11 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
         if (graph != nullptr) {
             switch (graph->type) {
                 case SERD_CURIE:
-                    return self->get_prefixed_iri(pred);
+                    return self->get_prefixed_iri(graph);
                 case SERD_URI:
-                    return self->get_iri(subj);
+                    return self->get_iri(graph);
                 case SERD_BLANK:
-                    return self->get_bnode(subj);
+                    return self->get_bnode(graph);
                 default:
                     return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
             }
@@ -277,7 +277,6 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     if (!obj_node.has_value()) {
         return obj_node.error();
     }
-
     self->quad_buffer.emplace_back(*graph_node, *subj_node, *pred_node, *obj_node);
     return SERD_SUCCESS;
 }
