@@ -28,6 +28,35 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(n == 4);
     }
 
+    TEST_CASE("correct data with prefix") {
+        constexpr char const *triples = "@prefix ex: <http://www.example.org/> ."
+                                        "ex:s1 ex:p1 ex:o1 .\n"
+                                        "ex:s1 ex:p2 <http://www.example.org/o2> .\n"
+                                        "ex:s2 ex:p3 \"test\" .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss};
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value().subject() == IRI{"http://www.example.org/s1"});
+        CHECK(qit->value().predicate() == IRI{"http://www.example.org/p1"});
+        CHECK(qit->value().object() == IRI{"http://www.example.org/o1"});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value().subject() == IRI{"http://www.example.org/s1"});
+        CHECK(qit->value().predicate() == IRI{"http://www.example.org/p2"});
+        CHECK(qit->value().object() == IRI{"http://www.example.org/o2"});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value().subject() == IRI{"http://www.example.org/s2"});
+        CHECK(qit->value().predicate() == IRI{"http://www.example.org/p3"});
+        CHECK(qit->value().object() == Literal{"test"});
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
+    }
+
     TEST_CASE("continue after error") {
         constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\"^^<http://www.w3.org/2001/XMLSchema#string> .\n"
                                         "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/ontology/bibo/authorList> <http://data.semanticweb.org/workshop/admire/2012/paper/12/authorlist> .\n"
