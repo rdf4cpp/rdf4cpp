@@ -58,4 +58,11 @@ struct PositiveInteger : registry::LiteralDatatypeImpl<registry::xsd_positive_in
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::PositiveInteger const xsd_positive_integer_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_POSITIVEINTEGER_HPP

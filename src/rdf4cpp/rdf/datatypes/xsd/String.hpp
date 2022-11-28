@@ -38,4 +38,11 @@ struct String : registry::LiteralDatatypeImpl<registry::xsd_string,
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::String const xsd_string_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_STRING_HPP

@@ -35,6 +35,7 @@ class Recipe(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
         self.options["fmt"].header_only = True
+        self.options["boost"].header_only = True
 
     _cmake = None
 

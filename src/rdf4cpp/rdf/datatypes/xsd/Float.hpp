@@ -48,4 +48,11 @@ struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Float const xsd_float_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_FLOAT_HPP

@@ -56,4 +56,11 @@ struct UnsignedByte : registry::LiteralDatatypeImpl<registry::xsd_unsigned_byte,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::UnsignedByte const xsd_unsigned_byte_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_UNSIGNED_BYTE_HPP

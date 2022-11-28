@@ -40,4 +40,11 @@ struct Double : registry::LiteralDatatypeImpl<registry::xsd_double,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Double const xsd_double_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_DOUBLE_HPP

@@ -61,4 +61,11 @@ struct NegativeInteger : registry::LiteralDatatypeImpl<registry::xsd_negative_in
 
 } //  rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::NegativeInteger const xsd_negative_integer_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_NEGATIVEINTEGER_HPP

@@ -34,6 +34,7 @@ extern template struct LiteralDatatypeImpl<owl_rational,
 
 } // rdf4cpp::rdf::datatypes::registry
 
+
 namespace rdf4cpp::rdf::datatypes::owl {
 
 struct Rational : registry::LiteralDatatypeImpl<registry::owl_rational,
@@ -42,5 +43,12 @@ struct Rational : registry::LiteralDatatypeImpl<registry::owl_rational,
                                                 registry::capabilities::Comparable> {};
 
 } // rdf4cpp::rdf::datatypes::owl
+
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline owl::Rational const owl_rational_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_OWL_RATIONAL_HPP
