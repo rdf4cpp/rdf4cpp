@@ -239,9 +239,7 @@ constexpr static util::ConstexprString C{"C"};
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 
-
 namespace rdf4cpp::rdf::datatypes::xsd {
-
 /**
  *       A   -->   Z
  *     |  |        |
@@ -257,13 +255,14 @@ namespace rdf4cpp::rdf::datatypes::xsd {
  *          B
  */
 using A = registry::LiteralDatatypeImpl<registry::A, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Promotable>;
+
 using B = registry::LiteralDatatypeImpl<registry::B, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
 using B2 = registry::LiteralDatatypeImpl<registry::B2, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype, registry::capabilities::Promotable>;
+
 using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
 
 using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric, registry::capabilities::Comparable>;
 using Y = registry::LiteralDatatypeImpl<registry::Y, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
-
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -413,6 +412,14 @@ inline capabilities::Default<C>::cpp_type capabilities::Default<C>::from_string(
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
+namespace rdf4cpp::rdf::datatypes::xsd {
+inline A const a_instance;
+inline B const b_instance;
+inline B2 const b2_instance;
+inline C const c_instance;
+inline Z const z_instance;
+inline Y const y_instance;
+} // namespace rdf4cpp::rdf::datatypes::xsd
 
 #define GENERATE_HIERARCHY_TEST(lhs, rhs, expected) \
     GENERATE_BINOP_TESTCASE(lhs, 1, +, rhs, 1, expected, 2)
