@@ -116,7 +116,7 @@ jobs:
           cd build_examples_static
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
-          examples/namespaces
+          examples/namespaces_example
           examples/rdf_nodes_example
       - name: Build Examples
         run: |
@@ -127,7 +127,7 @@ jobs:
           cd build_examples
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
-          examples/namespaces
+          examples/namespaces_example
           examples/rdf_nodes_example
       - name: Test conan package
         env:
