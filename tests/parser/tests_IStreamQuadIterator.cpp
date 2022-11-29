@@ -246,4 +246,38 @@ TEST_SUITE("IStreamQuadIterator") {
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
     }
+
+    TEST_CASE("no prefix parsing") {
+        constexpr char const *triples = "@base <http://invalid-url.org> .\n"
+                                        "@prefix xsd: <http://some-random-url.de#> .\n"
+                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
+                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlag::NoParsePrefix};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->has_value());
+        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                   IRI{"http://purl.org/dc/elements/1.1/subject"},
+                                   Literal{"search"}});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
+    }
 }

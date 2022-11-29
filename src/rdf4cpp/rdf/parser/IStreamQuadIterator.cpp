@@ -16,7 +16,7 @@ IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream, ParsingFlags flags, prefix_storage_type prefixes, storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(istream, flags.contains(ParsingFlag::Strict), std::move(prefixes), std::move(node_storage))} {
+    : impl{std::make_unique<Impl>(istream, flags, std::move(prefixes), std::move(node_storage))} {
     ++*this;
 }
 
