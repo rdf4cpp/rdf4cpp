@@ -82,6 +82,10 @@ jobs:
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+      - name: Build Static Lib
+        run: |
+          cmake -G Ninja -B build_static_lib
+          cmake --build build_static_lib
       - name: Build Tests
         if: matrix.config.cxx == 'g++-11'
         run: |
