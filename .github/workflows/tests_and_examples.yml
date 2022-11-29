@@ -84,7 +84,7 @@ jobs:
           conan profile update settings.compiler.libcxx=libstdc++11 default
       - name: Build Tests Static
         run: |
-          cmake -G Ninja -B build_static_lib -DBUILD_TESTING=ON
+          cmake -G Ninja -B build_tests_static -DBUILD_TESTING=ON
           cmake --build build_tests_static
       - name: Run Tests Static
         run: |
