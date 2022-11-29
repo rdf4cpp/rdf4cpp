@@ -20,11 +20,7 @@ namespace rdf4cpp::rdf::parser {
 
 struct IStreamQuadIterator::Impl {
 private:
-    using PrefixMap = rdf4cpp::rdf::storage::util::tsl::sparse_map<
-            std::string,
-            std::string,
-            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
-            std::equal_to<>>;
+    using PrefixMap = IStreamQuadIterator::prefix_storage_type;
 
     struct SerdReaderDelete {
         inline void operator()(SerdReader *rdr) const noexcept {
@@ -61,7 +57,7 @@ private:
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
 
 public:
-    Impl(std::istream &istream, bool strict, storage::node::NodeStorage node_storage) noexcept;
+    Impl(std::istream &istream, bool strict, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
 
     /**
      * @return true if this will no longer yield values

@@ -15,10 +15,12 @@ IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
     : impl{nullptr} {
 }
 
-IStreamQuadIterator::IStreamQuadIterator(std::istream &istream, ParsingFlags flags, storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(istream, flags.contains(ParsingFlag::Strict), std::move(node_storage))} {
+IStreamQuadIterator::IStreamQuadIterator(std::istream &istream, ParsingFlags flags, prefix_storage_type prefixes, storage::node::NodeStorage node_storage) noexcept
+    : impl{std::make_unique<Impl>(istream, flags.contains(ParsingFlag::Strict), std::move(prefixes), std::move(node_storage))} {
     ++*this;
 }
+
+IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
 
 IStreamQuadIterator::~IStreamQuadIterator() noexcept = default;
 
@@ -45,7 +47,5 @@ bool IStreamQuadIterator::operator==(IStreamQuadIterator const &other) const noe
 bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noexcept {
     return !(*this == other);
 }
-IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
-
 
 }  // namespace rdf4cpp::rdf::parser

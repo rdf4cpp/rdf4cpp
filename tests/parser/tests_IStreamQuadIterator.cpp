@@ -230,4 +230,20 @@ TEST_SUITE("IStreamQuadIterator") {
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
     }
+
+    TEST_CASE("manually added prefix") {
+        constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> prefix:predicate \"search\"^^<http://www.w3.org/2001/XMLSchema#string> .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlags::none(), { {"prefix", "https://hello.com#"} }};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->has_value());
+        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                   IRI{"https://hello.com#predicate"},
+                                   Literal{"search"}});
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
+    }
 }
