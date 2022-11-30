@@ -56,4 +56,11 @@ struct Int : registry::LiteralDatatypeImpl<registry::xsd_int,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Int const xsd_int_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_INT_HPP

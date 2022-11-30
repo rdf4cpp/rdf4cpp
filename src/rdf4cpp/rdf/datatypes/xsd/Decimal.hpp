@@ -55,6 +55,7 @@ extern template struct LiteralDatatypeImpl<xsd_decimal,
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
+
 namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
@@ -65,5 +66,12 @@ struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                                registry::capabilities::FixedId> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
+
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Decimal const xsd_decimal_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_DECIMAL_HPP

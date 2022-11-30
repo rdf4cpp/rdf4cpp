@@ -43,4 +43,11 @@ struct Boolean : registry::LiteralDatatypeImpl<registry::xsd_boolean,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Boolean const xsd_boolean_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_BOOLEAN_HPP

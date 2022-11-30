@@ -312,19 +312,14 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
                   "Mismatch between declared and actual fixed id mapping state. "
                   "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
                   "Note: this would cause inconsistency between registry and node storage");
-protected:
-    static std::nullptr_t init() noexcept;
-    inline static std::nullptr_t const dummy = init();
+private:
+    static std::nullptr_t init() noexcept {
+        DatatypeRegistry::add<LiteralDatatypeImpl>();
+        return nullptr;
+    }
 
-    // Force `dummy` to be instantiated, even though it's unused.
-    static constexpr std::integral_constant<decltype(&dummy), &dummy> dummy_helper{};
+    [[maybe_unused]] std::nullptr_t const init_dummy = init();
 };
-
-template<util::ConstexprString type_iri, template<util::ConstexprString> typename... Capabilities>
-std::nullptr_t LiteralDatatypeImpl<type_iri, Capabilities...>::init() noexcept {
-    DatatypeRegistry::add<LiteralDatatypeImpl<type_iri, Capabilities...>>();
-    return nullptr;
-}
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 #endif  //RDF4CPP_LITERALDATATYPEIMPL_HPP

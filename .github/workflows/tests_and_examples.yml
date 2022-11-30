@@ -82,6 +82,13 @@ jobs:
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+      - name: Build Tests Static
+        run: |
+          cmake -G Ninja -B build_tests_static -DBUILD_TESTING=ON
+          cmake --build build_tests_static
+      - name: Run Tests Static
+        run: |
+          ctest --test-dir build_tests_static
       - name: Build Tests
         if: matrix.config.cxx == 'g++-11'
         run: |
@@ -100,6 +107,17 @@ jobs:
         run: |
           gcovr --coveralls --filter 'src/' -o coverage.json -r ./
           curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
+      - name: Build Examples Static
+        run: |
+          cmake -G Ninja -B build_examples_static -DBUILD_EXAMPLES=ON
+          cmake --build build_examples_static
+      - name: Run Examples Static
+        run: |
+          cd build_examples_static
+          examples/graphs_and_datasets_example
+          examples/literal_datatypes_example
+          examples/namespaces_example
+          examples/rdf_nodes_example
       - name: Build Examples
         run: |
           cmake -G Ninja -B build_examples -DBUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=On
@@ -109,6 +127,7 @@ jobs:
           cd build_examples
           examples/graphs_and_datasets_example
           examples/literal_datatypes_example
+          examples/namespaces_example
           examples/rdf_nodes_example
       - name: Test conan package
         env:

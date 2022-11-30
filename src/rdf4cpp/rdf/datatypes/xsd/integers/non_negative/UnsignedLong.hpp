@@ -59,4 +59,11 @@ struct UnsignedLong : registry::LiteralDatatypeImpl<registry::xsd_unsigned_long,
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::UnsignedLong const xsd_unsigned_long_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_UNSIGNED_LONG_HPP

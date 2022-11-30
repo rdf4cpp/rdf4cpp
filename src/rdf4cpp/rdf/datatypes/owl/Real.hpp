@@ -31,6 +31,7 @@ extern template struct LiteralDatatypeImpl<owl_real,
 
 } // rdf4cpp::rdf::datatypes::registry
 
+
 namespace rdf4cpp::rdf::datatypes::owl {
 
 struct Real : registry::LiteralDatatypeImpl<registry::owl_real,
@@ -39,5 +40,12 @@ struct Real : registry::LiteralDatatypeImpl<registry::owl_real,
                                             registry::capabilities::Comparable> {};
 
 } // rdf4cpp::rdf::datatypes::owl
+
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline owl::Real const owl_real_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_OWL_REAL_HPP

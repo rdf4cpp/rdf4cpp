@@ -57,4 +57,12 @@ struct Integer : registry::LiteralDatatypeImpl<registry::xsd_integer,
                                                registry::capabilities::FixedId> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
+
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::Integer const xsd_intenger_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_INTEGER_HPP

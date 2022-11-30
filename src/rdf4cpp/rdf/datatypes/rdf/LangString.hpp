@@ -47,4 +47,11 @@ struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline rdf::LangString const rdf_lang_string_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_RDF_LANGSTRING_HPP

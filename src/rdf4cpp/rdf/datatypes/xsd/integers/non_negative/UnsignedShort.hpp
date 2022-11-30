@@ -56,4 +56,11 @@ struct UnsignedShort : registry::LiteralDatatypeImpl<registry::xsd_unsigned_shor
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::UnsignedShort const xsd_unsigned_short_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 #endif  //RDF4CPP_XSD_UNSIGNED_SHORT_HPP

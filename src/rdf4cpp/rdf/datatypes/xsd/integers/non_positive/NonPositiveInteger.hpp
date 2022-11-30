@@ -46,6 +46,7 @@ extern template struct LiteralDatatypeImpl<xsd_non_positive_integer,
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
+
 namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct NonPositiveInteger : registry::LiteralDatatypeImpl<registry::xsd_non_positive_integer,
@@ -56,5 +57,12 @@ struct NonPositiveInteger : registry::LiteralDatatypeImpl<registry::xsd_non_posi
                                                           registry::capabilities::FixedId> {};
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
+
+
+namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+
+[[maybe_unused]] inline xsd::NonPositiveInteger const xsd_non_positive_integer_instance;
+
+} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_NONPOSITIVEINTEGER_HPP
