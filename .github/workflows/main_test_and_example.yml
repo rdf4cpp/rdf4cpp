@@ -23,7 +23,7 @@ jobs:
           compiler: "clang-14",
         } ]
     name: ${{ matrix.cppenv.os }}, ${{ matrix.cppenv.compiler }}, ${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
-    uses: ./.github/workflows/reusable_test_and_example.yml
+    uses: ./.github/workflows/reusable_test_and_example_config.yml
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}

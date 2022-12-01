@@ -1,0 +1,43 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      compiler:
+        required: true
+        type: string
+      cmake-version:
+        required: true
+        type:
+          string
+      with-coverage:
+        type: boolean
+    secrets:
+      coverall-token:
+        type: string
+
+
+jobs:
+  test-and-examples-static:
+    name: static lib
+    uses: ./.github/workflows/reusable_test_and_example.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: false
+    secrets:
+      coverall_token: ${{ inputs.coverall-token }}
+
+  test-and-examples-shared:
+    name: shared lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
+    uses: ./.github/workflows/reusable_test_and_example.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: true
+      with-coverage: ${{ inputs.with-coverage }}
+    secrets:
+      coverall_token: ${{ inputs.coverall-token }}
