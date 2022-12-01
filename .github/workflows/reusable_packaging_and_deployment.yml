@@ -24,7 +24,7 @@ jobs:
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
-          cmakeVersion: ${{ cmake-version }}
+          cmakeVersion: ${{ inputs.cmake-version }}
 
       - name: Install compiler
         id: install_cc
