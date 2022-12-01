@@ -1,0 +1,83 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      cmake-version:
+        required: true
+        type:
+          string
+      compiler:
+        required: true
+        type: string
+
+jobs:
+  build-and-test-conan-package:
+    name: Build and test conan package
+    runs-on: ${{ inputs.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Get minimum cmake version
+        uses: lukka/get-cmake@v3.24.3
+        with:
+          cmakeVersion: 3.22.6
+
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@v1.2
+        with:
+          compiler: ${{  inputs.compiler }}
+
+      - name: use mold as default linker
+        uses: rui314/setup-mold@v1
+
+      - name: Configure conan
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+
+      - name: Cache conan data
+        id: cache-conan
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan/data
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+
+      - name: Check out sources
+        uses: actions/checkout@v3
+
+      - name: Test conan package
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          # build and test package
+          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default
+          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
+
+  test-fetch-content-static:
+    name: Test cmake FetchContent (static lib)
+    uses: ./.github/workflows/reusable_fetch_content.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: false
+
+  test-fetch-content-shared:
+    name: Test cmake FetchContent (shared lib)
+    uses: ./.github/workflows/reusable_fetch_content.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: true
