@@ -9,8 +9,7 @@ on:
         type: string
       cmake-version:
         required: true
-        type:
-          string
+        type: string
       build-shared-libs:
         required: true
         type: boolean
@@ -24,7 +23,7 @@ on:
 
 jobs:
   tests-and-examples:
-    name: Build and run tests and examples ${{ fromJSON('["", "+ report code coverage"]')[inputs.with-coverage] }}
+    name: ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
     runs-on: ${{ inputs.os }}
     defaults:
       run:
@@ -34,7 +33,7 @@ jobs:
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
-          cmakeVersion: 3.22.6
+          cmakeVersion: ${{ inputs.cmake-version }}
 
       - name: Install compiler
         id: install_cc

@@ -19,8 +19,7 @@ on:
 
 jobs:
   test-and-examples-static:
-    name: static lib
-    uses: ./.github/workflows/reusable_test_and_example.yml
+    uses: ./.github/workflows/reusable_test_and_example_by_linking_type.yml
     with:
       os: ${{ inputs.os }}
       compiler: ${{ inputs.compiler }}
@@ -30,8 +29,7 @@ jobs:
       coverall-token: ${{ inputs.coverall-token }}
 
   test-and-examples-shared:
-    name: shared lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
-    uses: ./.github/workflows/reusable_test_and_example.yml
+    uses: ./.github/workflows/reusable_test_and_example_by_linking_type.yml
     with:
       os: ${{ inputs.os }}
       compiler: ${{ inputs.compiler }}

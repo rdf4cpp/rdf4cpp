@@ -1,4 +1,4 @@
-name: Unit, packaging and deployment tests
+name: Run unit tests and examples
 on: [ 'push', 'pull_request' ]
 
 
@@ -23,8 +23,8 @@ jobs:
           compiler: "clang-14",
         } ]
       fail-fast: false
-    name: ${{ matrix.cppenv.os }}, ${{ matrix.cppenv.compiler }}, ${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
-    uses: ./.github/workflows/reusable_test_and_example_config.yml
+    name: ${{ matrix.cppenv.compiler }}$, ${{ matrix.cppenv.os }}{{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
+    uses: ./.github/workflows/reusable_test_and_example_by_linking_type.yml
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
@@ -32,11 +32,3 @@ jobs:
       with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' && matrix.shared }}
     secrets:
       coverall-token: ${{ secrets.COVERALLS_TOKEN }}
-
-  packaging:
-    name: Test Packaging and Deployment
-    uses: ./.github/workflows/reusable_packaging_and_deployment.yml
-    with:
-      os: ubuntu-22.04
-      compiler: clang-14
-      cmake-version: 3.22.6
