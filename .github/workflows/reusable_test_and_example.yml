@@ -16,10 +16,7 @@ on:
 jobs:
   build-and-test:
     name: Build and run tests and examples
-    strategy:
-      matrix:
-        os: [inputs.os]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ inputs.os }}
     defaults:
       run:
         shell: bash
