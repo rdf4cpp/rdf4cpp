@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [inputs.os]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
