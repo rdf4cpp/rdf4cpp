@@ -1,0 +1,75 @@
+on:
+  workflow_call:
+    inputs:
+       os:
+        required: true
+        type: string
+       compiler:
+         required: true
+         type: string
+       build-shared-libs:
+         required: true
+         bool: string
+
+jobs:
+  build-and-test:
+    name: Build and run tests and examples (${{ inputs.os }}, ${{ compiler }}, ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs == true] }} lib)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Get minimum cmake version
+        uses: lukka/get-cmake@v3.24.3
+        with:
+          cmakeVersion: 3.22.6
+
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@v1.2
+        with:
+          compiler: ${{  inputs.compiler }}
+
+      - name: use mold as default linker
+        uses: rui314/setup-mold@v1
+
+      - name: Configure conan
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+
+      - name: Cache conan data
+        id: cache-conan
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan/data
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+
+      - name: Check out sources
+        uses: actions/checkout@v3
+
+      - name: Build Tests & Examples
+        run: |
+          cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=${{ fromJSON('["OFF", "ON"]')[inputs.build-shared-libs == true] }}
+          cmake --build build_dir
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+
+      - name: Run tests
+        working-directory: build_dir
+        run: |
+          ctest --parallel 2
+
+      - name: Run Examples Static
+        working-directory: build_dir
+        run: |
+          examples/graphs_and_datasets_example
+          examples/literal_datatypes_example
+          examples/namespaces_example
+          examples/rdf_nodes_example

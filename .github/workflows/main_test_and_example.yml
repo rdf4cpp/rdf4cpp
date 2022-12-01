@@ -1,0 +1,36 @@
+name: Tests and Examples (new)
+on: [ 'push', 'pull_request' ]
+
+
+jobs:
+  tests_and_example_matrix:
+    strategy:
+      matrix:
+        shared: [ON, OFF]
+        cppenv:
+          - {
+            os: ubuntu-22.04,
+            compiler: "gcc-11",
+          }
+          - {
+            os: ubuntu-22.04,
+            compiler: "gcc-12",
+          }
+          - {
+            os: ubuntu-22.04,
+            compiler: "clang-12",
+          }
+          - {
+            os: ubuntu-22.04,
+            compiler: "clang-13",
+          }
+          - {
+            os: ubuntu-22.04,
+            compiler: "clang-14",
+          }
+
+    uses: ./.github/workflows/main_test_and_example.yml
+    with:
+      build-shared-libs: ${{ matrix.shared }}
+      os: ${{matrix.cppenv.os }}
+      compiler: ${{ matrix.cppenv.compiler }}
