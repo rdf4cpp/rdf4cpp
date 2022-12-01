@@ -16,7 +16,8 @@ name: ${{ inputs.os }}, ${{ inputs.compiler }}, ${{ fromJSON('["static", "shared
 jobs:
   build-and-test:
     name: Build and run tests and examples
-    runs-on: ${{ inputs.os }}
+    matrix:
+      os: [inputs.os]
     defaults:
       run:
         shell: bash
