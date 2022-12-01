@@ -89,11 +89,3 @@ jobs:
           ./${example}
           done
 
-
-  conan-packaging:
-    name: Build and run tests and examples
-    runs-on: ${{ inputs.os }}
-    defaults:
-      run:
-        shell: bash
-
