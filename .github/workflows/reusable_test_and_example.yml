@@ -18,7 +18,8 @@ on:
         type: boolean
     secrets:
       coverall-token:
-        type: string
+        description: 'Access token for coverall. Required if inputs.with-coverage'
+        required: false
 
 
 jobs:

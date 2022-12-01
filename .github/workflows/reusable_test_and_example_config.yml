@@ -9,14 +9,13 @@ on:
         type: string
       cmake-version:
         required: true
-        type:
-          string
+        type: string
       with-coverage:
         type: boolean
     secrets:
       coverall-token:
-        type: string
-
+        description: 'Access token for coverall. Required if inputs.with-coverage'
+        required: false
 
 jobs:
   test-and-examples-static:
