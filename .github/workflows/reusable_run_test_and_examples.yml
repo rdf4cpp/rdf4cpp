@@ -25,8 +25,6 @@ jobs:
       compiler: ${{ inputs.compiler }}
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: false
-    secrets:
-      coverall-token: ${{ inputs.coverall-token }}
 
   test-and-examples-shared:
     uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml

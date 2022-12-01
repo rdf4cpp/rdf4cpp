@@ -23,12 +23,12 @@ jobs:
           compiler: "clang-14",
         } ]
       fail-fast: false
-    name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
+    name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12'] }}
     uses: ./.github/workflows/reusable_run_test_and_examples.yml
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
-      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' && matrix.shared }}
+      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' }}
     secrets:
       coverall-token: ${{ secrets.COVERALLS_TOKEN }}
