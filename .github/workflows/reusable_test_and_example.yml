@@ -12,7 +12,7 @@ on:
          type: boolean
        with-coverage:
          type: boolean
-# name: ${{ inputs.os }}, ${{ inputs.compiler }}, ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", ", coverage report"]')[build-shared-libs] }}
+
 jobs:
   build-and-test:
     name: Build and run tests and examples
