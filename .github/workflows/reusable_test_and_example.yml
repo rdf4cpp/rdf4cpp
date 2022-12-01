@@ -136,7 +136,7 @@ jobs:
           conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
   test-cmake-fetch-content:
-    name: Build and test conan package
+    name: Test cmake FetchContent
     runs-on: ${{ inputs.os }}
     defaults:
       run:
