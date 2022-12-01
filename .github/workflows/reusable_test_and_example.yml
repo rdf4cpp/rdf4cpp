@@ -7,16 +7,22 @@ on:
       compiler:
         required: true
         type: string
+      cmake-version:
+        required: true
+        type:
+          string
       build-shared-libs:
         required: true
         type: boolean
       with-coverage:
         type: boolean
-      test-deployment:
-        type: boolean
+    secrets:
+      coverall-token:
+        type: string
+
 
 jobs:
-  build-and-test:
+  tests-and-examples:
     name: Build and run tests and examples ${{ fromJSON('["", "+ report code coverage"]')[inputs.with-coverage] }}
     runs-on: ${{ inputs.os }}
     defaults:
@@ -74,6 +80,8 @@ jobs:
           ctest --parallel 2
 
       - name: Report coverage
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.coverall-token }}
         if: inputs.with-coverage
         run: |
           gcovr --coveralls --filter 'src/' -o coverage.json -r ./
@@ -84,101 +92,6 @@ jobs:
         run: |
           for example in examples/*_example 
           do 
-          echo "executing ${example}$
+          echo "executing ${example}"
           ./${example}
           done
-  build-and-test-conan-package:
-    if: inputs.test-deployment
-    name: Build and test conan package
-    runs-on: ${{ inputs.os }}
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - name: Get minimum cmake version
-        uses: lukka/get-cmake@v3.24.3
-        with:
-          cmakeVersion: 3.22.6
-
-      - name: Install compiler
-        id: install_cc
-        uses: rlalik/setup-cpp-compiler@v1.2
-        with:
-          compiler: ${{  inputs.compiler }}
-
-      - name: use mold as default linker
-        uses: rui314/setup-mold@v1
-
-      - name: Configure conan
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
-        run: |
-          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
-          conan user
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-
-      - name: Cache conan data
-        id: cache-conan
-        uses: actions/cache@v3
-        with:
-          path: ~/.conan/data
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
-
-      - name: Check out sources
-        uses: actions/checkout@v3
-
-      - name: Test conan package
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
-        run: |
-          # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default
-          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
-  test-cmake-fetch-content:
-    if: inputs.test-deployment
-    name: Test cmake FetchContent
-    runs-on: ${{ inputs.os }}
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - name: Get minimum cmake version
-        uses: lukka/get-cmake@v3.24.3
-        with:
-          cmakeVersion: 3.22.6
-
-      - name: Install compiler
-        id: install_cc
-        uses: rlalik/setup-cpp-compiler@v1.2
-        with:
-          compiler: ${{  inputs.compiler }}
-
-      - name: use mold as default linker
-        uses: rui314/setup-mold@v1
-      - name: Install systemlib and boost for FetchContent
-        run: |
-          # FetchContent does not handle transitive dependencies and doesn't run conan.
-          sudo apt-get install libboost-math-dev
-      - name: Check out sources
-        uses: actions/checkout@v3
-
-      - name: Test cmake FetchContent
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
-        working-directory: test_FetchContent
-        run: |
-          cmake -G Ninja -B build_fetch_content -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }} \
-          ${{ fromJSON('["", "-DCMAKE_CXX_FLAGS=--coverage"]')[inputs.with-coverage] }}  
-          cmake --build build_fetch_content
-
-      - name: Run test executable
-        working-directory: test_FetchContent/build_fetch_content
-        run: |
-          ./test_FetchContent
