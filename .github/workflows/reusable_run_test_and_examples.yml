@@ -19,7 +19,7 @@ on:
 
 jobs:
   test-and-examples-static:
-    uses: ./.github/workflows/reusable_test_and_example_by_linking_type.yml
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
     with:
       os: ${{ inputs.os }}
       compiler: ${{ inputs.compiler }}
@@ -29,7 +29,7 @@ jobs:
       coverall-token: ${{ inputs.coverall-token }}
 
   test-and-examples-shared:
-    uses: ./.github/workflows/reusable_test_and_example_by_linking_type.yml
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
     with:
       os: ${{ inputs.os }}
       compiler: ${{ inputs.compiler }}

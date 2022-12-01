@@ -4,7 +4,6 @@ on: [ 'pull_request' ]
 
 jobs:
   packaging:
-    name: Packaging and deployment tests
     uses: ./.github/workflows/reusable_packaging_and_deployment.yml
     with:
       os: ubuntu-22.04
