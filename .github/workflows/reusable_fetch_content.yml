@@ -17,7 +17,7 @@ on:
 
 jobs:
   test-cmake-fetch-content:
-    name: Test cmake FetchContent (${{ fromJSON('["static", "shared"]')[build-shared-libs] }})
+    name: Test cmake FetchContent (${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }})
     runs-on: ${{ inputs.os }}
     defaults:
       run:
