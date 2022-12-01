@@ -39,4 +39,4 @@ jobs:
       build-shared-libs: true
       with-coverage: ${{ inputs.with-coverage }}
     secrets:
-      coverall_token: ${{ inputs.coverall-token }}
+      coverall-token: ${{ inputs.coverall-token }}
