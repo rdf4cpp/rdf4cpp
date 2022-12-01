@@ -3,34 +3,34 @@ on: [ 'push', 'pull_request' ]
 
 
 jobs:
-  tests_and_example_matrix:
-    strategy:
-      matrix:
-        shared: [ true, false ]
-        cppenv: [ {
-          os: ubuntu-22.04,
-          compiler: "gcc-11",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "gcc-12",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-12",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-13",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-14",
-        } ]
-    name: ${{ matrix.cppenv.os }}, ${{ matrix.cppenv.compiler }}, ${{ fromJSON('["static", "shared"]')[matrix.shared] }} lib${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
-    uses: ./.github/workflows/reusable_test_and_example.yml
-    with:
-      os: ${{ matrix.cppenv.os }}
-      compiler: ${{ matrix.cppenv.compiler }}
-      build-shared-libs: ${{ matrix.shared }}
-      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' && matrix.shared }}
-      test-deployment: ${{ matrix.cppenv.compiler == 'clang-14' && !matrix.shared }}
+#  tests_and_example_matrix:
+#    strategy:
+#      matrix:
+#        shared: [ true, false ]
+#        cppenv: [ {
+#          os: ubuntu-22.04,
+#          compiler: "gcc-11",
+#        }, {
+#          os: ubuntu-22.04,
+#          compiler: "gcc-12",
+#        }, {
+#          os: ubuntu-22.04,
+#          compiler: "clang-12",
+#        }, {
+#          os: ubuntu-22.04,
+#          compiler: "clang-13",
+#        }, {
+#          os: ubuntu-22.04,
+#          compiler: "clang-14",
+#        } ]
+#    name: ${{ matrix.cppenv.os }}, ${{ matrix.cppenv.compiler }}, ${{ fromJSON('["static", "shared"]')[matrix.shared] }} lib${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
+#    uses: ./.github/workflows/reusable_test_and_example.yml
+#    with:
+#      os: ${{ matrix.cppenv.os }}
+#      compiler: ${{ matrix.cppenv.compiler }}
+#      build-shared-libs: ${{ matrix.shared }}
+#      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' && matrix.shared }}
+#      test-deployment: ${{ matrix.cppenv.compiler == 'clang-14' && !matrix.shared }}
 
   packaging:
     name: Test Packaging and Deployment
