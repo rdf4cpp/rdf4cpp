@@ -27,5 +27,5 @@ jobs:
     uses: ./.github/workflows/reusable_test_and_example.yml
     with:
       os: ${{ matrix.cppenv.os }}
-      compiler: ${{ matrix.cppenv.compiler }}
+      compiler: "clang-12"
       build-shared-libs: ${{ matrix.shared }}
