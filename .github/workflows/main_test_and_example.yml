@@ -31,6 +31,6 @@ jobs:
 
     uses: ./.github/workflows/reusable_test_and_example.yml
     with:
-      build-shared-libs: ${{ matrix.shared }}
       os: ${{matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
+      build-shared-libs: ${{ matrix.shared }}
