@@ -30,7 +30,7 @@ jobs:
       cmake-version: 3.22.6
       with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' && matrix.shared }}
     secrets:
-      coverall_token: ${{ secrets.COVERALLS_TOKEN }}
+      coverall-token: ${{ secrets.COVERALLS_TOKEN }}
 
   packaging:
     name: Test Packaging and Deployment

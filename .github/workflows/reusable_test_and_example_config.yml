@@ -28,7 +28,7 @@ jobs:
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: false
     secrets:
-      coverall_token: ${{ inputs.coverall-token }}
+      coverall-token: ${{ inputs.coverall-token }}
 
   test-and-examples-shared:
     name: shared lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
