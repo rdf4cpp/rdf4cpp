@@ -36,6 +36,6 @@ jobs:
     name: Test Packaging and Deployment
     uses: ./.github/workflows/reusable_packaging_and_deployment.yml
     with:
-      os: ${{ matrix.cppenv.os }}
-      compiler: ${{ matrix.cppenv.compiler }}
+      os: ubuntu-22.04
+      compiler: clang-14
       cmake-version: 3.22.6
