@@ -22,6 +22,7 @@ jobs:
           os: ubuntu-22.04,
           compiler: "clang-14",
         } ]
+      fail-fast: false
     name: ${{ matrix.cppenv.os }}, ${{ matrix.cppenv.compiler }}, ${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12' && matrix.shared] }}
     uses: ./.github/workflows/reusable_test_and_example_config.yml
     with:
