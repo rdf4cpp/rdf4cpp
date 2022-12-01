@@ -10,11 +10,13 @@ on:
        build-shared-libs:
          required: true
          type: boolean
-
+       with-coverage:
+         type: boolean
+name: ${{ inputs.os }}, ${{ inputs.compiler }}, ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", ", coverage report"]')[build-shared-libs] }}
 jobs:
   build-and-test:
-    name: Build and run tests and examples (${{ inputs.os }}, ${{ inputs.compiler }}, ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs == true] }} lib)
-    runs-on: ubuntu-latest
+    name: Build and run tests and examples
+    runs-on: ${{ inputs.os }}
     defaults:
       run:
         shell: bash
@@ -39,7 +41,7 @@ jobs:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install conan
+          pip3 install conan ${{ fromJSON('["", "gcov"]')[inputs.with-coverage] }}
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -56,7 +58,9 @@ jobs:
 
       - name: Build Tests & Examples
         run: |
-          cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON -DBUILD_SHARED_LIBS=${{ fromJSON('["OFF", "ON"]')[inputs.build-shared-libs == true] }}
+          cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }} \
+          ${{ fromJSON('["", "-DCMAKE_CXX_FLAGS=--coverage"]')[inputs.with-coverage] }}  
           cmake --build build_dir
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
@@ -66,6 +70,12 @@ jobs:
         working-directory: build_dir
         run: |
           ctest --parallel 2
+
+      - name: Report coverage
+        if: inputs.with-coverage
+        run: |
+          gcovr --coveralls --filter 'src/' -o coverage.json -r ./
+          curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
 
       - name: Run Examples Static
         working-directory: build_dir

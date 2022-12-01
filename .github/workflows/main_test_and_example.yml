@@ -29,3 +29,4 @@ jobs:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
       build-shared-libs: ${{ matrix.shared }}
+      with-coverage: ${{ matrix.cppenv.compiler == "gcc-12" && matrix.shared }}
