@@ -12,6 +12,8 @@ on:
         type: boolean
       with-coverage:
         type: boolean
+      test-deployment:
+        type: boolean
 
 jobs:
   build-and-test:
@@ -86,6 +88,7 @@ jobs:
           ./${example}
           done
   build-and-test-conan-package:
+    if: inputs.test-deployment
     name: Build and test conan package
     runs-on: ${{ inputs.os }}
     defaults:
@@ -136,6 +139,7 @@ jobs:
           conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
   test-cmake-fetch-content:
+    if: inputs.test-deployment
     name: Test cmake FetchContent
     runs-on: ${{ inputs.os }}
     defaults:
