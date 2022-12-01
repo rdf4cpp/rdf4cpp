@@ -70,7 +70,8 @@ jobs:
       - name: Run Examples Static
         working-directory: build_dir
         run: |
-          examples/graphs_and_datasets_example
-          examples/literal_datatypes_example
-          examples/namespaces_example
-          examples/rdf_nodes_example
+          for example in examples/*_example 
+          do 
+          echo "executing ${example}$
+          ./${example}
+          done
