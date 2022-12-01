@@ -6,7 +6,7 @@ jobs:
   tests_and_example_matrix:
     strategy:
       matrix:
-        shared: [ON, OFF]
+        shared: [true, false]
         cppenv:
           - {
             os: ubuntu-22.04,
