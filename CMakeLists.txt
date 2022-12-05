@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.7)
+project(rdf4cpp VERSION 0.0.8)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
