@@ -9,6 +9,8 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -41,6 +43,12 @@ struct IStreamQuadIterator {
     using iterator_category = std::input_iterator_tag;
     using istream_type = std::istream;
 
+    using prefix_storage_type = rdf4cpp::rdf::storage::util::tsl::sparse_map<
+            std::string,
+            std::string,
+            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
+            std::equal_to<>>;
+
 private:
     struct Impl;
 
@@ -63,7 +71,9 @@ public:
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) noexcept ;
 
-    explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(), storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+    explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(),
+                                 prefix_storage_type prefixes = {},
+                                 storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
     ~IStreamQuadIterator() noexcept;
 
     reference operator*() const noexcept;

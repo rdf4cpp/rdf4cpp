@@ -185,13 +185,33 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
 
 SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
-    self->prefixes.emplace("", node_into_string_view(uri));
+
+    if (self->no_parse_prefixes) {
+        self->last_error = ParsingError{
+                .error_type = ParsingError::Type::BadSyntax,
+                .line = serd_reader_get_current_line(self->reader.get()),
+                .col = serd_reader_get_current_col(self->reader.get()),
+                .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+    } else {
+        self->prefixes.emplace("", node_into_string_view(uri));
+    }
+
     return SERD_SUCCESS;
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
     auto *self = reinterpret_cast<Impl *>(voided_self);
-    self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
+
+    if (self->no_parse_prefixes) {
+        self->last_error = ParsingError{
+                .error_type = ParsingError::Type::BadSyntax,
+                .line = serd_reader_get_current_line(self->reader.get()),
+                .col = serd_reader_get_current_col(self->reader.get()),
+                .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+    } else {
+        self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
+    }
+
     return SERD_SUCCESS;
 }
 
@@ -281,12 +301,14 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     return SERD_SUCCESS;
 }
 
-IStreamQuadIterator::Impl::Impl(std::istream &istream, bool strict, storage::node::NodeStorage node_storage) noexcept
+IStreamQuadIterator::Impl::Impl(std::istream &istream, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept
     : istream{std::ref(istream)},
       node_storage{std::move(node_storage)},
-      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)} {
+      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
+      prefixes{std::move(prefixes)},
+      no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)} {
 
-    serd_reader_set_strict(this->reader.get(), strict);
+    serd_reader_set_strict(this->reader.get(), flags.contains(ParsingFlag::Strict));
     serd_reader_set_error_sink(this->reader.get(), &Impl::on_error, this);
     serd_reader_start_source_stream(this->reader.get(), &util::istream_read, &util::istream_is_ok, &this->istream.get(), nullptr, 4096);
 }
@@ -300,17 +322,22 @@ std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::n
         this->last_error = std::nullopt;
         SerdStatus const st = serd_reader_read_chunk(this->reader.get());
 
-        if (st != SerdStatus::SERD_SUCCESS && quad_buffer.empty()) {
-            // was not able to read stmt, prefix or base
+        if (quad_buffer.empty()) {
+            if (st != SerdStatus::SERD_SUCCESS) {
+                // was not able to read stmt, prefix or base
 
-            if (!this->last_error.has_value()) {
-                // did not receive error either => must be eof
-                this->end_flag = true;
-                return std::nullopt;  // eof reached
+                if (!this->last_error.has_value()) {
+                    // did not receive error either => must be eof
+                    this->end_flag = true;
+                    return std::nullopt;  // eof reached
+                }
+
+                serd_reader_skip_error(this->reader.get());
+                return nonstd::make_unexpected(*this->last_error);
+            } else if (this->last_error.has_value()) {
+                // non-fatal, artificially inserted error
+                return nonstd::make_unexpected(*this->last_error);
             }
-
-            serd_reader_skip_error(this->reader.get());
-            return nonstd::make_unexpected(*this->last_error);
         }
     }
 
