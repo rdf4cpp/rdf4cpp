@@ -1,0 +1,38 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      compiler:
+        required: true
+        type: string
+      cmake-version:
+        required: true
+        type: string
+      with-coverage:
+        type: boolean
+    secrets:
+      coverall-token:
+        description: 'Access token for coverall. Required if inputs.with-coverage'
+        required: false
+
+jobs:
+  test-and-examples-static:
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: false
+
+  test-and-examples-shared:
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
+    with:
+      os: ${{ inputs.os }}
+      compiler: ${{ inputs.compiler }}
+      cmake-version: ${{ inputs.cmake-version }}
+      build-shared-libs: true
+      with-coverage: ${{ inputs.with-coverage }}
+    secrets:
+      coverall-token: ${{ inputs.coverall-token }}

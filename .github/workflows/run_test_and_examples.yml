@@ -1,0 +1,34 @@
+name: Run unit tests and examples
+on: [ 'pull_request' ]
+
+
+jobs:
+  tests_and_example_matrix:
+    strategy:
+      matrix:
+        cppenv: [ {
+          os: ubuntu-22.04,
+          compiler: "gcc-11",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "gcc-12",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-12",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-13",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-14",
+        } ]
+      fail-fast: false
+    name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}${{ fromJSON('["", ", coverage report"]')[matrix.cppenv.compiler == 'gcc-12'] }}
+    uses: ./.github/workflows/reusable_run_test_and_examples.yml
+    with:
+      os: ${{ matrix.cppenv.os }}
+      compiler: ${{ matrix.cppenv.compiler }}
+      cmake-version: 3.22.6
+      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' }}
+    secrets:
+      coverall-token: ${{ secrets.COVERALLS_TOKEN }}

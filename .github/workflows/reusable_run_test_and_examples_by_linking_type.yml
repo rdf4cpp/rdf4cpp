@@ -1,0 +1,97 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      compiler:
+        required: true
+        type: string
+      cmake-version:
+        required: true
+        type: string
+      build-shared-libs:
+        required: true
+        type: boolean
+      with-coverage:
+        type: boolean
+    secrets:
+      coverall-token:
+        description: 'Access token for coverall. Required if inputs.with-coverage'
+        required: false
+
+
+jobs:
+  tests-and-examples:
+    name: ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
+    runs-on: ${{ inputs.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Get minimum cmake version
+        uses: lukka/get-cmake@v3.24.3
+        with:
+          cmakeVersion: ${{ inputs.cmake-version }}
+
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@v1.2
+        with:
+          compiler: ${{  inputs.compiler }}
+
+      - name: use mold as default linker
+        uses: rui314/setup-mold@v1
+
+      - name: Configure conan
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+        run: |
+          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+
+      - name: Cache conan data
+        id: cache-conan
+        uses: actions/cache@v3
+        with:
+          path: ~/.conan/data
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+
+      - name: Check out sources
+        uses: actions/checkout@v3
+
+      - name: Build Tests & Examples
+        run: |
+          cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }} \
+          ${{ fromJSON('["", "-DCMAKE_CXX_FLAGS=--coverage"]')[inputs.with-coverage] }}  
+          cmake --build build_dir
+        env:
+          CC: ${{ steps.install_cc.outputs.cc }}
+          CXX: ${{ steps.install_cc.outputs.cxx }}
+
+      - name: Run tests
+        working-directory: build_dir
+        run: |
+          ctest --parallel 2
+
+      - name: Report coverage
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.coverall-token }}
+        if: inputs.with-coverage
+        run: |
+          gcovr --coveralls --filter 'src/' -o coverage.json -r ./
+          curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
+
+      - name: Run examples
+        working-directory: build_dir
+        run: |
+          for example in examples/*_example 
+          do 
+          echo "executing ${example}"
+          ./${example}
+          done
