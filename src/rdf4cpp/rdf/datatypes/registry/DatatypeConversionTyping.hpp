@@ -7,7 +7,7 @@
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/TypeList.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -28,16 +28,16 @@ template<typename T>
 struct IsConversionLayer : std::false_type {};
 
 template<typename... Ts>
-struct IsConversionLayer<std::tuple<Ts...>>
+struct IsConversionLayer<mz::type_list<Ts...>>
     : std::bool_constant<
-              (ConversionEntry<Ts> && ...) && util::AllSame<typename Ts::source_type...>::value> {};
+              (ConversionEntry<Ts> && ...) && util::all_types_same<typename Ts::source_type...>::value> {};
 
 
 template<typename Layer>
 struct ConversionLayerSource;
 
 template<typename Entry, typename... Entries>
-struct ConversionLayerSource<std::tuple<Entry, Entries...>> {
+struct ConversionLayerSource<mz::type_list<Entry, Entries...>> {
     using type = typename Entry::source_type;
 };
 
@@ -46,9 +46,9 @@ struct IsConversionTable
     : std::false_type {};
 
 template<typename... Ts>
-struct IsConversionTable<std::tuple<Ts...>>
+struct IsConversionTable<mz::type_list<Ts...>>
     : std::bool_constant<
-              (IsConversionLayer<Ts>::value && ...) && util::AllSame<typename ConversionLayerSource<Ts>::type...>::value> {};
+              (IsConversionLayer<Ts>::value && ...) && util::all_types_same<typename ConversionLayerSource<Ts>::type...>::value> {};
 
 }  // namespace conversion_typing_detail
 
@@ -149,18 +149,18 @@ private:
 public:
     template<ConversionTable Table>
     static RuntimeConversionTable from_concrete() noexcept {
-        static constexpr size_t s_rank = std::tuple_size_v<Table>;
+        static constexpr size_t s_rank = Table::length;
 
-        static constexpr size_t max_p_rank = util::tuple_type_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
-            return std::max(acc, std::tuple_size_v<Layer>);
+        static constexpr size_t max_p_rank = util::type_list_fold<Table>(0ul, []<ConversionLayer Layer>(auto acc) {
+            return std::max(acc, Layer::length);
         });
 
         RuntimeConversionTable table{s_rank, max_p_rank};
 
-        util::tuple_type_fold<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) noexcept {
-            table.p_ranks[s_off] = std::tuple_size_v<Layer>;
+        util::type_list_for_each_with<Table>(0ul, [&]<ConversionLayer Layer>(size_t const s_off) noexcept {
+            table.p_ranks[s_off] = Layer::length;
 
-            util::tuple_type_fold<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) noexcept {
+            util::type_list_for_each_with<Layer>(0ul, [&]<ConversionEntry Entry>(size_t const p_off) noexcept {
                 table.conversion_at_index(s_off, p_off) = RuntimeConversionEntry::from_concrete<Entry>();
                 return p_off + 1;
             });
