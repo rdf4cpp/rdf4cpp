@@ -292,18 +292,21 @@ template<util::ConstexprString type_iri>
 struct Inlineable {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
-    static constexpr std::true_type is_inlineable;
+    static constexpr std::true_type is_inlineable{};
 
-    static bool can_inline(cpp_type const &value) noexcept {
-        static_assert(detail::always_false_v<cpp_type>);
+    static bool can_inline([[maybe_unused]] cpp_type const &value) noexcept {
+        static_assert(detail::always_false_v<cpp_type>, "can_inline not implemented for inlineable type");
+        return {}; // silence gcc no-return warning
     }
 
-    static uint64_t to_inlined(cpp_type const &value) noexcept {
-        static_assert(detail::always_false_v<cpp_type>);
+    static uint64_t to_inlined([[maybe_unused]] cpp_type const &value) noexcept {
+        static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
+        return {}; // silence gcc no-return warning
     }
 
-    static cpp_type from_inlined(uint64_t inlined) noexcept {
-        static_assert(detail::always_false_v<cpp_type>);
+    static cpp_type from_inlined([[maybe_unused]] uint64_t inlined) noexcept {
+        static_assert(detail::always_false_v<cpp_type>, "from_inlined not implemented for inlineable type");
+        return {}; // silence gcc no-return warning
     }
 };
 
@@ -331,6 +334,11 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
                   "Mismatch between declared and actual fixed id mapping state. "
                   "Hint: maybe you forgot declare the fixed id or to add the FixedId capability. "
                   "Note: this would cause inconsistency between registry and node storage");
+
+    static_assert(!IsInlineable<LiteralDatatypeImpl> || datatype_id.is_fixed(),
+                  "Inlineable datatypes are required to have a fixed id."
+                  "Hint: either make this datatype not inlineable or add a fixed id."
+                  "Note: inlineable datatypes with dynamic id would not be able to recover their IRI using the node storage handle.");
 private:
     static std::nullptr_t init() noexcept {
         DatatypeRegistry::add<LiteralDatatypeImpl>();

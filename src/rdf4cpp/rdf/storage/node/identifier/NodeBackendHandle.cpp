@@ -29,15 +29,16 @@ struct __attribute__((__packed__)) NodeBackendHandleImpl {
             NodeID node_id_;
             RDFNodeType type_ : 2;
             NodeStorageID::underlying_type storage_id_ : NodeStorageID::width;
-            uint8_t free_tagging_bits : 4;
+            uint8_t inlined : 1;
+            uint8_t free_tagging_bits : 3;
 
         } fields_;
     };
 
     constexpr explicit NodeBackendHandleImpl(size_t raw) noexcept : raw_{raw} {}
 
-    constexpr NodeBackendHandleImpl(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, uint8_t tagging_bits) noexcept
-        : fields_{.node_id_ = node_id, .type_ = node_type, .storage_id_ = node_storage_id.value, .free_tagging_bits = tagging_bits} {}
+    constexpr NodeBackendHandleImpl(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
+        : fields_{.node_id_ = node_id, .type_ = node_type, .storage_id_ = node_storage_id.value, .inlined = inlined, .free_tagging_bits = tagging_bits} {}
 
     [[nodiscard]] constexpr NodeStorageID storage_id() const noexcept { return NodeStorageID{fields_.storage_id_}; }
     [[nodiscard]] constexpr NodeID node_id() const noexcept { return fields_.node_id_; }
@@ -81,18 +82,24 @@ view::VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
 NodeID NodeBackendHandle::node_id() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_;
 }
+
+bool NodeBackendHandle::is_inlined() const noexcept {
+    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.inlined;
+}
+
 uint8_t NodeBackendHandle::free_tagging_bits() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits;
 }
 void NodeBackendHandle::set_free_tagging_bits(uint8_t new_value) {
-    assert(new_value < (1 << 4));
+    assert(new_value < (1 << 3));
     unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits = new_value;
 }
 NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).storage_id();
 }
-NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, uint8_t tagging_bits) noexcept
-    : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, tagging_bits})) {}
+NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
+    : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, inlined, tagging_bits})) {}
+
 uint64_t NodeBackendHandle::raw() const noexcept {
     return raw_;
 }

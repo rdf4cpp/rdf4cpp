@@ -90,8 +90,8 @@ public:
 
     struct InliningOps {
         can_inline_fptr_t can_inline_fptr;
-        from_inlined_fptr_t from_inlined_fptr;
         to_inlined_fptr_t to_inlined_fptr;
+        from_inlined_fptr_t from_inlined_fptr;
     };
 
     struct DatatypeEntry {
@@ -252,6 +252,12 @@ public:
      */
     inline static const registered_datatypes_t &registered_datatypes() noexcept {
         return DatatypeRegistry::get_mutable();
+    }
+
+    inline static std::optional<std::string_view> get_iri(DatatypeIDView const datatype_id) noexcept {
+        return find_map_entry(datatype_id, [](auto const &entry) noexcept -> std::string_view {
+            return entry.datatype_iri;
+        });
     }
 
     /**
@@ -606,11 +612,11 @@ template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
     return InliningOps {
         .can_inline_fptr = [](std::any const &value) noexcept -> bool {
-            auto const &val = std::any_cast<LiteralDatatype_t::cpp_type>(value);
+            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
             return LiteralDatatype_t::can_inline(val);
         },
         .to_inlined_fptr = [](std::any const &value) noexcept -> uint64_t {
-            auto const &val = std::any_cast<LiteralDatatype_t::cpp_type>(value);
+            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
             return LiteralDatatype_t::to_inlined(val);
         },
         .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> std::any {

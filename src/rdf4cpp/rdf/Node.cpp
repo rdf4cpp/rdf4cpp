@@ -72,6 +72,10 @@ bool Node::is_iri() const noexcept {
     return handle_.is_iri();
 }
 
+bool Node::is_inlined() const noexcept {
+    return handle_.is_inlined();
+}
+
 std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
     if (this->handle_ == other.handle_){
         return std::strong_ordering::equivalent;
@@ -157,5 +161,6 @@ Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const n
 
     return static_cast<Literal>(*this).ebv_as_literal(node_storage);
 }
+
 
 }  // namespace rdf4cpp::rdf

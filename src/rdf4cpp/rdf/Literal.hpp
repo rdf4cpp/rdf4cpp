@@ -10,6 +10,7 @@
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
+#include <rdf4cpp/rdf/util/CowString.hpp>
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
@@ -83,6 +84,9 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
 
+    /**
+     * Creates an inlined Literal without any safety checks
+     */
     [[nodiscard]] static Literal make_inlined_unchecked(uint64_t inlined_value, IRI const &datatype, NodeStorage &node_storage) noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
@@ -130,8 +134,7 @@ public:
         if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
             if (LiteralDatatype_t::can_inline(compatible_value)) {
                 auto const inlined = LiteralDatatype_t::to_inlined(compatible_value);
-
-
+                return Literal::make_inlined_unchecked(inlined, IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
             }
         }
 
@@ -179,7 +182,8 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-    [[nodiscard]] std::string_view lexical_form() const noexcept;
+     // TODO: find better return type, CowString does not work currently
+    [[nodiscard]] std::string lexical_form() const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -313,16 +317,19 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     typename LiteralDatatype_t::cpp_type value() const {
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (this->is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                return LiteralDatatype_t::from_inlined(inlined_value);
+            }
+        }
+
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             auto const &lit = this->handle_.literal_backend();
 
             return datatypes::registry::LangStringRepr{
                     .lexical_form = std::string{lit.lexical_form},
                     .language_tag = std::string{lit.language_tag}};
-        } else if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (this->handle_.is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;i
-            }
         }
 
         return LiteralDatatype_t::from_string(this->lexical_form());
