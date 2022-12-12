@@ -83,6 +83,7 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
 
+    [[nodiscard]] static Literal make_inlined_unchecked(uint64_t inlined_value, IRI const &datatype, NodeStorage &node_storage) noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
@@ -125,6 +126,14 @@ public:
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
                         NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (LiteralDatatype_t::can_inline(compatible_value)) {
+                auto const inlined = LiteralDatatype_t::to_inlined(compatible_value);
+
+
+            }
+        }
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
@@ -310,9 +319,13 @@ public:
             return datatypes::registry::LangStringRepr{
                     .lexical_form = std::string{lit.lexical_form},
                     .language_tag = std::string{lit.language_tag}};
-        } else {
-            return LiteralDatatype_t::from_string(this->lexical_form());
+        } else if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (this->handle_.is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id().value;i
+            }
         }
+
+        return LiteralDatatype_t::from_string(this->lexical_form());
     }
 
     friend class Node;

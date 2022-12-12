@@ -127,5 +127,13 @@ concept HasFixedId = requires {
 template<typename LiteralDatatypeImpl>
 concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && HasFixedId<LiteralDatatypeImpl>;
 
+template<typename LiteralDatatypeImpl>
+concept IsInlineable = requires {
+                           { LiteralDatatypeImpl::is_inlineable } -> std::convertible_to<std::true_type>;
+                       };
+
+template<typename LiteralDatatypeImpl>
+concept InlineableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && IsInlineable<LiteralDatatypeImpl>;
+
 }  // namespace rdf4cpp::rdf::datatypes
 #endif  //RDF4CPP_LITERALDATATYPE_HPP

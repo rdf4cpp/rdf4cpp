@@ -114,6 +114,13 @@ std::any Literal::value() const {
         return registry::LangStringRepr{
             .lexical_form = std::string{lit.lexical_form},
             .language_tag = std::string{lit.language_tag}};
+    }
+    else if (this->handle_.is_inlined()) {
+        auto const fi = registry::DatatypeRegistry::get_inlining_ops(datatype);
+        assert(fi != nullptr);
+
+        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        return fi->from_inlined_fptr(inlined_value);
     } else if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
         return factory(this->lexical_form());
     } else {
@@ -146,6 +153,19 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                              .language_tag = lang}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
+}
+
+Literal Literal::make_inlined_unchecked(uint64_t inlined_value, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+    using namespace storage::node::identifier;
+
+    assert(inlined_value >> 42 == 0);
+    auto const type = static_cast<datatypes::registry::DatatypeIDView>(datatype);
+
+    return Literal{NodeBackendHandle{
+            NodeID{LiteralID{inlined_value}, type.is_fixed() ? type.get_fixed() : LiteralType::other()},
+            RDFNodeType::Literal,
+            node_storage.id(),
+            1}}; // TODO extract 1 into some constant
 }
 
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {

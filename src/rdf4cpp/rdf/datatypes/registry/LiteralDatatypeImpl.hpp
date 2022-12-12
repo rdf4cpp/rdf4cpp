@@ -288,6 +288,25 @@ struct FixedId {
     static_assert(fixed_id.is_fixed(), "cannot treat non fixed id as fixed");
 };
 
+template<util::ConstexprString type_iri>
+struct Inlineable {
+    using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
+
+    static constexpr std::true_type is_inlineable;
+
+    static bool can_inline(cpp_type const &value) noexcept {
+        static_assert(detail::always_false_v<cpp_type>);
+    }
+
+    static uint64_t to_inlined(cpp_type const &value) noexcept {
+        static_assert(detail::always_false_v<cpp_type>);
+    }
+
+    static cpp_type from_inlined(uint64_t inlined) noexcept {
+        static_assert(detail::always_false_v<cpp_type>);
+    }
+};
+
 } // namespace capabilities
 
 /**
