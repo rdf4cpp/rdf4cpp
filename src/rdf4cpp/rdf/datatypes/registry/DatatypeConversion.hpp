@@ -4,13 +4,12 @@
 #include <any>
 #include <cstddef>
 #include <functional>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include <nonstd/expected.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/Tuple.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/TypeList.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
 
@@ -41,9 +40,9 @@ template<LiteralDatatype BaseType,
          template<LiteralDatatype> typename HasConversion,
          template<LiteralDatatype, LiteralDatatype> typename RankRule,
          ConversionLayer LayerAcc>
-consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_acc) {
+consteval ConversionLayer auto make_conversion_layer_impl() {
     if constexpr (!HasConversion<Type>::value) {
-        return table_acc;
+        return LayerAcc{};
     } else {
         using next = Conversion<Type>;
 
@@ -98,13 +97,11 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 }
             };
 
-            auto next_table = std::tuple_cat(table_acc, std::make_tuple(FirstConversion{}));
-            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
+            using next_table = typename LayerAcc::template append<FirstConversion>;
+            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule, next_table>();
         } else {
-            using table_type_t = std::remove_reference_t<decltype(table_acc)>;
-            auto const table_size = std::tuple_size_v<table_type_t>;
-
-            using prev_promotion_t = typename std::tuple_element_t<table_size - 1, table_type_t>;
+            auto const table_size = LayerAcc::length;
+            using prev_promotion_t = typename LayerAcc::template select<table_size - 1>;
 
             struct NextConversion {
                 using source_type = typename prev_promotion_t::source_type;
@@ -124,8 +121,8 @@ consteval ConversionLayer auto make_conversion_layer_impl(LayerAcc const &table_
                 }
             };
 
-            auto next_table = std::tuple_cat(table_acc, std::make_tuple(NextConversion{}));
-            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule>(next_table);
+            using next_table = typename LayerAcc::template append<NextConversion>;
+            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule, next_table>();
         }
     }
 }
@@ -223,9 +220,10 @@ consteval ConversionLayer auto make_promotion_layer() {
                                                              Type,
                                                              conversion_detail::adaptor::PromoteConversion,
                                                              conversion_detail::adaptor::PromoteConcept,
-                                                             conversion_detail::adaptor::PromoteRankRule>(std::tuple{});
+                                                             conversion_detail::adaptor::PromoteRankRule,
+                                                             mz::type_list<>>();
     } else {
-        return std::tuple{};
+        return mz::type_list{};
     }
 }
 
@@ -255,9 +253,10 @@ consteval ConversionLayer auto make_subtype_layer() {
                                                              Type,
                                                              conversion_detail::adaptor::SupertypeConversion,
                                                              conversion_detail::adaptor::SubtypeConcept,
-                                                             conversion_detail::adaptor::SubtypeRankRule>(std::tuple{});
+                                                             conversion_detail::adaptor::SubtypeRankRule,
+                                                             mz::type_list<>>();
     } else {
-        return std::tuple{};
+        return mz::type_list{};
     }
 }
 
@@ -311,20 +310,20 @@ consteval ConversionTable auto make_conversion_table() {
         }
     };
 
-    auto level_0_table = std::tuple_cat(std::make_tuple(IdConversion{}), make_promotion_layer<Type>());
+    using level_0_table = typename decltype(make_promotion_layer<Type>())::template prepend<IdConversion>;
 
     if constexpr (!SubtypedLiteralDatatype<Type>) {
-        return std::make_tuple(level_0_table);
+        return mz::type_list<level_0_table>{};
     } else {
-        ConversionLayer auto const s_table = make_subtype_layer<Type>();
+        using s_table = decltype(make_subtype_layer<Type>());
 
         // generate the linear promotion table for each supertype
-        auto other_level_tables = util::tuple_map(s_table, []<ConversionEntry ToSuper>(ToSuper const &to_super) {
-            ConversionLayer auto const level_p_table = make_promotion_layer<typename ToSuper::target_type>();
+        auto const other_level_tables = util::type_list_map<s_table>([]<ConversionEntry ToSuper>() {
+            using level_p_table = decltype(make_promotion_layer<typename ToSuper::target_type>());
 
             // compose each promotion for the supertype with the function to convert to the supertype
             // to get direct conversions from Type to promoted supertype
-            auto const to_promoted_supers = util::tuple_map(level_p_table, []<ConversionEntry PromoteSuper>(PromoteSuper) {
+            auto const to_promoted_supers = util::type_list_map<level_p_table>([]<ConversionEntry PromoteSuper>() {
                 struct PromotedSuperConversion {
                     using source_type = typename ToSuper::source_type;
                     using target_type = typename PromoteSuper::target_type;
@@ -346,10 +345,10 @@ consteval ConversionTable auto make_conversion_table() {
                 return PromotedSuperConversion{};
             });
 
-            return std::tuple_cat(std::make_tuple(to_super), to_promoted_supers);
+            return typename decltype(to_promoted_supers)::template prepend<ToSuper>{};
         });
 
-        return std::tuple_cat(std::make_tuple(level_0_table), other_level_tables);
+        return typename decltype(other_level_tables)::template prepend<level_0_table>{};
     }
 }
 
@@ -364,8 +363,8 @@ consteval ConversionTable auto make_conversion_table() {
  */
 template<LiteralDatatype Supertype, ConversionTable SubtypeTable>
 consteval std::optional<size_t> calculate_subtype_offset() {
-    return util::tuple_type_find_if<SubtypeTable>([]<ConversionLayer Layer>() {
-        using target_t = typename std::tuple_element_t<0, Layer>::target_type;
+    return util::type_list_find_if<SubtypeTable>([]<ConversionLayer Layer>() {
+        using target_t = typename Layer::first::target_type;
         return std::is_same_v<target_t, Supertype>;
     });
 }
