@@ -23,13 +23,8 @@ Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::Nod
     : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
 
 IRI Literal::datatype() const noexcept {
-    if (this->is_inlined()) {
-        auto node_storage = NodeStorage::lookup_instance(handle_.node_storage_id());
-        assert(node_storage.has_value());
-
-        return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(handle_.node_id().literal_type().to_underlying())},
-                                     storage::node::identifier::RDFNodeType::IRI,
-                                     handle_.node_storage_id()}};
+    if (this->is_fixed()) {
+        return IRI{NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(handle_)};
     }
 
     return IRI{NodeBackendHandle{handle_.literal_backend().datatype_id,
@@ -56,11 +51,6 @@ Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
 
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        // TODO: implement if rdf:langString inlining is implemented
-        //if (this->is_inlined()) {
-        //
-        //}
-
         return handle_.literal_backend().language_tag;
     }
 
@@ -105,13 +95,8 @@ Literal::operator std::string() const noexcept {
     if (this->is_inlined()) {
         quoted_lexical_into_stream(oss, this->lexical_form());
 
-        //if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        //    // TODO implement if rdf:langString becomes inlineable
-        //}
-
-        auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{NodeID{static_cast<uint64_t>(handle_.node_id().literal_type().to_underlying())},
-                                                                                     storage::node::identifier::RDFNodeType::IRI,
-                                                                                     handle_.node_storage_id()});
+        // rdf:langString is not inlined, therefore can only have datatype not lang tag
+        auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(handle_));
 
         oss << "^^" << dtype_iri.n_string();
     } else {
@@ -153,11 +138,11 @@ std::any Literal::value() const {
     auto const datatype = this->datatype_id();
 
     if (this->is_inlined()) {
-        auto const fi = registry::DatatypeRegistry::get_inlining_ops(datatype);
-        assert(fi != nullptr);
+        auto const ops = registry::DatatypeRegistry::get_inlining_ops(datatype);
+        assert(ops != nullptr);
 
         auto const inlined_value = this->handle_.node_id().literal_id().value;
-        return fi->from_inlined_fptr(inlined_value);
+        return ops->from_inlined_fptr(inlined_value);
     }
 
     if (datatype == rdf::LangString::datatype_id) {
@@ -202,21 +187,19 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                      node_storage.id()}};
 }
 
-Literal Literal::make_inlined_unchecked(uint64_t inlined_value, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_inlined_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
     using namespace storage::node::identifier;
 
-    assert(inlined_value < (1ul << 42));
+    assert(inlined_value >> LiteralID::width == 0);
+    assert(fixed_id != LiteralType::other());
 
-    auto const type = static_cast<datatypes::registry::DatatypeIDView>(datatype);
-    assert(type.is_fixed());
-
-    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, type.get_fixed()},
+    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
                                      RDFNodeType::Literal,
                                      node_storage.id(),
                                      true}};
 }
 
-Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
+Literal Literal::make(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
     DatatypeIDView const datatype_identifier{datatype};
@@ -228,9 +211,16 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
         // exists => canonize
-        auto const cpp_value = entry->factory_fptr(lexical_form);
-        auto const canonical_lexical_form = entry->to_string_fptr(cpp_value);
 
+        auto const cpp_value = entry->factory_fptr(lexical_form);
+        if (entry->inlining_ops.has_value()) {
+            // try to inline
+            if (auto const maybe_inlined = entry->inlining_ops->try_into_inlined_fptr(cpp_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_unchecked(*maybe_inlined, datatype_identifier.get_fixed(), node_storage);
+            }
+        }
+
+        auto const canonical_lexical_form = entry->to_string_fptr(cpp_value);
         return Literal::make_typed_unchecked(canonical_lexical_form, datatype, node_storage);
     } else {
         // doesn't exist in the registry no way to canonicalize
@@ -647,6 +637,12 @@ datatypes::registry::DatatypeIDView Literal::datatype_id() const noexcept {
     } else {
         return datatypes::registry::DatatypeIDView{this->datatype().identifier()};
     }
+}
+
+bool Literal::is_fixed() const noexcept {
+    assert(!this->null());
+    auto const lit_type = this->handle_.node_id().literal_type();
+    return lit_type.is_fixed();
 }
 
 bool Literal::is_fixed_not_numeric() const noexcept {

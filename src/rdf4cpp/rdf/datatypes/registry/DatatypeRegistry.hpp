@@ -32,7 +32,7 @@ public:
     using to_string_fptr_t = std::string (*)(const std::any &) noexcept;
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
     using can_inline_fptr_t = bool (*)(std::any const &) noexcept;
-    using to_inlined_fptr_t = uint64_t (*)(std::any const &) noexcept;
+    using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(std::any const &) noexcept;
     using from_inlined_fptr_t = std::any (*)(uint64_t) noexcept;
 
     struct NumericOpResult {
@@ -89,8 +89,7 @@ public:
     };
 
     struct InliningOps {
-        can_inline_fptr_t can_inline_fptr;
-        to_inlined_fptr_t to_inlined_fptr;
+        try_into_inlined_fptr_t try_into_inlined_fptr;
         from_inlined_fptr_t from_inlined_fptr;
     };
 
@@ -611,13 +610,9 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
 template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
     return InliningOps {
-        .can_inline_fptr = [](std::any const &value) noexcept -> bool {
+        .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<uint64_t> {
             auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
-            return LiteralDatatype_t::can_inline(val);
-        },
-        .to_inlined_fptr = [](std::any const &value) noexcept -> uint64_t {
-            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
-            return LiteralDatatype_t::to_inlined(val);
+            return LiteralDatatype_t::try_into_inlined(val);
         },
         .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> std::any {
             return LiteralDatatype_t::from_inlined(inlined_value);

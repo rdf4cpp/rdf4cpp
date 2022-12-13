@@ -6,6 +6,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/Inlining.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 
 #include <cstddef>
 #include <sstream>
@@ -288,25 +290,42 @@ struct FixedId {
     static_assert(fixed_id.is_fixed(), "cannot treat non fixed id as fixed");
 };
 
+/**
+ * The capability for values to be inlined into the LiteralID part of the NodeID
+ */
 template<util::ConstexprString type_iri>
 struct Inlineable {
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
 
     static constexpr std::true_type is_inlineable{};
 
-    static bool can_inline([[maybe_unused]] cpp_type const &value) noexcept {
-        static_assert(detail::always_false_v<cpp_type>, "can_inline not implemented for inlineable type");
-        return {}; // silence gcc no-return warning
-    }
+    static std::optional<uint64_t> try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
+        if constexpr (std::is_integral_v<cpp_type>) {
+            auto const inlined = util::pack<uint64_t>(value);
 
-    static uint64_t to_inlined([[maybe_unused]] cpp_type const &value) noexcept {
-        static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
-        return {}; // silence gcc no-return warning
+            if constexpr (sizeof(cpp_type) * 8 <= storage::node::identifier::LiteralID::width) {
+                // always fits
+                return inlined;
+            } else {
+                // check if no bits to the left of boundary set
+                if (inlined >> storage::node::identifier::LiteralID::width == 0) {
+                    return inlined;
+                }
+            }
+        } else {
+            static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
+        }
+
+        return std::nullopt;
     }
 
     static cpp_type from_inlined([[maybe_unused]] uint64_t inlined) noexcept {
-        static_assert(detail::always_false_v<cpp_type>, "from_inlined not implemented for inlineable type");
-        return {}; // silence gcc no-return warning
+        if constexpr (std::is_integral_v<cpp_type>) {
+            return util::unpack<cpp_type>(inlined);
+        } else {
+            static_assert(detail::always_false_v<cpp_type>, "from_inlined not implemented for inlineable type");
+            return {}; // silence gcc no-return warning
+        }
     }
 };
 

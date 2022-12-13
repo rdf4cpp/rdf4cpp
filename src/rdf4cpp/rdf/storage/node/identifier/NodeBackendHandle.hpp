@@ -35,6 +35,13 @@ public:
     explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined = false, uint8_t tagging_bits = {}) noexcept;
 
     /**
+     * Constructor to create an IRI handle for the datatype of a Literal with fixed id datatype
+     * @param lit_handle handle of the literal
+     * @return handle to the datatype of the literal
+     */
+    [[nodiscard]] static NodeBackendHandle datatype_iri_handle_for_fixed_lit_handle(NodeBackendHandle lit_handle) noexcept;
+
+    /**
      * Get the RDFNodeType
      * @returnRDFNodeType
      */

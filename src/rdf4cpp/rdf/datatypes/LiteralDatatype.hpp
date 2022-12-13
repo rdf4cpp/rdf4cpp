@@ -1,6 +1,8 @@
 #ifndef RDF4CPP_LITERALDATATYPE_HPP
 #define RDF4CPP_LITERALDATATYPE_HPP
 
+#include <optional>
+
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
@@ -128,8 +130,10 @@ template<typename LiteralDatatypeImpl>
 concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && HasFixedId<LiteralDatatypeImpl>;
 
 template<typename LiteralDatatypeImpl>
-concept IsInlineable = requires {
+concept IsInlineable = requires (typename LiteralDatatypeImpl::cpp_type const &value, uint64_t inlined_value) {
                            { LiteralDatatypeImpl::is_inlineable } -> std::convertible_to<std::true_type>;
+                           { LiteralDatatypeImpl::try_into_inlined(value) } -> std::convertible_to<std::optional<uint64_t>>;
+                           { LiteralDatatypeImpl::from_inlined(inlined_value) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                        };
 
 template<typename LiteralDatatypeImpl>

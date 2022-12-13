@@ -3,6 +3,31 @@
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
+namespace packing_detail {
+
+    template<typename Source, typename Target>
+    union __attribute__((__packed__)) PackingHelper {
+        static constexpr size_t source_padding = sizeof(Target) > sizeof(Source) ? sizeof(Target) - sizeof(Source) : 0;
+        static constexpr size_t target_padding = sizeof(Source) > sizeof(Target) ? sizeof(Source) - sizeof(Target) : 0;
+
+        struct __attribute__((__packed__)) {
+            Source value;
+            std::array<std::byte, source_padding> pad{};
+        } source;
+
+        struct __attribute__((__packed__)) {
+            Target value;
+            std::array<std::byte, target_padding> pad{};
+        } target;
+    };
+
+    template<size_t N>
+    constexpr bool is_padding_empty(std::array<std::byte, N> const &pad) noexcept {
+        return std::all_of(pad.begin(), pad.end(), [](auto const byte) { return byte == std::byte{0}; });
+    }
+
+} // namespace packing_detail
+
 /**
  * @brief packs the bits of a value into the lower bits of a bigger type
  * @tparam P bigger type to pack the bits into
@@ -12,15 +37,9 @@ namespace rdf4cpp::rdf::datatypes::registry::util {
  */
 template<typename P, typename T>
 constexpr P pack(T value) noexcept {
-    static_assert(sizeof(P) > sizeof(T));
-    static_assert(sizeof(P) % sizeof(T) == 0);
-
-    union {
-        std::array<T, sizeof(P) / sizeof(T)> source;
-        P target;
-    } reinterpret{ .source = {value} };
-
-    return reinterpret.target;
+    packing_detail::PackingHelper<T, P> reinterpret{ .source = { .value = value } };
+    assert(packing_detail::is_padding_empty(reinterpret.target.pad));
+    return reinterpret.target.value;
 }
 
 /**
@@ -32,15 +51,9 @@ constexpr P pack(T value) noexcept {
  */
 template<typename T, typename P>
 constexpr T unpack(P packed_value) noexcept {
-    static_assert(sizeof(P) > sizeof(T));
-    static_assert(sizeof(P) % sizeof(T) == 0);
-
-    union {
-        P source;
-        std::array<T, sizeof(P) / sizeof(T)> target;
-    } reinterpret{ .source = packed_value };
-
-    return reinterpret.target[0];
+    packing_detail::PackingHelper<P, T> reinterpret{ .source = { .value = packed_value } };
+    assert(packing_detail::is_padding_empty(reinterpret.target.pad));
+    return reinterpret.target.value;
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

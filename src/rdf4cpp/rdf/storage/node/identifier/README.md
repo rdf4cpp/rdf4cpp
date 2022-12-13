@@ -5,12 +5,14 @@ rdf4cpp uses `NodeBackendHandle` – a 64 bit wide type – to identify `Node`s 
 The following figure gives an overview of its memory layout.
 ```
 LSB                                                          MSB
-┣━━━━━━━━━━━━━━━━ NodeBackendHandle (64 bit) ━━━━━━━━━━━━━━━━━━┫
-├────────────── NodeID (48 bit) ───────────────┤├┤├────────┤├──┤
-├───────── LiteralID (42 bit) ───────────┤├────┤^     ^      ^
-                                            ^   |     |      |
-                                            |   |     |      free tagging bits (4 bit)
-                          LiteralType (6 bit)   |     |
+┣━━━━━━━━━━━━━━━━ NodeBackendHandle (64 bit) ━━━━━━━━━━━━━━━━━━━┫
+├────────────── NodeID (48 bit) ───────────────┤├┤├────────┤├┤├─┤
+├───────── LiteralID (42 bit) ───────────┤├────┤^     ^     ^  ^
+                                            ^   |     |     |   |
+                                            |   |     |     |   free tagging bits (3 bit)
+                          LiteralType (6 bit)   |     |     |
+                                                |     |     inlining tagging bit (1 bit)
+                                                |     |
                                                 |     NodeStorageID (10 bit)
                                                 |
                                                 NodeType (2 bit)                                                                                               
@@ -19,9 +21,12 @@ LSB                                                          MSB
 `NodeID` is the most frequently used identifier and is thus aligned with the LSB. 
 In the following, the parts of `NodeBackendHandle` will be explained starting from the most significant bits because the parts in the less significant depend on the parts in the more significant bits.  
 
-## Free Tagging Bits (4 bit)
-
+## Free Tagging Bits (3 bit)
 The _free tagging bits_ can be used by the internal storage to store 4 bit of information. Before calling any functions on a `NodeBackendHandle` the _free tagging bits_ must be reset to 0 again.  
+
+## Inlinining tagging bit (1 bit)
+The _inlinining tagging bit_ indicates whether the value of the node is stored directly (in-place) inside the NodeID
+instead of the node storage.
 
 ## `NodeStorageID` (10 bit) 
 The `NodeStorageID` identifies the `NodeStorage` in which the identified `Node` is stored.

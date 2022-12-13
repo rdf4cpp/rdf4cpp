@@ -65,9 +65,15 @@ private:
     [[nodiscard]] datatypes::registry::DatatypeIDView datatype_id() const noexcept;
 
     /**
+     * @return if the datatype of this is fixed
+     */
+    [[nodiscard]] bool is_fixed() const noexcept;
+
+    /**
      * @return if the datatype of this is simultaneously fixed but not numeric
      */
     [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
+
 
     /**
      * Creates a simple Literal directly without any safety checks
@@ -87,7 +93,7 @@ private:
     /**
      * Creates an inlined Literal without any safety checks
      */
-    [[nodiscard]] static Literal make_inlined_unchecked(uint64_t inlined_value, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
@@ -131,22 +137,21 @@ public:
     static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
                         NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (LiteralDatatype_t::can_inline(compatible_value)) {
-                auto const inlined = LiteralDatatype_t::to_inlined(compatible_value);
-                return Literal::make_inlined_unchecked(inlined, IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
-            }
-        }
-
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
                                                        compatible_value.language_tag,
                                                        node_storage);
-        } else {
-            return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
-                                                 IRI{LiteralDatatype_t::datatype_id, node_storage},
-                                                 node_storage);
         }
+
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+            }
+        }
+
+        return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
+                                             IRI{LiteralDatatype_t::datatype_id, node_storage},
+                                             node_storage);
     }
 
     /**
