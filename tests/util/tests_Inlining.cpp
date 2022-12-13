@@ -52,33 +52,53 @@ TEST_SUITE("literal inlining") {
     using namespace datatypes;
 
     TEST_CASE("32bit positive int inlining") {
-        auto const lit = Literal::make<xsd::Int>(std::numeric_limits<xsd::Int::cpp_type>::max());
-        CHECK(lit.backend_handle().is_inlined());
+        auto const i = std::numeric_limits<xsd::Int::cpp_type>::max();
+        auto const lit1 = Literal::make<xsd::Int>(i);
+        auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+        CHECK(lit1.backend_handle().is_inlined());
+        CHECK(lit2.backend_handle().is_inlined());
+        CHECK(lit1 == lit2);
 
-        auto const extracted = lit.template value<xsd::Int>();
-        CHECK(extracted == std::numeric_limits<xsd::Int::cpp_type>::max());
+        auto const extracted1 = lit1.template value<xsd::Int>();
+        auto const extracted2 = lit2.value();
+        CHECK(extracted1 == i);
+        CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
     }
 
     TEST_CASE("32bit negative int inlining") {
-        auto const lit = Literal::make<xsd::Int>(std::numeric_limits<xsd::Int::cpp_type>::min());
-        CHECK(lit.backend_handle().is_inlined());
+        auto const i = std::numeric_limits<xsd::Int::cpp_type>::min();
+        auto const lit1 = Literal::make<xsd::Int>(i);
+        auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+        CHECK(lit1.backend_handle().is_inlined());
+        CHECK(lit2.backend_handle().is_inlined());
+        CHECK(lit1 == lit2);
 
-        auto const extracted = lit.template value<xsd::Int>();
-        CHECK(extracted == std::numeric_limits<xsd::Int::cpp_type>::min());
+        auto const extracted1 = lit1.template value<xsd::Int>();
+        auto const extracted2 = lit2.value();
+        CHECK(extracted1 == i);
+        CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
     }
 
     TEST_CASE("small 64bit positive int inlining") {
         auto const i = 1l << (storage::node::identifier::LiteralID::width - 1);
-        auto const lit = Literal::make<xsd::Long>(i);
-        CHECK(lit.backend_handle().is_inlined());
+        auto const lit1 = Literal::make<xsd::Long>(i);
+        auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Long::identifier});
+        CHECK(lit1.backend_handle().is_inlined());
+        CHECK(lit2.backend_handle().is_inlined());
+        CHECK(lit1 == lit2);
 
-        auto const extracted = lit.template value<xsd::Long>();
-        CHECK(extracted == i);
+        auto const extracted1 = lit1.template value<xsd::Long>();
+        auto const extracted2 = lit2.value();
+        CHECK(extracted1 == i);
+        CHECK(std::any_cast<xsd::Long::cpp_type>(extracted2) == i);
     }
 
     TEST_CASE("negative 64bit int not-inlining") {
         auto const i = -256;
-        auto const lit = Literal::make<xsd::Long>(i);
-        CHECK(!lit.backend_handle().is_inlined()); // cannot be inlined bits left of 42bit boundary would need to be set
+        auto const lit1 = Literal::make<xsd::Long>(i);
+        auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Long::identifier});
+        CHECK(!lit1.backend_handle().is_inlined()); // cannot be inlined bits left of 42bit boundary would need to be set
+        CHECK(!lit2.backend_handle().is_inlined());
+        CHECK(lit1 == lit2);
     }
 }
