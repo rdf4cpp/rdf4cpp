@@ -1,6 +1,11 @@
 #ifndef RDF4CPP_REGISTRY_UTIL_INLINING_HPP
 #define RDF4CPP_REGISTRY_UTIL_INLINING_HPP
 
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstddef>
+
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
 namespace packing_detail {
