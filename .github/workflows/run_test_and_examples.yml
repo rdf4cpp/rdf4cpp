@@ -31,4 +31,4 @@ jobs:
       cmake-version: 3.22.6
       with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' }}
     secrets:
-      coverall-token: ${{ secrets.COVERALLS_TOKEN }}
+      github-token: ${{ secrets.GITHUB_TOKEN }}
