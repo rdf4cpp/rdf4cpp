@@ -81,7 +81,7 @@ jobs:
 
       - name: Report coverage
         env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+          COVERALLS_REPO_TOKEN: ${{ secrets.coverall-token }}
         if: inputs.with-coverage
         run: |
           gcovr --coveralls --filter 'src/' -o coverage.json -r ./
