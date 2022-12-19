@@ -25,9 +25,10 @@ std::optional<uint64_t> capabilities::Inlineable<xsd_double>::try_into_inlined(c
     static constexpr uint64_t drop_width = 64 - storage::node::identifier::LiteralID::width;
 
     auto const packed = util::pack<uint64_t>(value);
-    auto const shortened = packed >> drop_width;
+    auto const shortened = packed >> drop_width; // drop right bits of mantissa
 
     if (shortened << drop_width != packed) {
+        // dropped part contained information
         return std::nullopt;
     }
 

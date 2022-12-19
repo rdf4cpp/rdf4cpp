@@ -23,6 +23,11 @@ namespace packing_detail {
         P packed_value;
     };
 
+    /**
+     * @brief determines if the bit at position `bit` has the same value as every other higher bit after it
+     * @tparam bit last bit that is supposed to carry information
+     * @param value value to check
+     */
     template<size_t bit, typename T>
     constexpr bool no_information_in_bits_after(T value) noexcept {
         if constexpr (bit >= sizeof(T) * 8) {
@@ -67,6 +72,14 @@ constexpr T unpack(P packed_value) noexcept {
     return reinterpret.unpacked_value.value;
 }
 
+/**
+ * @brief packs the value of a signed integral type into the lower `bits` bits of P
+ * @tparam P type to pack into
+ * @tparam bits bits available in P for packing
+ * @tparam T to be packed type
+ * @param value to be packed value
+ * @return packed value
+ */
 template<typename P, size_t bits, std::signed_integral T>
 constexpr P pack_signed(T value) noexcept {
     // bits after boundary cannot hold any information
@@ -81,6 +94,9 @@ constexpr P pack_signed(T value) noexcept {
     return pack<P>(value);
 }
 
+/**
+ * @brief reverse operation of pack_signed
+ */
 template<std::signed_integral T, size_t bits, typename P>
 constexpr T unpack_signed(P packed_value) noexcept {
     auto const sign_ext_shift_amt = sizeof(T) * 8 - bits;
@@ -90,6 +106,14 @@ constexpr T unpack_signed(P packed_value) noexcept {
     return unpack<T>(packed_value) << sign_ext_shift_amt >> sign_ext_shift_amt;
 }
 
+/**
+ * @brief tries to pack any integral value into the lower `bits` bits of a value of type P
+ * @tparam P type to pack into
+ * @tparam bits bits available in P for packing
+ * @tparam T to be packed type
+ * @param value to be packed value
+ * @return the packed value if there was enough space to pack it, otherwise nullopt
+ */
 template<typename P, size_t bits, std::integral T>
 constexpr std::optional<P> try_pack_integral(T value) noexcept {
     if constexpr (sizeof(T) * 8 <= bits) {
@@ -109,6 +133,9 @@ constexpr std::optional<P> try_pack_integral(T value) noexcept {
     }
 }
 
+/**
+ * @brief reverse operation of pack_integral
+ */
 template<std::integral T, size_t bits, typename P>
 constexpr T unpack_integral(P packed_value) noexcept {
     if constexpr (sizeof(T) * 8 <= bits || std::unsigned_integral<T>) {

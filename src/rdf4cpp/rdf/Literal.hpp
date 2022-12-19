@@ -81,7 +81,7 @@ private:
     [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
 
     /**
-     * Creates a typed Literal without doing any safety checks or canonicalization.
+     * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
     [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
@@ -96,7 +96,7 @@ private:
     [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
     /**
-     * Creates an inlined Literal without any safety checks
+     * Creates an inlined or non-inlined typed Literal without any safety checks
      */
     [[nodiscard]] static Literal make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
 protected:
