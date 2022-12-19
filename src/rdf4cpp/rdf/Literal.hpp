@@ -83,7 +83,7 @@ private:
     /**
      * Creates a typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
@@ -93,7 +93,12 @@ private:
     /**
      * Creates an inlined Literal without any safety checks
      */
-    [[nodiscard]] static Literal make_inlined_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates an inlined Literal without any safety checks
+     */
+    [[nodiscard]] static Literal make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
@@ -145,13 +150,13 @@ public:
 
         if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
             if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
             }
         }
 
-        return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
-                                             IRI{LiteralDatatype_t::datatype_id, node_storage},
-                                             node_storage);
+        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
+                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+                                                        node_storage);
     }
 
     /**

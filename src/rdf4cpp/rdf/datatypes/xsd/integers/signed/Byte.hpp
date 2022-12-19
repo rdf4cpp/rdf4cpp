@@ -41,7 +41,8 @@ extern template struct LiteralDatatypeImpl<xsd_byte,
                                            capabilities::NumericStub,
                                            capabilities::Subtype,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -53,7 +54,8 @@ struct Byte : registry::LiteralDatatypeImpl<registry::xsd_byte,
                                             registry::capabilities::NumericStub,
                                             registry::capabilities::Subtype,
                                             registry::capabilities::Comparable,
-                                            registry::capabilities::FixedId> {};
+                                            registry::capabilities::FixedId,
+                                            registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

@@ -40,12 +40,19 @@ std::partial_ordering capabilities::Comparable<xsd_negative_integer>::compare(cp
 template<>
 nonstd::expected<capabilities::Default<xsd_negative_integer>::cpp_type, DynamicError> capabilities::Subtype<xsd_negative_integer>::from_supertype(super_cpp_type const &value) noexcept;
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_negative_integer>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_negative_integer>::cpp_type capabilities::Inlineable<xsd_negative_integer>::from_inlined(uint64_t inlined) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_negative_integer,
                                            capabilities::Logical,
                                            capabilities::NumericStub,
                                            capabilities::Subtype,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -57,7 +64,8 @@ struct NegativeInteger : registry::LiteralDatatypeImpl<registry::xsd_negative_in
                                                        registry::capabilities::NumericStub,
                                                        registry::capabilities::Subtype,
                                                        registry::capabilities::Comparable,
-                                                       registry::capabilities::FixedId> {};
+                                                       registry::capabilities::FixedId,
+                                                       registry::capabilities::Inlineable> {};
 
 } //  rdf4cpp::rdf::datatypes::xsd
 

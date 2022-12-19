@@ -300,18 +300,10 @@ struct Inlineable {
     static constexpr std::true_type is_inlineable{};
 
     static std::optional<uint64_t> try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
-        if constexpr (std::is_integral_v<cpp_type>) {
-            auto const inlined = util::pack<uint64_t>(value);
+        static constexpr size_t pack_width = storage::node::identifier::LiteralID::width;
 
-            if constexpr (sizeof(cpp_type) * 8 <= storage::node::identifier::LiteralID::width) {
-                // always fits
-                return inlined;
-            } else {
-                // check if no bits to the left of boundary set
-                if (inlined >> storage::node::identifier::LiteralID::width == 0) {
-                    return inlined;
-                }
-            }
+        if constexpr (std::integral<cpp_type>) {
+            return util::try_pack_integral<uint64_t, pack_width>(value);
         } else {
             static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
         }
@@ -320,8 +312,10 @@ struct Inlineable {
     }
 
     static cpp_type from_inlined([[maybe_unused]] uint64_t inlined) noexcept {
-        if constexpr (std::is_integral_v<cpp_type>) {
-            return util::unpack<cpp_type>(inlined);
+        static constexpr size_t pack_width = storage::node::identifier::LiteralID::width;
+
+        if constexpr (std::integral<cpp_type>) {
+            return util::unpack_integral<cpp_type, pack_width>(inlined);
         } else {
             static_assert(detail::always_false_v<cpp_type>, "from_inlined not implemented for inlineable type");
             return {}; // silence gcc no-return warning

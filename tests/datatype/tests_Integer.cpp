@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf.hpp>
 
 using namespace rdf4cpp::rdf;
+using namespace datatypes;
 
 TEST_CASE("integer capabilities") {
     static_assert(datatypes::LiteralDatatype<datatypes::xsd::Integer>);
@@ -89,4 +90,16 @@ TEST_CASE("other int types serializing") {
 
     auto lit1 = Literal::make<Int>(std::numeric_limits<Int::cpp_type>::min());
     CHECK(lit1.lexical_form() == std::to_string(std::numeric_limits<Int::cpp_type>::min()));
+}
+
+TEST_CASE("integer inlining") {
+    SUBCASE("small") {
+        auto lit = Literal::make<xsd::Integer>((1l << 41) - 1);
+        CHECK(lit.backend_handle().is_inlined());
+    }
+
+    SUBCASE("too large") {
+        auto lit = Literal::make<xsd::Integer>(xsd::Integer::cpp_type{"9999999999999999999999"});
+        CHECK(!lit.backend_handle().is_inlined());
+    }
 }

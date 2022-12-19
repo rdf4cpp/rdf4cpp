@@ -46,11 +46,27 @@ nonstd::expected<capabilities::Default<xsd_negative_integer>::cpp_type, DynamicE
     return value;
 }
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_negative_integer>::try_into_inlined(cpp_type const &value) noexcept {
+    auto const to_pack_value = -value - 1;
+    if (to_pack_value >= (uint64_t{1} << storage::node::identifier::LiteralID::width)) {
+        return std::nullopt;
+    }
+
+    return util::try_pack_integral<uint64_t, storage::node::identifier::LiteralID::width>(static_cast<uint64_t>(to_pack_value));
+}
+
+template<>
+capabilities::Inlineable<xsd_negative_integer>::cpp_type capabilities::Inlineable<xsd_negative_integer>::from_inlined(uint64_t inlined) noexcept {
+    return -cpp_type{util::unpack_integral<uint64_t, storage::node::identifier::LiteralID::width>(inlined) + 1};
+}
+
 template struct LiteralDatatypeImpl<xsd_negative_integer,
                                     capabilities::Logical,
                                     capabilities::NumericStub,
                                     capabilities::Subtype,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

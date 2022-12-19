@@ -29,9 +29,20 @@ bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const 
     return value;
 }
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_boolean>::try_into_inlined(cpp_type const &value) noexcept {
+    return util::pack<uint64_t>(value);
+}
+
+template<>
+capabilities::Inlineable<xsd_boolean>::cpp_type capabilities::Inlineable<xsd_boolean>::from_inlined(uint64_t inlined) noexcept {
+    return util::unpack<bool>(inlined);
+}
+
 template struct LiteralDatatypeImpl<xsd_boolean,
                                     capabilities::Logical,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
