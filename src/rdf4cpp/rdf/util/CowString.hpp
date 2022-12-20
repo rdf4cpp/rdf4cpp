@@ -32,10 +32,10 @@ private:
 public:
     constexpr CowString(ownership_tag::Borrowed, std::string_view const value) noexcept : data{std::in_place_type<std::string_view>, value} {}
 
-    constexpr CowString(ownership_tag::Owned, std::string const &value) : data{std::in_place_type<std::string>, value} {}
-    constexpr CowString(ownership_tag::Owned, std::string &&value) noexcept : data{std::in_place_type<std::string>, std::move(value)} {}
+    inline CowString(ownership_tag::Owned, std::string const &value) : data{std::in_place_type<std::string>, value} {}
+    inline CowString(ownership_tag::Owned, std::string &&value) noexcept : data{std::in_place_type<std::string>, std::move(value)} {}
 
-    inline operator std::string_view() const noexcept {
+    constexpr operator std::string_view() const noexcept {
         return this->view();
     }
 
@@ -68,7 +68,7 @@ public:
     /**
      * Converts this CowString into std::string by copy
      */
-    [[nodiscard]] constexpr std::string into_owned() const & noexcept {
+    [[nodiscard]] inline std::string into_owned() const & noexcept {
         if (this->is_borrowed()) {
             return std::string{this->get_borrowed()};
         }
@@ -79,7 +79,7 @@ public:
     /**
      * Converts this CowString into std::string (by move if the owned form is active)
      */
-    [[nodiscard]] constexpr std::string into_owned() && noexcept {
+    [[nodiscard]] inline std::string into_owned() && noexcept {
         if (this->is_borrowed()) {
             return std::string{this->get_borrowed()};
         }
@@ -91,7 +91,7 @@ public:
      * Returns a non-const reference to the owned form of the data (std::string)
      * Converts the data to the owned for if it is currently the borrowed form
      */
-    [[nodiscard]] constexpr std::string &to_mutable() noexcept {
+    [[nodiscard]] inline std::string &to_mutable() noexcept {
         if (this->is_borrowed()) {
             this->data = std::string{this->get_borrowed()};
         }
