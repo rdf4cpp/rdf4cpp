@@ -7,54 +7,125 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * Tags to control the construction of CowStrings
+ */
+namespace ownership_tag {
+
+struct Owned {};
+struct Borrowed {};
+
+inline constexpr Borrowed borrowed;
+inline constexpr Owned owned;
+
+} // namespace ownership_tags
+
+/**
+ * A string-like type, that is either std::string_view (borrowed) or std::string (owned) with copy-on-write functionality.
+ * Inspired by rust's std::borrow::Cow (https://doc.rust-lang.org/std/borrow/enum.Cow.html).
+ */
 struct CowString {
 private:
     using repr_t = std::variant<std::string, std::string_view>;
     repr_t data;
 
 public:
-    CowString(std::string const &value) : data{value} {}
-    CowString(std::string &&value) : data{std::move(value)} {}
-    CowString(std::string_view const value) : data{value} {}
+    constexpr CowString(ownership_tag::Borrowed, std::string_view const value) noexcept : data{std::in_place_type<std::string_view>, value} {}
+
+    constexpr CowString(ownership_tag::Owned, std::string const &value) : data{std::in_place_type<std::string>, value} {}
+    constexpr CowString(ownership_tag::Owned, std::string &&value) noexcept : data{std::in_place_type<std::string>, std::move(value)} {}
 
     inline operator std::string_view() const noexcept {
+        return this->view();
+    }
+
+    [[nodiscard]] constexpr std::string_view view() const noexcept {
         return std::visit([](auto const &value) noexcept -> std::string_view {
             return value;
         }, this->data);
     }
 
-    inline operator std::string() const noexcept {
-        return std::string{*this};
+    [[nodiscard]] constexpr bool is_borrowed() const noexcept {
+        return this->data.index() == 1;
     }
 
-    inline std::strong_ordering operator<=>(CowString const &other) const noexcept {
-        return static_cast<std::string_view>(*this) <=> static_cast<std::string_view>(other);
+    [[nodiscard]] constexpr bool is_owned() const noexcept {
+        return this->data.index() == 0;
     }
 
-    inline friend std::strong_ordering operator<=>(CowString const &lhs, char const *rhs) noexcept {
-        return static_cast<std::string_view>(lhs) <=> rhs;
+    [[nodiscard]] constexpr std::string_view get_borrowed() const {
+        return std::get<std::string_view>(this->data);
     }
 
-    inline friend std::strong_ordering operator<=>(char const *lhs, CowString const &rhs) noexcept {
-        return lhs <=> static_cast<std::string_view>(rhs);
+    [[nodiscard]] constexpr std::string const &get_owned() const {
+        return std::get<std::string>(this->data);
     }
 
-    inline friend std::strong_ordering operator<=>(CowString const &lhs, std::string_view const rhs) noexcept {
-        return static_cast<std::string_view>(lhs) <=> rhs;
+    [[nodiscard]] constexpr std::string &get_owned() {
+        return std::get<std::string>(this->data);
     }
 
-    inline friend std::strong_ordering operator<=>(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs <=> static_cast<std::string_view>(rhs);
+    /**
+     * Returns a non-const reference to the owned form of the data (std::string)
+     * Converts the data to the owned for if it is currently the borrowed form
+     */
+    [[nodiscard]] constexpr std::string &to_mutable() noexcept {
+        if (this->is_borrowed()) {
+            this->data = std::string{this->get_borrowed()};
+        }
+
+        return this->get_owned();
     }
 
-    template<size_t N>
-    friend std::strong_ordering operator<=>(CowString const &lhs, char const (&rhs)[N]) noexcept {
-        return static_cast<std::string_view>(lhs) <=> rhs;
+    constexpr std::strong_ordering operator<=>(CowString const &other) const noexcept {
+        return this->view() <=> other.view();
     }
 
-    template<size_t N>
-    friend std::strong_ordering operator<=>(char const (&lhs)[N], CowString const &rhs) noexcept {
-        return lhs <=> static_cast<std::string_view>(rhs);
+    friend constexpr bool operator==(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() == rhs;
+    }
+    friend constexpr bool operator==(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs == rhs.view();
+    }
+
+    friend constexpr bool operator!=(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() != rhs;
+    }
+    friend constexpr bool operator!=(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs != rhs.view();
+    }
+
+    friend constexpr bool operator<(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() < rhs;
+    }
+    friend constexpr bool operator<(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs < rhs.view();
+    }
+
+    friend constexpr bool operator>(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() > rhs;
+    }
+    friend constexpr bool operator>(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs > rhs.view();
+    }
+
+    friend constexpr bool operator<=(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() <= rhs;
+    }
+    friend constexpr bool operator<=(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs <= rhs.view();
+    }
+
+    friend constexpr bool operator>=(CowString const &lhs, std::string_view const rhs) noexcept {
+        return lhs.view() >= rhs;
+    }
+    friend constexpr bool operator>=(std::string_view const lhs, CowString const &rhs) noexcept {
+        return lhs >= rhs.view();
+    }
+
+    friend inline std::ostream &operator<<(std::ostream &os, CowString const &cow) {
+        os << cow.view();
+        return os;
     }
 };
 

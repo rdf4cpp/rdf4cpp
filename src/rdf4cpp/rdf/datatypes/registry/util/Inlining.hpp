@@ -82,13 +82,13 @@ constexpr T unpack(P packed_value) noexcept {
  */
 template<typename P, size_t bits, std::signed_integral T>
 constexpr P pack_signed(T value) noexcept {
-    // bits after boundary cannot hold any information
+    // bit at position bits - 1 must have the same value as every bit to the left of it
     assert(packing_detail::no_information_in_bits_after<bits - 1>(value));
 
-    // clear bits without information
     if constexpr (sizeof(T) * 8 > bits) {
-        P const clear_mask = (P{1} << bits) - 1;
-        value &= clear_mask;
+        // clear bits without information if necessary
+        P const keep_mask = (P{1} << bits) - 1;
+        value &= keep_mask;
     }
 
     return pack<P>(value);

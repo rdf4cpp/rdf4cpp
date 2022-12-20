@@ -53,3 +53,15 @@ TEST_CASE("Datatype PositiveInteger") {
 
     CHECK_THROWS(no_discard_dummy = Literal("-0.01", type_iri));
 }
+
+TEST_CASE("xsd:positiveInteger inlining") {
+    using datatypes::xsd::PositiveInteger;
+
+    auto one_lit = Literal::make<PositiveInteger>(1);
+    CHECK(one_lit.backend_handle().is_inlined());
+    CHECK(one_lit.value<PositiveInteger>() == 1);
+
+    auto large_lit = Literal::make<PositiveInteger>(1l << 42);
+    CHECK(large_lit.backend_handle().is_inlined());
+    CHECK(large_lit.value<PositiveInteger>() == (1l << 42));
+}

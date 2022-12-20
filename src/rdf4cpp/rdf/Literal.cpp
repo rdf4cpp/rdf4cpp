@@ -32,17 +32,17 @@ IRI Literal::datatype() const noexcept {
                                  handle_.node_storage_id()}};
 }
 
-std::string Literal::lexical_form() const noexcept {
+util::CowString Literal::lexical_form() const noexcept {
     if (this->is_inlined()) {
         auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
         assert(entry != nullptr);
         assert(entry->inlining_ops.has_value());
 
         auto const inlined_value = this->handle_.node_id().literal_id().value;
-        return entry->to_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
+        return util::CowString{util::ownership_tag::owned, entry->to_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
-    return std::string{handle_.literal_backend().lexical_form};
+    return util::CowString{util::ownership_tag::borrowed, handle_.literal_backend().lexical_form};
 }
 
 Literal Literal::as_lexical_form(NodeStorage &node_storage) const {

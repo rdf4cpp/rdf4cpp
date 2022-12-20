@@ -192,8 +192,7 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-     // TODO: find better return type, CowString does not work currently
-    [[nodiscard]] std::string lexical_form() const noexcept;
+    [[nodiscard]] util::CowString lexical_form() const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
