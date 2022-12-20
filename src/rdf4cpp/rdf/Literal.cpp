@@ -46,7 +46,7 @@ util::CowString Literal::lexical_form() const noexcept {
 }
 
 Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
-    return Literal::make<datatypes::xsd::String>(std::string{this->lexical_form()}, node_storage);
+    return Literal::make<datatypes::xsd::String>(this->lexical_form().into_owned(), node_storage);
 }
 
 std::string_view Literal::language_tag() const noexcept {

@@ -66,6 +66,28 @@ public:
     }
 
     /**
+     * Converts this CowString into std::string by copy
+     */
+    [[nodiscard]] constexpr std::string into_owned() const & noexcept {
+        if (this->is_borrowed()) {
+            return std::string{this->get_borrowed()};
+        }
+
+        return this->get_owned();
+    }
+
+    /**
+     * Converts this CowString into std::string (by move if the owned form is active)
+     */
+    [[nodiscard]] constexpr std::string into_owned() && noexcept {
+        if (this->is_borrowed()) {
+            return std::string{this->get_borrowed()};
+        }
+
+        return std::move(this->get_owned());
+    }
+
+    /**
      * Returns a non-const reference to the owned form of the data (std::string)
      * Converts the data to the owned for if it is currently the borrowed form
      */
