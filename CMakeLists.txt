@@ -105,8 +105,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.cpp

@@ -14,8 +14,7 @@ TEST_CASE("Literal - Check for only lexical form") {
     CHECK(lit1.is_literal());
     CHECK(not lit1.is_variable());
     CHECK(not lit1.is_iri());
-    lit1.lexical_form() == "Bugs Bunny";
-    //CHECK(lit1.lexical_form() == "Bugs Bunny");
+    CHECK(lit1.lexical_form() == "Bugs Bunny");
     CHECK(lit1.datatype() == iri);
     CHECK(lit1.language_tag() == "");
     CHECK(std::string(lit1) == "\"Bugs Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");

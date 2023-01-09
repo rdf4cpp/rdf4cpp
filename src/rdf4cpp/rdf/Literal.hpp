@@ -92,6 +92,9 @@ private:
 
     /**
      * Creates an inlined Literal without any safety checks
+     *
+     * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
+     * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
     [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 

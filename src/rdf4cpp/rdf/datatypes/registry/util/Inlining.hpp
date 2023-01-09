@@ -125,7 +125,9 @@ constexpr std::optional<P> try_pack_integral(T value) noexcept {
 
         return pack<P>(value);
     } else {
-        if (auto const boundary = T{1} << (bits - 1); value >= boundary || value < -boundary) [[unlikely]] {
+        constexpr auto boundary = T{1} << (bits - 1);
+
+        if (value >= boundary || value < -boundary) [[unlikely]] {
             return std::nullopt;
         }
 

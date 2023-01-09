@@ -291,7 +291,8 @@ struct FixedId {
 };
 
 /**
- * The capability for values to be inlined into the LiteralID part of the NodeID
+ * The capability for values to be inlined into the LiteralID part of the NodeID.
+ * @note this capability requires the FixedId capability, for more details see static_assert in LiteralDatatypeImpl
  */
 template<util::ConstexprString type_iri>
 struct Inlineable {
