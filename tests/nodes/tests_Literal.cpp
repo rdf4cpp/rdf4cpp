@@ -340,3 +340,13 @@ TEST_CASE("Literal - casting") {
         CHECK(lit2.null());
     }
 }
+
+TEST_CASE("Literal - substr") {
+    using namespace rdf4cpp::rdf;
+
+    auto s = "Hello World"_lit;
+    CHECK(s.substr(1.0_lit) == s);
+    CHECK(s.substr(2_lit, -1.3_lit) == ""_lit);
+    CHECK(s.substr(2.1_lit, 3.2_lit) == "ell"_lit);
+    CHECK(s.substr(100_lit, 10_lit) == ""_lit);
+}

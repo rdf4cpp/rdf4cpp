@@ -55,4 +55,11 @@ std::string_view IRI::identifier() const noexcept {
 }
 
 
+inline namespace literals {
+
+IRI operator""_iri(char const *str, size_t const len) {
+    return IRI{std::string_view{str, len}};
+}
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf

@@ -4,6 +4,9 @@
 #include <any>
 #include <ostream>
 #include <type_traits>
+#include <random>
+#include <regex>
+#include <optional>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
@@ -67,6 +70,11 @@ private:
      * @return if the datatype of this is simultaneously fixed but not numeric
      */
     [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
+
+    /**
+     * @return if this datatype is either xsd:string or rdf:langString
+     */
+    [[nodiscard]] bool is_string_like() const noexcept;
 
     /**
      * Creates a simple Literal directly without any safety checks
@@ -147,6 +155,12 @@ public:
      */
     static Literal make(std::string_view lexical_form, const IRI &datatype,
                         NodeStorage &node_storage = NodeStorage::default_instance());
+
+    template<typename Rng>
+    [[nodiscard]] static Literal make_rand_double(Rng &rng = std::random_device{}, NodeStorage &node_storage = NodeStorage::default_instance()) {
+        std::uniform_real_distribution dist{0.0, 1.0};
+        return Literal::make<datatypes::xsd::Double>(dist(rng));
+    }
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.
@@ -277,6 +291,48 @@ public:
     [[nodiscard]] Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator-() const noexcept;
 
+    [[nodiscard]] Literal abs(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal round(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal floor(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal ceil(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * https://www.w3.org/TR/xpath-functions/#func-string-length
+     */
+    [[nodiscard]] std::optional<size_t> strlen() const noexcept;
+
+    [[nodiscard]] util::TriBool matches(std::regex const &regex) const noexcept;
+    [[nodiscard]] util::TriBool matches(Literal const &regex, Literal const &flags) const noexcept;
+
+    [[nodiscard]] util::TriBool contains(std::string_view needle) const noexcept;
+    [[nodiscard]] util::TriBool contains(Literal const &needle) const noexcept;
+
+    [[nodiscard]] Literal substr_before(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal substr_before(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    [[nodiscard]] Literal substr_after(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal substr_after(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    [[nodiscard]] util::TriBool str_starts_with(std::string_view needle) const noexcept;
+    [[nodiscard]] util::TriBool str_starts_with(Literal const &needle) const noexcept;
+
+    [[nodiscard]] util::TriBool str_ends_with(std::string_view needle) const noexcept;
+    [[nodiscard]] util::TriBool str_ends_with(Literal const &needle) const noexcept;
+
+    [[nodiscard]] Literal as_uppercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_lowercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    [[nodiscard]] Literal concat(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    [[nodiscard]] Literal substr(size_t start,
+                                 size_t len = std::string_view::npos,
+                                 NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    [[nodiscard]] Literal substr(Literal const &start,
+                                 Literal const &len = Literal::make<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
+                                 NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+
     /**
      * @return the effective boolean value of this
      */
@@ -317,6 +373,14 @@ public:
 
     friend class Node;
 };
+
+inline namespace literals {
+
+Literal operator""_lit(unsigned long long int i);
+Literal operator""_lit(long double d);
+Literal operator""_lit(char const *str, size_t len);
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf
 
 template<>

@@ -32,6 +32,12 @@ public:
     [[nodiscard]] bool is_iri() const noexcept;
     friend class Node;
 };
+
+inline namespace literals {
+
+BlankNode operator""_bnode(char const *str, size_t len);
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf
 
 template<>

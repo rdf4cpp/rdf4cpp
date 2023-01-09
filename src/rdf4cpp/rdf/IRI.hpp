@@ -62,6 +62,12 @@ public:
      */
     static IRI default_graph(NodeStorage &node_storage = NodeStorage::default_instance());
 };
+
+inline namespace literals {
+
+IRI operator""_iri(char const *str, size_t len);
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf
 
 template<>
