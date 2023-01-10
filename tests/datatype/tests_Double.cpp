@@ -88,3 +88,10 @@ TEST_CASE("Datatype Double") {
 
     CHECK_THROWS(no_discard_dummy = Literal("454sdsd", type_iri));
 }
+
+TEST_CASE("double inlining") {
+    double value = 9999;
+    auto lit = Literal::make<datatypes::xsd::Double>(value);
+    CHECK(lit.backend_handle().is_inlined());
+    CHECK(lit.value<datatypes::xsd::Double>() == value);
+}

@@ -53,3 +53,19 @@ TEST_CASE("Datatype NonPositiveInteger") {
 
     CHECK_THROWS(no_discard_dummy = Literal("0.01", type_iri));
 }
+
+TEST_CASE("xsd:nonPositiveInteger inlining") {
+    using datatypes::xsd::NonPositiveInteger;
+
+    auto zero_lit = Literal::make<NonPositiveInteger>(0);
+    CHECK(zero_lit.backend_handle().is_inlined());
+    CHECK(zero_lit.value<NonPositiveInteger>() == 0);
+
+    auto one_lit = Literal::make<NonPositiveInteger>(-1);
+    CHECK(one_lit.backend_handle().is_inlined());
+    CHECK(one_lit.value<NonPositiveInteger>() == -1);
+
+    auto large_lit = Literal::make<NonPositiveInteger>(-(1l << 42) + 1);
+    CHECK(large_lit.backend_handle().is_inlined());
+    CHECK(large_lit.value<NonPositiveInteger>() == (-(1l << 42) + 1));
+}

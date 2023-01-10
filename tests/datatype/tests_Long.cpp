@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf.hpp>
 
 using namespace rdf4cpp::rdf;
+using namespace datatypes;
 
 TEST_CASE("Datatype Long") {
 
@@ -56,4 +57,27 @@ TEST_CASE("Datatype Long") {
     CHECK_THROWS(no_discard_dummy = Literal("qwerty", type_iri));
 
     CHECK_THROWS(no_discard_dummy = Literal("1.00001", type_iri));
+}
+
+TEST_CASE("small 64bit positive int inlining") {
+    auto const i = (1l << 41) - 1;
+    auto const lit1 = Literal::make<xsd::Long>(i);
+    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Long::identifier});
+    CHECK(lit1.backend_handle().is_inlined());
+    CHECK(lit2.backend_handle().is_inlined());
+    CHECK(lit1 == lit2);
+
+    auto const extracted1 = lit1.template value<xsd::Long>();
+    auto const extracted2 = lit2.value();
+    CHECK(extracted1 == i);
+    CHECK(std::any_cast<xsd::Long::cpp_type>(extracted2) == i);
+}
+
+TEST_CASE("negative 64bit int inlining") {
+    auto const i = -256;
+    auto const lit1 = Literal::make<xsd::Long>(i);
+    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Long::identifier});
+    CHECK(lit1.backend_handle().is_inlined());
+    CHECK(lit2.backend_handle().is_inlined());
+    CHECK(lit1 == lit2);
 }

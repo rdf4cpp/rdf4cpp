@@ -215,6 +215,14 @@ target_link_libraries(tests_NonNegativeInteger
 set_property(TARGET tests_NonNegativeInteger PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_NonNegativeInteger COMMAND tests_NonNegativeInteger)
 
+add_executable(tests_CowString util/tests_CowString.cpp)
+target_link_libraries(tests_CowString
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_CowString PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_CowString COMMAND tests_CowString)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest
@@ -222,6 +230,14 @@ target_link_libraries(tests_TriBool
         )
 set_property(TARGET tests_TriBool PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_TriBool COMMAND tests_TriBool)
+
+add_executable(tests_Inlining util/tests_Inlining.cpp)
+target_link_libraries(tests_Inlining
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Inlining PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Inlining COMMAND tests_Inlining)
 
 add_executable(tests_LangString datatype/tests_LangString.cpp)
 target_link_libraries(tests_LangString

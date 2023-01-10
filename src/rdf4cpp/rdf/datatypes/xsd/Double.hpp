@@ -21,11 +21,18 @@ std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value) 
 template<>
 bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &value) noexcept;
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_double>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_double>::cpp_type capabilities::Inlineable<xsd_double>::from_inlined(uint64_t inlined) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_double,
                                            capabilities::Logical,
                                            capabilities::Numeric,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -36,7 +43,8 @@ struct Double : registry::LiteralDatatypeImpl<registry::xsd_double,
                                               registry::capabilities::Logical,
                                               registry::capabilities::Numeric,
                                               registry::capabilities::Comparable,
-                                              registry::capabilities::FixedId> {};
+                                              registry::capabilities::FixedId,
+                                              registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

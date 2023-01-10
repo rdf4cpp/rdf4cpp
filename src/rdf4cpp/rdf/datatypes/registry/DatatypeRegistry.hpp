@@ -31,6 +31,9 @@ public:
     using factory_fptr_t = std::any (*)(std::string_view);
     using to_string_fptr_t = std::string (*)(const std::any &) noexcept;
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
+    using can_inline_fptr_t = bool (*)(std::any const &) noexcept;
+    using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(std::any const &) noexcept;
+    using from_inlined_fptr_t = std::any (*)(uint64_t) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
@@ -85,6 +88,11 @@ public:
         }
     };
 
+    struct InliningOps {
+        try_into_inlined_fptr_t try_into_inlined_fptr;
+        from_inlined_fptr_t from_inlined_fptr;
+    };
+
     struct DatatypeEntry {
         std::string datatype_iri;         // datatype IRI string
         factory_fptr_t factory_fptr;      // construct from string
@@ -93,6 +101,7 @@ public:
         ebv_fptr_t ebv_fptr; // convert to effective boolean value
 
         std::optional<NumericOps> numeric_ops;
+        std::optional<InliningOps> inlining_ops;
 
         compare_fptr_t compare_fptr;
 
@@ -105,6 +114,7 @@ public:
                     .to_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
+                    .inlining_ops = std::nullopt,
                     .compare_fptr = nullptr,
                     .conversion_table = RuntimeConversionTable::empty()};
         }
@@ -116,6 +126,7 @@ public:
                     .to_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
+                    .inlining_ops = std::nullopt,
                     .compare_fptr = nullptr,
                     .conversion_table = RuntimeConversionTable::empty()};
         }
@@ -194,8 +205,11 @@ private:
      * Creates NumericOps based on a NumericLiteralDatatype
      * by generating type-erased versions of all necessary functions (add, sub, ...).
      */
-    template<datatypes::NumericImplLiteralDatatype datatype_info>
+    template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
     static NumericOpsImpl make_numeric_ops_impl() noexcept;
+
+    template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
+    static InliningOps make_inlining_ops() noexcept;
 
     inline static void add_fixed(DatatypeEntry entry_to_add, LiteralType type_id) noexcept {
         auto const id_as_index = static_cast<size_t>(type_id.to_underlying()) - 1; // ids from 1 to n stored in places 0 to n-1
@@ -211,7 +225,7 @@ public:
      * Auto-register a datatype that fulfills DatatypeConcept
      * @tparam datatype_info type that is registered.
      */
-    template<datatypes::LiteralDatatype datatype_info>
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
     inline static void add() noexcept;
 
     /**
@@ -237,6 +251,12 @@ public:
      */
     inline static const registered_datatypes_t &registered_datatypes() noexcept {
         return DatatypeRegistry::get_mutable();
+    }
+
+    inline static std::optional<std::string_view> get_iri(DatatypeIDView const datatype_id) noexcept {
+        return find_map_entry(datatype_id, [](auto const &entry) noexcept -> std::string_view {
+            return entry.datatype_iri;
+        });
     }
 
     /**
@@ -331,6 +351,24 @@ public:
         });
 
         return res.has_value() ? *res : nullptr;
+    }
+
+    inline static InliningOps const *get_inlining_ops(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
+            return &entry.inlining_ops;
+        });
+
+        // res is nullopt if no datatype matching given datatype_iri was found
+        if (res.has_value()) {
+            // contained ptr cannot be nullptr as by return in lambda for find_map_entry above
+            // optional behind contained ptr can be nullopt if type is not inlineable
+            if (auto const ops_ptr = res.value(); ops_ptr->has_value()) {
+                return &ops_ptr->value();
+            }
+        }
+
+        // no datatype found or not inlineable
+        return nullptr;
     }
 
     /**
@@ -440,6 +478,14 @@ inline void DatatypeRegistry::add() noexcept {
         }
     }();
 
+    auto const inlining_ops = []() -> std::optional<InliningOps> {
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            return make_inlining_ops<LiteralDatatype_t>();
+        } else {
+            return std::nullopt;
+        }
+    }();
+
     DatatypeEntry entry{
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
@@ -450,6 +496,7 @@ inline void DatatypeRegistry::add() noexcept {
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,
+            .inlining_ops = inlining_ops,
             .compare_fptr = compare_fptr,
             .conversion_table = RuntimeConversionTable::from_concrete<conversion_table_t>()};
 
@@ -558,6 +605,18 @@ inline DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl(
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
             }};
+}
+
+template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
+DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
+    return InliningOps {
+        .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<uint64_t> {
+            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
+            return LiteralDatatype_t::try_into_inlined(val);
+        },
+        .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> std::any {
+            return LiteralDatatype_t::from_inlined(inlined_value);
+        }};
 }
 
 inline std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_type_conversion(

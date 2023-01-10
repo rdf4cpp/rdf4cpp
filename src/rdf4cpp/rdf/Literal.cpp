@@ -23,20 +23,38 @@ Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::Nod
     : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
 
 IRI Literal::datatype() const noexcept {
-    NodeBackendHandle iri_handle{handle_.literal_backend().datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()};
-    return IRI{iri_handle};
+    if (this->is_fixed()) {
+        return IRI{NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(handle_)};
+    }
+
+    return IRI{NodeBackendHandle{handle_.literal_backend().datatype_id,
+                                 storage::node::identifier::RDFNodeType::IRI,
+                                 handle_.node_storage_id()}};
 }
 
-std::string_view Literal::lexical_form() const noexcept {
-    return handle_.literal_backend().lexical_form;
+util::CowString Literal::lexical_form() const noexcept {
+    if (this->is_inlined()) {
+        auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+        assert(entry != nullptr);
+        assert(entry->inlining_ops.has_value());
+
+        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        return util::CowString{util::ownership_tag::owned, entry->to_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
+    }
+
+    return util::CowString{util::ownership_tag::borrowed, handle_.literal_backend().lexical_form};
 }
 
 Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
-    return Literal::make<datatypes::xsd::String>(std::string{this->lexical_form()}, node_storage);
+    return Literal::make<datatypes::xsd::String>(this->lexical_form().into_owned(), node_storage);
 }
 
 std::string_view Literal::language_tag() const noexcept {
-    return handle_.literal_backend().language_tag;
+    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
+        return handle_.literal_backend().language_tag;
+    }
+
+    return "";
 }
 
 Literal::operator std::string() const noexcept {
@@ -72,18 +90,29 @@ Literal::operator std::string() const noexcept {
         out << "\"";
     };
 
-    const auto &literal = handle_.literal_backend();
     std::ostringstream oss;
 
-    quoted_lexical_into_stream(oss, literal.lexical_form);
+    if (this->is_inlined()) {
+        quoted_lexical_into_stream(oss, this->lexical_form());
 
-    if (literal.datatype_id == NodeID::rdf_langstring_iri.first) {
-        if (!literal.language_tag.empty()) {
-            oss << "@" << literal.language_tag;
-        }
-    } else {
-        auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
+        // rdf:langString is not inlined, therefore can only have datatype not lang tag
+        auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(handle_));
+
         oss << "^^" << dtype_iri.n_string();
+    } else {
+        auto const &literal = handle_.literal_backend();
+        quoted_lexical_into_stream(oss, literal.lexical_form);
+
+        if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
+            if (!literal.language_tag.empty()) {
+                oss << "@" << literal.language_tag;
+            }
+        } else {
+            auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal.datatype_id,
+                                                                                         storage::node::identifier::RDFNodeType::IRI,
+                                                                                         handle_.node_storage_id()});
+            oss << "^^" << dtype_iri.n_string();
+        }
     }
 
     return oss.str();
@@ -108,17 +137,27 @@ std::any Literal::value() const {
 
     auto const datatype = this->datatype_id();
 
+    if (this->is_inlined()) {
+        auto const ops = registry::DatatypeRegistry::get_inlining_ops(datatype);
+        assert(ops != nullptr);
+
+        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        return ops->from_inlined_fptr(inlined_value);
+    }
+
     if (datatype == rdf::LangString::datatype_id) {
         auto const &lit = this->handle_.literal_backend();
 
         return registry::LangStringRepr{
             .lexical_form = std::string{lit.lexical_form},
             .language_tag = std::string{lit.language_tag}};
-    } else if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
-        return factory(this->lexical_form());
-    } else {
-        return {};
     }
+
+    if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
+        return factory(this->lexical_form());
+    }
+
+    return {};
 }
 
 Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
@@ -130,7 +169,7 @@ Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::Node
                                      node_storage.id()}};
 }
 
-Literal Literal::make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
                                              .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                              .lexical_form = lexical_form,
@@ -148,7 +187,31 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                      node_storage.id()}};
 }
 
-Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
+Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+    using namespace storage::node::identifier;
+
+    assert(inlined_value >> LiteralID::width == 0);
+    assert(fixed_id != LiteralType::other());
+
+    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
+                                     RDFNodeType::Literal,
+                                     node_storage.id(),
+                                     true}};
+}
+
+Literal Literal::make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, Node::NodeStorage &node_storage) noexcept {
+    if (entry.inlining_ops.has_value()) {
+        if (auto const maybe_inlined = entry.inlining_ops->try_into_inlined_fptr(value); maybe_inlined.has_value()) {
+            return Literal::make_inlined_typed_unchecked(*maybe_inlined, datatype.get_fixed(), node_storage);
+        }
+    }
+
+    return Literal::make_noninlined_typed_unchecked(entry.to_string_fptr(value),
+                                                    IRI{datatype, node_storage},
+                                                    node_storage);
+}
+
+Literal Literal::make(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
     DatatypeIDView const datatype_identifier{datatype};
@@ -160,13 +223,12 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
         // exists => canonize
-        auto const cpp_value = entry->factory_fptr(lexical_form);
-        auto const canonical_lexical_form = entry->to_string_fptr(cpp_value);
 
-        return Literal::make_typed_unchecked(canonical_lexical_form, datatype, node_storage);
+        auto const cpp_value = entry->factory_fptr(lexical_form);
+        return Literal::make_typed_unchecked(cpp_value, datatype_identifier, *entry, node_storage);
     } else {
         // doesn't exist in the registry no way to canonicalize
-        return Literal::make_typed_unchecked(lexical_form, datatype, node_storage);
+        return Literal::make_noninlined_typed_unchecked(lexical_form, datatype, node_storage);
     }
 }
 
@@ -216,7 +278,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
             auto const value = this->template value<Boolean>() ? target_e->numeric_ops->get_impl().one_value_fptr()
                                                                : target_e->numeric_ops->get_impl().zero_value_fptr();
 
-            return Literal::make_typed_unchecked(target_e->to_string_fptr(value), target, node_storage);
+            return Literal::make_typed_unchecked(value, target_dtid, *target_e, node_storage);
         } else {
             auto const &impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
             auto const *target_num_impl = DatatypeRegistry::get_numerical_ops(impl_converter.target_type_id);
@@ -234,7 +296,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
                 return Literal{};
             }
 
-            return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
+            return Literal::make_typed_unchecked(*target_value, target_dtid, *target_e, node_storage);
         }
     }
 
@@ -254,7 +316,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
             // downcast failed
             return Literal{};
         }
-        return Literal::make_typed_unchecked(target_e->to_string_fptr(*target_value), target, node_storage);
+        return Literal::make_typed_unchecked(*target_value, target_dtid, *target_e, node_storage);
     }
 
     // no conversion found
@@ -271,7 +333,7 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
     }
 
     auto const this_datatype = this->datatype_id();
-    auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
+    auto const *this_entry = DatatypeRegistry::get_entry(this_datatype);
     assert(this_entry != nullptr);
 
     if (!this_entry->numeric_ops.has_value()) {
@@ -288,21 +350,18 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};
         }
 
-        auto const to_string_fptr = [&]() {
+        auto const *result_entry = [&]() {
             if (op_res.result_type_id == this_datatype) [[likely]] {
-                return this_entry->to_string_fptr;
+                return this_entry;
             } else [[unlikely]] {
-                return DatatypeRegistry::get_to_string(op_res.result_type_id);
+                return DatatypeRegistry::get_entry(op_res.result_type_id);
             }
         }();
 
-        assert(to_string_fptr != nullptr);
-
-        return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                             IRI{op_res.result_type_id, node_storage},
-                                             node_storage);
+        assert(result_entry != nullptr);
+        return Literal::make_typed_unchecked(*op_res.result_value, op_res.result_type_id, *result_entry, node_storage);
     } else {
-        auto const other_entry = DatatypeRegistry::get_entry(other_datatype);
+        auto const *other_entry = DatatypeRegistry::get_entry(other_datatype);
         assert(other_entry != nullptr);
 
         if (!other_entry->numeric_ops.has_value()) {
@@ -337,19 +396,16 @@ Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, No
             return Literal{};
         }
 
-        auto const to_string_fptr = [&op_res, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
+        auto const *result_entry = [&, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
             if (op_res.result_type_id == equalized_id.get()) [[likely]] {
-                return equalized_entry->to_string_fptr;
+                return equalized_entry;
             } else [[unlikely]] {
-                return DatatypeRegistry::get_to_string(op_res.result_type_id);
+                return DatatypeRegistry::get_entry(op_res.result_type_id);
             }
         }();
 
-        assert(to_string_fptr != nullptr);
-
-        return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                             IRI{op_res.result_type_id, node_storage},
-                                             node_storage);
+        assert(result_entry != nullptr);
+        return Literal::make_typed_unchecked(*op_res.result_value, op_res.result_type_id, *result_entry, node_storage);
     }
 }
 
@@ -387,19 +443,16 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 
     DatatypeRegistry::NumericOpResult const op_res = op_select(operand_entry->numeric_ops->get_impl())(value);
 
-    auto const to_string_fptr = [&op_res, operand_entry = operand_entry]() {
+    auto const *result_entry = [&op_res, operand_entry = operand_entry]() {
         if (op_res.result_type_id == DatatypeIDView{operand_entry->datatype_iri}) [[likely]] {
-            return operand_entry->to_string_fptr;
+            return operand_entry;
         } else [[unlikely]] {
-            return DatatypeRegistry::get_to_string(op_res.result_type_id);
+            return DatatypeRegistry::get_entry(op_res.result_type_id);
         }
     }();
 
-    assert(to_string_fptr != nullptr);
-
-    return Literal::make_typed_unchecked(to_string_fptr(*op_res.result_value),
-                                         IRI{op_res.result_type_id, node_storage},
-                                         node_storage);
+    assert(result_entry != nullptr);
+    return Literal::make_typed_unchecked(*op_res.result_value, op_res.result_type_id, *result_entry, node_storage);
 }
 
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const noexcept {
@@ -581,6 +634,12 @@ datatypes::registry::DatatypeIDView Literal::datatype_id() const noexcept {
     }
 }
 
+bool Literal::is_fixed() const noexcept {
+    assert(!this->null());
+    auto const lit_type = this->handle_.node_id().literal_type();
+    return lit_type.is_fixed();
+}
+
 bool Literal::is_fixed_not_numeric() const noexcept {
     using namespace datatypes::registry;
 
@@ -714,5 +773,6 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
 Literal Literal::operator!() const noexcept {
     return this->logical_not();
 }
+
 
 }  // namespace rdf4cpp::rdf
