@@ -90,6 +90,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp
         src/rdf4cpp/rdf/datatypes/rdf/LangString.cpp

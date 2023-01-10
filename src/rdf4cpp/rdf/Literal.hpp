@@ -16,7 +16,7 @@ namespace rdf4cpp::rdf {
 class Literal : public Node {
 private:
     /**
-     * @brief the implementation for all numeric, binary operations
+     * the implementation for all numeric, binary operations
      *
      * @tparam OpSelect a function NumericOps -> binop_fptr_t
      * @param op_select is used to select the specific operation to be carried out
@@ -30,7 +30,7 @@ private:
     [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
-     * @brief the implementation for all numeric, unary operations
+     * the implementation for all numeric, unary operations
      *
      * @tparam OpSelect a function NumericOps -> unop_fptr_t
      * @param op_select is used to select the specific operation to be carried out
@@ -170,7 +170,7 @@ public:
      * @param node_storage
      * @return
      */
-    static Literal make(std::string_view lexical_form, const IRI &datatype,
+    static Literal make(std::string_view lexical_form, IRI const &datatype,
                         NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
@@ -203,7 +203,7 @@ public:
      * @param node_storage where to put the resulting literal
      * @return lexical form of this as xsd:string
      */
-    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Returns the datatype IRI of this.
@@ -225,7 +225,7 @@ public:
      * Constructs a datatype specific container from Literal.
      * @return std::any wrapped value. might be empty if type is not registered.
      */
-    [[nodiscard]] std::any value() const;
+    [[nodiscard]] std::any value() const noexcept;
 
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
@@ -328,7 +328,7 @@ public:
      * @return T instance with the value from this
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
-    typename LiteralDatatype_t::cpp_type value() const {
+    typename LiteralDatatype_t::cpp_type value() const noexcept {
         if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
             if (this->is_inlined()) {
                 auto const inlined_value = this->handle_.node_id().literal_id().value;

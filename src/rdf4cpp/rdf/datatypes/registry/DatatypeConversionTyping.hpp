@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_DATATYPECONVERSIONTYPING_HPP
 #define RDF4CPP_DATATYPECONVERSIONTYPING_HPP
 
+#include <any>
 #include <concepts>
 #include <tuple>
 #include <type_traits>
