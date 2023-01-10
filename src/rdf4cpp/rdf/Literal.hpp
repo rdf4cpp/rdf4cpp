@@ -91,6 +91,18 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
 
+    /**
+     * Creates a string like type with contents of str.
+     * Will either create
+     *      - a xsd:string if lang_tag_src is xsd:string
+     *      - a rdf:langString with language tag equal to that of lang_tag_src if lang_tag_src is an rdf:langString
+     *
+     * @param str lexical form of the to be created string
+     * @param lang_tag_src source for the language tag of the newly created string
+     * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
+     */
+    [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
@@ -155,6 +167,16 @@ public:
      */
     static Literal make(std::string_view lexical_form, const IRI &datatype,
                         NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a literal from a tri-bool with the following mappings
+     *      - TriBool::True => "true"^^xsd:boolean
+     *      - TriBool::False => "false"^^xsd:boolean
+     *      - TriBool::Err => the null literal
+     *
+     * @return the literal form of the given boolean
+     */
+    static Literal make_boolean(util::TriBool b, NodeStorage &node_storage = NodeStorage::default_instance());
 
     template<typename Rng>
     [[nodiscard]] static Literal make_rand_double(Rng &rng = std::random_device{}, NodeStorage &node_storage = NodeStorage::default_instance()) {
@@ -291,47 +313,254 @@ public:
     [[nodiscard]] Literal neg(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator-() const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-abs
+     * @return absolute value of this or the null literal if this is not numeric
+     */
     [[nodiscard]] Literal abs(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-round
+     * @return the rounded value of this or the null literal if this is not numeric
+     */
     [[nodiscard]] Literal round(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-floor
+     * @return the floored value of this or the null literal if this is not numeric
+     */
     [[nodiscard]] Literal floor(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ceiling
+     * @return the ceiled value of this or the null literal if this is not numeric
+     */
     [[nodiscard]] Literal ceil(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
-     * https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @return the length this' lexical form if it is string-like otherwise nullopt
      */
     [[nodiscard]] std::optional<size_t> strlen() const noexcept;
 
-    [[nodiscard]] util::TriBool matches(std::regex const &regex) const noexcept;
-    [[nodiscard]] util::TriBool matches(Literal const &regex, Literal const &flags) const noexcept;
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @return the length this' lexical form (as xsd:integer) if it is string-like otherwise the null literal
+     */
+    [[nodiscard]] Literal strlen_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern regex to match against
+     * @return whether this' lexical form matches the regex or Err if this is not string-like
+     */
+    [[nodiscard]] util::TriBool regex_match(std::regex const &pattern) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern xsd:string containing a regex to match against
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return whether this' lexical form matches the regex or the null literal if
+     *      - this is not string-like
+     *      - regex is not string-like
+     *      - flags is not string-like or not parsable as flags
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal regex_match(Literal const &pattern, Literal const &flags = Literal{""}, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-replace
+     *
+     * @param pattern regex (as string) to match against
+     * @param replacement string to replace the matched pattern
+     * @return the new string with the matches substring replaced by replacement
+     */
+    [[nodiscard]] Literal regex_replace(std::regex const &pattern, std::string_view replacement, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-replace
+     *
+     * @param pattern regex (as string) to match against
+     * @param replacement string to replace the matched pattern
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return the new string with the matches substring replaced by replacement
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal regex_replace(Literal const &pattern, Literal const &replacement,
+                                        Literal const &flags = Literal{""},
+                                        NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string or Err if this is not string-like
+     */
     [[nodiscard]] util::TriBool contains(std::string_view needle) const noexcept;
-    [[nodiscard]] util::TriBool contains(Literal const &needle) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     */
+    [[nodiscard]] Literal contains(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' up to the position of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
     [[nodiscard]] Literal substr_before(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     *
+     * @param needle string-like value to search for in this
+     * @return substring of this' up to the position of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *          - needle is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
     [[nodiscard]] Literal substr_before(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' after the end of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
     [[nodiscard]] Literal substr_after(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' after the end of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *          - needle is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
     [[nodiscard]] Literal substr_after(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle or Err if
+     *      - this is not string-like
+     */
     [[nodiscard]] util::TriBool str_starts_with(std::string_view needle) const noexcept;
-    [[nodiscard]] util::TriBool str_starts_with(Literal const &needle) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     *      - the language tags of this and needle do not match
+     */
+    [[nodiscard]] Literal str_starts_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle or Err if
+     *      - this is not string-like
+     */
     [[nodiscard]] util::TriBool str_ends_with(std::string_view needle) const noexcept;
-    [[nodiscard]] util::TriBool str_ends_with(Literal const &needle) const noexcept;
 
-    [[nodiscard]] Literal as_uppercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
-    [[nodiscard]] Literal as_lowercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     *      - the language tags of this and needle do not match
+     */
+    [[nodiscard]] Literal str_ends_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-upper-case
+     *
+     * @return the upper case version if this' if this is string-like or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal uppercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-lower-case
+     *
+     * @return the lower case version if this' if this is string-like or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal lowercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-concat
+     *
+     * @param other other literal to append to this
+     * @return a string-like type that is the concatenation of the lexical forms of this and other
+     */
     [[nodiscard]] Literal concat(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * akin to std::string_view::substr
+     * @see https://en.cppreference.com/w/cpp/string/basic_string_view/substr
+     * @warning 0-based indexing
+     *
+     * @param start position of the first character
+     * @param len requested length of the substring
+     * @return the characters in this whose position P satisfy: P >= start && P < start + len or the null literal if
+     *      - this is not string-like
+     */
     [[nodiscard]] Literal substr(size_t start,
                                  size_t len = std::string_view::npos,
                                  NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * TODO: should both substr version behave identically?
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring
+     * @warning 1-based indexing
+     *
+     * @param start position of the first character
+     * @param len requested length of the substring
+     * @return the characters in this whose position P satisfy: P >= round(start) && P < round(start) + round(len) or the null literal if
+     *      - this is not string-like
+     *      - start is not xsd:double or derived from it
+     *      - len is not xsd:double or derived from it
+     */
     [[nodiscard]] Literal substr(Literal const &start,
                                  Literal const &len = Literal::make<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
                                  NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
-
 
     /**
      * @return the effective boolean value of this
@@ -359,7 +588,7 @@ public:
      * @return T instance with the value from this
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
-    typename LiteralDatatype_t::cpp_type value() const {
+    typename LiteralDatatype_t::cpp_type value() const noexcept {
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             auto const &lit = this->handle_.literal_backend();
 
@@ -376,9 +605,13 @@ public:
 
 inline namespace literals {
 
-Literal operator""_lit(unsigned long long int i);
-Literal operator""_lit(long double d);
-Literal operator""_lit(char const *str, size_t len);
+Literal operator""_xsd_string(char const *str, size_t len);
+Literal operator""_xsd_integer(unsigned long long int i);
+Literal operator""_xsd_int(unsigned long long int i);
+Literal operator""_xsd_long(unsigned long long int i);
+Literal operator""_xsd_double(long double d);
+Literal operator""_xsd_float(long double d);
+Literal operator""_xsd_decimal(char const *str, size_t len);
 
 }  // namespace literals
 }  // namespace rdf4cpp::rdf

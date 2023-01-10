@@ -338,11 +338,57 @@ public:
         return res.has_value() ? *res : nullptr;
     }
 
+    inline static RuntimeConversionTable const *get_conversion_table(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
+            return &entry.conversion_table;
+        });
+
+        return res.has_value() ? *res : nullptr;
+    }
+
     /**
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
      * @return the found conversion if there is a viable one
      */
     static std::optional<DatatypeConverter> get_common_type_conversion(RuntimeConversionTable const &lhs_conv, RuntimeConversionTable const &rhs_conv, size_t lhs_init_soff = 0, size_t rhs_init_soff = 0) noexcept;
+
+    /**
+     * Tries to find a conversion to convert a subtype to the given supertype
+     *
+     * @param sub table of type to convert
+     * @param super table of conversion target
+     * @return the conversion if there is one, otherwise if sub is not a subtype of super nullptr
+     */
+    inline static RuntimeConversionEntry const *get_supertype_conversion(RuntimeConversionTable const &sub, RuntimeConversionTable const &super) noexcept {
+        if (sub.subtype_rank() < super.subtype_rank()) {
+            // sub cannot be subtype of super
+            return nullptr;
+        }
+
+        auto const soff = sub.subtype_rank() - super.subtype_rank();
+        auto const &conv = sub.conversion_at_index(soff, 0);
+
+        if (conv.target_type_id != super.conversion_at_index(0, 0).target_type_id) {
+            // conversion does not convert to correct type
+            return nullptr;
+        }
+
+        return &conv;
+    }
+
+    inline static RuntimeConversionEntry const *get_supertype_conversion(DatatypeIDView const sub, DatatypeIDView const super) noexcept {
+        auto const sub_table = get_conversion_table(sub);
+        if (sub_table == nullptr) {
+            return nullptr;
+        }
+
+        auto const super_table = get_conversion_table(super);
+        if (super_table == nullptr) {
+            return nullptr;
+        }
+
+        return get_supertype_conversion(*sub_table, *super_table);
+    }
 
     /**
      * Tries to find a conversion to a common type in the context of numeric operations.

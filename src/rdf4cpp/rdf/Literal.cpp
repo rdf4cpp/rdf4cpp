@@ -148,6 +148,17 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                      node_storage.id()}};
 }
 
+Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto const lt_dt = lang_tag_src.datatype_id();
+
+    if (lt_dt == datatypes::rdf::LangString::datatype_id) {
+        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+    }
+
+    assert(lt_dt == datatypes::xsd::String::datatype_id);
+    return Literal::make_simple_unchecked(str, node_storage);
+}
+
 Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage) {
     using namespace datatypes::registry;
 
@@ -168,6 +179,14 @@ Literal Literal::make(std::string_view lexical_form, const IRI &datatype, Node::
         // doesn't exist in the registry no way to canonicalize
         return Literal::make_typed_unchecked(lexical_form, datatype, node_storage);
     }
+}
+
+Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_storage) {
+    if (b == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
 }
 
 Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
@@ -756,23 +775,131 @@ std::optional<size_t> Literal::strlen() const noexcept {
     return this->lexical_form().size();
 }
 
-util::TriBool Literal::matches(std::regex const &regex) const noexcept {
+Literal Literal::strlen_as_literal(Node::NodeStorage &node_storage) const noexcept {
+    auto const len = this->strlen();
+    if (!len.has_value()) {
+        return Literal{};
+    }
+
+    return Literal::make<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
+}
+
+static std::optional<std::regex::flag_type> translate_regex_flags(std::string_view const xpath_flags) noexcept {
+    bool error = false;
+    auto const regex_flags = std::accumulate(xpath_flags.begin(), xpath_flags.end(), std::regex_constants::ECMAScript, [&error](auto facc, char c) noexcept {
+        switch (c) {
+            case 'm':
+                return facc | std::regex_constants::multiline;
+            case 'i':
+                return facc | std::regex_constants::icase;
+            case 's':
+            case 'x':
+            case 'q':
+                // TODO: support s, x, q
+                // ignoring for now
+                return facc;
+            default:
+                error = true;
+                return facc;
+        }
+    });
+
+    if (error) {
+        return std::nullopt;
+    }
+
+    return regex_flags;
+}
+
+util::TriBool Literal::regex_match(std::regex const &pattern) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
     auto const s = this->lexical_form();
-    return std::regex_match(s.begin(), s.end(), regex);
-}
-
-util::TriBool Literal::matches(Literal const &regex, [[maybe_unused]] Literal const &flags) const noexcept {
-    if (!this->is_string_like() || !regex.is_string_like() || !flags.is_string_like()) {
+    try {
+        return std::regex_search(s.begin(), s.end(), pattern);
+    } catch (std::regex_error const &) {
         return util::TriBool::Err;
     }
+}
 
-    // TODO: translate flags
-    std::regex const re{std::string{regex.lexical_form()}};
-    return this->matches(re);
+Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like() || !pattern.is_string_like() || !flags.is_string_like()) {
+        return Literal{};
+    }
+
+    if (pattern.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != pattern.language_tag()) {
+        return Literal{};
+    }
+
+    auto const regex_flags = translate_regex_flags(flags.lexical_form());
+    if (!regex_flags.has_value()) {
+        return Literal{};
+    }
+
+    auto const re = [&]() noexcept -> std::optional<std::regex> {
+        try {
+            return std::regex{std::string{pattern.lexical_form()}, *regex_flags};
+        } catch (std::regex_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!re.has_value()) {
+        return Literal{};
+    }
+
+    return Literal::make_boolean(this->regex_match(*re), node_storage);
+}
+
+Literal Literal::regex_replace(std::regex const &pattern, std::string_view const replacement, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    auto const new_str = [&]() noexcept -> std::optional<std::string> {
+        try {
+            return std::regex_replace(std::string{this->lexical_form()}, pattern, std::string{replacement});
+        } catch (std::regex_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!new_str.has_value()) {
+        return Literal{};
+    }
+
+    return Literal::make_string_like_copy_lang_tag(*new_str, *this, node_storage);
+}
+
+Literal Literal::regex_replace(Literal const &pattern, Literal const &replacement, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like() || !pattern.is_string_like() || !replacement.is_string_like() || !flags.is_string_like()) {
+        return Literal{};
+    }
+
+    if (pattern.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != pattern.language_tag()) {
+        return Literal{};
+    }
+
+    auto const regex_flags = translate_regex_flags(flags.lexical_form());
+    if (!regex_flags.has_value()) {
+        return Literal{};
+    }
+
+    auto const re = [&]() noexcept -> std::optional<std::regex> {
+        try {
+            return std::regex{std::string{pattern.lexical_form()}, *regex_flags};
+        } catch (std::regex_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!re.has_value()) {
+        return Literal{};
+    }
+
+    return this->regex_replace(*re, replacement.lexical_form(), node_storage);
 }
 
 util::TriBool Literal::contains(std::string_view const needle) const noexcept {
@@ -784,17 +911,21 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     return s.find(needle) != std::string_view::npos;
 }
 
-util::TriBool Literal::contains(Literal const &needle) const noexcept {
-    if (!needle.is_string_like()) {
-        return util::TriBool::Err;
+Literal Literal::contains(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
     }
 
-    return this->contains(needle.lexical_form());
+    return Literal::make_boolean(this->contains(needle.lexical_form()), node_storage);
 }
 
 Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
+    }
+
+    if (needle.empty()) {
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
     auto const s = this->lexical_form();
@@ -805,20 +936,10 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     }
 
     auto const substr = s.substr(0, pos);
-
-    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(substr, this->language_tag(), node_storage);
-
-    }
-
-    return Literal::make_simple_unchecked(substr, node_storage);
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
 Literal Literal::substr_before(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
-    if (!needle.is_string_like()) {
-        return Literal{};
-    }
-
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
         return Literal{};
     }
@@ -831,6 +952,10 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
         return Literal{};
     }
 
+    if (needle.empty()) {
+        return *this;
+    }
+
     auto const s = this->lexical_form();
     auto const pos = s.find(needle);
 
@@ -839,19 +964,10 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     }
 
     auto const substr = s.substr(pos + needle.size());
-
-    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(substr, this->language_tag(), node_storage);
-    }
-
-    return Literal::make_simple_unchecked(substr, node_storage);
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
 Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
-    if (!needle.is_string_like()) {
-        return Literal{};
-    }
-
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
         return Literal{};
     }
@@ -868,16 +984,16 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     return s.starts_with(needle);
 }
 
-util::TriBool Literal::str_starts_with(Literal const &needle) const noexcept {
+Literal Literal::str_starts_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
-        return util::TriBool::Err;
+        return Literal{};
     }
 
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
-        return util::TriBool::Err;
+        return Literal{};
     }
 
-    return this->str_starts_with(needle.lexical_form());
+    return Literal::make_boolean(this->str_starts_with(needle.lexical_form()), node_storage);
 }
 
 util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
@@ -889,19 +1005,19 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
     return s.ends_with(needle);
 }
 
-util::TriBool Literal::str_ends_with(Literal const &needle) const noexcept {
+Literal Literal::str_ends_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
-        return util::TriBool::Err;
+        return Literal{};
     }
 
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
-        return util::TriBool::Err;
+        return Literal{};
     }
 
-    return this->str_ends_with(needle.lexical_form());
+    return Literal::make_boolean(this->str_ends_with(needle.lexical_form()), node_storage);
 }
 
-Literal Literal::as_uppercase(Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
@@ -911,14 +1027,10 @@ Literal Literal::as_uppercase(Node::NodeStorage &node_storage) const noexcept {
     upper.reserve(s.size());
     std::transform(s.begin(), s.end(), std::back_inserter(upper), [](char const ch) { return std::toupper(ch); });
 
-    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(upper, this->language_tag(), node_storage);
-    }
-
-    return Literal::make_simple_unchecked(upper, node_storage);
+    return Literal::make_string_like_copy_lang_tag(upper, *this, node_storage);
 }
 
-Literal Literal::as_lowercase(Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::lowercase(Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
@@ -928,15 +1040,11 @@ Literal Literal::as_lowercase(Node::NodeStorage &node_storage) const noexcept {
     lower.reserve(s.size());
     std::transform(s.begin(), s.end(), std::back_inserter(lower), [](char const ch) { return std::tolower(ch); });
 
-    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(lower, this->language_tag(), node_storage);
-    }
-
-    return Literal::make_simple_unchecked(lower, node_storage);
+    return Literal::make_string_like_copy_lang_tag(lower, *this, node_storage);
 }
 
 Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    if (!this->is_string_like() || !other.is_string_like()) {
+    if (this->null() || other.null()) {
         return Literal{};
     }
 
@@ -963,72 +1071,80 @@ Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storag
     auto const s = this->lexical_form();
 
     if (start > s.size()) {
-        if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-            return Literal::make_lang_tagged_unchecked("", this->language_tag(), node_storage);
-        }
-
-        return Literal::make_simple_unchecked("", node_storage);
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
     auto const substr = s.substr(start, len);
-
-    if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(substr, this->language_tag(), node_storage);
-    }
-
-    return Literal::make_simple_unchecked(substr, node_storage);
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
 Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStorage &node_storage) const noexcept {
-    using namespace datatypes::registry;
+    using namespace datatypes;
 
     if (!this->is_string_like()) {
         return Literal{};
     }
 
-    auto const start_double = start.cast<datatypes::xsd::Double>(node_storage);
+    auto const start_double = start.cast<xsd::Double>(node_storage);
     if (start_double.null()) {
         return Literal{};
     }
 
-    auto const len_double = len.cast<datatypes::xsd::Double>(node_storage);
+    auto const len_double = len.cast<xsd::Double>(node_storage);
     if (len_double.null()) {
         return Literal{};
     }
 
-    auto const start_val = start_double.value<datatypes::xsd::Double>();
+    auto const start_val = start_double.value<xsd::Double>();
     if (std::isnan(start_val) || (std::isinf(start_val) && start_val > 0)) [[unlikely]] {
-        return Literal::make_simple_unchecked("", node_storage);
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
-    auto const len_val = len_double.value<datatypes::xsd::Double>();
+    auto const len_val = len_double.value<xsd::Double>();
     if (std::isnan(len_val) || len_val <= 0) {
-        return Literal::make_simple_unchecked("", node_storage);
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
-    auto const start_ix = static_cast<size_t>(std::round(std::max(0.0, start_val - 1)));
+    auto const start_ix = static_cast<size_t>(std::round(std::max(0.0, start_val - 1.0)));
 
     if (std::isinf(len_val)) {
         return this->substr(start_ix);
     }
 
-    auto const len_ix = static_cast<size_t>(std::round(len_val));
+    auto const len_ix = static_cast<size_t>(std::round(len_val) - (start_val < 1.0 ? std::round(1.0 - start_val) : 0.0));
 
     return this->substr(start_ix, len_ix, node_storage);
 }
 
+
 inline namespace literals {
 
-Literal operator""_lit(char const *str, size_t const len) {
+Literal operator""_xsd_string(char const *str, size_t const len) {
     return Literal{std::string_view{str, len}};
 }
 
-Literal operator""_lit(unsigned long long int i) {
+Literal operator""_xsd_integer(unsigned long long int i) {
     return Literal::make<datatypes::xsd::Integer>(i);
 }
 
-Literal operator""_lit(long double d) {
+Literal operator""_xsd_int(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Int>(i);
+}
+
+Literal operator""_xsd_long(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Integer>(i);
+}
+
+Literal operator""_xsd_double(long double d) {
     return Literal::make<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
+}
+
+Literal operator""_xsd_float(long double d) {
+    return Literal::make<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
+}
+
+Literal operator""_xsd_decimal(char const *str, size_t const len) {
+    return Literal::make(std::string_view{str, len}, IRI{datatypes::xsd::Decimal::identifier});
 }
 
 }  // namespace literals
