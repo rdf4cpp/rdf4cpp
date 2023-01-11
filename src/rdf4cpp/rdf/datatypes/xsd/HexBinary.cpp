@@ -17,7 +17,7 @@ static constexpr std::array<int8_t, 128> decode_lut{
         -1,  10,  11,  12,  13,  14,  15,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
         -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
 
-constexpr uint8_t hex_decode(char const ch) {
+static uint8_t hex_decode(char const ch) {
     auto const decoded = decode_lut[static_cast<size_t>(ch)];
     if (decoded < 0) {
         throw std::runtime_error{"xsd:binaryHex parsing error: invalid digit"};
@@ -26,7 +26,7 @@ constexpr uint8_t hex_decode(char const ch) {
     return static_cast<uint8_t>(decoded);
 }
 
-constexpr char hex_encode(uint8_t const half_octet) noexcept {
+static char hex_encode(uint8_t const half_octet) noexcept {
     assert(half_octet <= 15);
     return encode_lut[half_octet];
 }

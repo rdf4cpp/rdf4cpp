@@ -26,7 +26,7 @@ static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,
                                                     41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  -1,  -1,  -1,  -1,  -1};
 
-static constexpr std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2, std::byte const h3) noexcept {
+static std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2, std::byte const h3) noexcept {
     uint32_t const combined = static_cast<uint32_t>(h1) << 16| static_cast<uint32_t>(h2) << 8 | static_cast<uint32_t>(h3);
 
     return {encode_lut[(combined >> 18) & 0b0011'1111],
@@ -35,7 +35,7 @@ static constexpr std::array<char, 4> base64_encode(std::byte const h1, std::byte
             encode_lut[combined & 0b0011'1111]};
 }
 
-static constexpr uint8_t base64_decode_single(char const c) {
+static uint8_t base64_decode_single(char const c) {
     auto const decoded = decode_lut[static_cast<size_t>(c)];
     if (decoded < 0) {
         throw std::runtime_error{"xsd:base64Binary parsing error: invalid digit"};
@@ -44,7 +44,7 @@ static constexpr uint8_t base64_decode_single(char const c) {
     return static_cast<uint8_t>(decoded);
 }
 
-static constexpr std::array<std::byte, 3> base64_decode(char const c1, char const c2, char const c3, char const c4) {
+static std::array<std::byte, 3> base64_decode(char const c1, char const c2, char const c3, char const c4) {
     uint32_t const combined = (base64_decode_single(c1) << 18) | (base64_decode_single(c2) << 12) | (base64_decode_single(c3) << 6) | base64_decode_single(c4);
 
     uint8_t const b1 = (combined >> 16) & 0b1111'1111;
