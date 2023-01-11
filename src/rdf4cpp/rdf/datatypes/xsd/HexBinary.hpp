@@ -24,18 +24,12 @@ struct HexBinaryRepr : std::vector<std::byte> {
      * @return the n-th half-octet of this byte sequence
      * @note the least significant half-octet has index 0
      */
-    [[nodiscard]] constexpr std::byte half_octet(size_t const n) const noexcept {
-        auto const ix = n / 2;
-        auto const off = n % 2;
-        return static_cast<std::byte>((static_cast<uint8_t>((*this)[ix]) >> (4 * off)) & 0b1111);
-    }
+    [[nodiscard]] std::byte half_octet(size_t n) const noexcept;
 
     /**
      * @return the number of half-octets / hex digits represented by this byte sequence
      */
-    [[nodiscard]] constexpr size_t n_half_octets() const noexcept {
-        return this->size() * 2;
-    }
+    [[nodiscard]] size_t n_half_octets() const noexcept;
 
     std::strong_ordering operator<=>(HexBinaryRepr const &) const noexcept = default;
 };

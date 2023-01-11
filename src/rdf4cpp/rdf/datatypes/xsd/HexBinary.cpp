@@ -83,6 +83,16 @@ std::string HexBinaryRepr::to_encoded() const noexcept {
     return buf;
 }
 
+std::byte HexBinaryRepr::half_octet(size_t const n) const noexcept {
+    auto const ix = n / 2;
+    auto const off = n % 2;
+    return ((*this)[ix] >> (4 * off)) & std::byte{0b1111};
+}
+
+size_t HexBinaryRepr::n_half_octets() const noexcept {
+    return this->size() * 2;
+}
+
 template<>
 capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_binary>::from_string(std::string_view const s) {
     return HexBinaryRepr::from_encoded(s);

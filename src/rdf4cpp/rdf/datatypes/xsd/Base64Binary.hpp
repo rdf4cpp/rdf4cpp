@@ -32,24 +32,13 @@ struct Base64BinaryRepr : std::vector<std::byte> {
      * @param n the index of the hextet to extract
      * @return the n-th hextet in this decoded base64 value
      */
-    [[nodiscard]] constexpr std::byte hextet(size_t const n) const noexcept {
-        auto const triple = n / 4 * 3;
-        auto const off = (3 - (n % 4)) * 6;
-
-        uint32_t const bytes = static_cast<uint32_t>((*this)[triple]) << 16
-                               | (triple + 1 < this->size() ? static_cast<uint32_t>((*this)[triple + 1]) << 8 : 0)
-                               | (triple + 2 < this->size() ? static_cast<uint32_t>((*this)[triple + 2]) : 0);
-
-        return static_cast<std::byte>((bytes >> off) & 0b11'1111);
-    }
+    [[nodiscard]] std::byte hextet(size_t n) const noexcept;
 
     /**
      * @return the number of hextets in this decoded base64 value
      * @note count includes padding hextets
      */
-    [[nodiscard]] constexpr size_t n_hextets() const noexcept {
-        return 4 * (this->size() / 3 + (this->size() % 3 != 0));
-    }
+    [[nodiscard]] size_t n_hextets() const noexcept;
 
     std::strong_ordering operator<=>(Base64BinaryRepr const &) const noexcept = default;
 };

@@ -153,6 +153,21 @@ std::string Base64BinaryRepr::to_encoded() const noexcept {
     return buf;
 }
 
+std::byte Base64BinaryRepr::hextet(size_t const n) const noexcept {
+    auto const triple = n / 4 * 3;
+    auto const off = (3 - (n % 4)) * 6;
+
+    uint32_t const bytes = static_cast<uint32_t>((*this)[triple]) << 16
+                           | (triple + 1 < this->size() ? static_cast<uint32_t>((*this)[triple + 1]) << 8 : 0)
+                           | (triple + 2 < this->size() ? static_cast<uint32_t>((*this)[triple + 2]) : 0);
+
+    return static_cast<std::byte>((bytes >> off) & 0b11'1111);
+}
+
+size_t Base64BinaryRepr::n_hextets() const noexcept {
+    return 4 * (this->size() / 3 + (this->size() % 3 != 0));
+}
+
 template<>
 capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_base64_binary>::from_string(std::string_view s) {
     return Base64BinaryRepr::from_encoded(s);
