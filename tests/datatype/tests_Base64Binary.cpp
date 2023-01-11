@@ -5,10 +5,12 @@
 
 using namespace rdf4cpp::rdf::datatypes::xsd;
 
+// ascii -> value
+// note: modified to decode '=' to 0
 static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  62,  -1,  -1,  -1,  63,
-                                                    52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  -1,  -1,  -1,  -1,  -1,  -1,
+                                                    52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  -1,  -1,  -1,   0,  -1,  -1,
                                                     -1,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
                                                     15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,
@@ -16,10 +18,7 @@ static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,
 
 static constexpr std::byte base64_decode_single(char const c) {
     auto const decoded = decode_lut[static_cast<size_t>(c)];
-    if (decoded < 0) {
-        throw std::runtime_error{"xsd:base64Binary parsing error: invalid digit"};
-    }
-
+    REQUIRE(decoded >= 0);
     return static_cast<std::byte>(decoded);
 }
 
@@ -33,9 +32,9 @@ TEST_SUITE("base64Binary") {
             auto const back = b64.to_encoded();
             CHECK(s == back);
 
-            //for (size_t ix = 0; ix < b64.n_hextets(); ++ix) {
-            //    CHECK(base64_decode_single(s[ix]) == b64.hextet(ix));
-            //}
+            for (size_t ix = 0; ix < b64.n_hextets(); ++ix) {
+                CHECK(base64_decode_single(s[ix]) == b64.hextet(ix));
+            }
         }
 
         SUBCASE("one pad") {
@@ -45,6 +44,10 @@ TEST_SUITE("base64Binary") {
 
             auto const back = b64.to_encoded();
             CHECK(s == back);
+
+            for (size_t ix = 0; ix < b64.n_hextets(); ++ix) {
+                CHECK(base64_decode_single(s[ix]) == b64.hextet(ix));
+            }
         }
 
         SUBCASE("two pad") {
@@ -54,6 +57,10 @@ TEST_SUITE("base64Binary") {
 
             auto const back = b64.to_encoded();
             CHECK(s == back);
+
+            for (size_t ix = 0; ix < b64.n_hextets(); ++ix) {
+                CHECK(base64_decode_single(s[ix]) == b64.hextet(ix));
+            }
         }
 
         SUBCASE("spaces") {

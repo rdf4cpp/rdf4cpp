@@ -7,6 +7,8 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 namespace encode_decode_detail {
+
+// value -> ascii
 static constexpr std::array<char, 64> encode_lut{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
                                                  'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
                                                  'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
@@ -14,6 +16,7 @@ static constexpr std::array<char, 64> encode_lut{'A', 'B', 'C', 'D', 'E', 'F', '
                                                  's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
                                                  '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
+// ascii -> value
 static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
                                                     -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  62,  -1,  -1,  -1,  63,
@@ -24,7 +27,7 @@ static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,
                                                     41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  -1,  -1,  -1,  -1,  -1};
 
 static constexpr std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2, std::byte const h3) noexcept {
-    uint32_t const combined = (static_cast<uint8_t>(h1) << 16) | (static_cast<uint8_t>(h2) << 8) | static_cast<uint8_t>(h3);
+    uint32_t const combined = static_cast<uint32_t>(h1) << 16| static_cast<uint32_t>(h2) << 8 | static_cast<uint32_t>(h3);
 
     return {encode_lut[(combined >> 18) & 0b0011'1111],
             encode_lut[(combined >> 12) & 0b0011'1111],
