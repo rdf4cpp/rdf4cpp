@@ -9,7 +9,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
-    static std::regex const decimal_regex{R"#((\+|-)?[0-9]+\.[0-9]*)#"};
+    static std::regex const decimal_regex{R"#((\+|-)?[0-9]+\.[0-9]*)#", std::regex_constants::optimize};
 
     if (!std::regex_match(s.begin(), s.end(), decimal_regex)) {
         throw std::runtime_error{"XSD Parsing Error"};

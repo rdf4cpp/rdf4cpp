@@ -45,8 +45,8 @@ util::CowString Literal::lexical_form() const noexcept {
     return util::CowString{util::ownership_tag::borrowed, handle_.literal_backend().lexical_form};
 }
 
-Literal Literal::as_lexical_form(NodeStorage &node_storage) const {
-    return Literal::make<datatypes::xsd::String>(this->lexical_form().into_owned(), node_storage);
+Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
+    return Literal::make_simple_unchecked(this->lexical_form(), node_storage);
 }
 
 std::string_view Literal::language_tag() const noexcept {
@@ -132,7 +132,7 @@ std::ostream &operator<<(std::ostream &os, const Literal &literal) {
     os << static_cast<std::string>(literal);
     return os;
 }
-std::any Literal::value() const {
+std::any Literal::value() const noexcept {
     using namespace datatypes;
 
     auto const datatype = this->datatype_id();
