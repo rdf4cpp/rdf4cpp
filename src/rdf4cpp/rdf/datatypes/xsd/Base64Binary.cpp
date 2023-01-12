@@ -30,8 +30,24 @@ static constexpr std::array<uint8_t, 128> decode_lut{127,  127,  127,  127,  127
                                                       41,   42,   43,   44,   45,   46,   47,   48,   49,   50,   51,  127,  127,  127,  127,  127};
 
 static std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2, std::byte const h3) noexcept {
-    uint32_t const combined = static_cast<uint32_t>(h1) << 16| static_cast<uint32_t>(h2) << 8 | static_cast<uint32_t>(h3);
+    /*
+     *  visualization of the 'combined' variable
+     *  put 3 bytes / 8-bit units into it then extract 4 hextets / 6-bit units
+     *
+     *  | decoded 1                     | decoded 2                     | decoded 3                     | <- first 24 bits / 4 hextets / 3 bytes of combined
+     *  | 7   6   5   4   3   2   1   0 | 7   6   5   4   3   2   1   0 | 7   6   5   4   3   2   1   0 |
+     *  |           |           |           |           |           |           |           |           |
+     *  |           |           |           |           |           |           |           |           |
+     *  |           v           |           v           |           v           |           v           |
+     *  | 5   4   3   2   1   0 | 5   4   3   2   1   0 | 5   4   3   2   1   0 | 5   4   3   2   1   0 | output hextets, still need to be encoded to ascii (via encode_lut)
+     *  | hextet  1             | hextet 2              | hextet 3              | hextet 4              | (only 6 bits used because base64 is a 6 bit encoding)
+     *
+     *
+     *  see https://de.wikipedia.org/wiki/Base64#/media/Datei:Base64-de.png
+     */
+    uint32_t const combined = static_cast<uint32_t>(h1) << 16 | static_cast<uint32_t>(h2) << 8 | static_cast<uint32_t>(h3);
 
+    // extract hextets out of combined and encode to ascii
     return {encode_lut[(combined >> 18) & 0b0011'1111],
             encode_lut[(combined >> 12) & 0b0011'1111],
             encode_lut[(combined >> 6) & 0b0011'1111],
