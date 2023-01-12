@@ -7,7 +7,7 @@ using namespace rdf4cpp::rdf::datatypes::xsd;
 using rdf4cpp::rdf::datatypes::registry::HexBinaryRepr;
 
 TEST_SUITE("xsd:hexBinary") {
-    TEST_CASE("canonical") {
+    TEST_CASE("canonicalization") {
         SUBCASE("a") {
             std::string_view const h = "0FB7";
             auto const x = HexBinary::from_string(h);

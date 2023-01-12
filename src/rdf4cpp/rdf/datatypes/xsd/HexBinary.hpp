@@ -15,8 +15,20 @@ namespace rdf4cpp::rdf::datatypes::registry {
  *
  * The bytes are stored in order least significant to most significant (i.e. index 0 is least significant).
  */
-struct HexBinaryRepr : std::vector<std::byte> {
+struct HexBinaryRepr {
+    std::vector<std::byte> bytes;
+
+    /**
+     * Constructs a HexBinaryRepr from an hexadecimal-encoded string
+     * @param hex_encoded encoded hexadecimal string
+     * @return decoded hexadecimal value
+     */
     [[nodiscard]] static HexBinaryRepr from_encoded(std::string_view hex_encoded);
+
+    /**
+     * Encodes this hexadecimal value into its string representation
+     * @return encoded string representation
+     */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
     /**
@@ -30,6 +42,18 @@ struct HexBinaryRepr : std::vector<std::byte> {
      * @return the number of half-octets / hex digits represented by this byte sequence
      */
     [[nodiscard]] size_t n_half_octets() const noexcept;
+
+    /**
+     * @param n index of the byte to extract
+     * @return the n-th byte of this sequence
+     * @note the bytes are stored in order least significant to most significant (i.e. index 0 is least significant).
+     */
+    [[nodiscard]] std::byte byte(size_t n) const noexcept;
+
+    /**
+     * @return the number of bytes in this encoded hexadecimal value
+     */
+    [[nodiscard]] size_t n_bytes() const noexcept;
 
     std::strong_ordering operator<=>(HexBinaryRepr const &) const noexcept = default;
 };

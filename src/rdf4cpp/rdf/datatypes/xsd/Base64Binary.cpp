@@ -8,7 +8,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 namespace encode_decode_detail {
 
-// value -> ascii
+// integer value -> ascii base64 character
 static constexpr std::array<char, 64> encode_lut{'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
                                                  'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
                                                  'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
@@ -16,15 +16,18 @@ static constexpr std::array<char, 64> encode_lut{'A', 'B', 'C', 'D', 'E', 'F', '
                                                  's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
                                                  '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
-// ascii -> value
-static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  62,  -1,  -1,  -1,  63,
-                                                    52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  -1,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
-                                                    15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,
-                                                    41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  -1,  -1,  -1,  -1,  -1};
+// ascii base64 character -> integer value (e.g. 'A' => 0, 'a' => 26)
+// see https://en.wikipedia.org/wiki/Base64
+// 127 is the error value, meaning the character is invalid for base64 encoding
+// the padding char '=' is also mapped to 127 because it is not supposed to be decoded by this table as it needs special handling
+static constexpr std::array<uint8_t, 128> decode_lut{127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,
+                                                     127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,
+                                                     127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,   62,  127,  127,  127,   63,
+                                                      52,   53,   54,   55,   56,   57,   58,   59,   60,   61,  127,  127,  127,  127,  127,  127,
+                                                     127,    0,    1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12,   13,   14,
+                                                      15,   16,   17,   18,   19,   20,   21,   22,   23,   24,   25,  127,  127,  127,  127,  127,
+                                                     127,   26,   27,   28,   29,   30,   31,   32,   33,   34,   35,   36,   37,   38,   39,   40,
+                                                      41,   42,   43,   44,   45,   46,   47,   48,   49,   50,   51,  127,  127,  127,  127,  127};
 
 static std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2, std::byte const h3) noexcept {
     uint32_t const combined = static_cast<uint32_t>(h1) << 16| static_cast<uint32_t>(h2) << 8 | static_cast<uint32_t>(h3);
@@ -37,16 +40,32 @@ static std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2,
 
 static uint8_t base64_decode_single(char const c) {
     auto const decoded = decode_lut[static_cast<size_t>(c)];
-    if (decoded < 0) {
+    if (decoded == 127) {
         throw std::runtime_error{"xsd:base64Binary parsing error: invalid digit"};
     }
 
-    return static_cast<uint8_t>(decoded);
+    return decoded;
 }
 
 static std::array<std::byte, 3> base64_decode(char const c1, char const c2, char const c3, char const c4) {
+    /*
+     *  visualization of the 'combined' variable
+     *  put 4 hextets / 6-bit units into it then extract 3 bytes / 8-bit units
+     *
+     *  | encoded 1             | encoded 2             | encoded 3             | encoded 4             | input chars, decoded with base64_decode_single
+     *  | 5   4   3   2   1   0 | 5   4   3   2   1   0 | 5   4   3   2   1   0 | 5   4   3   2   1   0 | (only lower 6 bits used because base64 is a 6 bit encoding)
+     *  |           |           |           |           |           |           |           |           |
+     *  |           |           |           |           |           |           |           |           |
+     *  |           v           |           v           |           v           |           v           |
+     *  | 7   6   5   4   3   2   1   0 | 7   6   5   4   3   2   1   0 | 7   6   5   4   3   2   1   0 |
+     *  | decoded 1                     | decoded 2                     | decoded 3                     | <- first 24 bits / 4 hextets / 3 bytes of combined
+     *
+     *
+     *  see https://de.wikipedia.org/wiki/Base64#/media/Datei:Base64-de.png
+     */
     uint32_t const combined = (base64_decode_single(c1) << 18) | (base64_decode_single(c2) << 12) | (base64_decode_single(c3) << 6) | base64_decode_single(c4);
 
+    // extract 3 bytes back out of combined
     uint8_t const b1 = (combined >> 16) & 0b1111'1111;
     uint8_t const b2 = (combined >> 8) & 0b1111'1111;
     uint8_t const b3 = combined & 0b1111'1111;
@@ -60,7 +79,7 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
         return Base64BinaryRepr{};
     }
 
-    size_t const len = std::count_if(base64encoded.begin(), base64encoded.end(), [](auto const ch) { return ch != ' '; });
+    size_t const len = std::count_if(base64encoded.begin(), base64encoded.end(), [](auto const ch) noexcept { return ch != ' '; });
     if (len % 4 != 0) {
         throw std::runtime_error{"xsd:base64Binary parsing error: Invalid number of digits."};
     }
@@ -124,30 +143,33 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
 }
 
 std::string Base64BinaryRepr::to_encoded() const noexcept {
-    if (this->empty()) {
+    if (this->n_bytes() == 0) {
         return "";
     }
 
     std::string buf;
-    for (size_t triple = 0; triple < this->size() / 3; ++triple) {
-        auto const b1 = (*this)[triple * 3];
-        auto const b2 = (*this)[triple * 3 + 1];
-        auto const b3 = (*this)[triple * 3 + 2];
+    for (size_t triple = 0; triple < this->n_bytes() / 3; ++triple) {
+        // encode all full 3-byte chunks, last chunk that is potentially less than 3 bytes will be handled separately
+
+        auto const b1 = this->byte(triple * 3);
+        auto const b2 = this->byte(triple * 3 + 1);
+        auto const b3 = this->byte(triple * 3 + 2);
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
         std::copy(encoded.begin(), encoded.end(), std::back_inserter(buf));
     }
 
-    if (auto const rest = this->size() % 3; rest != 0) {
-        auto const triple = this->size() / 3;
+    if (auto const rest = this->n_bytes() % 3; rest != 0) {
+        // there is a chunk that is not complete, i.e. < 3 bytes large
+        auto const triple = this->n_bytes() / 3;
 
-        auto const b1 = (*this)[triple * 3];
-        auto const b2 = triple * 3 + 1 < this->size() ? (*this)[triple * 3 + 1] : std::byte{0};
-        auto const b3 = triple * 3 + 2 < this->size() ? (*this)[triple * 3 + 2] : std::byte{0};
+        auto const b1 = this->byte(triple * 3);
+        auto const b2 = triple * 3 + 1 < this->n_bytes() ? this->byte(triple * 3 + 1) : std::byte{0}; // maybe add padding byte for encoding
+        auto const b3 = triple * 3 + 2 < this->n_bytes() ? this->byte(triple * 3 + 2) : std::byte{0}; // maybe add padding byte for encoding
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        std::copy_n(encoded.begin(), 4 - (3 - rest), std::back_inserter(buf));
-        std::fill_n(std::back_inserter(buf), 3 - rest, '=');
+        std::copy_n(encoded.begin(), 4 - (3 - rest), std::back_inserter(buf)); // add non-padding / data hextets
+        std::fill_n(std::back_inserter(buf), 3 - rest, '='); // add padding hextets to signal that padding bytes were used
     }
 
     return buf;
@@ -157,15 +179,23 @@ std::byte Base64BinaryRepr::hextet(size_t const n) const noexcept {
     auto const triple = n / 4 * 3;
     auto const off = (3 - (n % 4)) * 6;
 
-    uint32_t const bytes = static_cast<uint32_t>((*this)[triple]) << 16
-                           | (triple + 1 < this->size() ? static_cast<uint32_t>((*this)[triple + 1]) << 8 : 0)
-                           | (triple + 2 < this->size() ? static_cast<uint32_t>((*this)[triple + 2]) : 0);
+    uint32_t const selected_bytes = static_cast<uint32_t>(this->byte(triple)) << 16
+                                    | (triple + 1 < this->n_bytes() ? static_cast<uint32_t>(this->byte(triple + 1)) << 8 : 0)
+                                    | (triple + 2 < this->n_bytes() ? static_cast<uint32_t>(this->byte(triple + 2)) : 0);
 
-    return static_cast<std::byte>((bytes >> off) & 0b11'1111);
+    return static_cast<std::byte>((selected_bytes >> off) & 0b11'1111);
 }
 
 size_t Base64BinaryRepr::n_hextets() const noexcept {
-    return 4 * (this->size() / 3 + (this->size() % 3 != 0));
+    return 4 * (this->n_bytes() / 3 + (this->n_bytes() % 3 != 0));
+}
+
+std::byte Base64BinaryRepr::byte(size_t n) const noexcept {
+    return this->bytes[n];
+}
+
+size_t Base64BinaryRepr::n_bytes() const noexcept {
+    return this->bytes.size();
 }
 
 template<>

@@ -13,10 +13,11 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * Represents a decoded base64 value as a sequence of bytes.
  * Bytes are stored in the same order as the encoded hextets.
  */
-struct Base64BinaryRepr : std::vector<std::byte> {
+struct Base64BinaryRepr {
+    std::vector<std::byte> bytes;
+
     /**
      * Constructs a Base64BinaryRepr from an encoded base64 value string
-     *
      * @param base64encoded encoded base64 value
      * @return decoded base64 value
      */
@@ -39,6 +40,17 @@ struct Base64BinaryRepr : std::vector<std::byte> {
      * @note count includes padding hextets
      */
     [[nodiscard]] size_t n_hextets() const noexcept;
+
+    /**
+     * @param n the index of the byte to extract
+     * @return the n-th byte in this decoded base64 value
+     */
+     [[nodiscard]] std::byte byte(size_t n) const noexcept;
+
+     /**
+      * @return the number of bytes in this decoded base64 value
+      */
+     [[nodiscard]] size_t n_bytes() const noexcept;
 
     std::strong_ordering operator<=>(Base64BinaryRepr const &) const noexcept = default;
 };

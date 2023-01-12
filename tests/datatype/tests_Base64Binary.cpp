@@ -6,24 +6,25 @@
 using namespace rdf4cpp::rdf::datatypes::xsd;
 
 // ascii -> value
-// note: modified to decode '=' to 0
-static constexpr std::array<int8_t, 128> decode_lut{-1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  62,  -1,  -1,  -1,  63,
-                                                    52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  -1,  -1,  -1,   0,  -1,  -1,
-                                                    -1,   0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
-                                                    15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  -1,  -1,  -1,  -1,  -1,
-                                                    -1,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,
-                                                    41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,  -1,  -1,  -1,  -1,  -1};
+// note: modified to decode '=' to 0 because the original table is not supposed to be used to decode padding hextets
+// as they need special handling during decoding, here however when extracting hextets we are expecting padding hextets to have a value of 0
+static constexpr std::array<uint8_t, 128> decode_lut{127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,
+                                                     127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,
+                                                     127,  127,  127,  127,  127,  127,  127,  127,  127,  127,  127,   62,  127,  127,  127,   63,
+                                                      52,   53,   54,   55,   56,   57,   58,   59,   60,   61,  127,  127,  127,    0,  127,  127,
+                                                     127,    0,    1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12,   13,   14,
+                                                      15,   16,   17,   18,   19,   20,   21,   22,   23,   24,   25,  127,  127,  127,  127,  127,
+                                                     127,   26,   27,   28,   29,   30,   31,   32,   33,   34,   35,   36,   37,   38,   39,   40,
+                                                      41,   42,   43,   44,   45,   46,   47,   48,   49,   50,   51,  127,  127,  127,  127,  127};
 
 static std::byte base64_decode_single(char const c) {
     auto const decoded = decode_lut[static_cast<size_t>(c)];
-    REQUIRE(decoded >= 0);
+    REQUIRE(decoded != 127);
     return static_cast<std::byte>(decoded);
 }
 
 TEST_SUITE("base64Binary") {
-    TEST_CASE("canonical") {
+    TEST_CASE("canonicalization") {
         SUBCASE("zero pad") {
             std::string_view const s = "U29tZSBzdHJpbmcgaGVy";
             auto const b64 = Base64Binary::from_string(s);
@@ -41,6 +42,7 @@ TEST_SUITE("base64Binary") {
             std::string_view const s = "SGVsbG8gV29ybGQ=";
             auto const b64 = Base64Binary::from_string(s);
             CHECK(b64.n_hextets() == s.size());
+            CHECK(b64.n_bytes() == std::string_view{"Hello World"}.size());
 
             auto const back = b64.to_encoded();
             CHECK(s == back);
