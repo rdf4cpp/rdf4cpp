@@ -32,6 +32,7 @@ struct Base64BinaryRepr {
     /**
      * @param n the index of the hextet to extract
      * @return the n-th hextet in this decoded base64 value
+     * @warning the provided index n must be less than n_hextets() otherwise the behaviour is undefined
      */
     [[nodiscard]] std::byte hextet(size_t n) const noexcept;
 
@@ -44,6 +45,7 @@ struct Base64BinaryRepr {
     /**
      * @param n the index of the byte to extract
      * @return the n-th byte in this decoded base64 value
+     * @warning the provided index n must be less than n_bytes() otherwise the behaviour is undefined
      */
      [[nodiscard]] std::byte byte(size_t n) const noexcept;
 

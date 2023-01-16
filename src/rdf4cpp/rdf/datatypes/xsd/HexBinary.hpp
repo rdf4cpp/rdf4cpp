@@ -35,6 +35,7 @@ struct HexBinaryRepr {
      * @param n index of half-octet / hex digit to extract
      * @return the n-th half-octet of this byte sequence
      * @note the least significant half-octet has index 0
+     * @warning the provided index n must be less than n_half_octets() otherwise the behaviour is undefined
      */
     [[nodiscard]] std::byte half_octet(size_t n) const noexcept;
 
@@ -47,6 +48,7 @@ struct HexBinaryRepr {
      * @param n index of the byte to extract
      * @return the n-th byte of this sequence
      * @note the bytes are stored in order least significant to most significant (i.e. index 0 is least significant).
+     * @warning the provided index n must be less than n_bytes() otherwise the behaviour is undefined
      */
     [[nodiscard]] std::byte byte(size_t n) const noexcept;
 
