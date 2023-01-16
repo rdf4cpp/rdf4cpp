@@ -16,6 +16,25 @@ std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value) 
 }
 
 template<>
+std::string capabilities::Default<xsd_double>::display(cpp_type const &value) noexcept {
+    if (value == 0) {
+        return std::signbit(value) ? "-0" : "0";
+    }
+
+    if (auto const abs = std::abs(value); abs >= 0.000001 && abs < 1000000) {
+        static constexpr size_t buf_sz = 2 + std::numeric_limits<cpp_type>::max_exponent10 + std::numeric_limits<cpp_type>::max_digits10;
+        std::array<char, buf_sz> buf;
+
+        auto const res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::fixed);
+        assert(res.ec == std::errc{});
+
+        return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    }
+
+    return to_string(value);
+}
+
+template<>
 bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &value) noexcept {
     return !std::isnan(value) && value != 0.0;
 }

@@ -9,7 +9,8 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
-    static std::regex const decimal_regex{R"#((\+|-)?[0-9]+\.[0-9]*)#", std::regex_constants::optimize};
+    // https://www.w3.org/TR/xmlschema11-2/#decimal
+    static std::regex const decimal_regex{R"#((\+|-)?([0-9]+(\.[0-9]*)?|\.[0-9]+))#", std::regex_constants::optimize};
 
     if (!std::regex_match(s.begin(), s.end(), decimal_regex)) {
         throw std::runtime_error{"XSD Parsing Error"};
@@ -19,15 +20,11 @@ capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>:
         s.remove_prefix(1);
     }
 
-    try {
-        return cpp_type{s};
-    } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"xsd:decimal parsing error: "} + e.what()};
-    }
+    return cpp_type{s};
 }
 
 template<>
-std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) noexcept {
+std::string capabilities::Default<xsd_decimal>::to_string(cpp_type const &value) noexcept {
     auto s = value.str(std::numeric_limits<cpp_type>::digits10, std::ios_base::fixed | std::ios_base::showpoint);
     auto const non_zero_pos = s.find_last_not_of('0');
 
@@ -42,6 +39,11 @@ std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value)
     s.resize(non_zero_pos + 1 + static_cast<std::string::size_type>(s[non_zero_pos] == '.'));
 
     return s;
+}
+
+template<>
+std::string capabilities::Default<xsd_decimal>::display(cpp_type const &value) noexcept {
+    return value.str();
 }
 
 template<>

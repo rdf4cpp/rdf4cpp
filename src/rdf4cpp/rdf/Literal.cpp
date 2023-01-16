@@ -49,6 +49,27 @@ Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
     return Literal::make_simple_unchecked(this->lexical_form(), node_storage);
 }
 
+util::CowString Literal::display() const noexcept {
+    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+    if (entry == nullptr) {
+        return util::CowString{util::ownership_tag::borrowed, this->handle_.literal_backend().lexical_form};
+    }
+
+    if (this->is_inlined()) {
+        assert(entry->inlining_ops.has_value());
+
+        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        return util::CowString{util::ownership_tag::owned, entry->display_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
+    }
+
+    auto const value = entry->factory_fptr(this->handle_.literal_backend().lexical_form);
+    return util::CowString{util::ownership_tag::owned, entry->display_fptr(value)};
+}
+
+Literal Literal::as_display(Node::NodeStorage &node_storage) const noexcept {
+    return Literal::make_simple_unchecked(this->display(), node_storage);
+}
+
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_id() == datatypes::rdf::LangString::datatype_id) {
         return handle_.literal_backend().language_tag;
@@ -149,8 +170,8 @@ std::any Literal::value() const noexcept {
         auto const &lit = this->handle_.literal_backend();
 
         return registry::LangStringRepr{
-            .lexical_form = std::string{lit.lexical_form},
-            .language_tag = std::string{lit.language_tag}};
+            .lexical_form = lit.lexical_form,
+            .language_tag = lit.language_tag};
     }
 
     if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
@@ -247,16 +268,6 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         return static_cast<Literal>(this->to_node_storage(node_storage));
     }
 
-    if (target_dtid == Boolean::datatype_id) {
-        // any -> bool
-        return this->ebv_as_literal(node_storage);
-    }
-
-    if (target_dtid == String::datatype_id) {
-        // any -> string
-        return this->as_lexical_form(node_storage);
-    }
-
     if (this_dtid == String::datatype_id) {
         // string -> any
         try {
@@ -264,6 +275,16 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         } catch (std::runtime_error const &) {
             return Literal{};
         }
+    }
+
+    if (target_dtid == String::datatype_id) {
+        // any -> string
+        return this->as_display(node_storage);
+    }
+
+    if (target_dtid == Boolean::datatype_id) {
+        // any -> bool
+        return this->ebv_as_literal(node_storage);
     }
 
     auto const *target_e = DatatypeRegistry::get_entry(target_dtid);

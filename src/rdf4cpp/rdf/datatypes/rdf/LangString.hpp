@@ -7,10 +7,17 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 struct LangStringRepr {
-    std::string lexical_form;
-    std::string language_tag;
+    std::string_view lexical_form;
+    std::string_view language_tag;
 
-    auto operator<=>(LangStringRepr const &) const = default;
+    std::weak_ordering operator<=>(LangStringRepr const &other) const noexcept;
+
+    bool operator==(LangStringRepr const &) const noexcept = default;
+    bool operator!=(LangStringRepr const &) const noexcept = default;
+    bool operator<(LangStringRepr const &) const noexcept = default;
+    bool operator<=(LangStringRepr const &) const noexcept = default;
+    bool operator>(LangStringRepr const &) const noexcept = default;
+    bool operator>=(LangStringRepr const &) const noexcept = default;
 };
 
 template<>

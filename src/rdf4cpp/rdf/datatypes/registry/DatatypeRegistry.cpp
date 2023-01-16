@@ -70,6 +70,15 @@ DatatypeRegistry::to_string_fptr_t DatatypeRegistry::get_to_string(DatatypeIDVie
     return res.has_value() ? *res : nullptr;
 }
 
+DatatypeRegistry::to_string_fptr_t DatatypeRegistry::get_display(DatatypeIDView const datatype_id) noexcept {
+    auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
+        return entry.display_fptr;
+    });
+
+    return res.has_value() ? *res : nullptr;
+}
+
+
 DatatypeRegistry::NumericOps const *DatatypeRegistry::get_numerical_ops(DatatypeIDView const datatype_id) noexcept {
     auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
         return &entry.numeric_ops;
