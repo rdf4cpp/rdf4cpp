@@ -12,6 +12,7 @@
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/datatypes/owl.hpp>
+#include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf {
@@ -181,7 +182,7 @@ public:
     template<typename Rng>
     [[nodiscard]] static Literal make_rand_double(Rng &rng = std::random_device{}, NodeStorage &node_storage = NodeStorage::default_instance()) {
         std::uniform_real_distribution dist{0.0, 1.0};
-        return Literal::make<datatypes::xsd::Double>(dist(rng));
+        return Literal::make<datatypes::xsd::Double>(dist(rng), node_storage);
     }
 
     /**
@@ -355,7 +356,7 @@ public:
      * @param pattern regex to match against
      * @return whether this' lexical form matches the regex or Err if this is not string-like
      */
-    [[nodiscard]] util::TriBool regex_match(std::regex const &pattern) const noexcept;
+    [[nodiscard]] util::TriBool regex_match(regex::Regex const &pattern) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -379,7 +380,7 @@ public:
      * @param replacement string to replace the matched pattern
      * @return the new string with the matches substring replaced by replacement
      */
-    [[nodiscard]] Literal regex_replace(std::regex const &pattern, std::string_view replacement, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace

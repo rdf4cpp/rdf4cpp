@@ -14,6 +14,7 @@ endif ()
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
+find_package(re2 REQUIRED)
 
 include(FetchContent)
 
@@ -128,6 +129,10 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
+        src/rdf4cpp/rdf/regex/Regex.cpp
+        src/rdf4cpp/rdf/regex/RegexReplacer.cpp
+        src/rdf4cpp/rdf/regex/private/RegexImpl.cpp
+        src/rdf4cpp/rdf/regex/private/RegexReplacerImpl.cpp
         src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
@@ -171,6 +176,7 @@ target_link_libraries(rdf4cpp
         Boost::headers
         PRIVATE
         fmt::fmt-header-only
+        re2::re2
 )
 
 set_target_properties(rdf4cpp PROPERTIES

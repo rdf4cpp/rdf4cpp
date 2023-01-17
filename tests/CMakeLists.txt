@@ -223,6 +223,14 @@ target_link_libraries(tests_TriBool
 set_property(TARGET tests_TriBool PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_TriBool COMMAND tests_TriBool)
 
+add_executable(tests_Regex util/tests_Regex.cpp)
+target_link_libraries(tests_Regex
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_Regex PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Regex COMMAND tests_Regex)
+
 add_executable(tests_LangString datatype/tests_LangString.cpp)
 target_link_libraries(tests_LangString
         doctest

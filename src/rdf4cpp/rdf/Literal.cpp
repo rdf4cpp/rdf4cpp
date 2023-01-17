@@ -784,44 +784,27 @@ Literal Literal::strlen_as_literal(Node::NodeStorage &node_storage) const noexce
     return Literal::make<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
 }
 
-static std::optional<std::regex::flag_type> translate_regex_flags(std::string_view const xpath_flags) noexcept {
-    bool error = false;
-    auto const regex_flags = std::accumulate(xpath_flags.begin(), xpath_flags.end(), std::regex_constants::ECMAScript, [&error](auto facc, char c) noexcept {
+static regex::Regex::flag_type translate_regex_flags(std::string_view const xpath_flags) {
+    return std::accumulate(xpath_flags.begin(), xpath_flags.end(), regex::RegexFlags::none(), [](auto facc, char c) {
         switch (c) {
-            case 'm':
-                return facc | std::regex_constants::multiline;
-            case 'i':
-                return facc | std::regex_constants::icase;
             case 's':
-            case 'x':
+                return facc | regex::RegexFlag::DotAll;
+            case 'i':
+                return facc | regex::RegexFlag::CaseInsensitive;
             case 'q':
-                // TODO: support s, x, q
-                // ignoring for now
-                return facc;
+                return facc | regex::RegexFlag::Literal;
             default:
-                error = true;
-                return facc;
+                throw std::runtime_error{std::string{"Encountered unsupported regex flag: "} + c};
         }
     });
-
-    if (error) {
-        return std::nullopt;
-    }
-
-    return regex_flags;
 }
 
-util::TriBool Literal::regex_match(std::regex const &pattern) const noexcept {
+util::TriBool Literal::regex_match(regex::Regex const &pattern) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
-    auto const s = this->lexical_form();
-    try {
-        return std::regex_search(s.begin(), s.end(), pattern);
-    } catch (std::regex_error const &) {
-        return util::TriBool::Err;
-    }
+    return pattern.regex_search(this->lexical_form());
 }
 
 Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
@@ -833,15 +816,11 @@ Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node:
         return Literal{};
     }
 
-    auto const regex_flags = translate_regex_flags(flags.lexical_form());
-    if (!regex_flags.has_value()) {
-        return Literal{};
-    }
-
-    auto const re = [&]() noexcept -> std::optional<std::regex> {
+    auto const re = [&]() noexcept -> std::optional<regex::Regex> {
         try {
-            return std::regex{std::string{pattern.lexical_form()}, *regex_flags};
-        } catch (std::regex_error const &) {
+            auto const regex_flags = translate_regex_flags(flags.lexical_form());
+            return regex::Regex{pattern.lexical_form(), regex_flags};
+        } catch (std::runtime_error const &) {
             return std::nullopt;
         }
     }();
@@ -853,24 +832,15 @@ Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node:
     return Literal::make_boolean(this->regex_match(*re), node_storage);
 }
 
-Literal Literal::regex_replace(std::regex const &pattern, std::string_view const replacement, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::regex_replace(regex::RegexReplacer const &replacer, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
 
-    auto const new_str = [&]() noexcept -> std::optional<std::string> {
-        try {
-            return std::regex_replace(std::string{this->lexical_form()}, pattern, std::string{replacement});
-        } catch (std::regex_error const &) {
-            return std::nullopt;
-        }
-    }();
+    std::string lf{this->lexical_form()};
+    replacer.regex_replace(lf);
 
-    if (!new_str.has_value()) {
-        return Literal{};
-    }
-
-    return Literal::make_string_like_copy_lang_tag(*new_str, *this, node_storage);
+    return Literal::make_string_like_copy_lang_tag(lf, *this, node_storage);
 }
 
 Literal Literal::regex_replace(Literal const &pattern, Literal const &replacement, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
@@ -882,15 +852,11 @@ Literal Literal::regex_replace(Literal const &pattern, Literal const &replacemen
         return Literal{};
     }
 
-    auto const regex_flags = translate_regex_flags(flags.lexical_form());
-    if (!regex_flags.has_value()) {
-        return Literal{};
-    }
-
-    auto const re = [&]() noexcept -> std::optional<std::regex> {
+    auto const re = [&]() noexcept -> std::optional<regex::Regex> {
         try {
-            return std::regex{std::string{pattern.lexical_form()}, *regex_flags};
-        } catch (std::regex_error const &) {
+            auto const regex_flags = translate_regex_flags(flags.lexical_form());
+            return regex::Regex{pattern.lexical_form(), regex_flags};
+        } catch (std::runtime_error const &) {
             return std::nullopt;
         }
     }();
@@ -899,7 +865,19 @@ Literal Literal::regex_replace(Literal const &pattern, Literal const &replacemen
         return Literal{};
     }
 
-    return this->regex_replace(*re, replacement.lexical_form(), node_storage);
+    auto const repl = [&]() noexcept -> std::optional<regex::RegexReplacer> {
+        try {
+            return re->make_replacer(replacement.lexical_form());
+        } catch (std::runtime_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!repl.has_value()) {
+        return Literal{};
+    }
+
+    return this->regex_replace(*repl, node_storage);
 }
 
 util::TriBool Literal::contains(std::string_view const needle) const noexcept {
