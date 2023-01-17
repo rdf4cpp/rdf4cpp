@@ -75,6 +75,14 @@ struct Default {
         str_s << value;
         return str_s.str();
     }
+
+    /**
+     * Returns a string representation of a datatype that is intended to be shown in user friendly output.
+     * E.g. when casting to xsd:string
+     */
+    inline static std::string display(cpp_type const &value) noexcept {
+        return to_string(value);
+    }
 };
 
 /**

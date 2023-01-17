@@ -182,11 +182,128 @@ TEST_CASE("Literal - casting") {
         CHECK(lit2.value<Float>() == 1.2f);
     }
 
-    SUBCASE("any -> str") {
-        auto const lit1 = Literal::make<Decimal>(1.5);
-        auto const lit2 = lit1.template cast<String>();
+    SUBCASE("str -> boolean") {
+        SUBCASE("word-form") {
+            auto const lit1 = Literal::make<String>("true");
+            auto const lit2 = lit1.template cast<Boolean>();
 
-        CHECK(lit2.template value<String>() == "1.5");
+            CHECK(lit2.datatype() == IRI{Boolean::identifier});
+            CHECK(lit2.value<Boolean>());
+        }
+
+        SUBCASE("numeric form") {
+            auto const lit1 = Literal::make<String>("1");
+            auto const lit2 = lit1.template cast<Boolean>();
+
+            CHECK(lit2.datatype() == IRI{Boolean::identifier});
+            CHECK(lit2.value<Boolean>());
+        }
+    }
+
+    SUBCASE("any -> str") {
+        SUBCASE("decimal") {
+            SUBCASE("integral") {
+                auto const lit1 = Literal::make<Decimal>(Decimal::cpp_type{"1005.0"});
+                auto const lit2 = lit1.cast<String>();
+
+                CHECK(lit2.value<String>() == "1005");
+            }
+
+            SUBCASE("non-integral") {
+                auto const lit1 = Literal::make<Decimal>(1.5);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "1.5");
+            }
+        }
+
+        SUBCASE("float") {
+            SUBCASE("fixed notation - non-integral") {
+                auto const lit1 = Literal::make<Float>(10.5f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "10.5");
+            }
+
+            SUBCASE("fixed notation - integral") {
+                auto const lit1 = Literal::make<Float>(100000.f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "100000");
+            }
+
+            SUBCASE("large - scientific") {
+                auto const lit1 = Literal::make<Float>(1000001.f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "1.000001E6");
+            }
+
+            SUBCASE("small - scientific") {
+                auto const lit1 = Literal::make<Float>(0.0000009f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "9.0E-7");
+            }
+
+            SUBCASE("zero") {
+                auto const lit1 = Literal::make<Float>(0.0f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "0");
+            }
+
+            SUBCASE("minus zero") {
+                auto const lit1 = Literal::make<Float>(-0.0f);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "-0");
+            }
+        }
+
+        SUBCASE("double") {
+            SUBCASE("fixed notation - non-integral") {
+                auto const lit1 = Literal::make<Double>(10.5);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "10.5");
+            }
+
+            SUBCASE("fixed notation - integral") {
+                auto const lit1 = Literal::make<Double>(100000.0);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "100000");
+            }
+
+            SUBCASE("large - scientific") {
+                auto const lit1 = Literal::make<Double>(1000001.0);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "1.000001E6");
+            }
+
+            SUBCASE("small - scientific") {
+                auto const lit1 = Literal::make<Double>(0.0000009);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "9.0E-7");
+            }
+
+            SUBCASE("zero") {
+                auto const lit1 = Literal::make<Double>(0.0);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "0");
+            }
+
+            SUBCASE("minus zero") {
+                auto const lit1 = Literal::make<Double>(-0.0);
+                auto const lit2 = lit1.template cast<String>();
+
+                CHECK(lit2.template value<String>() == "-0");
+            }
+        }
     }
 
     SUBCASE("any -> bool") {

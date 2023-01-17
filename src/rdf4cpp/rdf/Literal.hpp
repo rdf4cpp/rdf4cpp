@@ -206,6 +206,18 @@ public:
     [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
+     * Returns the user friendly string version of this. This is for example used when casting numerics to string.
+     * @return user friendly string representation
+     */
+    [[nodiscard]] util::CowString display() const noexcept;
+
+    /**
+     * Converts this into it's user friendly string representation as xsd:string. See Literal::display for more details.
+     * @return user friendly string representation of this as xsd:string
+     */
+    [[nodiscard]] Literal as_display(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
      * Returns the datatype IRI of this.
      * @return datatype IRI
      */
@@ -340,8 +352,8 @@ public:
             auto const &lit = this->handle_.literal_backend();
 
             return datatypes::registry::LangStringRepr{
-                    .lexical_form = std::string{lit.lexical_form},
-                    .language_tag = std::string{lit.language_tag}};
+                    .lexical_form = lit.lexical_form,
+                    .language_tag = lit.language_tag};
         }
 
         return LiteralDatatype_t::from_string(this->lexical_form());

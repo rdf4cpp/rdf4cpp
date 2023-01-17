@@ -95,6 +95,13 @@ constexpr size_t log10ceil(T const value) noexcept {
 }
 } // namespace detail
 
+template<size_t N>
+static void string_shift_left(std::array<char, N> &buf, size_t start, size_t end, size_t amt) {
+
+    std::shift_left(&buf[start], &buf[end], amt);
+
+}
+
 /**
  * Serializes a floating point number into its (SPARQL) canonical string representation
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-float
@@ -124,41 +131,46 @@ std::string to_chars(F const value) noexcept {
     static constexpr size_t buf_sz = 5 + std::numeric_limits<F>::max_digits10 + std::max(2ul, detail::log10ceil(std::numeric_limits<F>::max_exponent10));
     std::array<char, buf_sz> buf;
 
-    std::to_chars_result res = [&]() {
-        [[maybe_unused]] F integral;
-        F const fraction = std::modf(value, &integral);
-
-        if (fraction == 0) {
-            // include one zero after dot
-            return std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::scientific, 1);
-        } else {
-            // automatic precision guarantees round-trip-safety (https://en.cppreference.com/w/cpp/utility/to_chars)
-            return std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::scientific);
-        }
-    }();
+    std::to_chars_result res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::scientific);
     assert(res.ec == std::errc{});
 
     auto *e_ptr = std::find(buf.data(), res.ptr, 'e');
     assert(e_ptr != res.ptr); // serializing in scientific notation, there must be an 'e'
     *e_ptr = 'E'; // convert 'e' to 'E' as required by the SPARQL standard
 
-    auto const shift_amt = [&]() {
-        auto *exp_start_ptr = e_ptr + 2;
-        if (auto *non_zero_exp_ptr = std::find_if(exp_start_ptr, res.ptr, [](char const c) { return c != '0'; }); non_zero_exp_ptr != res.ptr) {
-            // exponent has leading zeros
-            // shift such that leading zeros get shifted out
-            return non_zero_exp_ptr - exp_start_ptr;
-        } else {
-            // exponent is only zeros
-            // shift such that one zero remains
-            return res.ptr - exp_start_ptr - 1;
-        }
-    }();
+    if (auto *dot_ptr = buf.data() + 1; dot_ptr == e_ptr) {
+        // mantissa is in integer format therefore missing '.0' after mantissa
 
-    auto const shift_off = static_cast<std::string::size_type>(*(e_ptr + 1) == '+'); // needed to shift potential '+' out as well
+        // make space for '.0' by shifting exponent right
+        std::shift_right(e_ptr, buf.data() + buf.size(), 2);
 
-    auto *new_end = std::shift_left(e_ptr + 1 + (1 - shift_off), res.ptr, shift_amt + shift_off); // shift out all leading zeros and plus sign from exponent
-    return std::string{buf.data(), static_cast<std::string::size_type>(new_end - buf.data())};
+        // write '.0'
+        dot_ptr[0] = '.';
+        dot_ptr[1] = '0';
+
+        // adjust reference pointers
+        e_ptr += 2;
+        res.ptr += 2;
+    }
+
+    {
+        // remove potential leading zeros and '+' in exponent
+        std::string_view const exponent{e_ptr + 2, res.ptr};
+
+        auto const shift_amt = [&]() {
+            if (auto const non_zero_pos = exponent.find_first_not_of('0'); non_zero_pos != std::string::npos) {
+                return non_zero_pos;
+            }
+
+            // exponent is only zeroes, keep 1 zero
+            return exponent.size() - 1;
+        }();
+
+        auto const shift_off = static_cast<std::string::size_type>(e_ptr[1] == '+'); // need to shift potential '+' out as well
+        res.ptr = std::shift_left(e_ptr + 1 + (1 - shift_off), res.ptr, shift_amt + shift_off); // shift out all leading zeros and plus sign from exponent
+    }
+
+    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util
