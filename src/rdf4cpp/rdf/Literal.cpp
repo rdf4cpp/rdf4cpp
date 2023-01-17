@@ -1,5 +1,6 @@
 #include "Literal.hpp"
 
+#include <cwchar>
 #include <sstream>
 
 #include <rdf4cpp/rdf/IRI.hpp>
@@ -772,10 +773,21 @@ std::optional<size_t> Literal::strlen() const noexcept {
         return std::nullopt;
     }
 
-    return this->lexical_form().size();
+    auto const lf = this->lexical_form();
+    auto ptr = lf.data();
+
+    std::mbstate_t state{};
+
+    auto const len = std::mbsrtowcs(nullptr, &ptr, lf.size(), &state);
+    if (len == static_cast<size_t>(-1)) {
+        // invalid multibyte character was encountered
+        return std::nullopt;
+    }
+
+    return len;
 }
 
-Literal Literal::strlen_as_literal(Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
     auto const len = this->strlen();
     if (!len.has_value()) {
         return Literal{};

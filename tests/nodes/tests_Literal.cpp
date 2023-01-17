@@ -345,10 +345,13 @@ TEST_CASE("Literal - misc functions") {
     using namespace rdf4cpp::rdf;
 
     SUBCASE("strlen") {
-        CHECK("12345"_xsd_string .strlen_as_literal() == 5_xsd_integer);
-        CHECK(1_xsd_int .strlen_as_literal().null());
-        CHECK("123"_xsd_string .strlen() == 3);
-        CHECK(Literal{"hello", "en"}.strlen() == 5);
+        CHECK("12345"_xsd_string .as_strlen() == 5_xsd_integer);
+        CHECK(1_xsd_int .as_strlen().null());
+        CHECK("123"_xsd_string .as_strlen() == 3_xsd_integer);
+        CHECK(Literal{"hello", "en"}.as_strlen() == 5_xsd_integer);
+
+        std::setlocale(LC_ALL, "en_US.utf8");
+        CHECK("z\u00df\u6c34\U0001f34c"_xsd_string .as_strlen() == 4_xsd_integer); // "zß水🍌"
     }
 
     SUBCASE("substr") {

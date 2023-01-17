@@ -348,7 +348,7 @@ public:
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
      * @return the length this' lexical form (as xsd:integer) if it is string-like otherwise the null literal
      */
-    [[nodiscard]] Literal strlen_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_strlen(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
