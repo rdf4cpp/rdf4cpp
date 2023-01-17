@@ -351,6 +351,22 @@ public:
     [[nodiscard]] Literal as_strlen(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-langMatches
+     * @param lang_range a basic language range
+     * @return whether the language tag of this matches the given lang range if this is string-like, otherwise Err
+     */
+    [[nodiscard]] util::TriBool lang_matches(std::string_view lang_range) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @param lang_range a basic language range as xsd:string
+     * @return whether the language tag of this matches the given lang range or the null literal if
+     *      - this is not string-like
+     *      - lang_range is not xsd:string
+     */
+    [[nodiscard]] Literal lang_matches(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
      *
      * @param pattern regex to match against

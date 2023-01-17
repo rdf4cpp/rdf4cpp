@@ -3,6 +3,8 @@
 #include <cwchar>
 #include <sstream>
 
+#include <utf8cpp/utf8.h>
+
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 
@@ -774,17 +776,11 @@ std::optional<size_t> Literal::strlen() const noexcept {
     }
 
     auto const lf = this->lexical_form();
-    auto ptr = lf.data();
-
-    std::mbstate_t state{};
-
-    auto const len = std::mbsrtowcs(nullptr, &ptr, lf.size(), &state);
-    if (len == static_cast<size_t>(-1)) {
-        // invalid multibyte character was encountered
+    try {
+        return utf8::distance(lf.begin(), lf.end());
+    } catch (utf8::exception const &) {
         return std::nullopt;
     }
-
-    return len;
 }
 
 Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
@@ -794,6 +790,38 @@ Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
     }
 
     return Literal::make<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
+}
+
+util::TriBool Literal::lang_matches(std::string_view const lang_range) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto const lang = this->language_tag();
+
+    if (lang_range.empty()) {
+        return lang.empty();
+    }
+
+    if (lang_range == "*") {
+        return !lang.empty();
+    }
+
+    assert(false);
+    // TODO: comment in when other PR merged
+    /*auto const lang_ci = datatypes::registry::util::LangTagView{lang.data(), lang.size()};
+    auto const lang_range_ci = datatypes::registry::util::LangTagView{lang_range.data(), lang_range.size()};
+
+    return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');*/
+}
+
+Literal Literal::lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
+    if (lang_range.datatype_id() != datatypes::xsd::String::datatype_id) {
+        return Literal{};
+    }
+
+    auto const res = this->lang_matches(lang_range.lexical_form());
+    return Literal::make_boolean(res, node_storage);
 }
 
 static regex::Regex::flag_type translate_regex_flags(std::string_view const xpath_flags) {
@@ -1105,7 +1133,6 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
 
     return this->substr(start_ix, len_ix, node_storage);
 }
-
 
 inline namespace literals {
 
