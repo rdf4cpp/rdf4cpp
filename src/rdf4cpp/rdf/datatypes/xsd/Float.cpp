@@ -17,6 +17,8 @@ std::string capabilities::Default<xsd_float>::to_string(cpp_type const &value) n
 
 template<>
 std::string capabilities::Default<xsd_float>::display(cpp_type const &value) noexcept {
+    std::abort();
+
     if (value == 0) {
         return std::signbit(value) ? "-0" : "0";
     }
