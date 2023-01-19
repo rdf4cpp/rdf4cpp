@@ -29,6 +29,9 @@ template<>
 std::string capabilities::Default<xsd_decimal>::to_string(const cpp_type &value) noexcept;
 
 template<>
+std::string capabilities::Default<xsd_decimal>::display(cpp_type const &value) noexcept;
+
+template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::add_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::add(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 template<>
