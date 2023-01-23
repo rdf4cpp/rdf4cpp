@@ -37,10 +37,10 @@ jobs:
 
       - name: use mold as default linker
         uses: rui314/setup-mold@v1
-      - name: Install systemlib and boost for FetchContent
+      - name: Install systemlib boost and re2 for FetchContent
         run: |
           # FetchContent does not handle transitive dependencies and doesn't run conan.
-          sudo apt-get install libboost-math-dev
+          sudo apt-get install libboost-math-dev libre2-dev
       - name: Check out sources
         uses: actions/checkout@v3
 
