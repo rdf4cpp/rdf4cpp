@@ -21,6 +21,16 @@ concept template_invocable_r = requires (F f) {
                                   { f.template operator()<Ts...>() } -> std::convertible_to<R>;
                               };
 
+template<typename F, auto ...vals>
+concept value_template_invocable = requires (F f) {
+                                       f.template operator()<vals...>();
+                                   };
+
+template<typename F, auto ...vals>
+concept nothrow_value_template_invocable = requires (F f) {
+                                               noexcept(f.template operator()<vals...>());
+                                           };
+
 template<typename R, typename F, typename ...Ts>
 concept nothrow_template_invocable = requires (F f) {
                                          noexcept(f.template operator()<Ts...>());
@@ -65,6 +75,11 @@ template<typename FoldF, typename Acc, typename ...Ts> requires (mixed_invocable
 constexpr Acc type_list_fold_impl(mz::type_list<Ts...>, Acc init, FoldF f) noexcept(noexcept((nothrow_mixed_invocable<FoldF, Ts, Acc> && ...))) {
     ((init = f.template operator()<Ts>(std::move(init))), ...);
     return init;
+}
+
+template<size_t ...ixs, typename F> requires (value_template_invocable<F, ixs> && ...)
+constexpr auto type_list_generate_impl(std::index_sequence<ixs...>, F f) noexcept(noexcept((nothrow_value_template_invocable<F, ixs> && ...))) {
+    return mz::type_list<decltype(f.template operator()<ixs>())...>{};
 }
 
 } // namespace type_list_detail
@@ -173,6 +188,26 @@ constexpr void type_list_for_each_with(Init init, FoldF f) noexcept(noexcept(typ
     type_list_fold<List>(std::move(init), f);
 }
 
+/**
+ * Generates a type list of count by repeatedly calling f.template operator()<ix>() for
+ * all indices in [0, count).
+ *
+ * @param f a value template callable function that generates the types
+ * @return a type list with the generated types
+ *
+ * @example
+ * @code
+ * using list_t = decltype(type_list_generate<2>([]<size_t ix>() {
+ *    return std::integral_constant<size_t, ix>{};
+ * }));
+ *
+ * static_assert(std::is_same_v<list_t, mz::type_list<std::integral_constant<size_t, 0>, std::integral_constant<size_t, 1>>>);
+ * @endcode
+ */
+template<size_t count, typename F>
+constexpr auto type_list_generate(F f) noexcept(noexcept(type_list_detail::type_list_generate_impl(std::make_index_sequence<count>{}, f))) {
+    return type_list_detail::type_list_generate_impl(std::make_index_sequence<count>{}, f);
+}
 
 /**
  * Check if all given types in the Ts parameter pack are equal.

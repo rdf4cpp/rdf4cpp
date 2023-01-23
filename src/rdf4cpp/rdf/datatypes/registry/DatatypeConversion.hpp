@@ -59,7 +59,7 @@ consteval ConversionLayer auto make_conversion_layer_impl() {
         // This is problematic when trying to jump to the common subtype level for both arguments
         // because while in the graph they are visually at the correct level, their subtype ranks do not reflect that.
         // The same problem exists when a supertype (or promoted type) has a subtype (promotion) rank that is not exactly one less than the origin type's rank.
-        static_assert(RankRule<Type, typename next::converted>::value,
+        static_assert(RankRule<Type, typename next::template converted<0>>::value,
                       "detected invalid hierarchy, would not be able to discover all conversions");
 
         // conversion must preserve numericity, so:
@@ -67,62 +67,71 @@ consteval ConversionLayer auto make_conversion_layer_impl() {
         // This is because the numeric operations assume that if any of the operands is not numeric
         // the common type and the result type will also not be numeric to allow for an early return
         // without doing the actual conversion.
-        static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::converted>) || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::converted>),
+        static_assert((NumericLiteralDatatype<Type> && NumericLiteralDatatype<typename next::template converted<0>>) || (!NumericLiteralDatatype<Type> && !NumericLiteralDatatype<typename next::template converted<0>>),
                       "conversion must preserve numericity");
 
         // conversion cannot downgrade impl-numericity class back to stub-numericity, so:
         // NumericImplLiteralDatatype<Type> -> NumericImplLiteralDatatype<typename next::converted>
         // This is required so that skipping to a numeric-impl in the hierarchy will guarantee
         // that we can only find numeric impls from now on, which ensures the search algorithm can be single pass.
-        static_assert(!NumericImplLiteralDatatype<Type> || NumericImplLiteralDatatype<typename next::converted>,
+        static_assert(!NumericImplLiteralDatatype<Type> || NumericImplLiteralDatatype<typename next::template converted<0>>,
                       "conversion must preserve impl-numericity");
 
         // conversion must preserve comparability, so:
         // ComparableLiteralDatatype<Type> <-> ComparableLiteralDatatype<typename next::converted>
         // The reasoning is the same as in the static_assert for numericity.
-        static_assert((ComparableLiteralDatatype<Type> && ComparableLiteralDatatype<typename next::converted>) || (!ComparableLiteralDatatype<Type> && !ComparableLiteralDatatype<typename next::converted>),
+        static_assert((ComparableLiteralDatatype<Type> && ComparableLiteralDatatype<typename next::template converted<0>>) || (!ComparableLiteralDatatype<Type> && !ComparableLiteralDatatype<typename next::template converted<0>>),
                       "conversion must preserve comparability");
 
+
         if constexpr (BaseType::identifier == Type::identifier) {
-            struct FirstConversion {
-                using source_type = Type;
-                using target_type = typename next::converted;
+            auto const additional_conversions = util::type_list_generate<next::max_specialization_ix + 1>([]<size_t ix> {
+                struct FirstConversion {
+                    using source_type = Type;
+                    using target_type = typename next::template converted<ix>;
 
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
-                    return next::convert(value);
-                }
-
-                inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
-                    return next::inverse_convert(value);
-                }
-            };
-
-            using next_table = typename LayerAcc::template append<FirstConversion>;
-            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule, next_table>();
-        } else {
-            auto const table_size = LayerAcc::length;
-            using prev_promotion_t = typename LayerAcc::template select<table_size - 1>;
-
-            struct NextConversion {
-                using source_type = typename prev_promotion_t::source_type;
-                using target_type = typename next::converted;
-
-                inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
-                    return next::convert(prev_promotion_t::convert(value));
-                }
-
-                inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
-                    auto const converted = next::inverse_convert(value);
-                    if (!converted.has_value()) {
-                        return nonstd::make_unexpected(converted.error());
+                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
+                        return next::template convert<ix>(value);
                     }
 
-                    return prev_promotion_t::inverse_convert(*converted);
-                }
-            };
+                    inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                        return next::template inverse_convert<ix>(value);
+                    }
+                };
 
-            using next_table = typename LayerAcc::template append<NextConversion>;
-            return make_conversion_layer_impl<BaseType, typename next::converted, Conversion, HasConversion, RankRule, next_table>();
+                return FirstConversion{};
+            });
+
+            using next_table = util::type_list_cat<LayerAcc, decltype(additional_conversions)>;
+            return make_conversion_layer_impl<BaseType, typename next::template converted<next::max_specialization_ix>, Conversion, HasConversion, RankRule, next_table>();
+        } else {
+            constexpr size_t table_size = LayerAcc::length;
+            using prev_promotion_t = typename LayerAcc::template select<table_size - 1>;
+
+            auto const additional_conversions = util::type_list_generate<next::max_specialization_ix + 1>([]<size_t ix> {
+                struct NextConversion {
+                    using source_type = typename prev_promotion_t::source_type;
+                    using target_type = typename next::template converted<ix>;
+
+                    inline static typename target_type::cpp_type convert(typename source_type::cpp_type const &value) noexcept {
+                        return next::template convert<ix>(prev_promotion_t::convert(value));
+                    }
+
+                    inline static nonstd::expected<typename source_type::cpp_type, DynamicError> inverse_convert(typename target_type::cpp_type const &value) noexcept {
+                        auto const converted = next::template inverse_convert<ix>(value);
+                        if (!converted.has_value()) {
+                            return nonstd::make_unexpected(converted.error());
+                        }
+
+                        return prev_promotion_t::inverse_convert(*converted);
+                    }
+                };
+
+                return NextConversion{};
+            });
+
+            using next_table = util::type_list_cat<LayerAcc, decltype(additional_conversions)>;
+            return make_conversion_layer_impl<BaseType, typename next::template converted<next::max_specialization_ix>, Conversion, HasConversion, RankRule, next_table>();
         }
     }
 }
@@ -138,16 +147,22 @@ struct PromoteConversion;
 template<PromotableLiteralDatatype LiteralDatatypeImpl>
 struct PromoteConversion<LiteralDatatypeImpl> {
     using cpp_type = typename LiteralDatatypeImpl::cpp_type;
+    static constexpr size_t max_specialization_ix = LiteralDatatypeImpl::max_promotion_specialization_ix;
 
-    using converted = typename LiteralDatatypeImpl::promoted;
-    using converted_cpp_type = typename LiteralDatatypeImpl::promoted_cpp_type;
+    template<size_t ix>
+    using converted = typename LiteralDatatypeImpl::template promoted<ix>;
 
-    inline static converted_cpp_type convert(cpp_type const &value) noexcept {
-        return LiteralDatatypeImpl::promote(value);
+    template<size_t ix>
+    using converted_cpp_type = typename LiteralDatatypeImpl::template promoted_cpp_type<ix>;
+
+    template<size_t ix>
+    inline static converted_cpp_type<ix> convert(cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::template promote<ix>(value);
     }
 
-    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type const &value) noexcept {
-        return LiteralDatatypeImpl::demote(value);
+    template<size_t ix>
+    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type<ix> const &value) noexcept {
+        return LiteralDatatypeImpl::template demote<ix>(value);
     }
 };
 
@@ -160,16 +175,22 @@ struct SupertypeConversion;
 template<SubtypedLiteralDatatype LiteralDatatypeImpl>
 struct SupertypeConversion<LiteralDatatypeImpl> {
     using cpp_type = typename LiteralDatatypeImpl::cpp_type;
+    static constexpr size_t max_specialization_ix = LiteralDatatypeImpl::max_supertype_specialization_ix;
 
-    using converted = typename LiteralDatatypeImpl::supertype;
-    using converted_cpp_type = typename LiteralDatatypeImpl::super_cpp_type;
+    template<size_t ix>
+    using converted = typename LiteralDatatypeImpl::template supertype<ix>;
 
-    inline static converted_cpp_type convert(cpp_type const &value) noexcept {
-        return LiteralDatatypeImpl::into_supertype(value);
+    template<size_t ix>
+    using converted_cpp_type = typename LiteralDatatypeImpl::template super_cpp_type<ix>;
+
+    template<size_t ix>
+    inline static converted_cpp_type<ix> convert(cpp_type const &value) noexcept {
+        return LiteralDatatypeImpl::template into_supertype<ix>(value);
     }
 
-    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type const &value) noexcept {
-        return LiteralDatatypeImpl::from_supertype(value);
+    template<size_t ix>
+    inline static nonstd::expected<cpp_type, DynamicError> inverse_convert(converted_cpp_type<ix> const &value) noexcept {
+        return LiteralDatatypeImpl::template from_supertype<ix>(value);
     }
 };
 
@@ -318,12 +339,12 @@ consteval ConversionTable auto make_conversion_table() {
         using s_table = decltype(make_subtype_layer<Type>());
 
         // generate the linear promotion table for each supertype
-        auto const other_level_tables = util::type_list_map<s_table>([]<ConversionEntry ToSuper>() {
+        auto const other_level_tables = util::type_list_map<s_table>([]<ConversionEntry ToSuper>() noexcept {
             using level_p_table = decltype(make_promotion_layer<typename ToSuper::target_type>());
 
             // compose each promotion for the supertype with the function to convert to the supertype
             // to get direct conversions from Type to promoted supertype
-            auto const to_promoted_supers = util::type_list_map<level_p_table>([]<ConversionEntry PromoteSuper>() {
+            auto const to_promoted_supers = util::type_list_map<level_p_table>([]<ConversionEntry PromoteSuper>() noexcept {
                 struct PromotedSuperConversion {
                     using source_type = typename ToSuper::source_type;
                     using target_type = typename PromoteSuper::target_type;
