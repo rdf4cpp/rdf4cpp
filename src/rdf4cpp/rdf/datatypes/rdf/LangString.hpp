@@ -33,7 +33,7 @@ inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rd
 }
 
 template<>
-inline std::string capabilities::Default<rdf_lang_string>::to_string(cpp_type const &) noexcept {
+inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(cpp_type const &) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();

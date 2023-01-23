@@ -157,7 +157,7 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
+        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_canonical_string(compatible_value),
                                                         IRI{LiteralDatatype_t::datatype_id, node_storage},
                                                         node_storage);
     }
@@ -201,21 +201,21 @@ public:
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
      *
      * @param node_storage where to put the resulting literal
-     * @return lexical form of this as xsd:string
+     * @return lexical form of this as xsd:string if this is not the null literal, otherwise returns the null literal
      */
     [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
-     * Returns the user friendly string version of this. This is for example used when casting numerics to string.
+     * Returns the simplified/more user friendly string version of this. This is for example used when casting numerics to string.
      * @return user friendly string representation
      */
-    [[nodiscard]] util::CowString display() const noexcept;
+    [[nodiscard]] util::CowString simplified_lexical_form() const noexcept;
 
     /**
-     * Converts this into it's user friendly string representation as xsd:string. See Literal::display for more details.
-     * @return user friendly string representation of this as xsd:string
+     * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
+     * @return user friendly string representation of this as xsd:string if this is not the null literal, otherwise returns the null literal
      */
-    [[nodiscard]] Literal as_display(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_simplified_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Returns the datatype IRI of this.

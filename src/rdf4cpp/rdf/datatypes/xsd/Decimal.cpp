@@ -24,7 +24,7 @@ capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>:
 }
 
 template<>
-std::string capabilities::Default<xsd_decimal>::to_string(cpp_type const &value) noexcept {
+std::string capabilities::Default<xsd_decimal>::to_canonical_string(cpp_type const &value) noexcept {
     auto s = value.str(std::numeric_limits<cpp_type>::digits10, std::ios_base::fixed | std::ios_base::showpoint);
     auto const non_zero_pos = s.find_last_not_of('0');
 
@@ -42,7 +42,7 @@ std::string capabilities::Default<xsd_decimal>::to_string(cpp_type const &value)
 }
 
 template<>
-std::string capabilities::Default<xsd_decimal>::display(cpp_type const &value) noexcept {
+std::string capabilities::Default<xsd_decimal>::to_simplified_string(cpp_type const &value) noexcept {
     return value.str();
 }
 
