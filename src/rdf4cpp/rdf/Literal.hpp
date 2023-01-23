@@ -14,12 +14,13 @@
 #include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
+#include <rdf4cpp/rdf/util/CowString.hpp>
 
 namespace rdf4cpp::rdf {
 class Literal : public Node {
 private:
     /**
-     * @brief the implementation for all numeric, binary operations
+     * the implementation for all numeric, binary operations
      *
      * @tparam OpSelect a function NumericOps -> binop_fptr_t
      * @param op_select is used to select the specific operation to be carried out
@@ -33,7 +34,7 @@ private:
     [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
-     * @brief the implementation for all numeric, unary operations
+     * the implementation for all numeric, unary operations
      *
      * @tparam OpSelect a function NumericOps -> unop_fptr_t
      * @param op_select is used to select the specific operation to be carried out
@@ -68,9 +69,15 @@ private:
     [[nodiscard]] datatypes::registry::DatatypeIDView datatype_id() const noexcept;
 
     /**
+     * @return if the datatype of this is fixed
+     */
+    [[nodiscard]] bool is_fixed() const noexcept;
+
+    /**
      * @return if the datatype of this is simultaneously fixed but not numeric
      */
     [[nodiscard]] bool is_fixed_not_numeric() const noexcept;
+
 
     /**
      * @return if this datatype is either xsd:string or rdf:langString
@@ -83,9 +90,22 @@ private:
     [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
 
     /**
-     * Creates a typed Literal without doing any safety checks or canonicalization.
+     * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates an inlined Literal without any safety checks
+     *
+     * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
+     * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
+     */
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates an inlined or non-inlined typed Literal without any safety checks
+     */
+    [[nodiscard]] static Literal make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
@@ -151,11 +171,17 @@ public:
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
                                                        compatible_value.language_tag,
                                                        node_storage);
-        } else {
-            return Literal::make_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
-                                                 IRI{LiteralDatatype_t::datatype_id, node_storage},
-                                                 node_storage);
         }
+
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+            }
+        }
+
+        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_string(compatible_value),
+                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+                                                        node_storage);
     }
 
     /**
@@ -166,7 +192,7 @@ public:
      * @param node_storage
      * @return
      */
-    static Literal make(std::string_view lexical_form, const IRI &datatype,
+    static Literal make(std::string_view lexical_form, IRI const &datatype,
                         NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
@@ -207,7 +233,7 @@ public:
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
      */
-    [[nodiscard]] std::string_view lexical_form() const noexcept;
+    [[nodiscard]] util::CowString lexical_form() const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -215,7 +241,7 @@ public:
      * @param node_storage where to put the resulting literal
      * @return lexical form of this as xsd:string
      */
-    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_lexical_form(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Returns the datatype IRI of this.
@@ -237,7 +263,7 @@ public:
      * Constructs a datatype specific container from Literal.
      * @return std::any wrapped value. might be empty if type is not registered.
      */
-    [[nodiscard]] std::any value() const;
+    [[nodiscard]] std::any value() const noexcept;
 
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
@@ -606,15 +632,22 @@ public:
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
     typename LiteralDatatype_t::cpp_type value() const noexcept {
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (this->is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                return LiteralDatatype_t::from_inlined(inlined_value);
+            }
+        }
+
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             auto const &lit = this->handle_.literal_backend();
 
             return datatypes::registry::LangStringRepr{
                     .lexical_form = std::string{lit.lexical_form},
                     .language_tag = std::string{lit.language_tag}};
-        } else {
-            return LiteralDatatype_t::from_string(this->lexical_form());
         }
+
+        return LiteralDatatype_t::from_string(this->lexical_form());
     }
 
     friend class Node;

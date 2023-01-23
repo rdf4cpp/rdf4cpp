@@ -44,11 +44,26 @@ std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type co
     }
 }
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_integer>::try_into_inlined(cpp_type const &value) noexcept {
+    if (auto const boundary = 1l << (storage::node::identifier::LiteralID::width - 1); value >= boundary || value < -boundary) [[unlikely]] {
+        return std::nullopt;
+    }
+
+    return util::try_pack_integral<uint64_t, storage::node::identifier::LiteralID::width>(static_cast<int64_t>(value));
+}
+
+template<>
+capabilities::Inlineable<xsd_integer>::cpp_type capabilities::Inlineable<xsd_integer>::from_inlined(uint64_t inlined) noexcept {
+    return cpp_type{util::unpack_integral<int64_t, storage::node::identifier::LiteralID::width>(inlined)};
+}
+
 template struct LiteralDatatypeImpl<xsd_integer,
                                     capabilities::Logical,
                                     capabilities::Numeric,
                                     capabilities::Comparable,
                                     capabilities::Subtype,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

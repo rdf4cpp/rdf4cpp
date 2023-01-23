@@ -110,3 +110,13 @@ TEST_CASE("round-trip") {
     std::cout << lit.lexical_form() << std::endl;
     CHECK(lit.value<datatypes::xsd::Float>() == value);
 }
+
+TEST_CASE("inlining") {
+    using datatypes::xsd::Float;
+
+    Float::cpp_type f = 123.89f;
+    auto const inlined = Float::try_into_inlined(f);
+    auto const deinlined = Float::from_inlined(*inlined);
+
+    CHECK(f == deinlined);
+}

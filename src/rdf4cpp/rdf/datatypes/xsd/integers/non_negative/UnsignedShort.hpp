@@ -40,7 +40,8 @@ extern template struct LiteralDatatypeImpl<xsd_unsigned_short,
                                            capabilities::NumericStub,
                                            capabilities::Subtype,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -52,7 +53,8 @@ struct UnsignedShort : registry::LiteralDatatypeImpl<registry::xsd_unsigned_shor
                                                      registry::capabilities::NumericStub,
                                                      registry::capabilities::Subtype,
                                                      registry::capabilities::Comparable,
-                                                     registry::capabilities::FixedId> {};
+                                                     registry::capabilities::FixedId,
+                                                     registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

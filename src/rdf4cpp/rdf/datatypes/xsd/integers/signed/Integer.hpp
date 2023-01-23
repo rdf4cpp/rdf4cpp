@@ -37,12 +37,19 @@ nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, Dynami
 template<>
 std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
+template<>
+std::optional<uint64_t> capabilities::Inlineable<xsd_integer>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_integer>::cpp_type capabilities::Inlineable<xsd_integer>::from_inlined(uint64_t inlined) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_integer,
                                            capabilities::Logical,
                                            capabilities::Numeric,
                                            capabilities::Comparable,
                                            capabilities::Subtype,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -54,7 +61,8 @@ struct Integer : registry::LiteralDatatypeImpl<registry::xsd_integer,
                                                registry::capabilities::Numeric,
                                                registry::capabilities::Comparable,
                                                registry::capabilities::Subtype,
-                                               registry::capabilities::FixedId> {};
+                                               registry::capabilities::FixedId,
+                                               registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

@@ -23,6 +23,7 @@ template struct LiteralDatatypeImpl<xsd_unsigned_int,
                                     capabilities::NumericStub,
                                     capabilities::Comparable,
                                     capabilities::Subtype,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

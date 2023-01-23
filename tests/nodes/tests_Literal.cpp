@@ -8,32 +8,32 @@ using namespace rdf4cpp::rdf;
 TEST_CASE("Literal - Check for only lexical form") {
 
     auto iri = IRI{"http://www.w3.org/2001/XMLSchema#string"};
-    auto lit1 = Literal{"Bugs Bunny"};
+    auto lit1 = Literal{"Bunny"};
 
     CHECK(not lit1.is_blank_node());
     CHECK(lit1.is_literal());
     CHECK(not lit1.is_variable());
     CHECK(not lit1.is_iri());
-    CHECK(lit1.lexical_form() == "Bugs Bunny");
+    CHECK(lit1.lexical_form() == "Bunny");
     CHECK(lit1.datatype() == iri);
     CHECK(lit1.language_tag() == "");
-    CHECK(std::string(lit1) == "\"Bugs Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
+    CHECK(std::string(lit1) == "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
 }
 
 TEST_CASE("Literal - Check for lexical form with IRI") {
 
     SUBCASE("string datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#string"};
-        auto lit1 = Literal{"Bugs Bunny", iri};
+        auto lit1 = Literal{"Bunny", iri};
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
         CHECK(not lit1.is_variable());
         CHECK(not lit1.is_iri());
-        CHECK(lit1.lexical_form() == "Bugs Bunny");
+        CHECK(lit1.lexical_form() == "Bunny");
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
-        CHECK(std::string(lit1) == "\"Bugs Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
+        CHECK(std::string(lit1) == "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
@@ -131,16 +131,16 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
 TEST_CASE("Literal - Check for lexical form with language tag") {
 
     auto iri = IRI{"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
-    auto lit1 = Literal{"Bugs Bunny", "en"};
+    auto lit1 = Literal{"Bunny", "en"};
 
     CHECK(not lit1.is_blank_node());
     CHECK(lit1.is_literal());
     CHECK(not lit1.is_variable());
     CHECK(not lit1.is_iri());
-    CHECK(lit1.lexical_form() == "Bugs Bunny");
+    CHECK(lit1.lexical_form() == "Bunny");
     CHECK(lit1.datatype() == iri);
     CHECK(lit1.language_tag() == "en");
-    CHECK(std::string(lit1) == "\"Bugs Bunny\"@en");
+    CHECK(std::string(lit1) == "\"Bunny\"@en");
 }
 
 TEST_CASE("Literal - ctor edge-case") {

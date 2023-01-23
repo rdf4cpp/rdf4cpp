@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf.hpp>
 
 using namespace rdf4cpp::rdf;
+using namespace datatypes;
 
 TEST_CASE("Datatype Int") {
 
@@ -76,4 +77,32 @@ TEST_CASE("Datatype Int") {
     CHECK_THROWS(no_discard_dummy = Literal("-2147483648.0001", type_iri));
 
     CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+}
+
+TEST_CASE("32bit positive int inlining") {
+    auto const i = std::numeric_limits<xsd::Int::cpp_type>::max();
+    auto const lit1 = Literal::make<xsd::Int>(i);
+    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+    CHECK(lit1.backend_handle().is_inlined());
+    CHECK(lit2.backend_handle().is_inlined());
+    CHECK(lit1 == lit2);
+
+    auto const extracted1 = lit1.template value<xsd::Int>();
+    auto const extracted2 = lit2.value();
+    CHECK(extracted1 == i);
+    CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
+}
+
+TEST_CASE("32bit negative int inlining") {
+    auto const i = std::numeric_limits<xsd::Int::cpp_type>::min();
+    auto const lit1 = Literal::make<xsd::Int>(i);
+    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+    CHECK(lit1.backend_handle().is_inlined());
+    CHECK(lit2.backend_handle().is_inlined());
+    CHECK(lit1 == lit2);
+
+    auto const extracted1 = lit1.template value<xsd::Int>();
+    auto const extracted2 = lit2.value();
+    CHECK(extracted1 == i);
+    CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
 }

@@ -92,13 +92,16 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp
         src/rdf4cpp/rdf/datatypes/rdf/LangString.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/Base64Binary.cpp
         src/rdf4cpp/rdf/datatypes/xsd/Boolean.cpp
         src/rdf4cpp/rdf/datatypes/xsd/Decimal.cpp
         src/rdf4cpp/rdf/datatypes/xsd/Double.cpp
         src/rdf4cpp/rdf/datatypes/xsd/Float.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/HexBinary.cpp
         src/rdf4cpp/rdf/datatypes/xsd/String.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.cpp
@@ -107,8 +110,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.cpp

@@ -6,6 +6,8 @@
 using namespace rdf4cpp::rdf;
 
 TEST_CASE("rdf:langString") {
+    static_assert(!datatypes::InlineableLiteralDatatype<datatypes::rdf::LangString>, "beware: making rdf:langString inlineable requires additional code in Literal");
+
     CHECK_THROWS(Literal{"hello", IRI{datatypes::rdf::LangString::identifier}});
     CHECK_THROWS(Literal::make("hello", IRI{datatypes::rdf::LangString::identifier}));
 

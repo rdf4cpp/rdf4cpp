@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_DATATYPECONVERSION_HPP
 #define RDF4CPP_DATATYPECONVERSION_HPP
 
-#include <any>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -9,9 +8,10 @@
 
 #include <nonstd/expected.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/TypeList.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/TypeList.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

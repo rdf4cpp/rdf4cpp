@@ -1,5 +1,6 @@
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/Inlining.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -23,6 +24,7 @@ template struct LiteralDatatypeImpl<xsd_int,
                                     capabilities::NumericStub,
                                     capabilities::Comparable,
                                     capabilities::Subtype,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -32,7 +32,14 @@ public:
      * @param node_storage_id  the NodeStorageID
      * @param tagging_bits tagging bits (must be all zero for usage with the backend)
      */
-    explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, uint8_t tagging_bits = {}) noexcept;
+    explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined = false, uint8_t tagging_bits = {}) noexcept;
+
+    /**
+     * Constructor to create an IRI handle for the datatype of a Literal with fixed id datatype
+     * @param lit_handle handle of the literal
+     * @return handle to the datatype of the literal
+     */
+    [[nodiscard]] static NodeBackendHandle datatype_iri_handle_for_fixed_lit_handle(NodeBackendHandle lit_handle) noexcept;
 
     /**
      * Get the RDFNodeType
@@ -78,6 +85,11 @@ public:
      * @return
      */
     [[nodiscard]] NodeID node_id() const noexcept;
+
+    /**
+     * @return Whether the LiteralID is an inlined value or a normal node storage ID
+     */
+    [[nodiscard]] bool is_inlined() const noexcept;
 
     /**
      * Get the free tagging bits

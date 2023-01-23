@@ -82,6 +82,11 @@ public:
      */
     [[nodiscard]] bool is_iri() const noexcept;
 
+    /**
+     * @return if the current value of this node is stored inside the handle instead of the node storage
+     */
+    [[nodiscard]] bool is_inlined() const noexcept;
+
     bool operator==(const Node &other) const noexcept;
 
     std::weak_ordering operator<=>(const Node &other) const noexcept;

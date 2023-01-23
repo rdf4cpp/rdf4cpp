@@ -1,10 +1,12 @@
 #ifndef RDF4CPP_DATATYPES_XSD_HPP
 #define RDF4CPP_DATATYPES_XSD_HPP
 
+#include <rdf4cpp/rdf/datatypes/xsd/Base64Binary.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Double.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/HexBinary.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
 
 #include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.hpp>
