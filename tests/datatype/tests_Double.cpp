@@ -89,6 +89,13 @@ TEST_CASE("Datatype Double") {
     CHECK_THROWS(no_discard_dummy = Literal("454sdsd", type_iri));
 }
 
+TEST_CASE("round-trip") {
+    datatypes::xsd::Double::cpp_type const value = -0.1234567890001;
+    auto const lit = Literal::make<datatypes::xsd::Double>(value);
+    std::cout << lit.lexical_form() << std::endl;
+    CHECK(lit.value<datatypes::xsd::Double>() == value);
+}
+
 TEST_CASE("double inlining") {
     double value = 9999;
     auto lit = Literal::make<datatypes::xsd::Double>(value);

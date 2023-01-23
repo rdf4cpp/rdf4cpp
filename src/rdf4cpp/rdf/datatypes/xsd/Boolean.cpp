@@ -16,7 +16,7 @@ capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>:
 }
 
 template<>
-std::string capabilities::Default<xsd_boolean>::to_string(const cpp_type &value) noexcept {
+std::string capabilities::Default<xsd_boolean>::to_canonical_string(cpp_type const &value) noexcept {
     if (value)  {
         return "true";
     } else {

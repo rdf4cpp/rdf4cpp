@@ -18,9 +18,12 @@ TEST_CASE("rdf:langString") {
 
     Literal const lit3{"hello", "de-DE"};
     Literal const lit4{"hallo", "de-DE"};
+    Literal const lit5{"hallo", "de-de"};
     CHECK(lit1 != lit3);
     CHECK(lit1 != lit4);
     CHECK(lit3 != lit4);
+    CHECK(lit3 != lit5);
+    CHECK(lit4 == lit5);
 
     SUBCASE("value extraction") {
         CHECK(static_cast<std::string>(lit1) == R"("hello"@en)");

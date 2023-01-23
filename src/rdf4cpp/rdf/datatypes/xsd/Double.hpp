@@ -16,7 +16,10 @@ template<>
 capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_double>::to_string(cpp_type const &value) noexcept;
+std::string capabilities::Default<xsd_double>::to_canonical_string(cpp_type const &value) noexcept;
+
+template<>
+std::string capabilities::Default<xsd_double>::to_simplified_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &value) noexcept;

@@ -30,7 +30,7 @@ template<>
 capabilities::Default<xsd_int>::cpp_type capabilities::Default<xsd_int>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_int>::to_string(cpp_type const &value) noexcept;
+std::string capabilities::Default<xsd_int>::to_canonical_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_int>::effective_boolean_value(cpp_type const &value) noexcept;

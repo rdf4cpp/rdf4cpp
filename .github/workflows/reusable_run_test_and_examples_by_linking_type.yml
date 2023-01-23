@@ -77,7 +77,7 @@ jobs:
       - name: Run tests
         working-directory: build_dir
         run: |
-          ctest --parallel 2
+          ctest --parallel 2 --verbose
 
       - name: Report coverage
         env:

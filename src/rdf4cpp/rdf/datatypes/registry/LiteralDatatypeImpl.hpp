@@ -69,11 +69,19 @@ struct Default {
      * @param value the value
      * @return <div>value</div>'s canonical string representation
      */
-    inline static std::string to_string(cpp_type const &value) noexcept {
-        // If not further specified, to_string is instantiated via operator<<. If operator<< is not defined for cpp_type instantiation will fail.
+    inline static std::string to_canonical_string(cpp_type const &value) noexcept {
+        // If not further specified, to_canonical_string is instantiated via operator<<. If operator<< is not defined for cpp_type instantiation will fail.
         std::stringstream str_s;
         str_s << value;
         return str_s.str();
+    }
+
+    /**
+     * Returns a string representation of a datatype that is intended to be shown in user friendly output.
+     * E.g. when casting to xsd:string
+     */
+    inline static std::string to_simplified_string(cpp_type const &value) noexcept {
+        return to_canonical_string(value);
     }
 };
 
