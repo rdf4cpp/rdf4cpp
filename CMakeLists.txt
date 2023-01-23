@@ -15,7 +15,7 @@ find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
-find_package(utfcpp QUIET)
+find_package(utf8cpp QUIET)
 
 include(FetchContent)
 
@@ -49,7 +49,7 @@ if (NOT re2_FOUND)
             GIT_TAG 2022-12-01
     )
 
-    set(RE2_BUILD_TESTING OFF)
+    set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
     FetchContent_MakeAvailable(fetchre2)
     message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
 endif ()

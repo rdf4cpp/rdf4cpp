@@ -2,10 +2,9 @@
 
 #include <sstream>
 
-#include <utf8.h>
-
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
+#include <rdf4cpp/rdf/util/private/Utf8.hpp>
 
 namespace rdf4cpp::rdf {
 
