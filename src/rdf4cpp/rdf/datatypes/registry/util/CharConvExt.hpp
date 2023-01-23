@@ -36,13 +36,13 @@ I from_chars(std::string_view s) {
 }
 
 /**
- * Serializes an integral type into its (SPARQL) canonical representation
+ * Serializes an integral type into its (SPARQL) _canonical_ representation.
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-integer
  *
  * @param value the value to be serialized
  */
 template<std::integral I>
-std::string to_chars(I const value) noexcept {
+std::string to_chars_canonical(I const value) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
@@ -52,7 +52,21 @@ std::string to_chars(I const value) noexcept {
 
     assert(res.ec == std::errc{});
 
-    return std::string{buf.data(), res.ptr};
+    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+}
+
+/**
+ * Serializes an integer into its _simplified_ string representation which is e.g. used in
+ * casting integers to strings.
+ * @note for integers this is identical to the canonical representation
+ *
+ * @see https://www.w3.org/TR/xpath-functions/#casting-to-string
+ *
+ * @param value the value to be serialized
+ */
+template<std::integral I>
+std::string to_chars_simplified(I const value) noexcept {
+    return to_chars_canonical(value);
 }
 
 /**
@@ -95,21 +109,15 @@ constexpr size_t log10ceil(T const value) noexcept {
 }
 } // namespace detail
 
-template<size_t N>
-static void string_shift_left(std::array<char, N> &buf, size_t start, size_t end, size_t amt) {
-
-    std::shift_left(&buf[start], &buf[end], amt);
-
-}
-
 /**
- * Serializes a floating point number into its (SPARQL) canonical string representation
+ * Serializes a floating point number into its (SPARQL) _canonical_ string representation.
+ * This is always scientific notation.
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-float
  *
  * @param value the value to be serialized
  */
 template<std::floating_point F>
-std::string to_chars(F const value) noexcept {
+std::string to_chars_canonical(F const value) noexcept {
     if (std::isnan(value)) {
         return "NaN";
     }
@@ -171,6 +179,32 @@ std::string to_chars(F const value) noexcept {
     }
 
     return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+}
+
+/**
+ * Serializes a floating point number into its _simplified_ string representation which is e.g. used in
+ * casting floats to strings.
+ * see https://www.w3.org/TR/xpath-functions/#casting-to-string
+ *
+ * @param value the value to be serialized
+ */
+template<std::floating_point F>
+std::string to_chars_simplified(F const value) noexcept {
+    if (value == 0) {
+        return std::signbit(value) ? "-0" : "0";
+    }
+
+    if (auto const abs = std::abs(value); abs >= 0.000001 && abs < 1000000) {
+        static constexpr size_t buf_sz = 2 + std::numeric_limits<F>::max_exponent10 + std::numeric_limits<F>::max_digits10;
+        std::array<char, buf_sz> buf;
+
+        auto const res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::fixed);
+        assert(res.ec == std::errc{});
+
+        return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    }
+
+    return to_chars_canonical(value);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

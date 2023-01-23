@@ -6,6 +6,13 @@
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
 struct LangTagCharTraits : std::char_traits<char> {
+    using char_type = std::char_traits<char>::char_type;
+    using pos_type = std::char_traits<char>::pos_type;
+    using int_type = std::char_traits<char>::int_type;
+    using off_type = std::char_traits<char>::off_type;
+    using state_type = std::char_traits<char>::state_type;
+    using comparison_category = std::char_traits<char>::comparison_category;
+
     static constexpr bool eq(char_type const c1, char_type const c2) noexcept {
         return std::tolower(c1) == std::tolower(c2);
     }
