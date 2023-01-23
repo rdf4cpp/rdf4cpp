@@ -1,9 +1,8 @@
 #include "Literal.hpp"
 
-#include <cwchar>
 #include <sstream>
 
-#include <utf8cpp/utf8.h>
+#include <utf8.h>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
@@ -1204,11 +1203,11 @@ Literal operator""_xsd_integer(unsigned long long int i) {
 }
 
 Literal operator""_xsd_int(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Int>(i);
+    return Literal::make<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
 }
 
 Literal operator""_xsd_long(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Integer>(i);
+    return Literal::make<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
 }
 
 Literal operator""_xsd_double(long double d) {

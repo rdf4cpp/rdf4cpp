@@ -14,8 +14,8 @@ endif ()
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
-find_package(re2 REQUIRED)
-find_package(utf8cpp REQUIRED)
+find_package(re2 QUIET)
+find_package(utfcpp QUIET)
 
 include(FetchContent)
 
@@ -40,6 +40,29 @@ if (NOT expected-lite_FOUND)
 
     FetchContent_MakeAvailable(expected-lite)
     message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
+endif ()
+
+if (NOT re2_FOUND)
+    FetchContent_Declare(
+            fetchre2
+            GIT_REPOSITORY https://github.com/google/re2
+            GIT_TAG 2022-12-01
+    )
+
+    set(RE2_BUILD_TESTING OFF)
+    FetchContent_MakeAvailable(fetchre2)
+    message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
+endif ()
+
+if (NOT utf8cpp_FOUND)
+    FetchContent_Declare(
+            fetchutfcpp
+            GIT_REPOSITORY https://github.com/nemtrif/utfcpp
+            GIT_TAG v3.2.3
+    )
+
+    FetchContent_MakeAvailable(fetchutfcpp)
+    message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
 set(serd_source_files
