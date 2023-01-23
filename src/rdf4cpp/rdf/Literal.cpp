@@ -46,6 +46,10 @@ util::CowString Literal::lexical_form() const noexcept {
 }
 
 Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
+    if (this->null()) {
+        return Literal{};
+    }
+
     return Literal::make_simple_unchecked(this->lexical_form(), node_storage);
 }
 
@@ -67,6 +71,10 @@ util::CowString Literal::display() const noexcept {
 }
 
 Literal Literal::as_display(Node::NodeStorage &node_storage) const noexcept {
+    if (this->null()) {
+        return Literal{};
+    }
+
     return Literal::make_simple_unchecked(this->display(), node_storage);
 }
 
