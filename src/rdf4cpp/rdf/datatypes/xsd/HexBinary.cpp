@@ -117,7 +117,7 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 }
 
 template<>
-std::string capabilities::Default<xsd_hex_binary>::to_string(cpp_type const &value) noexcept {
+std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept {
     return value.to_encoded();
 }
 

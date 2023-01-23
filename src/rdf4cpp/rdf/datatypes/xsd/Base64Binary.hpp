@@ -69,7 +69,7 @@ template<>
 capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_base64_binary>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_base64_binary>::to_string(cpp_type const &value) noexcept;
+std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_base64_binary>;
 
