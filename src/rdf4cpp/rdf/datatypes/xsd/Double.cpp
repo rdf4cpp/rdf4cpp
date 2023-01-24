@@ -26,6 +26,26 @@ bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_double>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_double>::abs(cpp_type const &operand) noexcept {
+    return std::abs(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_double>::round_result_cpp_type, DynamicError> capabilities::Numeric<xsd_double>::round(cpp_type const &operand) noexcept {
+    return std::round(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_double>::floor_result_cpp_type, DynamicError> capabilities::Numeric<xsd_double>::floor(cpp_type const &operand) noexcept {
+    return std::floor(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_double>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_double>::ceil(cpp_type const &operand) noexcept {
+    return std::ceil(operand);
+}
+
+template<>
 std::optional<uint64_t> capabilities::Inlineable<xsd_double>::try_into_inlined(cpp_type const &value) noexcept {
     static constexpr uint64_t drop_width = 64 - storage::node::identifier::LiteralID::width;
 

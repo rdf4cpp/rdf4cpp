@@ -1,6 +1,7 @@
 #include "Literal.hpp"
 
 #include <sstream>
+#include <random>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
@@ -280,6 +281,16 @@ Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_sto
     }
 
     return Literal::make<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+}
+
+Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
+    struct RngState {
+        std::default_random_engine rng{std::random_device{}()};
+        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
+    };
+
+    static thread_local RngState state;
+    return Literal::make<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
 }
 
 Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
@@ -1218,6 +1229,7 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
 
     return this->substr(start_ix, len_ix, node_storage);
 }
+
 
 inline namespace literals {
 

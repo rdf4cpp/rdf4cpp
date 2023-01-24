@@ -26,6 +26,26 @@ bool capabilities::Logical<xsd_float>::effective_boolean_value(cpp_type const &v
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_float>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_float>::abs(cpp_type const &operand) noexcept {
+    return std::abs(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_float>::round_result_cpp_type, DynamicError> capabilities::Numeric<xsd_float>::round(cpp_type const &operand) noexcept {
+    return std::round(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_float>::floor_result_cpp_type, DynamicError> capabilities::Numeric<xsd_float>::floor(cpp_type const &operand) noexcept {
+    return std::floor(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_float>::ceil(cpp_type const &operand) noexcept {
+    return std::ceil(operand);
+}
+
+template<>
 std::optional<uint64_t> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
     return util::pack<uint64_t>(value);
 }

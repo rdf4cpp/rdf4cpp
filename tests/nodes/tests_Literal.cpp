@@ -3,6 +3,8 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <thread>
+
 using namespace rdf4cpp::rdf;
 
 TEST_CASE("Literal - Check for only lexical form") {
@@ -460,6 +462,61 @@ TEST_CASE("Literal - casting") {
 
 TEST_CASE("Literal - misc functions") {
     using namespace rdf4cpp::rdf;
+
+    SUBCASE("rand") {
+        SUBCASE("same thread") {
+            auto const l1 = Literal::generate_random_double();
+            auto const l2 = Literal::generate_random_double();
+
+            CHECK(l1 >= 0.0_xsd_double);
+            CHECK(l1 < 1.0_xsd_double);
+
+            CHECK(l2 >= 0.0_xsd_double);
+            CHECK(l2 < 1.0_xsd_double);
+            CHECK(l1 != l2);
+        }
+
+        SUBCASE("difference threads") {
+            auto const l1 = Literal::generate_random_double();
+            Literal l2;
+
+            std::thread t{[&]() {
+                l2 = Literal::generate_random_double();
+            }};
+
+            t.join();
+
+            CHECK(l1 != l2);
+        }
+    }
+
+    SUBCASE("abs") {
+        CHECK((-1_xsd_int).abs() == 1_xsd_integer);
+        CHECK((-100.0_xsd_double).abs() == 100.0_xsd_double);
+        CHECK(99.0_xsd_float .abs() == 99.0_xsd_float);
+        CHECK("hello"_xsd_string .abs().null());
+    }
+
+    SUBCASE("round") {
+        CHECK(99_xsd_int .round() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .round() == 1.0_xsd_double);
+        CHECK(1.5_xsd_double .round() == 2.0_xsd_double);
+        CHECK("hello"_xsd_string .round().null());
+    }
+
+    SUBCASE("floor") {
+        CHECK(99_xsd_int .floor() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .floor() == 1.0_xsd_double);
+        CHECK(1.5_xsd_double .floor() == 1.0_xsd_double);
+        CHECK("hello"_xsd_string .floor().null());
+    }
+
+    SUBCASE("ceil") {
+        CHECK(99_xsd_int .ceil() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .ceil() == 2.0_xsd_double);
+        CHECK(1.5_xsd_double .ceil() == 2.0_xsd_double);
+        CHECK("hello"_xsd_string .ceil().null());
+    }
 
     SUBCASE("strlen") {
         CHECK("12345"_xsd_string .as_strlen() == 5_xsd_integer);

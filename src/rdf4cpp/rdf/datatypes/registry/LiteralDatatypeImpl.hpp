@@ -258,25 +258,23 @@ struct Numeric {
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-abs
-    inline static nonstd::expected<abs_result_cpp_type, DynamicError> abs(cpp_type const &operand) noexcept {
-        // this makes ADL work but sidesteps the infinite recursion that would occur without the lambda
-        // (only free functions considered here)
-        return [&operand]() { return abs(operand); }();
+    inline static nonstd::expected<abs_result_cpp_type, DynamicError> abs([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-round
-    inline static nonstd::expected<round_result_cpp_type, DynamicError> round(cpp_type const &operand) noexcept {
-        return [&operand]() { return round(operand); }();
+    inline static nonstd::expected<round_result_cpp_type, DynamicError> round([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-floor
-    inline static nonstd::expected<floor_result_cpp_type, DynamicError> floor(cpp_type const &operand) noexcept {
-        return [&operand]() { return floor(operand); }();
+    inline static nonstd::expected<floor_result_cpp_type, DynamicError> floor([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-ceiling
-    inline static nonstd::expected<ceil_result_cpp_type, DynamicError> ceil(cpp_type const &operand) noexcept {
-        return [&operand]() { return ceil(operand); }();
+    inline static nonstd::expected<ceil_result_cpp_type, DynamicError> ceil([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
     }
 };
 

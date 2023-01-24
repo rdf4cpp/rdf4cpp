@@ -4,8 +4,6 @@
 #include <any>
 #include <ostream>
 #include <type_traits>
-#include <random>
-#include <regex>
 #include <optional>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
@@ -205,11 +203,13 @@ public:
      */
     static Literal make_boolean(util::TriBool b, NodeStorage &node_storage = NodeStorage::default_instance());
 
-    template<typename Rng>
-    [[nodiscard]] static Literal make_rand_double(Rng &rng = std::random_device{}, NodeStorage &node_storage = NodeStorage::default_instance()) {
-        std::uniform_real_distribution dist{0.0, 1.0};
-        return Literal::make<datatypes::xsd::Double>(dist(rng), node_storage);
-    }
+    /**
+     * Generates a random double in the range [0.0, 1.0).
+     * The values are generated in a thread-safe manner using a lazily initialized thread_local random generator.
+     *
+     * @see https://www.w3.org/TR/sparql11-query/#idp2130040
+     */
+    [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.
