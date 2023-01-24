@@ -429,6 +429,14 @@ public:
      * @param lang_range a basic language range as xsd:string
      * @return whether the language tag of this matches the given lang range or the null literal if
      *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_lang_matches(std::string_view lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @param lang_range a basic language range as xsd:string
+     * @return whether the language tag of this matches the given lang range or the null literal if
+     *      - this is not string-like
      *      - lang_range is not xsd:string
      */
     [[nodiscard]] Literal as_lang_matches(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
@@ -440,6 +448,19 @@ public:
      * @return whether this' lexical form matches the regex or Err if this is not string-like
      */
     [[nodiscard]] util::TriBool regex_matches(regex::Regex const &pattern) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern xsd:string containing a regex to match against
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return whether this' lexical form matches the regex or the null literal if
+     *      - this is not string-like
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal as_regex_matches(regex::Regex const &pattern, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -487,6 +508,15 @@ public:
      * @return whether this' lexical form contains the given string or Err if this is not string-like
      */
     [[nodiscard]] util::TriBool contains(std::string_view needle) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_contains(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-contains
@@ -567,6 +597,15 @@ public:
      * @param needle substring to check
      * @return whether this' lexical form starts with needle (as xsd:boolean) or the null literal if
      *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_str_starts_with(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
      *      - needle is not string-like
      *      - the language tags of this and needle do not match
      */
@@ -580,6 +619,15 @@ public:
      *      - this is not string-like
      */
     [[nodiscard]] util::TriBool str_ends_with(std::string_view needle) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_str_ends_with(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-ends-with

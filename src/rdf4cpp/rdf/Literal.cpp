@@ -911,13 +911,17 @@ util::TriBool Literal::lang_matches(std::string_view const lang_range) const noe
     return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
 }
 
+Literal Literal::as_lang_matches(std::string_view const lang_range, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->lang_matches(lang_range);
+    return Literal::make_boolean(res, node_storage);
+}
+
 Literal Literal::as_lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
     if (lang_range.datatype_id() != datatypes::xsd::String::datatype_id) {
         return Literal{};
     }
 
-    auto const res = this->lang_matches(lang_range.lexical_form());
-    return Literal::make_boolean(res, node_storage);
+    return this->as_lang_matches(lang_range.lexical_form(), node_storage);
 }
 
 static regex::Regex::flag_type translate_regex_flags(std::string_view const xpath_flags) {
@@ -943,6 +947,11 @@ util::TriBool Literal::regex_matches(regex::Regex const &pattern) const noexcept
     return pattern.regex_search(this->lexical_form());
 }
 
+Literal Literal::as_regex_matches(regex::Regex const &pattern, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->regex_matches(pattern);
+    return Literal::make_boolean(res, node_storage);
+}
+
 Literal Literal::as_regex_matches(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like() || !pattern.is_string_like() || !flags.is_string_like()) {
         return Literal{};
@@ -965,7 +974,7 @@ Literal Literal::as_regex_matches(Literal const &pattern, Literal const &flags, 
         return Literal{};
     }
 
-    return Literal::make_boolean(this->regex_matches(*re), node_storage);
+    return this->as_regex_matches(*re, node_storage);
 }
 
 Literal Literal::regex_replace(regex::RegexReplacer const &replacer, Node::NodeStorage &node_storage) const noexcept {
@@ -1025,12 +1034,17 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     return s.view().find(needle) != std::string_view::npos;
 }
 
+Literal Literal::as_contains(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->contains(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
 Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
         return Literal{};
     }
 
-    return Literal::make_boolean(this->contains(needle.lexical_form()), node_storage);
+    return this->as_contains(needle.lexical_form(), node_storage);
 }
 
 Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1098,6 +1112,11 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     return s.view().starts_with(needle);
 }
 
+Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->str_starts_with(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
 Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
         return Literal{};
@@ -1107,7 +1126,7 @@ Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &no
         return Literal{};
     }
 
-    return Literal::make_boolean(this->str_starts_with(needle.lexical_form()), node_storage);
+    return this->as_str_starts_with(needle.lexical_form(), node_storage);
 }
 
 util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
@@ -1119,6 +1138,11 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
     return s.view().ends_with(needle);
 }
 
+Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->str_ends_with(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
 Literal Literal::as_str_ends_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
         return Literal{};
@@ -1128,7 +1152,7 @@ Literal Literal::as_str_ends_with(Literal const &needle, Node::NodeStorage &node
         return Literal{};
     }
 
-    return Literal::make_boolean(this->str_ends_with(needle.lexical_form()), node_storage);
+    return this->as_str_ends_with(needle.lexical_form(), node_storage);
 }
 
 Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
