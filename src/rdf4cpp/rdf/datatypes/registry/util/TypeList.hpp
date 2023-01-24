@@ -103,7 +103,7 @@ constexpr auto type_list_generate_impl(std::index_sequence<ixs...>, F f) noexcep
  * @endcode
  */
 template<typename ListA, typename ListB>
-using type_list_cat = decltype(type_list_detail::type_list_cat_impl(std::declval<ListA>(), std::declval<ListB>()));
+using type_list_cat = decltype(type_list_detail::type_list_cat_impl(ListA{}, ListB{}));
 
 
 /**
