@@ -553,12 +553,12 @@ TEST_CASE("Literal - misc functions") {
     }
 
     SUBCASE("langMatches") {
-        CHECK(Literal{"Hello", "en"}.lang_matches("*"_xsd_string).ebv());
-        CHECK(Literal{"Bonjour", "fr"}.lang_matches("FR"_xsd_string).ebv());
-        CHECK(Literal{"Hello", "en-US"}.lang_matches("en-US"_xsd_string).ebv());
-        CHECK(5_xsd_int .lang_matches("*"_xsd_string).null());
-        CHECK("Hello"_xsd_string .lang_matches(""_xsd_string).ebv());
-        CHECK("Hello"_xsd_string .lang_matches("*"_xsd_string).ebv() == util::TriBool::False);
+        CHECK(Literal{"Hello", "en"}.as_lang_matches("*"_xsd_string).ebv());
+        CHECK(Literal{"Bonjour", "fr"}.as_lang_matches("FR"_xsd_string).ebv());
+        CHECK(Literal{"Hello", "en-US"}.as_lang_matches("en-US"_xsd_string).ebv());
+        CHECK(5_xsd_int .as_lang_matches("*"_xsd_string).null());
+        CHECK("Hello"_xsd_string .as_lang_matches(""_xsd_string).ebv());
+        CHECK("Hello"_xsd_string .as_lang_matches("*"_xsd_string).ebv() == util::TriBool::False);
     }
 
     SUBCASE("ucase") {
@@ -575,12 +575,12 @@ TEST_CASE("Literal - misc functions") {
 
     SUBCASE("contains") {
         // from https://www.w3.org/TR/sparql11-query/#func-contains
-        CHECK("foobar"_xsd_string .contains("bar"_xsd_string).ebv());
-        CHECK(Literal{"foobar", "en"}.contains(Literal{"foo", "en"}).ebv());
-        CHECK(Literal{"foobar", "en"}.contains("bar"_xsd_string).ebv());
+        CHECK("foobar"_xsd_string .as_contains("bar"_xsd_string).ebv());
+        CHECK(Literal{"foobar", "en"}.as_contains(Literal{"foo", "en"}).ebv());
+        CHECK(Literal{"foobar", "en"}.as_contains("bar"_xsd_string).ebv());
 
-        CHECK(Literal{"hello", "en"}.contains(Literal{"o", "fr"}).null());
-        CHECK("123"_xsd_string .contains(Literal{"1", "en"}).null());
+        CHECK(Literal{"hello", "en"}.as_contains(Literal{"o", "fr"}).null());
+        CHECK("123"_xsd_string .as_contains(Literal{"1", "en"}).null());
     }
 
     SUBCASE("substr_before") {
@@ -611,22 +611,22 @@ TEST_CASE("Literal - misc functions") {
 
     SUBCASE("str_start_with") {
         // from https://www.w3.org/TR/sparql11-query/#func-strstarts
-        CHECK("foobar"_xsd_string .str_starts_with("foo"_xsd_string).ebv());
-        CHECK(Literal{"foobar", "en"}.str_starts_with(Literal{"foo", "en"}).ebv());
-        CHECK(Literal{"foobar", "en"}.str_starts_with("foo"_xsd_string).ebv());
+        CHECK("foobar"_xsd_string .as_str_starts_with("foo"_xsd_string).ebv());
+        CHECK(Literal{"foobar", "en"}.as_str_starts_with(Literal{"foo", "en"}).ebv());
+        CHECK(Literal{"foobar", "en"}.as_str_starts_with("foo"_xsd_string).ebv());
 
-        CHECK(Literal{"foobar", "fr"}.str_starts_with(Literal{"foo", "en"}).null());
-        CHECK("foobar"_xsd_string .str_starts_with(Literal{"foo", "en"}).null());
+        CHECK(Literal{"foobar", "fr"}.as_str_starts_with(Literal{"foo", "en"}).null());
+        CHECK("foobar"_xsd_string .as_str_starts_with(Literal{"foo", "en"}).null());
     }
 
     SUBCASE("str_ends_with") {
         // from https://www.w3.org/TR/sparql11-query/#func-strstarts
-        CHECK("foobar"_xsd_string .str_ends_with("bar"_xsd_string).ebv());
-        CHECK(Literal{"foobar", "en"}.str_ends_with(Literal{"bar", "en"}).ebv());
-        CHECK(Literal{"foobar", "en"}.str_ends_with("bar"_xsd_string).ebv());
+        CHECK("foobar"_xsd_string .as_str_ends_with("bar"_xsd_string).ebv());
+        CHECK(Literal{"foobar", "en"}.as_str_ends_with(Literal{"bar", "en"}).ebv());
+        CHECK(Literal{"foobar", "en"}.as_str_ends_with("bar"_xsd_string).ebv());
 
-        CHECK(Literal{"foobar", "fr"}.str_ends_with(Literal{"bar", "en"}).null());
-        CHECK("foobar"_xsd_string .str_ends_with(Literal{"bar", "en"}).null());
+        CHECK(Literal{"foobar", "fr"}.as_str_ends_with(Literal{"bar", "en"}).null());
+        CHECK("foobar"_xsd_string .as_str_ends_with(Literal{"bar", "en"}).null());
     }
 
     SUBCASE("concat") {
@@ -641,9 +641,9 @@ TEST_CASE("Literal - misc functions") {
 
     SUBCASE("regex_match") {
         // from https://www.w3.org/TR/xpath-functions/#func-matches
-        CHECK("abracadabra"_xsd_string .regex_match("bra"_xsd_string).ebv());
-        CHECK("abracadabra"_xsd_string .regex_match("^a.*a$"_xsd_string).ebv());
-        CHECK("abracadabra"_xsd_string .regex_match("^bra"_xsd_string).ebv() == util::TriBool::False);
+        CHECK("abracadabra"_xsd_string .as_regex_matches("bra"_xsd_string).ebv());
+        CHECK("abracadabra"_xsd_string .as_regex_matches("^a.*a$"_xsd_string).ebv());
+        CHECK("abracadabra"_xsd_string .as_regex_matches("^bra"_xsd_string).ebv() == util::TriBool::False);
 
         std::string_view const poem = "<poem author=\"Wilhelm Busch\">\n"
                                       "Kaum hat dies der Hahn gesehen,\n"
@@ -653,15 +653,15 @@ TEST_CASE("Literal - misc functions") {
                                       "</poem>";
         Literal const poem_lit{poem};
 
-        CHECK(poem_lit.regex_match("Kaum.*krähen"_xsd_string).ebv() == util::TriBool::False);
+        CHECK(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv() == util::TriBool::False);
         //CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv()); TODO: support multiline flag
-        CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string).ebv() == util::TriBool::False);
-        CHECK(poem_lit.regex_match("kiki"_xsd_string, "i"_xsd_string).ebv());
+        CHECK(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv() == util::TriBool::False);
+        CHECK(poem_lit.as_regex_matches("kiki"_xsd_string, "i"_xsd_string).ebv());
 
         // check lang tag behaviour
-        CHECK(Literal{"abcd", "en"}.regex_match("b"_xsd_string).ebv());
-        CHECK(Literal{"abcd", "en"}.regex_match(Literal{"b", "en"}).ebv());
-        CHECK(Literal{"abcd", "en"}.regex_match(Literal{"b", "fr"}).null());
+        CHECK(Literal{"abcd", "en"}.as_regex_matches("b"_xsd_string).ebv());
+        CHECK(Literal{"abcd", "en"}.as_regex_matches(Literal{"b", "en"}).ebv());
+        CHECK(Literal{"abcd", "en"}.as_regex_matches(Literal{"b", "fr"}).null());
     }
 
     SUBCASE("regex_replace") {
@@ -684,8 +684,8 @@ TEST_CASE("Literal - misc functions") {
         // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
         //CHECK("abracadabra"_xsd_string .regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
 
-        CHECK("abcd"_xsd_string .regex_match(".*"_xsd_string, "q"_xsd_string).ebv() == util::TriBool::False);
-        CHECK("Mr. B. Obama"_xsd_string .regex_match("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
+        CHECK("abcd"_xsd_string .as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv() == util::TriBool::False);
+        CHECK("Mr. B. Obama"_xsd_string .as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
 
         // check lang tag behaviour
         CHECK(Literal{"abcd", "en"}.regex_replace("b"_xsd_string, "Z"_xsd_string) == Literal{"aZcd", "en"});

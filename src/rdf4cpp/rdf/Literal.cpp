@@ -911,7 +911,7 @@ util::TriBool Literal::lang_matches(std::string_view const lang_range) const noe
     return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
 }
 
-Literal Literal::lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
     if (lang_range.datatype_id() != datatypes::xsd::String::datatype_id) {
         return Literal{};
     }
@@ -935,7 +935,7 @@ static regex::Regex::flag_type translate_regex_flags(std::string_view const xpat
     });
 }
 
-util::TriBool Literal::regex_match(regex::Regex const &pattern) const noexcept {
+util::TriBool Literal::regex_matches(regex::Regex const &pattern) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
@@ -943,7 +943,7 @@ util::TriBool Literal::regex_match(regex::Regex const &pattern) const noexcept {
     return pattern.regex_search(this->lexical_form());
 }
 
-Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_regex_matches(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like() || !pattern.is_string_like() || !flags.is_string_like()) {
         return Literal{};
     }
@@ -965,7 +965,7 @@ Literal Literal::regex_match(Literal const &pattern, Literal const &flags, Node:
         return Literal{};
     }
 
-    return Literal::make_boolean(this->regex_match(*re), node_storage);
+    return Literal::make_boolean(this->regex_matches(*re), node_storage);
 }
 
 Literal Literal::regex_replace(regex::RegexReplacer const &replacer, Node::NodeStorage &node_storage) const noexcept {
@@ -1025,7 +1025,7 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     return s.view().find(needle) != std::string_view::npos;
 }
 
-Literal Literal::contains(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
         return Literal{};
     }
@@ -1098,7 +1098,7 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     return s.view().starts_with(needle);
 }
 
-Literal Literal::str_starts_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
         return Literal{};
     }
@@ -1119,7 +1119,7 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
     return s.view().ends_with(needle);
 }
 
-Literal Literal::str_ends_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::as_str_ends_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (!needle.is_string_like()) {
         return Literal{};
     }
@@ -1237,18 +1237,6 @@ Literal operator""_xsd_string(char const *str, size_t const len) {
     return Literal{std::string_view{str, len}};
 }
 
-Literal operator""_xsd_integer(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Integer>(i);
-}
-
-Literal operator""_xsd_int(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
-}
-
-Literal operator""_xsd_long(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
-}
-
 Literal operator""_xsd_double(long double d) {
     return Literal::make<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
 }
@@ -1259,6 +1247,42 @@ Literal operator""_xsd_float(long double d) {
 
 Literal operator""_xsd_decimal(char const *str, size_t const len) {
     return Literal::make(std::string_view{str, len}, IRI{datatypes::xsd::Decimal::identifier});
+}
+
+Literal operator""_xsd_integer(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Integer>(i);
+}
+
+Literal operator""_xsd_byte(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
+}
+
+Literal operator""_xsd_ubyte(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
+}
+
+Literal operator""_xsd_short(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
+}
+
+Literal operator""_xsd_ushort(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
+}
+
+Literal operator""_xsd_int(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
+}
+
+Literal operator""_xsd_uint(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
+}
+
+Literal operator""_xsd_long(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
+}
+
+Literal operator""_xsd_ulong(unsigned long long int i) {
+    return Literal::make<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
 }
 
 }  // namespace literals

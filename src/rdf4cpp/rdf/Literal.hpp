@@ -277,6 +277,35 @@ public:
      */
     [[nodiscard]] std::any value() const noexcept;
 
+    /**
+     * Get the value of an literal. T must be the registered datatype for the datatype iri.
+     * @tparam T datatype of the returned instance
+     * @return T instance with the value from this
+     */
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    typename LiteralDatatype_t::cpp_type value() const {
+        if (this->datatype_id() != LiteralDatatype_t::datatype_id) [[unlikely]] {
+            throw std::runtime_error{"Literal::value error: incompatible type"};
+        }
+
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (this->is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                return LiteralDatatype_t::from_inlined(inlined_value);
+            }
+        }
+
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            auto const &lit = this->handle_.literal_backend();
+
+            return datatypes::registry::LangStringRepr{
+                    .lexical_form = lit.lexical_form,
+                    .language_tag = lit.language_tag};
+        }
+
+        return LiteralDatatype_t::from_string(this->lexical_form());
+    }
+
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
     [[nodiscard]] bool is_blank_node() const noexcept;
@@ -402,7 +431,7 @@ public:
      *      - this is not string-like
      *      - lang_range is not xsd:string
      */
-    [[nodiscard]] Literal lang_matches(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_lang_matches(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -410,7 +439,7 @@ public:
      * @param pattern regex to match against
      * @return whether this' lexical form matches the regex or Err if this is not string-like
      */
-    [[nodiscard]] util::TriBool regex_match(regex::Regex const &pattern) const noexcept;
+    [[nodiscard]] util::TriBool regex_matches(regex::Regex const &pattern) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -425,7 +454,7 @@ public:
      * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
      * @todo implement other flags
      */
-    [[nodiscard]] Literal regex_match(Literal const &pattern, Literal const &flags = Literal{""}, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_regex_matches(Literal const &pattern, Literal const &flags = Literal{""}, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace
@@ -467,7 +496,7 @@ public:
      *      - this is not string-like
      *      - needle is not string-like
      */
-    [[nodiscard]] Literal contains(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_contains(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
@@ -541,7 +570,7 @@ public:
      *      - needle is not string-like
      *      - the language tags of this and needle do not match
      */
-    [[nodiscard]] Literal str_starts_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_str_starts_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
@@ -561,7 +590,7 @@ public:
      *      - needle is not string-like
      *      - the language tags of this and needle do not match
      */
-    [[nodiscard]] Literal str_ends_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_str_ends_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-upper-case
@@ -637,43 +666,31 @@ public:
     [[nodiscard]] Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator!() const noexcept;
 
-    /**
-     * Get the value of an literal. T must be the registered datatype for the datatype iri.
-     * @tparam T datatype of the returned instance
-     * @return T instance with the value from this
-     */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
-    typename LiteralDatatype_t::cpp_type value() const noexcept {
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (this->is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
-                return LiteralDatatype_t::from_inlined(inlined_value);
-            }
-        }
-
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
-            auto const &lit = this->handle_.literal_backend();
-
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        }
-
-        return LiteralDatatype_t::from_string(this->lexical_form());
-    }
-
     friend class Node;
 };
 
 inline namespace literals {
 
 Literal operator""_xsd_string(char const *str, size_t len);
-Literal operator""_xsd_integer(unsigned long long int i);
-Literal operator""_xsd_int(unsigned long long int i);
-Literal operator""_xsd_long(unsigned long long int i);
+
 Literal operator""_xsd_double(long double d);
 Literal operator""_xsd_float(long double d);
+
 Literal operator""_xsd_decimal(char const *str, size_t len);
+
+Literal operator""_xsd_integer(unsigned long long int i);
+
+Literal operator""_xsd_byte(unsigned long long int i);
+Literal operator""_xsd_ubyte(unsigned long long int i);
+
+Literal operator""_xsd_short(unsigned long long int i);
+Literal operator""_xsd_ushort(unsigned long long int i);
+
+Literal operator""_xsd_int(unsigned long long int i);
+Literal operator""_xsd_uint(unsigned long long int i);
+
+Literal operator""_xsd_long(unsigned long long int i);
+Literal operator""_xsd_ulong(unsigned long long int i);
 
 }  // namespace literals
 }  // namespace rdf4cpp::rdf

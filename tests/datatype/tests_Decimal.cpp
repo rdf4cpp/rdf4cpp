@@ -147,6 +147,6 @@ TEST_CASE("Datatype Decimal buffer overread UB") {
     std::string const s = "123.456";
     std::string_view const sv{ s.data(), 5 };
 
-    Literal const lit{ sv, datatypes::xsd::Decimal::identifier };
+    Literal const lit{sv, IRI{datatypes::xsd::Decimal::identifier}};
     CHECK(lit.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type{"123.4"});
 }
