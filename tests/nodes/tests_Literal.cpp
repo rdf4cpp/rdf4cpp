@@ -495,15 +495,14 @@ TEST_CASE("Literal - misc functions") {
         CHECK(s.substr(100_xsd_integer, 10_xsd_int) == ""_xsd_string);
     }
 
-    // TODO: comment in when langMatches finished
-    /*SUBCASE("langMatches") {
+    SUBCASE("langMatches") {
         CHECK(Literal{"Hello", "en"}.lang_matches("*"_xsd_string).ebv());
         CHECK(Literal{"Bonjour", "fr"}.lang_matches("FR"_xsd_string).ebv());
         CHECK(Literal{"Hello", "en-US"}.lang_matches("en-US"_xsd_string).ebv());
         CHECK(5_xsd_int .lang_matches("*"_xsd_string).null());
         CHECK("Hello"_xsd_string .lang_matches(""_xsd_string).ebv());
         CHECK("Hello"_xsd_string .lang_matches("*"_xsd_string).ebv() == util::TriBool::False);
-    }*/
+    }
 
     SUBCASE("ucase") {
         // from https://www.w3.org/TR/sparql11-query/#func-ucase

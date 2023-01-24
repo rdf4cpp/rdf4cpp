@@ -5,6 +5,7 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/private/Utf8.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/LangTag.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -893,12 +894,10 @@ util::TriBool Literal::lang_matches(std::string_view const lang_range) const noe
         return !lang.empty();
     }
 
-    assert(false);
-    // TODO: comment in when other PR merged
-    /*auto const lang_ci = datatypes::registry::util::LangTagView{lang.data(), lang.size()};
+    auto const lang_ci = datatypes::registry::util::LangTagView{lang.data(), lang.size()};
     auto const lang_range_ci = datatypes::registry::util::LangTagView{lang_range.data(), lang_range.size()};
 
-    return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');*/
+    return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
 }
 
 Literal Literal::lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
