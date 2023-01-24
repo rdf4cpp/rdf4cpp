@@ -7,10 +7,17 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 struct LangStringRepr {
-    std::string lexical_form;
-    std::string language_tag;
+    std::string_view lexical_form;
+    std::string_view language_tag;
 
-    auto operator<=>(LangStringRepr const &) const = default;
+    std::weak_ordering operator<=>(LangStringRepr const &other) const noexcept;
+
+    bool operator==(LangStringRepr const &) const noexcept = default;
+    bool operator!=(LangStringRepr const &) const noexcept = default;
+    bool operator<(LangStringRepr const &) const noexcept = default;
+    bool operator<=(LangStringRepr const &) const noexcept = default;
+    bool operator>(LangStringRepr const &) const noexcept = default;
+    bool operator>=(LangStringRepr const &) const noexcept = default;
 };
 
 template<>
@@ -26,7 +33,7 @@ inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rd
 }
 
 template<>
-inline std::string capabilities::Default<rdf_lang_string>::to_string(cpp_type const &) noexcept {
+inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(cpp_type const &) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();

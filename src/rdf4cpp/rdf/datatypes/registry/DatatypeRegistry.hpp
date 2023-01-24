@@ -98,9 +98,10 @@ public:
     };
 
     struct DatatypeEntry {
-        std::string datatype_iri;         // datatype IRI string
-        factory_fptr_t factory_fptr;      // construct from string
-        to_string_fptr_t to_string_fptr;  // convert to string
+        std::string datatype_iri;                   // datatype IRI string
+        factory_fptr_t factory_fptr;                // construct from string
+        to_string_fptr_t to_canonical_string_fptr;  // convert to canonical string
+        to_string_fptr_t to_simplified_string_fptr; // convert to simplified string (e.g. for casting to xsd:string)
 
         ebv_fptr_t ebv_fptr; // convert to effective boolean value
 
@@ -115,7 +116,8 @@ public:
             return DatatypeEntry{
                     .datatype_iri = "",
                     .factory_fptr = nullptr,
-                    .to_string_fptr = nullptr,
+                    .to_canonical_string_fptr = nullptr,
+                    .to_simplified_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
                     .inlining_ops = std::nullopt,
@@ -127,7 +129,8 @@ public:
             return DatatypeEntry{
                     .datatype_iri = std::string{datatype_iri},
                     .factory_fptr = nullptr,
-                    .to_string_fptr = nullptr,
+                    .to_canonical_string_fptr = nullptr,
+                    .to_simplified_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
                     .inlining_ops = std::nullopt,
@@ -227,11 +230,18 @@ public:
     [[nodiscard]] static factory_fptr_t get_factory(DatatypeIDView datatype_id) noexcept;
 
     /**
-     * Get a to_string function for a datatype. The factory_fptr_t can be used like `std::string str_repr = to_string_fptr(any_typed_arg)`.
+     * Get a to_canonical_string function for a datatype. The factory_fptr_t can be used like `std::string str_repr = to_canonical_string_fptr(any_typed_arg)`.
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    [[nodiscard]] static to_string_fptr_t get_to_string(DatatypeIDView datatype_id) noexcept;
+    [[nodiscard]] static to_string_fptr_t get_to_canonical_string(DatatypeIDView datatype_id) noexcept;
+
+    /**
+     * Get the to_simplified_string function for a datatype. This function can be used for user friendly output.
+     * @param datatype_id datatype id for the corresponding datatype
+     * @return function pointer if datatype was found else nullptr
+     */
+    [[nodiscard]] static to_string_fptr_t get_to_simplified_string(DatatypeIDView datatype_id) noexcept;
 
     /**
      * Try to get the numerical ops function table for a datatype.
@@ -434,8 +444,11 @@ inline void DatatypeRegistry::add() noexcept {
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return std::any{LiteralDatatype_t::from_string(string_repr)};
             },
-            .to_string_fptr = [](const std::any &value) noexcept -> std::string {
-                return LiteralDatatype_t::to_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
+            .to_canonical_string_fptr = [](std::any const &value) noexcept -> std::string {
+                return LiteralDatatype_t::to_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
+            },
+            .to_simplified_string_fptr = [](std::any const &value) noexcept -> std::string {
+                return LiteralDatatype_t::to_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,

@@ -17,7 +17,8 @@ concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typ
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
                               { LiteralDatatypeImpl::datatype_id } -> std::convertible_to<registry::DatatypeIDView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
-                              { LiteralDatatypeImpl::to_string(cpp_value) } -> std::convertible_to<std::string>;
+                              { LiteralDatatypeImpl::to_canonical_string(cpp_value) } -> std::convertible_to<std::string>;
+                              { LiteralDatatypeImpl::to_simplified_string(cpp_value) } -> std::convertible_to<std::string>;
                           };
 
 template<typename LiteralDatatypeImpl>

@@ -19,7 +19,7 @@ template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<owl_rational>::to_string(cpp_type const &value) noexcept;
+std::string capabilities::Default<owl_rational>::to_canonical_string(cpp_type const &value) noexcept;
 
 template<>
 bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const &value) noexcept;
