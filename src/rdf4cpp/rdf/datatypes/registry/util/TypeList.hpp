@@ -48,9 +48,7 @@ concept nothrow_mixed_invocable = requires (F f, RParam rparam) {
 
 
 template<typename ...Ts, typename ...Us>
-consteval mz::type_list<Ts..., Us...> type_list_cat_impl(mz::type_list<Ts...>, mz::type_list<Us...>) {
-    return {};
-}
+mz::type_list<Ts..., Us...> type_list_cat_impl(mz::type_list<Ts...>, mz::type_list<Us...>);
 
 template<typename MapF, typename ...Ts> requires (template_invocable<MapF, Ts> && ...)
 constexpr auto type_list_map_impl(mz::type_list<Ts...>, MapF f) noexcept((nothrow_template_invocable<MapF, Ts> && ...)) {
