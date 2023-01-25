@@ -10,6 +10,10 @@ namespace rdf4cpp::rdf {
 
 Node::Node(Node::NodeBackendHandle id) noexcept : handle_(id) {}
 
+Node Node::make_null() noexcept {
+    return Node{};
+}
+
 Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
     if (this->backend_handle().node_storage_id() == node_storage.id())
         return *this;
@@ -39,7 +43,7 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
                     return NodeID{};
             }
         }();
-        return Node(NodeBackendHandle{node_id, backend_handle().type(), node_storage.id()});
+        return Node{NodeBackendHandle{node_id, backend_handle().type(), node_storage.id()}};
     }
 }
 
@@ -50,8 +54,7 @@ Node::operator std::string() const noexcept {
         case RDFNodeType::BNode:
             return handle_.bnode_backend().n_string();
         case RDFNodeType::Literal: {
-            const auto &literal = static_cast<const Literal &>(*this);
-            return static_cast<std::string>(literal);
+            return static_cast<std::string>(static_cast<Literal>(*this));
         }
         case RDFNodeType::Variable:
             return handle_.variable_backend().n_string();
@@ -102,7 +105,7 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
             case RDFNodeType::BNode:
                 return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
             case RDFNodeType::Literal:
-                return Literal{this->handle_}.compare_with_extensions(Literal{other.handle_});
+                return static_cast<Literal>(*this).compare_with_extensions(static_cast<Literal>(other));
             case RDFNodeType::Variable:
                 return this->handle_.variable_backend() <=> other.handle_.variable_backend();
             default:{
@@ -123,15 +126,15 @@ Node::operator BlankNode() const noexcept {
 }
 Node::operator IRI() const noexcept {
     assert(is_iri());
-    return IRI(handle_);
+    return IRI{handle_};
 }
 Node::operator Literal() const noexcept {
     assert(is_literal());
-    return Literal(handle_);
+    return Literal{handle_};
 }
 Node::operator query::Variable() const noexcept {
     assert(is_variable());
-    return query::Variable(handle_);
+    return query::Variable{handle_};
 }
 bool Node::null() const noexcept {
     return handle_.null();
@@ -161,6 +164,5 @@ Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const n
 
     return static_cast<Literal>(*this).ebv_as_literal(node_storage);
 }
-
 
 }  // namespace rdf4cpp::rdf

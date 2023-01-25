@@ -6,7 +6,7 @@
 int main() {
     using namespace rdf4cpp::rdf;
 
-    Literal float_1_1("1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"});
+    auto float_1_1 = Literal::make_typed("1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"});
 
     std::cout << float_1_1 << std::endl;
     std::any any_float_ = float_1_1.value();
@@ -20,6 +20,6 @@ int main() {
     // datatypes::xsd::Float is an alias for the built-in type float
     std::cout << float_ << std::endl;
     // make a new literal with new value
-    Literal updated_float = Literal::make<datatypes::xsd::Float>(float_);
+    Literal updated_float = Literal::make_typed<datatypes::xsd::Float>(float_);
     std::cout << updated_float << std::endl;
 }

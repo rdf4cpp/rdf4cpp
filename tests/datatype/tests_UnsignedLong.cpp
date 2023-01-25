@@ -19,30 +19,30 @@ TEST_CASE("Datatype UnsignedLong") {
     CHECK(std::is_same_v<type, uint64_t>);
 
     uint64_t value = 1;
-    auto lit1 = Literal::make<datatypes::xsd::UnsignedLong>(value);
+    auto lit1 = Literal::make_typed<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit1.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit2 = Literal::make<datatypes::xsd::UnsignedLong>(value);
+    auto lit2 = Literal::make_typed<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit2.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<uint64_t>::max();
-    auto lit3 = Literal::make<datatypes::xsd::UnsignedLong>(value);
+    auto lit3 = Literal::make_typed<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit3.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::UnsignedLong>() == value);
 
     value = 0;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::UnsignedLong>() == value);
 
     value = std::numeric_limits<uint64_t>::min();
-    auto lit6 = Literal::make<datatypes::xsd::UnsignedLong>(value);
+    auto lit6 = Literal::make_typed<datatypes::xsd::UnsignedLong>(value);
     CHECK(lit6.value<datatypes::xsd::UnsignedLong>() == value);
     CHECK(lit6.lexical_form() == std::to_string(value));
 
@@ -56,11 +56,11 @@ TEST_CASE("Datatype UnsignedLong") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg.59566", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("qwerty", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("qwerty", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("53.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("53.59566", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("0.01", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("0.01", type_iri));
 }

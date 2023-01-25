@@ -24,7 +24,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
 
     SUBCASE("string datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#string"};
-        auto lit1 = Literal{"Bunny", iri};
+        auto lit1 = Literal::make_typed("Bunny", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -37,7 +37,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
-        auto lit1 = Literal{"101", iri};
+        auto lit1 = Literal::make_typed("101", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -50,7 +50,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("date datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#date"};
-        auto lit1 = Literal{"2021-11-21", iri};
+        auto lit1 = Literal::make_typed("2021-11-21", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -63,7 +63,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("decimal datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#decimal"};
-        auto lit1 = Literal{"2.0", iri};
+        auto lit1 = Literal::make_typed("2.0", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -76,7 +76,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("boolean datatype - true") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
-        auto lit1 = Literal{"true", iri};
+        auto lit1 = Literal::make_typed("true", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -89,7 +89,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("boolean datatype - false") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
-        auto lit1 = Literal{"false", iri};
+        auto lit1 = Literal::make_typed("false", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -102,7 +102,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("boolean datatype - 0") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
-        auto lit1 = Literal{"0", iri};
+        auto lit1 = Literal::make_typed("0", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -115,7 +115,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
     }
     SUBCASE("boolean datatype - 1") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#boolean"};
-        auto lit1 = Literal{"1", iri};
+        auto lit1 = Literal::make_typed("1", iri);
 
         CHECK(not lit1.is_blank_node());
         CHECK(lit1.is_literal());
@@ -131,7 +131,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
 TEST_CASE("Literal - Check for lexical form with language tag") {
 
     auto iri = IRI{"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
-    auto lit1 = Literal{"Bunny", "en"};
+    auto lit1 = Literal::make_lang_tagged("Bunny", "en");
 
     CHECK(not lit1.is_blank_node());
     CHECK(lit1.is_literal());
@@ -145,16 +145,16 @@ TEST_CASE("Literal - Check for lexical form with language tag") {
 
 TEST_CASE("Literal - ctor edge-case") {
     IRI const iri{"http://www.w3.org/2001/XMLSchema#int"};
-    Literal const lit1{"1", iri};
-    Literal const lit2{"2", iri};
+    auto const lit1 = Literal::make_typed("1", iri);
+    auto const lit2 = Literal::make_typed("2", iri);
 
-    Literal const expected{"3", iri};
+    auto const expected = Literal::make_typed("3", iri);
     CHECK(lit1 + lit2 == expected);
 }
 
 TEST_CASE("Literal - check fixed id") {
     IRI const iri{datatypes::registry::xsd_string};
-    Literal const lit{"hello", iri};
+    auto const lit = Literal::make_typed("hello", iri);
 
     CHECK(lit.backend_handle().node_id().literal_type().is_fixed());
     CHECK(lit.datatype().backend_handle().node_id().value() < datatypes::registry::min_dynamic_datatype_id);
@@ -164,10 +164,10 @@ TEST_CASE("Literal - check fixed id") {
 TEST_CASE("Literal - casting") {
     using namespace datatypes::xsd;
 
-    auto const lit1 = Literal::make<datatypes::xsd::Int>(123);
+    auto const lit1 = Literal::make_typed<datatypes::xsd::Int>(123);
 
     SUBCASE("id cast") {
-        auto const lit1 = Literal::make<String>("hello");
+        auto const lit1 = Literal::make_typed<String>("hello");
         auto const lit2 = lit1.template cast<String>();
 
         CHECK(lit2.datatype() == IRI{String::identifier});
@@ -175,7 +175,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("str -> any") {
-        auto const lit1 = Literal::make<String>("1.2");
+        auto const lit1 = Literal::make_typed<String>("1.2");
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -184,7 +184,7 @@ TEST_CASE("Literal - casting") {
 
     SUBCASE("str -> boolean") {
         SUBCASE("word-form") {
-            auto const lit1 = Literal::make<String>("true");
+            auto const lit1 = Literal::make_typed<String>("true");
             auto const lit2 = lit1.template cast<Boolean>();
 
             CHECK(lit2.datatype() == IRI{Boolean::identifier});
@@ -192,7 +192,7 @@ TEST_CASE("Literal - casting") {
         }
 
         SUBCASE("numeric form") {
-            auto const lit1 = Literal::make<String>("1");
+            auto const lit1 = Literal::make_typed<String>("1");
             auto const lit2 = lit1.template cast<Boolean>();
 
             CHECK(lit2.datatype() == IRI{Boolean::identifier});
@@ -203,14 +203,14 @@ TEST_CASE("Literal - casting") {
     SUBCASE("any -> str") {
         SUBCASE("decimal") {
             SUBCASE("integral") {
-                auto const lit1 = Literal::make<Decimal>(Decimal::cpp_type{"1005.0"});
+                auto const lit1 = Literal::make_typed<Decimal>(Decimal::cpp_type{"1005.0"});
                 auto const lit2 = lit1.cast<String>();
 
                 CHECK(lit2.value<String>() == "1005");
             }
 
             SUBCASE("non-integral") {
-                auto const lit1 = Literal::make<Decimal>(1.5);
+                auto const lit1 = Literal::make_typed<Decimal>(1.5);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "1.5");
@@ -219,42 +219,42 @@ TEST_CASE("Literal - casting") {
 
         SUBCASE("float") {
             SUBCASE("fixed notation - non-integral") {
-                auto const lit1 = Literal::make<Float>(10.5f);
+                auto const lit1 = Literal::make_typed<Float>(10.5f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "10.5");
             }
 
             SUBCASE("fixed notation - integral") {
-                auto const lit1 = Literal::make<Float>(100000.f);
+                auto const lit1 = Literal::make_typed<Float>(100000.f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "100000");
             }
 
             SUBCASE("large - scientific") {
-                auto const lit1 = Literal::make<Float>(1000001.f);
+                auto const lit1 = Literal::make_typed<Float>(1000001.f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "1.000001E6");
             }
 
             SUBCASE("small - scientific") {
-                auto const lit1 = Literal::make<Float>(0.0000009f);
+                auto const lit1 = Literal::make_typed<Float>(0.0000009f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "9.0E-7");
             }
 
             SUBCASE("zero") {
-                auto const lit1 = Literal::make<Float>(0.0f);
+                auto const lit1 = Literal::make_typed<Float>(0.0f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "0");
             }
 
             SUBCASE("minus zero") {
-                auto const lit1 = Literal::make<Float>(-0.0f);
+                auto const lit1 = Literal::make_typed<Float>(-0.0f);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "-0");
@@ -263,42 +263,42 @@ TEST_CASE("Literal - casting") {
 
         SUBCASE("double") {
             SUBCASE("fixed notation - non-integral") {
-                auto const lit1 = Literal::make<Double>(10.5);
+                auto const lit1 = Literal::make_typed<Double>(10.5);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "10.5");
             }
 
             SUBCASE("fixed notation - integral") {
-                auto const lit1 = Literal::make<Double>(100000.0);
+                auto const lit1 = Literal::make_typed<Double>(100000.0);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "100000");
             }
 
             SUBCASE("large - scientific") {
-                auto const lit1 = Literal::make<Double>(1000001.0);
+                auto const lit1 = Literal::make_typed<Double>(1000001.0);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "1.000001E6");
             }
 
             SUBCASE("small - scientific") {
-                auto const lit1 = Literal::make<Double>(0.0000009);
+                auto const lit1 = Literal::make_typed<Double>(0.0000009);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "9.0E-7");
             }
 
             SUBCASE("zero") {
-                auto const lit1 = Literal::make<Double>(0.0);
+                auto const lit1 = Literal::make_typed<Double>(0.0);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "0");
             }
 
             SUBCASE("minus zero") {
-                auto const lit1 = Literal::make<Double>(-0.0);
+                auto const lit1 = Literal::make_typed<Double>(-0.0);
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "-0");
@@ -307,7 +307,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("any -> bool") {
-        auto const lit1 = Literal::make<Float>(1.4);
+        auto const lit1 = Literal::make_typed<Float>(1.4);
         auto const lit2 = lit1.template cast<Boolean>();
 
         CHECK(lit2.datatype() == IRI{Boolean::identifier});
@@ -315,7 +315,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("downcast: dbl -> flt") {
-        auto const lit1 = Literal::make<Double>(1.4);
+        auto const lit1 = Literal::make_typed<Double>(1.4);
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -323,7 +323,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> flt") {
-        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit1 = Literal::make_typed<Decimal>(1.0);
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -331,7 +331,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> dbl") {
-        auto const lit1 = Literal::make<Decimal>(1.0);
+        auto const lit1 = Literal::make_typed<Decimal>(1.0);
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK(lit2.datatype() == IRI{Double::identifier});
@@ -339,7 +339,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> int") {
-        auto const lit1 = Literal::make<Decimal>(1.2);
+        auto const lit1 = Literal::make_typed<Decimal>(1.2);
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK(lit2.datatype() == IRI{Int::identifier});
@@ -347,7 +347,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("downcast: int -> dec") {
-        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit1 = Literal::make_typed<Integer>(1);
         auto const lit2 = lit1.template cast<Decimal>();
 
         CHECK(lit2.datatype() == IRI{Decimal::identifier});
@@ -355,7 +355,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("int -> flt") {
-        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit1 = Literal::make_typed<Integer>(1);
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -363,7 +363,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("int -> dbl") {
-        auto const lit1 = Literal::make<Integer>(1);
+        auto const lit1 = Literal::make_typed<Integer>(1);
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK(lit2.datatype() == IRI{Double::identifier});
@@ -371,7 +371,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("id cast") {
-        auto const lit1 = Literal::make<Int>(5);
+        auto const lit1 = Literal::make_typed<Int>(5);
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK(lit1 == lit2);
@@ -380,7 +380,7 @@ TEST_CASE("Literal - casting") {
     SUBCASE("bool -> numeric") {
         SUBCASE("integers") {
             SUBCASE("regular case") {
-                auto const lit1 = Literal::make<Boolean>(true);
+                auto const lit1 = Literal::make_typed<Boolean>(true);
                 auto const lit2 = lit1.template cast<Byte>();
                 CHECK(!lit2.null());
                 CHECK(lit2.datatype() == IRI{Byte::identifier});
@@ -388,7 +388,7 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("partially representable - representable case") {
-                auto const lit3 = Literal::make<Boolean>(false);
+                auto const lit3 = Literal::make_typed<Boolean>(false);
                 auto const lit4 = lit3.template cast<NonPositiveInteger>();
                 CHECK(!lit4.null());
                 CHECK(lit4.datatype() == IRI{NonPositiveInteger::identifier});
@@ -396,14 +396,14 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("partially representable - unrepresentable case") {
-                auto const lit3 = Literal::make<Boolean>(true);
+                auto const lit3 = Literal::make_typed<Boolean>(true);
                 auto const lit4 = lit3.template cast<NegativeInteger>();
                 CHECK(lit4.null());
             }
         }
 
         SUBCASE("decimal") {
-            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit1 = Literal::make_typed<Boolean>(false);
             auto const lit2 = lit1.template cast<Decimal>();
             CHECK(!lit2.null());
             CHECK(lit2.datatype() == IRI{Decimal::identifier});
@@ -411,7 +411,7 @@ TEST_CASE("Literal - casting") {
         }
 
         SUBCASE("float") {
-            auto const lit1 = Literal::make<Boolean>(true);
+            auto const lit1 = Literal::make_typed<Boolean>(true);
             auto const lit2 = lit1.template cast<Float>();
             CHECK(!lit2.null());
             CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -419,7 +419,7 @@ TEST_CASE("Literal - casting") {
         }
 
         SUBCASE("double") {
-            auto const lit1 = Literal::make<Boolean>(false);
+            auto const lit1 = Literal::make_typed<Boolean>(false);
             auto const lit2 = lit1.template cast<Double>();
             CHECK(!lit2.null());
             CHECK(lit2.datatype() == IRI{Double::identifier});
@@ -428,7 +428,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("cross hierarchy: int -> unsignedInt") {
-        auto const lit1 = Literal::make<Int>(1);
+        auto const lit1 = Literal::make_typed<Int>(1);
         auto const lit2 = lit1.template cast<UnsignedInt>();
 
         CHECK(lit2.datatype() == IRI{UnsignedInt::identifier});
@@ -439,19 +439,19 @@ TEST_CASE("Literal - casting") {
         CHECK(lit1.template cast<Integer>().datatype() == IRI{Integer::identifier});
         CHECK(lit1.template cast<Float>().datatype() == IRI{Float::identifier});
 
-        auto const lit2 = Literal::make<Integer>(420);
-        CHECK(lit2.template cast<Int>() == Literal::make<Int>(420));
+        auto const lit2 = Literal::make_typed<Integer>(420);
+        CHECK(lit2.template cast<Int>() == Literal::make_typed<Int>(420));
     }
 
     SUBCASE("value too large") {
-        auto const lit1 = Literal::make<Int>(67000);
+        auto const lit1 = Literal::make_typed<Int>(67000);
         auto const lit2 = lit1.template cast<Short>();
 
         CHECK(lit2.null());
     }
 
     SUBCASE("negative to unsigned") {
-        auto const lit1 = Literal::make<Int>(-10);
+        auto const lit1 = Literal::make_typed<Int>(-10);
         auto const lit2 = lit1.template cast<UnsignedInt>();
 
         CHECK(lit2.null());

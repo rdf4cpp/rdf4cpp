@@ -106,30 +106,48 @@ protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
-    Literal() noexcept;
     /**
-     * Constructs a Literal from a lexical form. Datatype is `xsd:string`.
+     * Constructs the null-literal
+     */
+    Literal() noexcept;
+
+    /**
+     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
     explicit Literal(std::string_view lexical_form,
                      NodeStorage &node_storage = NodeStorage::default_instance());
+
     /**
-     * Constructs a Literal from a lexical form and a datatype.
+     * Constructs the null-literal
+     */
+    [[nodiscard]] static Literal make_null() noexcept;
+
+    /**
+     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form
-     * @param datatype the datatype
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(std::string_view lexical_form, const IRI &datatype,
-            NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Literal make_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
+
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(std::string_view lexical_form, std::string_view lang,
-            NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Literal make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
+                                                  NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a Literal from a lexical form and a datatype.
+     * @param lexical_form the lexical form
+     * @param datatype the datatype
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
+                                            NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
@@ -142,8 +160,8 @@ public:
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
-    static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
-                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+    [[nodiscard]] static Literal make_typed(typename LiteralDatatype_t::cpp_type compatible_value,
+                                            NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
@@ -161,17 +179,6 @@ public:
                                                         IRI{LiteralDatatype_t::datatype_id, node_storage},
                                                         node_storage);
     }
-
-    /**
-     * Constructs a literal from a compatible type. In this version of the function the datatype is specified at runtime.
-     * Due to the lookup of the converter functions, this function is slightly slower than its templated version.
-     * @param lexical_form
-     * @param datatype
-     * @param node_storage
-     * @return
-     */
-    static Literal make(std::string_view lexical_form, IRI const &datatype,
-                        NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.

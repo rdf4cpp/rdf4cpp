@@ -25,6 +25,8 @@ class Variable;
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
  * For the sake of simplicity, we decided to have no separate class for edges in an RDF graph.
  * You can determine if a Node is an edge by the the fact that it is used as predicate in a Dataset, Graph, Quad, Statement, QuadPattern or TriplePattern.</p>
+ *
+ * @warning This type is a POD.
  */
 class Node {
 protected:
@@ -44,8 +46,15 @@ public:
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
+     *
+     * @warning This type is POD. The constructor needs to be invoked explicitly. Alternatively: call Node::make_null()
      */
     Node() noexcept = default;
+
+    /**
+     * Construct the null-node
+     */
+    [[nodiscard]] static Node make_null() noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

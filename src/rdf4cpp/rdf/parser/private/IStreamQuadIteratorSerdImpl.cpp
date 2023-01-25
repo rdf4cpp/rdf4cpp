@@ -146,11 +146,11 @@ nonstd::expected<Literal, SerdStatus> IStreamQuadIterator::Impl::get_literal(Ser
                 return nonstd::make_unexpected(datatype_iri->error());
             }
 
-            return Literal{literal_value, datatype_iri->value(), this->node_storage};
+            return Literal::make_typed(literal_value, datatype_iri->value(), this->node_storage);
         } else if (lang != nullptr) {
-            return Literal{literal_value, node_into_string_view(lang), this->node_storage};
+            return Literal::make_lang_tagged(literal_value, node_into_string_view(lang), this->node_storage);
         } else {
-            return Literal{literal_value, this->node_storage};
+            return Literal::make_simple(literal_value, this->node_storage);
         }
     } catch (std::runtime_error const &e) {
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed

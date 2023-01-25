@@ -12,10 +12,10 @@ int main(int argc, char *argv[]) {
     std::cout << "dataset node storage id: " << dataset.backend().node_storage().id().value << std::endl;
     std::cout << "dataset2 node storage id: " << dataset2.backend().node_storage().id().value << std::endl;
 
-    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text", "en")});
-    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text", "fr")});
-    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("txt")});
-    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text")});
+    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_lang_tagged("text", "en")});
+    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_lang_tagged("text", "fr")});
+    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("txt")});
+    g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("text")});
 
     dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text")});
 

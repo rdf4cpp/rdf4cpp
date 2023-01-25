@@ -13,9 +13,25 @@ private:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
 
 public:
+    /**
+     * Constructs the null-bnode
+     */
     BlankNode() noexcept;
-    explicit BlankNode(std::string_view identifier,
-                       NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a bnode from an identifier
+     */
+    explicit BlankNode(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs the null-bnode
+     */
+    [[nodiscard]] static BlankNode make_null() noexcept;
+
+    /**
+     * Constructs a bnode from an identifier
+     */
+    [[nodiscard]] static BlankNode make(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
