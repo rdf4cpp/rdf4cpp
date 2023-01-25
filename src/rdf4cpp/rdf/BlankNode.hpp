@@ -5,14 +5,13 @@
 
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/util/BlankNodeIdManager.hpp>
 
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
-
-private:
+public:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
 
-public:
     BlankNode() noexcept;
     explicit BlankNode(std::string_view identifier,
                        NodeStorage &node_storage = NodeStorage::default_instance());

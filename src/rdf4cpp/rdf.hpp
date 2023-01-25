@@ -10,6 +10,7 @@
 #include <rdf4cpp/rdf/writer/NNodeWriter.hpp>
 #include <rdf4cpp/rdf/writer/NQuadsWriter.hpp>
 #include <rdf4cpp/rdf/writer/NTriplesWriter.hpp>
+#include <rdf4cpp/rdf/util/BlankNodeIdManager.hpp>
 
 /**
  * In this namespace the implementations of core RDF Concepts are defined. Class names are equal to terms defined in <a href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#resources-and-statements">RDF 1.1 Concepts and Abstract Syntax"</a>.

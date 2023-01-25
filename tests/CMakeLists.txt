@@ -239,6 +239,14 @@ target_link_libraries(tests_CowString
 set_property(TARGET tests_CowString PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_CowString COMMAND tests_CowString)
 
+add_executable(tests_BlankNodeIdManagement util/tests_BlankNodeIdManagement.cpp)
+target_link_libraries(tests_BlankNodeIdManagement
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_BlankNodeIdManagement PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BlankNodeIdManagement COMMAND tests_BlankNodeIdManagement)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest

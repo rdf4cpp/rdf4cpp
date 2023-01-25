@@ -149,6 +149,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
+        src/rdf4cpp/rdf/util/BlankNodeIdManager.cpp
+        src/rdf4cpp/rdf/util/private/BlankNodeIdGeneratorImpl.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
