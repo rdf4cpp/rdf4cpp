@@ -817,23 +817,11 @@ util::TriBool Literal::ebv() const noexcept {
 }
 
 Literal Literal::ebv_as_literal(NodeStorage &node_storage) const noexcept {
-    auto const ebv = this->ebv();
-
-    if (ebv == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
+    return Literal::make_boolean(this->ebv(), node_storage);
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    auto const res = this->ebv() && other.ebv();
-
-    if (res == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_boolean(this->ebv() && other.ebv(), node_storage);
 }
 
 Literal Literal::operator&&(Literal const &other) const noexcept {
@@ -841,13 +829,7 @@ Literal Literal::operator&&(Literal const &other) const noexcept {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    auto const res = this->ebv() || other.ebv();
-
-    if (res == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_boolean(this->ebv() || other.ebv(), node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const noexcept {
@@ -855,13 +837,7 @@ Literal Literal::operator||(Literal const &other) const noexcept {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
-    auto const ebv = this->ebv();
-
-    if (ebv == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
+    return Literal::make_boolean(!this->ebv(), node_storage);
 }
 
 Literal Literal::operator!() const noexcept {
