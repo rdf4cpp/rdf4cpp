@@ -8,7 +8,7 @@ using namespace rdf4cpp::rdf;
 TEST_CASE("Literal - Check for only lexical form") {
 
     auto iri = IRI{"http://www.w3.org/2001/XMLSchema#string"};
-    auto lit1 = Literal{"Bunny"};
+    auto lit1 = Literal::make_simple("Bunny");
 
     CHECK(not lit1.is_blank_node());
     CHECK(lit1.is_literal());

@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("txt")});
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("text")});
 
-    dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal("text")});
+    dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("text")});
 
     std::cout << "dataset string: \n"
               << writer::NQuadsWriter(g.dataset()) << std::endl;

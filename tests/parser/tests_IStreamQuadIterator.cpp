@@ -51,7 +51,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value().subject() == IRI{"http://www.example.org/s2"});
         CHECK(qit->value().predicate() == IRI{"http://www.example.org/p3"});
-        CHECK(qit->value().object() == Literal{"test"});
+        CHECK(qit->value().object() == Literal::make_simple("test"));
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
@@ -70,7 +70,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit != IStreamQuadIterator{});
             CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"search"});
+            CHECK(qit->value().object() == Literal::make_simple("search"));
 
             ++qit;
             CHECK(qit != IStreamQuadIterator{});
@@ -100,7 +100,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit != IStreamQuadIterator{});
             CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"search"});
+            CHECK(qit->value().object() == Literal::make_simple("search"));
 
             ++qit;
             CHECK(qit != IStreamQuadIterator{});
@@ -241,7 +241,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit->has_value());
         CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
                                    IRI{"https://hello.com#predicate"},
-                                   Literal{"search"}});
+                                   Literal::make_simple("search")});
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
@@ -270,7 +270,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit->has_value());
         CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
                                    IRI{"http://purl.org/dc/elements/1.1/subject"},
-                                   Literal{"search"}});
+                                   Literal::make_simple("search")});
 
         ++qit;
         CHECK(qit != IStreamQuadIterator{});

@@ -112,14 +112,6 @@ public:
     Literal() noexcept;
 
     /**
-     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
-     * @param lexical_form the lexical form
-     * @param node_storage optional custom node_storage used to store the literal
-     */
-    explicit Literal(std::string_view lexical_form,
-                     NodeStorage &node_storage = NodeStorage::default_instance());
-
-    /**
      * Constructs the null-literal
      */
     [[nodiscard]] static Literal make_null() noexcept;

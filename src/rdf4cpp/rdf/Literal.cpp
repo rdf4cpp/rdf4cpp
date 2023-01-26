@@ -11,10 +11,7 @@ Literal::Literal(Node::NodeBackendHandle handle) noexcept
     : Node{handle} {}
 
 Literal::Literal() noexcept
-    : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
-
-Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
-    : Literal{make_simple_unchecked(lexical_form, node_storage)} {}
+    : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}} {}
 
 Literal Literal::make_null() noexcept {
     return Literal{};
