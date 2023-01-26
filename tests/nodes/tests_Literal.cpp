@@ -459,5 +459,5 @@ TEST_CASE("Literal - casting") {
 }
 
 TEST_CASE("indirect casting precision") {
-    CHECK(Literal::make<datatypes::xsd::Double>(2e-1) + Literal::make<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{"0.2"}) == Literal::make<datatypes::xsd::Double>(4e-1));
+    CHECK(Literal::make_typed<datatypes::xsd::Double>(2e-1) + Literal::make_typed<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{"0.2"}) == Literal::make_typed<datatypes::xsd::Double>(4e-1));
 }
