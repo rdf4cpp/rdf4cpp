@@ -61,19 +61,36 @@ TEST_SUITE("blank node id management") {
     }
 
     TEST_CASE("blank node id manager") {
-        auto &mng = BlankNodeIdManager::default_instance();
+        {
+            auto scope = BlankNodeIdGenerator::default_instance().scope();
 
-        auto b1 = mng.get_or_generate("abc");
-        auto b2 = mng.get_or_generate("bcd");
-        auto b3 = mng.get_or_generate("abc");
+            auto b1 = scope.get_or_generate_bnode("abc");
+            auto b2 = scope.get_or_generate_bnode("bcd");
+            auto b3 = scope.get_or_generate_bnode("abc");
 
-        CHECK(b1 != b2);
-        CHECK(b1 == b3);
+            CHECK(b1 != b2);
+            CHECK(b1 == b3);
 
-        CHECK(mng.try_get("hello").null());
+            CHECK(scope.try_get_bnode("hello").null());
 
-        auto fresh = mng.generate();
-        CHECK(fresh != b1);
-        CHECK(fresh != b2);
+            auto fresh = scope.generate_bnode();
+            CHECK(fresh != b1);
+            CHECK(fresh != b2);
+
+            {
+                auto &subscope = scope.subscope("some_graph");
+                CHECK(subscope.try_get_bnode("abc").null());
+
+                auto sb1 = subscope.get_or_generate_bnode("abc");
+                CHECK(b1 != sb1);
+
+                auto sb1_iri = subscope.get_or_generate_skolem_iri("https://skolem-iris.com#", "abc");
+                CHECK(sb1_iri.identifier().starts_with("https://skolem-iris.com#"));
+                CHECK(sb1.identifier() == sb1_iri.identifier().substr(sb1_iri.identifier().size() - 32));
+            }
+        }
+
+        BlankNodeIdScope mng2 = BlankNodeIdGenerator::default_instance().scope();
+        CHECK(mng2.try_get_bnode("abc").null());
     }
 }

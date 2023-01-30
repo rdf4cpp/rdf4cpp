@@ -19,3 +19,8 @@ add_executable(namespaces_example namespaces.cpp)
 target_link_libraries(namespaces_example PRIVATE
         rdf4cpp::rdf4cpp
         )
+
+add_executable(blank_node_example blank_node_management.cpp)
+target_link_libraries(blank_node_example PRIVATE
+        rdf4cpp::rdf4cpp
+        )

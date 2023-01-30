@@ -5,7 +5,6 @@
 
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
-#include <rdf4cpp/rdf/util/BlankNodeIdManager.hpp>
 
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
