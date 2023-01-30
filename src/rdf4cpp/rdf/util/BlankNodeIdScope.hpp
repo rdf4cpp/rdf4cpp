@@ -15,6 +15,8 @@
 
 namespace rdf4cpp::rdf::util {
 
+
+
 struct BlankNodeIdGenerator;
 
 struct BlankNodeIdScope {
@@ -45,6 +47,9 @@ private:
     map_type<std::unique_ptr<BlankNodeIdScope>> subscopes; // uses unique_ptr to pin subscopes in memory
 
 public:
+    using subscope_iterator = decltype(subscopes)::const_iterator;
+
+public:
     BlankNodeIdScope(generator_type &generator, NodeStorage node_storage);
     BlankNodeIdScope(BlankNodeIdScope &&other) noexcept;
 
@@ -59,6 +64,9 @@ public:
 
     [[nodiscard]] BlankNodeIdScope &subscope(std::string const &scope_name) noexcept;
     [[nodiscard]] BlankNodeIdScope &subscope(std::string &&scope_name) noexcept;
+
+    [[nodiscard]] subscope_iterator subscopes_begin() const noexcept; // TODO think about relevance of exposing less implementation details
+    [[nodiscard]] subscope_iterator subscopes_end() const noexcept;
 };
 
 }  //namespace rdf4cpp::rdf::util

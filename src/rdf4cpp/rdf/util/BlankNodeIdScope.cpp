@@ -108,6 +108,10 @@ IRI BlankNodeIdScope::get_or_generate_skolem_iri(std::string_view const iri_pref
 }
 
 BlankNodeIdScope &BlankNodeIdScope::subscope(std::string const &scope_name) noexcept {
+    if (scope_name.empty()) {
+        return *this;
+    }
+
     if (auto it = this->subscopes.find(scope_name); it != this->subscopes.end()) {
         return *it.value();
     }
@@ -119,6 +123,10 @@ BlankNodeIdScope &BlankNodeIdScope::subscope(std::string const &scope_name) noex
 }
 
 BlankNodeIdScope &BlankNodeIdScope::subscope(std::string &&scope_name) noexcept {
+    if (scope_name.empty()) {
+        return *this;
+    }
+
     if (auto it = this->subscopes.find(scope_name); it != this->subscopes.end()) {
         return *it.value();
     }
@@ -127,6 +135,14 @@ BlankNodeIdScope &BlankNodeIdScope::subscope(std::string &&scope_name) noexcept 
     assert(inserted);
 
     return *it.value();
+}
+
+BlankNodeIdScope::subscope_iterator BlankNodeIdScope::subscopes_begin() const noexcept {
+    return this->subscopes.cbegin();
+}
+
+BlankNodeIdScope::subscope_iterator BlankNodeIdScope::subscopes_end() const noexcept {
+    return this->subscopes.cend();
 }
 
 }  //namespace rdf4cpp::rdf::util
