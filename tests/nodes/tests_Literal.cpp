@@ -473,7 +473,7 @@ TEST_CASE("Literal - misc functions") {
 
             CHECK(l2 >= 0.0_xsd_double);
             CHECK(l2 < 1.0_xsd_double);
-            CHECK(l1 != l2);
+            CHECK(l1 != l2); // note: non-deterministic but should basically never fail
         }
 
         SUBCASE("difference threads") {
@@ -486,7 +486,7 @@ TEST_CASE("Literal - misc functions") {
 
             t.join();
 
-            CHECK(l1 != l2);
+            CHECK(l1 != l2); // note: non-deterministic but should basically never fail
         }
     }
 

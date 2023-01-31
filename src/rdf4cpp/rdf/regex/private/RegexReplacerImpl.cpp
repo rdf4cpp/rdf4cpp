@@ -48,13 +48,13 @@ static std::string translate_rewrite(std::string_view const s) {
             replace(res, 0);
         } else {
             // find start of potential backslash sequence preceding the '$'
-            auto const end = static_cast<ssize_t>(pos);
-            auto before_start = end - 1;
-            while (before_start >= 0 && res[before_start] == '\\') {
+            size_t const end = pos;
+            size_t before_start = end - 1;
+            while (before_start != std::string_view::npos && res[before_start] == '\\') {
                 --before_start;
             }
 
-            if (auto const count = end - (before_start + 1); count % 2 == 0) {
+            if (size_t const count = end - (before_start + 1); count % 2 == 0) {
                 // even number of '\' preceding '$' => not escaped => replace
                 replace(res, pos);
             } else {

@@ -679,7 +679,6 @@ public:
                                  NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
-     * TODO: should both substr version behave identically?
      * @see https://www.w3.org/TR/xpath-functions/#func-substring
      * @warning 1-based indexing
      *
@@ -717,7 +716,7 @@ public:
     friend class Node;
 };
 
-inline namespace literals {
+inline namespace shorthands {
 
 Literal operator""_xsd_string(char const *str, size_t len);
 
@@ -740,7 +739,7 @@ Literal operator""_xsd_uint(unsigned long long int i);
 Literal operator""_xsd_long(unsigned long long int i);
 Literal operator""_xsd_ulong(unsigned long long int i);
 
-}  // namespace literals
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>

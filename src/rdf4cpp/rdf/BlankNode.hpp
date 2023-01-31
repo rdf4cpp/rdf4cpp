@@ -33,11 +33,11 @@ public:
     friend class Node;
 };
 
-inline namespace literals {
+inline namespace shorthands {
 
 BlankNode operator""_bnode(char const *str, size_t len);
 
-}  // namespace literals
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>
