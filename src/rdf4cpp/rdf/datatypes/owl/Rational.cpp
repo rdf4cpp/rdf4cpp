@@ -3,12 +3,15 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 static owl::Rational::cpp_type simplify(owl::Rational::cpp_type const &r) noexcept {
-    auto const divisor = gcd(numerator(r), denominator(r));
+    auto const num = numerator(r);
+    auto const den = denominator(r);
+
+    auto const divisor = gcd(num, den);
     if (divisor == 1) {
         return r;
     }
 
-    return r / divisor;
+    return owl::Rational::cpp_type{num / divisor, den / divisor};
 }
 
 template<>
@@ -66,7 +69,7 @@ nonstd::expected<capabilities::Numeric<owl_rational>::abs_result_cpp_type, Dynam
 
 template<>
 nonstd::expected<capabilities::Numeric<owl_rational>::round_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::round(cpp_type const &operand) noexcept {
-    auto const integral_part = numerator(operand) / denominator(operand);
+    auto const integral_part = static_cast<boost::multiprecision::cpp_int>(operand);
     cpp_type const fractional_part = operand - integral_part;
 
     if (numerator(fractional_part) * 2 < denominator(fractional_part)) {

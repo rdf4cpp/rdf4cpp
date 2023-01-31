@@ -50,6 +50,9 @@ TEST_SUITE("owl:rational") {
             CHECK_THROWS(Literal{"asd", IRI{owl_rational}});
             CHECK_THROWS(Literal{"5/-20", IRI{owl_rational}});
             CHECK_THROWS(Literal{"0x123/99", IRI{owl_rational}});
+
+            Literal const lit5 = Literal::make<Rational>(cpp_type{2, 4});
+            CHECK(lit5.lexical_form() == "1/2");
         }
     }
 
