@@ -24,7 +24,7 @@ std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
 }
 
 
-inline namespace literals {
+inline namespace shorthands {
 
 BlankNode operator""_bnode(char const *str, size_t len) {
     return BlankNode{std::string_view{str, len}};

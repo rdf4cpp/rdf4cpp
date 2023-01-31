@@ -1231,7 +1231,7 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
 }
 
 
-inline namespace literals {
+inline namespace shorthands {
 
 Literal operator""_xsd_string(char const *str, size_t const len) {
     return Literal{std::string_view{str, len}};

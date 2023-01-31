@@ -27,7 +27,7 @@ public:
      * The syntax follows google's RE2 library.
      *
      * @param regex the regex to compile
-     * @param flags compilation flags
+     * @param flags flags to configure the regex behaviour
      * @throws RegexError if the regex compilation was not successful
      */
     explicit Regex(std::string_view regex, flag_type flags = flag_type::none());
