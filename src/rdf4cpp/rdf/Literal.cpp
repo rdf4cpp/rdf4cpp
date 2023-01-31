@@ -83,7 +83,7 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
 
     if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
         // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
-        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other constructors"};
+        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
     }
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
