@@ -324,8 +324,6 @@ TEST_SUITE("IStreamQuadIterator") {
 
             ++qit;
             CHECK(qit == IStreamQuadIterator{});
-
-            CHECK(std::distance(state.blank_node_generator.subscopes_begin(), state.blank_node_generator.subscopes_end()) == 0);
         }
 
         SUBCASE("skolem iris") {

@@ -68,7 +68,7 @@ struct ParsingState {
      * @note the generator has its own node storage,
      *      a mismatch between this->node_storage and this->blank_node_generator's node storage may not be desired
      */
-    blank_node_generator_type blank_node_generator = util::BlankNodeIdGenerator::default_instance().scope(this->node_storage);
+    blank_node_generator_type blank_node_generator = util::BlankNodeIdGenerator::default_instance().scope();
 };
 
 }  //namespace rdf4cpp::rdf::parser

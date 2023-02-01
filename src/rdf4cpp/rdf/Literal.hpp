@@ -131,6 +131,8 @@ public:
     Literal(std::string_view lexical_form, std::string_view lang,
             NodeStorage &node_storage = NodeStorage::default_instance());
 
+    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
     /**
      * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
      * No runtime lookup of the type information is required.

@@ -22,6 +22,15 @@ IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage
                 id)} {
 }
 
+IRI IRI::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (this->backend_handle().node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(this->backend_handle()));
+    return IRI{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
+}
+
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::node::identifier;
 

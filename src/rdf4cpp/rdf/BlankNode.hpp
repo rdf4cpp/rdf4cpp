@@ -15,6 +15,8 @@ public:
     explicit BlankNode(std::string_view identifier,
                        NodeStorage &node_storage = NodeStorage::default_instance());
 
+    [[nodiscard]] BlankNode to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier

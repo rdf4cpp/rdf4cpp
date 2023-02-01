@@ -151,7 +151,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/util/BlankNodeIdGenerator.cpp
         src/rdf4cpp/rdf/util/BlankNodeIdScope.cpp
-        src/rdf4cpp/rdf/util/private/BlankNodeIdGeneratorImpl.cpp
+        src/rdf4cpp/rdf/util/reference_backends/RandomIdGeneratorBackend.cpp
+        src/rdf4cpp/rdf/util/reference_backends/IncreasingIdGeneratorBackend.cpp
+        src/rdf4cpp/rdf/util/reference_backends/ReferenceBlankNodeIdScope.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp

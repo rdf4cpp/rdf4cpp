@@ -22,6 +22,20 @@ Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeS
 Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
     : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
 
+Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (this->backend_handle().node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto literal_view = NodeStorage::find_literal_backend_view(backend_handle());
+    auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal_view.datatype_id, storage::node::identifier::RDFNodeType::IRI, this->backend_handle().node_storage_id()});
+
+    literal_view.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+
+    auto const new_lit_id = node_storage.find_or_make_id(literal_view);
+    return Literal{NodeBackendHandle{new_lit_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
 IRI Literal::datatype() const noexcept {
     if (this->is_fixed()) {
         return IRI{NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(handle_)};
@@ -802,6 +816,7 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
 Literal Literal::operator!() const noexcept {
     return this->logical_not();
 }
+
 
 
 }  // namespace rdf4cpp::rdf

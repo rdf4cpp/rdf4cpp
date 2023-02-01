@@ -42,25 +42,25 @@ int main() {
 
         {
             // subscopes for e.g. multiple graphs in one file
-            util::BlankNodeIdScope &subscope = scope.subscope("http://some-graph.com");
+            util::BlankNodeIdScope subscope = scope.subscope("http://some-graph.com");
 
             BlankNode remembered_b1_sub = subscope.get_or_generate_bnode("some-bnode-label");
-            assert(remembered_b1 != remembered_b1_sub);
+            assert(remembered_b1 == remembered_b1_sub); // remembers mapping from parent scope
             print(remembered_b1_sub);
 
             {
                 // nested subscopes
-                util::BlankNodeIdScope &subsubscope = subscope.subscope("queryA");
+                util::BlankNodeIdScope subsubscope = subscope.subscope("queryA");
 
                 BlankNode remembered_b1_sub_sub = subsubscope.get_or_generate_bnode("some-bnode-label");
-                assert(remembered_b1 != remembered_b1_sub_sub);
-                assert(remembered_b1_sub != remembered_b1_sub_sub);
+                assert(remembered_b1 == remembered_b1_sub_sub); // also remembers mapping of parent's-parent
+                assert(remembered_b1_sub == remembered_b1_sub_sub);
             }
         }
 
         {
             // subscopes are reusable
-            util::BlankNodeIdScope &subscope = scope.subscope("http://some-graph.com");
+            util::BlankNodeIdScope subscope = scope.subscope("http://some-graph.com");
 
             BlankNode remembered_b1_sub_again = subscope.try_get_bnode("some-bnode-label");
             assert(!remembered_b1_sub_again.null());

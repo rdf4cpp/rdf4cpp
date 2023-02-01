@@ -6,6 +6,7 @@
 #include <tuple>
 
 using namespace rdf4cpp::rdf::util;
+using namespace rdf4cpp::rdf;
 
 TEST_SUITE("blank node id management") {
     TEST_CASE("blank node id generation") {
@@ -77,17 +78,35 @@ TEST_SUITE("blank node id management") {
             CHECK(fresh != b1);
             CHECK(fresh != b2);
 
+            BlankNode sibling_1;
+            BlankNode sibling_2;
+
             {
-                auto &subscope = scope.subscope("some_graph");
-                CHECK(subscope.try_get_bnode("abc").null());
+                auto subscope = scope.subscope("some_graph");
 
                 auto sb1 = subscope.get_or_generate_bnode("abc");
-                CHECK(b1 != sb1);
+                CHECK(b1 == sb1);
 
                 auto sb1_iri = subscope.get_or_generate_skolem_iri("https://skolem-iris.com#", "abc");
                 CHECK(sb1_iri.identifier().starts_with("https://skolem-iris.com#"));
                 CHECK(sb1.identifier() == sb1_iri.identifier().substr(sb1_iri.identifier().size() - 32));
+
+                {
+                    auto subsubscope = subscope.subscope("inner");
+                    auto ssb1 = subsubscope.get_or_generate_bnode("abc");
+                    CHECK(ssb1 == sb1);
+                    CHECK(ssb1 == b1);
+                }
+
+                sibling_1 = subscope.get_or_generate_bnode("siblings");
             }
+
+            {
+                auto subscope = scope.subscope("other_graph");
+                sibling_2 = subscope.get_or_generate_bnode("siblings");
+            }
+
+            CHECK(sibling_1 != sibling_2);
         }
 
         BlankNodeIdScope mng2 = BlankNodeIdGenerator::default_instance().scope();

@@ -272,7 +272,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
                 case SERD_URI:
                     return self->get_iri(graph);
                 case SERD_BLANK:
-                    return self->get_bnode("", graph);
+                    return self->get_bnode("", graph); // TODO which scope?
                 default:
                     return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
             }
@@ -292,7 +292,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
             case SERD_URI:
                 return self->get_iri(subj);
             case SERD_BLANK:
-                return self->get_bnode(graph == nullptr ? "" : std::string{*graph_node}, subj);
+                return self->get_bnode(std::string{*graph_node}, subj);
             default:
                 return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
         }
@@ -324,7 +324,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
             case SERD_LITERAL:
                 return self->get_literal(obj, obj_datatype, obj_lang);
             case SERD_BLANK:
-                return self->get_bnode(graph == nullptr ? "" : std::string{*graph_node}, obj);
+                return self->get_bnode(std::string{*graph_node}, obj);
             case SERD_URI:
                 return self->get_iri(obj);
             default:

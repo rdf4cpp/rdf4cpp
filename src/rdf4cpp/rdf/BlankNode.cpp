@@ -23,4 +23,13 @@ std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
     return os;
 }
 
+BlankNode BlankNode::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (this->backend_handle().node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(this->backend_handle()));
+    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
+}
+
 }  // namespace rdf4cpp::rdf
