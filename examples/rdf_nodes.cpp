@@ -37,11 +37,11 @@ int main() {
         std::cout << "---" << std::endl;
     };
 
-    Literal lit1("xxxx");
-    Literal lit2("xxxx", iri_pred);
-    Literal lit3("xxxx", IRI("http://example.com/pred2"));
-    Literal lit4("xxxx", "de");
-    Literal lit5{"xxxx", "de"};
+    auto lit1 = Literal::make_simple("xxxx");
+    auto lit2 = Literal::make_typed("xxxx", iri_pred);
+    auto lit3 = Literal::make_typed("xxxx", IRI("http://example.com/pred2"));
+    auto lit4 = Literal::make_lang_tagged("xxxx", "de");
+    auto lit5 = Literal::make_lang_tagged("xxxx", "de");
 
     print_literal_info(lit1);
     print_literal_info(lit2);

@@ -21,35 +21,36 @@ TEST_SUITE("owl:rational") {
 
         SUBCASE("to string") {
             cpp_type const value1{1, 2};
-            auto const lit1 = Literal::make<Rational>(value1);
+            auto const lit1 = Literal::make_typed<Rational>(value1);
             CHECK(lit1.value<Rational>() == value1);
             CHECK(lit1.lexical_form() == "1/2");
 
             cpp_type const value2{-1, 10};
-            auto const lit2 = Literal::make<Rational>(value2);
+            auto const lit2 = Literal::make_typed<Rational>(value2);
             CHECK(lit2.value<Rational>() == value2);
             CHECK(lit2.lexical_form() == "-1/10");
 
             cpp_type const non_canonical{-10, -20};
-            auto const lit3 = Literal::make<Rational>(non_canonical);
+            auto const lit3 = Literal::make_typed<Rational>(non_canonical);
             CHECK(lit3.lexical_form() == "1/2");
         }
 
         SUBCASE("from string") {
-            Literal const lit1{"1/10", IRI{owl_rational}};
-            Literal const lit2 = Literal::make<Rational>(cpp_type{1, 10});
-            Literal const lit3{"-1/10", IRI{owl_rational}};
-            Literal const lit4 = Literal::make<Rational>(cpp_type{-1, 10});
+            auto const lit1 = Literal::make_typed("1/10", IRI{owl_rational});
+            auto const lit2 = Literal::make_typed<Rational>(cpp_type{1, 10});
+            auto const lit3 = Literal::make_typed("-1/10", IRI{owl_rational});
+            auto const lit4 = Literal::make_typed<Rational>(cpp_type{-1, 10});
 
             CHECK(lit1 == lit2);
             CHECK(lit3 == lit4);
             CHECK(lit1 == -lit3);
 
-            CHECK_THROWS(Literal{" 2/ 5", IRI{owl_rational}});
-            CHECK_THROWS(Literal{"+10/5", IRI{owl_rational}});
-            CHECK_THROWS(Literal{"asd", IRI{owl_rational}});
-            CHECK_THROWS(Literal{"5/-20", IRI{owl_rational}});
-            CHECK_THROWS(Literal{"0x123/99", IRI{owl_rational}});
+            Literal dummy;
+            CHECK_THROWS(dummy = Literal::make_typed(" 2/ 5", IRI{owl_rational}));
+            CHECK_THROWS(dummy = Literal::make_typed("+10/5", IRI{owl_rational}));
+            CHECK_THROWS(dummy = Literal::make_typed("asd", IRI{owl_rational}));
+            CHECK_THROWS(dummy = Literal::make_typed("5/-20", IRI{owl_rational}));
+            CHECK_THROWS(dummy = Literal::make_typed("0x123/99", IRI{owl_rational}));
         }
     }
 }

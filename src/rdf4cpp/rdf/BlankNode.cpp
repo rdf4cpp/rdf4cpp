@@ -1,12 +1,20 @@
 #include "BlankNode.hpp"
 
 namespace rdf4cpp::rdf {
-BlankNode::BlankNode() noexcept : Node{} {}
+BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
 BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storage)
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier}),
                              storage::node::identifier::RDFNodeType::BNode,
                              node_storage.id()}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
+
+BlankNode BlankNode::make_null() noexcept {
+    return BlankNode{};
+}
+
+BlankNode BlankNode::make(std::string_view identifier, Node::NodeStorage &node_storage) {
+    return BlankNode{identifier, node_storage};
+}
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 

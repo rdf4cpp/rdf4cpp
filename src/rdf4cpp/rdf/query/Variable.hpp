@@ -15,6 +15,9 @@ public:
     explicit Variable(std::string_view name, bool anonymous = false,
                       NodeStorage &node_storage = NodeStorage::default_instance());
 
+    [[nodiscard]] static Variable make_named(std::string_view name, NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Variable make_anonymous(std::string_view name, NodeStorage &node_storage = NodeStorage::default_instance());
+
     [[nodiscard]] bool is_anonymous() const;
 
     [[nodiscard]] std::string_view name() const;
