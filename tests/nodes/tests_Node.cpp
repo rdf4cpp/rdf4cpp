@@ -70,7 +70,8 @@ TEST_SUITE("comparisions") {
         }
 
         SUBCASE("incomparability") {
-            CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Incomparable>(1) == std::partial_ordering::unordered);
+            CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Incomparable>(2) == std::partial_ordering::unordered);
+            CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Incomparable>(1) == std::partial_ordering::equivalent); // exactly the same object so still equal
             CHECK(Literal::make<Int>(1) <=> Literal::make<Incomparable>(1) == std::partial_ordering::unordered);
             CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Int>(1) == std::partial_ordering::unordered);
         }

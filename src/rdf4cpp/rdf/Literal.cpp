@@ -527,19 +527,19 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const noexcept {
     using datatypes::registry::DatatypeRegistry;
 
+    if (this->handle_ == other.handle_) {
+        return std::partial_ordering::equivalent;
+    }
+
     if (this->handle_.null() || other.handle_.null()) {
-        if (this->handle_ == other.handle_) {
-            return std::partial_ordering::equivalent;
-        } else {
-            if (out_alternative_ordering != nullptr) {
-                // ordering extensions (for e.g. ORDER BY) require that null nodes
-                // are always the smallest node
-                *out_alternative_ordering = this->handle_.null()
-                                             ? std::strong_ordering::less
-                                             : std::strong_ordering::greater;
-            }
-            return std::partial_ordering::unordered;
+        if (out_alternative_ordering != nullptr) {
+            // ordering extensions (for e.g. ORDER BY) require that null nodes
+            // are always the smallest node
+            *out_alternative_ordering = this->handle_.null()
+                                                ? std::strong_ordering::less
+                                                : std::strong_ordering::greater;
         }
+        return std::partial_ordering::unordered;
     }
 
     auto const this_datatype = this->datatype_id();
