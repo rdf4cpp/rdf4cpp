@@ -26,7 +26,7 @@ class Recipe(ConanFile):
     requires = (("fmt/9.0.0", "private"),  # format must only be used within cpp files
                 "expected-lite/0.6.2",
                 "boost/1.79.0",
-                ("re2/20221201", "private"),
+                "re2/20221201",
                 ("utfcpp/3.2.3", "private"))
 
     generators = ("CMakeDeps", "CMakeToolchain")
