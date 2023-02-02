@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/regex/private/RegexReplacerImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexReplacerImpl.hpp>
 
 #include <cassert>
 #include <cctype>

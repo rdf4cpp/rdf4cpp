@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/regex/private/RegexImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexImpl.hpp>
 
 namespace rdf4cpp::rdf::regex {
 

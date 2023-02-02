@@ -1,5 +1,5 @@
 #include <rdf4cpp/rdf/regex/RegexReplacer.hpp>
-#include <rdf4cpp/rdf/regex/private/RegexReplacerImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexReplacerImpl.hpp>
 
 namespace rdf4cpp::rdf::regex {
 

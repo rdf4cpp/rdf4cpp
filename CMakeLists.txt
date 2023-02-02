@@ -148,7 +148,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
-        src/rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
@@ -156,8 +155,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/Variable.cpp
         src/rdf4cpp/rdf/regex/Regex.cpp
         src/rdf4cpp/rdf/regex/RegexReplacer.cpp
-        src/rdf4cpp/rdf/regex/private/RegexImpl.cpp
-        src/rdf4cpp/rdf/regex/private/RegexReplacerImpl.cpp
         src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
@@ -181,6 +178,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
+        private/rdf4cpp/rdf/regex/RegexImpl.cpp
+        private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
         ${serd_source_files}
 )
 
@@ -191,6 +191,7 @@ target_include_directories(
         PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/private>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
 )

@@ -1,6 +1,6 @@
 #include <rdf4cpp/rdf/regex/Regex.hpp>
-#include <rdf4cpp/rdf/regex/private/RegexImpl.hpp>
-#include <rdf4cpp/rdf/regex/private/RegexReplacerImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexReplacerImpl.hpp>
 
 namespace rdf4cpp::rdf::regex {
 

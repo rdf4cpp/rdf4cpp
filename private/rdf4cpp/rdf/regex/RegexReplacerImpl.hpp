@@ -2,7 +2,7 @@
 #define RDF4CPP_RDF_UTIL_PRIVATE_REGEXREPLACER_IMPL_HPP
 
 #include <rdf4cpp/rdf/regex/RegexReplacer.hpp>
-#include <rdf4cpp/rdf/regex/private/RegexImpl.hpp>
+#include <rdf4cpp/rdf/regex/RegexImpl.hpp>
 
 namespace rdf4cpp::rdf::regex {
 
