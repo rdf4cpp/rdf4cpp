@@ -10,14 +10,7 @@ struct LangStringRepr {
     std::string_view lexical_form;
     std::string_view language_tag;
 
-    std::weak_ordering operator<=>(LangStringRepr const &other) const noexcept;
-
-    bool operator==(LangStringRepr const &) const noexcept = default;
-    bool operator!=(LangStringRepr const &) const noexcept = default;
-    bool operator<(LangStringRepr const &) const noexcept = default;
-    bool operator<=(LangStringRepr const &) const noexcept = default;
-    bool operator>(LangStringRepr const &) const noexcept = default;
-    bool operator>=(LangStringRepr const &) const noexcept = default;
+    auto operator<=>(LangStringRepr const &other) const noexcept = default;
 };
 
 template<>
