@@ -25,6 +25,14 @@ inline constexpr Owned owned;
  * Inspired by rust's std::borrow::Cow (https://doc.rust-lang.org/std/borrow/enum.Cow.html).
  */
 struct CowString {
+    using value_type = std::string_view::value_type;
+    using traits_type = std::string_view::traits_type;
+    using iterator = std::string_view::iterator;
+    using const_iterator = std::string_view::const_iterator;
+    using const_reverse_iterator = std::string_view::const_reverse_iterator;
+    using reverse_iterator = std::string_view::reverse_iterator;
+    using size_type = std::string_view::size_type;
+
 private:
     using repr_t = std::variant<std::string, std::string_view>;
     repr_t data;
@@ -34,6 +42,46 @@ public:
 
     inline CowString(ownership_tag::Owned, std::string const &value) : data{std::in_place_type<std::string>, value} {}
     inline CowString(ownership_tag::Owned, std::string &&value) noexcept : data{std::in_place_type<std::string>, std::move(value)} {}
+
+    [[nodiscard]] constexpr size_type size() const noexcept {
+        return this->view().size();
+    }
+
+    [[nodiscard]] constexpr bool empty() const noexcept {
+        return this->view().empty();
+    }
+
+    [[nodiscard]] constexpr const_iterator begin() const noexcept {
+        return this->view().begin();
+    }
+
+    [[nodiscard]] constexpr const_iterator end() const noexcept {
+        return this->view().end();
+    }
+
+    [[nodiscard]] constexpr const_iterator cbegin() const noexcept {
+        return this->begin();
+    }
+
+    [[nodiscard]] constexpr const_iterator cend() const noexcept  {
+        return this->end();
+    }
+
+    [[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept {
+        return this->view().rbegin();
+    }
+
+    [[nodiscard]] constexpr const_reverse_iterator rend() const noexcept {
+        return this->view().rend();
+    }
+
+    [[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept {
+        return this->rbegin();
+    }
+
+    [[nodiscard]] constexpr const_reverse_iterator crend() const noexcept  {
+        return this->rend();
+    }
 
     constexpr operator std::string_view() const noexcept {
         return this->view();

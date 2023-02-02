@@ -34,6 +34,26 @@ nonstd::expected<capabilities::Numeric<xsd_integer>::div_result_cpp_type, Dynami
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_integer>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_integer>::abs(cpp_type const &operand) noexcept {
+    return boost::multiprecision::abs(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_integer>::round_result_cpp_type, DynamicError> capabilities::Numeric<xsd_integer>::round(cpp_type const &operand) noexcept {
+    return operand;
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_integer>::floor_result_cpp_type, DynamicError> capabilities::Numeric<xsd_integer>::floor(cpp_type const &operand) noexcept {
+    return operand;
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_integer>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_integer>::ceil(cpp_type const &operand) noexcept {
+    return operand;
+}
+
+template<>
 std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     if (lhs < rhs) {
         return std::partial_ordering::less;

@@ -106,6 +106,26 @@ struct DatatypeNegResultMapping {
     using op_result = std::false_type;
 };
 
+template<util::ConstexprString type_iri>
+struct DatatypeAbsResultMapping {
+    using op_result = std::false_type;
+};
+
+template<util::ConstexprString type_iri>
+struct DatatypeRoundResultMapping {
+    using op_result = std::false_type;
+};
+
+template<util::ConstexprString type_iri>
+struct DatatypeFloorResultMapping {
+    using op_result = std::false_type;
+};
+
+template<util::ConstexprString type_iri>
+struct DatatypeCeilResultMapping {
+    using op_result = std::false_type;
+};
+
 namespace detail_rank {
 
 template<util::ConstexprString type_iri, size_t N>

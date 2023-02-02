@@ -50,6 +50,12 @@ public:
     [[nodiscard]] bool is_iri() const noexcept;
     friend class Node;
 };
+
+inline namespace shorthands {
+
+BlankNode operator""_bnode(char const *str, size_t len);
+
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>

@@ -71,4 +71,12 @@ std::string_view IRI::identifier() const noexcept {
     return handle_.iri_backend().identifier;
 }
 
+inline namespace shorthands {
+
+IRI operator""_iri(char const *str, size_t const len) {
+    return IRI{std::string_view{str, len}};
+}
+
+}  // namespace shorthands
+
 }  // namespace rdf4cpp::rdf

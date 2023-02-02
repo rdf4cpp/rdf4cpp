@@ -27,6 +27,26 @@ std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const
     }
 }
 
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::abs_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::abs(cpp_type const &operand) noexcept {
+    return boost::multiprecision::abs(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::round_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::round(cpp_type const &operand) noexcept {
+    return boost::multiprecision::round(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::floor_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::floor(cpp_type const &operand) noexcept {
+    return boost::multiprecision::floor(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::ceil(cpp_type const &operand) noexcept {
+    return boost::multiprecision::ceil(operand);
+}
+
 template struct LiteralDatatypeImpl<owl_real,
                                     capabilities::Logical,
                                     capabilities::Numeric,

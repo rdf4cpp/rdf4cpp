@@ -78,6 +78,12 @@ public:
      */
     static IRI default_graph(NodeStorage &node_storage = NodeStorage::default_instance());
 };
+
+inline namespace shorthands {
+
+IRI operator""_iri(char const *str, size_t len);
+
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>

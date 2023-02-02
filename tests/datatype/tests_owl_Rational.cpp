@@ -51,6 +51,51 @@ TEST_SUITE("owl:rational") {
             CHECK_THROWS(dummy = Literal::make_typed("asd", IRI{owl_rational}));
             CHECK_THROWS(dummy = Literal::make_typed("5/-20", IRI{owl_rational}));
             CHECK_THROWS(dummy = Literal::make_typed("0x123/99", IRI{owl_rational}));
+
+            Literal const lit5 = Literal::make_typed_from_value<Rational>(cpp_type{2, 4});
+            CHECK(lit5.lexical_form() == "1/2");
         }
+    }
+
+    TEST_CASE("abs") {
+        using datatypes::owl::Rational;
+        using cpp_type = Rational::cpp_type;
+
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{-10, 100}).abs() == Literal::make_typed_from_value<Rational>(cpp_type{10, 100}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{99, -42}).abs() == Literal::make_typed_from_value<Rational>(cpp_type{99, 42}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{2, 3}).abs() == Literal::make_typed_from_value<Rational>(cpp_type{2, 3}));
+    }
+
+    TEST_CASE("round") {
+        using datatypes::owl::Rational;
+        using cpp_type = Rational::cpp_type;
+
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{2, 5}).round() == Literal::make_typed_from_value<Rational>(cpp_type{0, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{1, 2}).round() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{9, 10}).round() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{11, 10}).round() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{42, 10}).round() == Literal::make_typed_from_value<Rational>(cpp_type{4, 1}));
+    }
+
+    TEST_CASE("floor") {
+        using datatypes::owl::Rational;
+        using cpp_type = Rational::cpp_type;
+
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{2, 5}).floor() == Literal::make_typed_from_value<Rational>(cpp_type{0, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{1, 2}).floor() == Literal::make_typed_from_value<Rational>(cpp_type{0, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{9, 10}).floor() == Literal::make_typed_from_value<Rational>(cpp_type{0, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{11, 10}).floor() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{42, 10}).floor() == Literal::make_typed_from_value<Rational>(cpp_type{4, 1}));
+    };
+
+    TEST_CASE("ceil") {
+        using datatypes::owl::Rational;
+        using cpp_type = Rational::cpp_type;
+
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{2, 5}).ceil() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{1, 2}).ceil() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{9, 10}).ceil() == Literal::make_typed_from_value<Rational>(cpp_type{1, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{11, 10}).ceil() == Literal::make_typed_from_value<Rational>(cpp_type{2, 1}));
+        CHECK(Literal::make_typed_from_value<Rational>(cpp_type{42, 10}).ceil() == Literal::make_typed_from_value<Rational>(cpp_type{5, 1}));
     }
 }

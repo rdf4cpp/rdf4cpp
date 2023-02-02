@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
 
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -26,6 +27,18 @@ bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const
 
 template<>
 std::partial_ordering capabilities::Comparable<owl_rational>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_rational>::abs_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::abs(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_rational>::round_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::round(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_rational>::floor_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::floor(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_rational>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::ceil(cpp_type const &operand) noexcept;
 
 extern template struct LiteralDatatypeImpl<owl_rational,
                                            capabilities::Logical,

@@ -3,6 +3,8 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <thread>
+
 using namespace rdf4cpp::rdf;
 
 TEST_CASE("Literal - Check for only lexical form") {
@@ -455,6 +457,240 @@ TEST_CASE("Literal - casting") {
         auto const lit2 = lit1.template cast<UnsignedInt>();
 
         CHECK(lit2.null());
+    }
+}
+
+TEST_CASE("Literal - misc functions") {
+    using namespace rdf4cpp::rdf;
+
+    SUBCASE("rand") {
+        SUBCASE("same thread") {
+            auto const l1 = Literal::generate_random_double();
+            auto const l2 = Literal::generate_random_double();
+
+            CHECK(l1 >= 0.0_xsd_double);
+            CHECK(l1 < 1.0_xsd_double);
+
+            CHECK(l2 >= 0.0_xsd_double);
+            CHECK(l2 < 1.0_xsd_double);
+            CHECK(l1 != l2);  // note: non-deterministic but should basically never fail
+        }
+
+        SUBCASE("difference threads") {
+            auto const l1 = Literal::generate_random_double();
+            Literal l2;
+
+            std::thread t{[&]() {
+                l2 = Literal::generate_random_double();
+            }};
+
+            t.join();
+
+            CHECK(l1 != l2);  // note: non-deterministic but should basically never fail
+        }
+    }
+
+    SUBCASE("abs") {
+        CHECK((-1_xsd_int).abs() == 1_xsd_integer);
+        CHECK((-100.0_xsd_double).abs() == 100.0_xsd_double);
+        CHECK(99.0_xsd_float .abs() == 99.0_xsd_float);
+        CHECK("hello"_xsd_string .abs().null());
+    }
+
+    SUBCASE("round") {
+        CHECK(99_xsd_int .round() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .round() == 1.0_xsd_double);
+        CHECK(1.5_xsd_double .round() == 2.0_xsd_double);
+        CHECK("hello"_xsd_string.round().null());
+    }
+
+    SUBCASE("floor") {
+        CHECK(99_xsd_int .floor() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .floor() == 1.0_xsd_double);
+        CHECK(1.5_xsd_double .floor() == 1.0_xsd_double);
+        CHECK("hello"_xsd_string.floor().null());
+    }
+
+    SUBCASE("ceil") {
+        CHECK(99_xsd_int .ceil() == 99_xsd_integer);
+        CHECK(1.2_xsd_double .ceil() == 2.0_xsd_double);
+        CHECK(1.5_xsd_double .ceil() == 2.0_xsd_double);
+        CHECK("hello"_xsd_string.ceil().null());
+    }
+
+    SUBCASE("strlen") {
+        CHECK("12345"_xsd_string.as_strlen() == 5_xsd_integer);
+        CHECK(1_xsd_int .as_strlen().null());
+        CHECK("123"_xsd_string.as_strlen() == 3_xsd_integer);
+        CHECK(Literal::make_lang_tagged("hello", "en").as_strlen() == 5_xsd_integer);
+
+        CHECK("z\u00df\u6c34\U0001f34c"_xsd_string.as_strlen() == 4_xsd_integer);  // "zß水🍌"
+    }
+
+    SUBCASE("substr") {
+        // from https://www.w3.org/TR/xpath-functions/#func-substring
+        CHECK("motor car"_xsd_string.substr(6_xsd_integer) == " car"_xsd_string);
+        CHECK("metadata"_xsd_string.substr(4_xsd_integer, 3_xsd_integer) == "ada"_xsd_string);
+        CHECK("12345"_xsd_string.substr("1.5"_xsd_decimal, "2.6"_xsd_decimal) == "234"_xsd_string);
+        CHECK("12345"_xsd_string.substr(0_xsd_integer, 3_xsd_integer) == "12"_xsd_string);
+        CHECK("12345"_xsd_string.substr(5_xsd_integer, -3_xsd_integer) == ""_xsd_string);
+        CHECK("12345"_xsd_string.substr(-3_xsd_integer, 5_xsd_integer) == "1"_xsd_string);
+        CHECK("12345"_xsd_string.substr(0_xsd_integer / 0.0_xsd_double, 3_xsd_integer) == ""_xsd_string);
+        CHECK("12345"_xsd_string.substr(1_xsd_integer, 0_xsd_integer / 0.0_xsd_double) == ""_xsd_string);
+        CHECK("12345"_xsd_string.substr(-42_xsd_integer, 1_xsd_integer / 0.0_xsd_double) == "12345"_xsd_string);
+
+        // from https://www.w3.org/TR/sparql11-query/#func-substr
+        CHECK("foobar"_xsd_string.substr(4_xsd_integer) == "bar"_xsd_string);
+        CHECK(Literal::make_lang_tagged("foobar", "en").substr(4_xsd_integer) == Literal::make_lang_tagged("bar", "en"));
+        CHECK("foobar"_xsd_string.substr(4_xsd_integer, 1_xsd_integer) == "b"_xsd_string);
+        CHECK(Literal::make_lang_tagged("foobar", "en").substr(4_xsd_integer, 1_xsd_integer) == Literal::make_lang_tagged("b", "en"));
+
+        // check correct casting
+        auto const s = "Hello World"_xsd_string;
+        CHECK(s.substr(2_xsd_long, -1.3_xsd_double) == ""_xsd_string);
+        CHECK(s.substr(2.1_xsd_double, 3.2_xsd_double) == "ell"_xsd_string);
+        CHECK(s.substr(100_xsd_integer, 10_xsd_int) == ""_xsd_string);
+    }
+
+    SUBCASE("langMatches") {
+        CHECK(Literal::make_lang_tagged("Hello", "en").as_lang_matches("*"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("Bonjour", "fr").as_lang_matches("FR"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("Hello", "en-US").as_lang_matches("en-US"_xsd_string).ebv());
+        CHECK(5_xsd_int .as_lang_matches("*"_xsd_string).null());
+        CHECK("Hello"_xsd_string.as_lang_matches(""_xsd_string).ebv());
+        CHECK("Hello"_xsd_string.as_lang_matches("*"_xsd_string).ebv() == util::TriBool::False);
+    }
+
+    SUBCASE("ucase") {
+        // from https://www.w3.org/TR/sparql11-query/#func-ucase
+        CHECK("foo"_xsd_string.uppercase() == "FOO"_xsd_string);
+        CHECK(Literal::make_lang_tagged("foo", "en").uppercase() == Literal::make_lang_tagged("FOO", "en"));
+    }
+
+    SUBCASE("lcase") {
+        // from https://www.w3.org/TR/sparql11-query/#func-lcase
+        CHECK("BAR"_xsd_string.lowercase() == "bar"_xsd_string);
+        CHECK(Literal::make_lang_tagged("BAR", "en").lowercase() == Literal::make_lang_tagged("bar", "en"));
+    }
+
+    SUBCASE("contains") {
+        // from https://www.w3.org/TR/sparql11-query/#func-contains
+        CHECK("foobar"_xsd_string.as_contains("bar"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_contains(Literal::make_lang_tagged("foo", "en")).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_contains("bar"_xsd_string).ebv());
+
+        CHECK(Literal::make_lang_tagged("hello", "en").as_contains(Literal::make_lang_tagged("o", "fr")).null());
+        CHECK("123"_xsd_string.as_contains(Literal::make_lang_tagged("1", "en")).null());
+    }
+
+    SUBCASE("substr_before") {
+        // from https://www.w3.org/TR/sparql11-query/#func-strbefore
+        CHECK("abc"_xsd_string.substr_before("b"_xsd_string) == "a"_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before("bc"_xsd_string) == Literal::make_lang_tagged("a", "en"));
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before(Literal::make_lang_tagged("b", "cy")).null());
+        CHECK("abc"_xsd_string.substr_before(""_xsd_string) == ""_xsd_string);
+        CHECK("abc"_xsd_string.substr_before("xyz"_xsd_string) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before(Literal::make_lang_tagged("z", "en")) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before("z"_xsd_string) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before(Literal::make_lang_tagged("", "en")) == Literal::make_lang_tagged("", "en"));
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_before(""_xsd_string) == Literal::make_lang_tagged("", "en"));
+    }
+
+    SUBCASE("substr_after") {
+        // from https://www.w3.org/TR/sparql11-query/#func-strafter
+        CHECK("abc"_xsd_string.substr_after("b"_xsd_string) == "c"_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after("ab"_xsd_string) == Literal::make_lang_tagged("c", "en"));
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after(Literal::make_lang_tagged("b", "cy")).null());
+        CHECK("abc"_xsd_string.substr_after(""_xsd_string) == "abc"_xsd_string);
+        CHECK("abc"_xsd_string.substr_after("xyz"_xsd_string) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after(Literal::make_lang_tagged("z", "en")) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after("z"_xsd_string) == ""_xsd_string);
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after(Literal::make_lang_tagged("", "en")) == Literal::make_lang_tagged("abc", "en"));
+        CHECK(Literal::make_lang_tagged("abc", "en").substr_after(""_xsd_string) == Literal::make_lang_tagged("abc", "en"));
+    }
+
+    SUBCASE("str_start_with") {
+        // from https://www.w3.org/TR/sparql11-query/#func-strstarts
+        CHECK("foobar"_xsd_string.as_str_starts_with("foo"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_str_starts_with(Literal::make_lang_tagged("foo", "en")).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_str_starts_with("foo"_xsd_string).ebv());
+
+        CHECK(Literal::make_lang_tagged("foobar", "fr").as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
+        CHECK("foobar"_xsd_string.as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
+    }
+
+    SUBCASE("str_ends_with") {
+        // from https://www.w3.org/TR/sparql11-query/#func-strstarts
+        CHECK("foobar"_xsd_string.as_str_ends_with("bar"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_str_ends_with(Literal::make_lang_tagged("bar", "en")).ebv());
+        CHECK(Literal::make_lang_tagged("foobar", "en").as_str_ends_with("bar"_xsd_string).ebv());
+
+        CHECK(Literal::make_lang_tagged("foobar", "fr").as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
+        CHECK("foobar"_xsd_string.as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
+    }
+
+    SUBCASE("concat") {
+        // from https://www.w3.org/TR/sparql11-query/#func-concat
+        CHECK("foo"_xsd_string.concat("bar"_xsd_string) == "foobar"_xsd_string);
+        CHECK(Literal::make_lang_tagged("foo", "en").concat(Literal::make_lang_tagged("bar", "en")) == Literal::make_lang_tagged("foobar", "en"));
+        CHECK(Literal::make_lang_tagged("foo", "en").concat("bar"_xsd_string) == "foobar"_xsd_string);
+
+        CHECK(Literal::make_lang_tagged("foo", "fr").concat(Literal::make_lang_tagged("bar", "en")) == "foobar"_xsd_string);
+        CHECK(5_xsd_int .concat(" + "_xsd_string).concat(1.0_xsd_double).concat(Literal::make_lang_tagged(" = ", "en")).concat("6.0"_xsd_decimal) == "5 + 1.0E0 = 6.0"_xsd_string);
+    }
+
+    SUBCASE("regex_match") {
+        // from https://www.w3.org/TR/xpath-functions/#func-matches
+        CHECK("abracadabra"_xsd_string.as_regex_matches("bra"_xsd_string).ebv());
+        CHECK("abracadabra"_xsd_string.as_regex_matches("^a.*a$"_xsd_string).ebv());
+        CHECK("abracadabra"_xsd_string.as_regex_matches("^bra"_xsd_string).ebv() == util::TriBool::False);
+
+        std::string_view const poem = "<poem author=\"Wilhelm Busch\">\n"
+                                      "Kaum hat dies der Hahn gesehen,\n"
+                                      "Fängt er auch schon an zu krähen:\n"
+                                      "Kikeriki! Kikikerikih!!\n"
+                                      "Tak, tak, tak! - da kommen sie.\n"
+                                      "</poem>";
+        auto const poem_lit = Literal::make_simple(poem);
+
+        CHECK(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv() == util::TriBool::False);
+        //CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv()); TODO: support multiline flag
+        CHECK(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv() == util::TriBool::False);
+        CHECK(poem_lit.as_regex_matches("kiki"_xsd_string, "i"_xsd_string).ebv());
+
+        // check lang tag behaviour
+        CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches("b"_xsd_string).ebv());
+        CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches(Literal::make_lang_tagged("b", "en")).ebv());
+        CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches(Literal::make_lang_tagged("b", "fr")).null());
+    }
+
+    SUBCASE("regex_replace") {
+        // from https://www.w3.org/TR/sparql11-query/#func-replace
+        CHECK("abcd"_xsd_string.regex_replace("b"_xsd_string, "Z"_xsd_string) == "aZcd"_xsd_string);
+        CHECK("abab"_xsd_string.regex_replace("B"_xsd_string, "Z"_xsd_string, "i"_xsd_string) == "aZaZ"_xsd_string);
+        CHECK("abab"_xsd_string.regex_replace("B."_xsd_string, "Z"_xsd_string, "i"_xsd_string) == "aZb"_xsd_string);
+
+        // from https://www.w3.org/TR/xpath-functions/#func-replace
+        CHECK("abracadabra"_xsd_string.regex_replace("bra"_xsd_string, "*"_xsd_string) == "a*cada*"_xsd_string);
+        CHECK("abracadabra"_xsd_string.regex_replace("a.*a"_xsd_string, "*"_xsd_string) == "*"_xsd_string);
+        CHECK("abracadabra"_xsd_string.regex_replace("a.*?a"_xsd_string, "*"_xsd_string) == "*c*bra"_xsd_string);
+        CHECK("abracadabra"_xsd_string.regex_replace("a"_xsd_string, ""_xsd_string) == "brcdbr"_xsd_string);
+        CHECK("abracadabra"_xsd_string.regex_replace("a(.)"_xsd_string, "a$1$1"_xsd_string) == "abbraccaddabbra"_xsd_string);
+        CHECK("AAAA"_xsd_string.regex_replace("A+"_xsd_string, "b"_xsd_string) == "b"_xsd_string);
+        CHECK("AAAA"_xsd_string.regex_replace("A+?"_xsd_string, "b"_xsd_string) == "bbbb"_xsd_string);
+        CHECK("darted"_xsd_string.regex_replace("^(.*?)d(.*)$"_xsd_string, "$1c$2"_xsd_string) == "carted"_xsd_string);
+
+        // 'The expression fn:replace("abracadabra", ".*?", "$1") raises an error, because the pattern matches the zero-length string'
+        // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
+        //CHECK("abracadabra"_xsd_string .regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
+
+        CHECK("abcd"_xsd_string.as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv() == util::TriBool::False);
+        CHECK("Mr. B. Obama"_xsd_string.as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
+
+        // check lang tag behaviour
+        CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace("b"_xsd_string, "Z"_xsd_string) == Literal::make_lang_tagged("aZcd", "en"));
+        CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "en"), "Z"_xsd_string) == Literal::make_lang_tagged("aZcd", "en"));
+        CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
     }
 }
 

@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.hpp>
+#include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
 #include <cassert>
 #include <cstddef>

@@ -1,9 +1,12 @@
 #include "Literal.hpp"
 
 #include <sstream>
+#include <random>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
+#include <rdf4cpp/rdf/util/Utf8.hpp>
+#include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -68,6 +71,17 @@ Literal Literal::make_typed_unchecked(std::any const &value, datatypes::registry
                                                     node_storage);
 }
 
+Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto const lt_dt = lang_tag_src.datatype_id();
+
+    if (lt_dt == datatypes::rdf::LangString::datatype_id) {
+        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+    }
+
+    assert(lt_dt == datatypes::xsd::String::datatype_id);
+    return Literal::make_simple_unchecked(str, node_storage);
+}
+
 Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
     return Literal::make_simple_unchecked(lexical_form, node_storage);
 }
@@ -102,6 +116,24 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
     }
 }
 
+Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_storage) {
+    if (b == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+}
+
+Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
+    struct RngState {
+        std::default_random_engine rng{std::random_device{}()};
+        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
+    };
+
+    static thread_local RngState state;
+    return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+}
+
 Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
     if (handle_.node_storage_id() == node_storage.id()) {
         return *this;
@@ -114,6 +146,14 @@ Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept
 
     auto const new_lit_id = node_storage.find_or_make_id(literal_view);
     return Literal{NodeBackendHandle{new_lit_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
+bool Literal::datatype_matches(IRI const &datatype) const noexcept {
+    return this->datatype_id() == datatypes::registry::DatatypeIDView{datatype};
+}
+
+bool Literal::datatype_matches(Literal const &other) const noexcept {
+    return this->datatype_id() == other.datatype_id();
 }
 
 IRI Literal::datatype() const noexcept {
@@ -509,19 +549,19 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, NodeStorage &node_storage
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const noexcept {
     using datatypes::registry::DatatypeRegistry;
 
+    if (this->handle_ == other.handle_) {
+        return std::partial_ordering::equivalent;
+    }
+
     if (this->handle_.null() || other.handle_.null()) {
-        if (this->handle_ == other.handle_) {
-            return std::partial_ordering::equivalent;
-        } else {
-            if (out_alternative_ordering != nullptr) {
-                // ordering extensions (for e.g. ORDER BY) require that null nodes
-                // are always the smallest node
-                *out_alternative_ordering = this->handle_.null()
-                                             ? std::strong_ordering::less
-                                             : std::strong_ordering::greater;
-            }
-            return std::partial_ordering::unordered;
+        if (out_alternative_ordering != nullptr) {
+            // ordering extensions (for e.g. ORDER BY) require that null nodes
+            // are always the smallest node
+            *out_alternative_ordering = this->handle_.null()
+                                                ? std::strong_ordering::less
+                                                : std::strong_ordering::greater;
         }
+        return std::partial_ordering::unordered;
     }
 
     auto const this_datatype = this->datatype_id();
@@ -699,6 +739,15 @@ bool Literal::is_fixed_not_numeric() const noexcept {
     return lit_type.is_fixed() && !lit_type.is_numeric();
 }
 
+bool Literal::is_string_like() const noexcept {
+    if (this->null()) {
+        return false;
+    }
+
+    auto const dt = this->datatype_id();
+    return dt == datatypes::xsd::String::datatype_id || dt == datatypes::rdf::LangString::datatype_id;
+}
+
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.add_fptr;
@@ -759,6 +808,30 @@ Literal Literal::operator-() const noexcept {
     return this->neg();
 }
 
+Literal Literal::abs(Node::NodeStorage &node_storage) const noexcept {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
+        return num_ops.abs_fptr;
+    }, node_storage);
+}
+
+Literal Literal::round(Node::NodeStorage &node_storage) const noexcept {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
+        return num_ops.round_fptr;
+    }, node_storage);
+}
+
+Literal Literal::floor(Node::NodeStorage &node_storage) const noexcept {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
+        return num_ops.floor_fptr;
+    }, node_storage);
+}
+
+Literal Literal::ceil(NodeStorage &node_storage) const noexcept {
+    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
+        return num_ops.ceil_fptr;
+    }, node_storage);
+}
+
 util::TriBool Literal::ebv() const noexcept {
     if (this->null()) {
         return util::TriBool::Err;
@@ -774,23 +847,11 @@ util::TriBool Literal::ebv() const noexcept {
 }
 
 Literal Literal::ebv_as_literal(NodeStorage &node_storage) const noexcept {
-    auto const ebv = this->ebv();
-
-    if (ebv == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
+    return Literal::make_boolean(this->ebv(), node_storage);
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    auto const res = this->ebv() && other.ebv();
-
-    if (res == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_boolean(this->ebv() && other.ebv(), node_storage);;
 }
 
 Literal Literal::operator&&(Literal const &other) const noexcept {
@@ -798,13 +859,7 @@ Literal Literal::operator&&(Literal const &other) const noexcept {
 }
 
 Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    auto const res = this->ebv() || other.ebv();
-
-    if (res == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_boolean(this->ebv() || other.ebv(), node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const noexcept {
@@ -812,18 +867,453 @@ Literal Literal::operator||(Literal const &other) const noexcept {
 }
 
 Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
-    auto const ebv = this->ebv();
-
-    if (ebv == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
+    return Literal::make_boolean(!this->ebv(), node_storage);
 }
 
 Literal Literal::operator!() const noexcept {
     return this->logical_not();
 }
 
+std::optional<size_t> Literal::strlen() const noexcept {
+    if (!this->is_string_like()) {
+        return std::nullopt;
+    }
 
+    auto const lf = this->lexical_form();
+    try {
+        return utf8::distance(lf.begin(), lf.end());
+    } catch (utf8::exception const &) {
+        return std::nullopt;
+    }
+}
+
+Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
+    auto const len = this->strlen();
+    if (!len.has_value()) {
+        return Literal{};
+    }
+
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
+}
+
+util::TriBool Literal::lang_matches(std::string_view const lang_range) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto const lang = this->language_tag();
+
+    if (lang_range.empty()) {
+        return lang.empty();
+    }
+
+    if (lang_range == "*") {
+        return !lang.empty();
+    }
+
+    auto const lang_ci = util::CiStringView{lang.data(), lang.size()};
+    auto const lang_range_ci = util::CiStringView{lang_range.data(), lang_range.size()};
+
+    return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
+}
+
+Literal Literal::as_lang_matches(std::string_view const lang_range, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->lang_matches(lang_range);
+    return Literal::make_boolean(res, node_storage);
+}
+
+Literal Literal::as_lang_matches(Literal const &lang_range, Node::NodeStorage &node_storage) const noexcept {
+    if (lang_range.datatype_id() != datatypes::xsd::String::datatype_id) {
+        return Literal{};
+    }
+
+    return this->as_lang_matches(lang_range.lexical_form(), node_storage);
+}
+
+static regex::Regex::flag_type translate_regex_flags(std::string_view const xpath_flags) {
+    return std::accumulate(xpath_flags.begin(), xpath_flags.end(), regex::RegexFlags::none(), [](auto facc, char c) {
+        switch (c) {
+            case 's':
+                return facc | regex::RegexFlag::DotAll;
+            case 'i':
+                return facc | regex::RegexFlag::CaseInsensitive;
+            case 'q':
+                return facc | regex::RegexFlag::Literal;
+            default:
+                throw std::runtime_error{std::string{"Encountered unsupported regex flag: "} + c};
+        }
+    });
+}
+
+util::TriBool Literal::regex_matches(regex::Regex const &pattern) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    return pattern.regex_search(this->lexical_form());
+}
+
+Literal Literal::as_regex_matches(regex::Regex const &pattern, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->regex_matches(pattern);
+    return Literal::make_boolean(res, node_storage);
+}
+
+Literal Literal::as_regex_matches(Literal const &pattern, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like() || !pattern.is_string_like() || !flags.is_string_like()) {
+        return Literal{};
+    }
+
+    if (pattern.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != pattern.language_tag()) {
+        return Literal{};
+    }
+
+    auto const re = [&]() noexcept -> std::optional<regex::Regex> {
+        try {
+            auto const regex_flags = translate_regex_flags(flags.lexical_form());
+            return regex::Regex{pattern.lexical_form(), regex_flags};
+        } catch (std::runtime_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!re.has_value()) {
+        return Literal{};
+    }
+
+    return this->as_regex_matches(*re, node_storage);
+}
+
+Literal Literal::regex_replace(regex::RegexReplacer const &replacer, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    std::string lf{this->lexical_form()};
+    replacer.regex_replace(lf);
+
+    return Literal::make_string_like_copy_lang_tag(lf, *this, node_storage);
+}
+
+Literal Literal::regex_replace(Literal const &pattern, Literal const &replacement, Literal const &flags, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like() || !pattern.is_string_like() || !replacement.is_string_like() || !flags.is_string_like()) {
+        return Literal{};
+    }
+
+    if (pattern.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != pattern.language_tag()) {
+        return Literal{};
+    }
+
+    auto const re = [&]() noexcept -> std::optional<regex::Regex> {
+        try {
+            auto const regex_flags = translate_regex_flags(flags.lexical_form());
+            return regex::Regex{pattern.lexical_form(), regex_flags};
+        } catch (std::runtime_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!re.has_value()) {
+        return Literal{};
+    }
+
+    auto const repl = [&]() noexcept -> std::optional<regex::RegexReplacer> {
+        try {
+            return re->make_replacer(replacement.lexical_form());
+        } catch (std::runtime_error const &) {
+            return std::nullopt;
+        }
+    }();
+
+    if (!repl.has_value()) {
+        return Literal{};
+    }
+
+    return this->regex_replace(*repl, node_storage);
+}
+
+util::TriBool Literal::contains(std::string_view const needle) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto const s = this->lexical_form();
+    return s.view().find(needle) != std::string_view::npos;
+}
+
+Literal Literal::as_contains(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->contains(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
+Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    return this->as_contains(needle.lexical_form(), node_storage);
+}
+
+Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    if (needle.empty()) {
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
+    }
+
+    auto const s = this->lexical_form();
+    auto const pos = s.view().find(needle);
+
+    if (pos == std::string_view::npos) {
+        return Literal::make_simple_unchecked("", node_storage);
+    }
+
+    auto const substr = s.view().substr(0, pos);
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
+}
+
+Literal Literal::substr_before(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    return this->substr_before(needle.lexical_form(), node_storage);
+}
+
+Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    if (needle.empty()) {
+        return *this;
+    }
+
+    auto const s = this->lexical_form();
+    auto const pos = s.view().find(needle);
+
+    if (pos == std::string_view::npos) {
+        return Literal::make_simple_unchecked("", node_storage);
+    }
+
+    auto const substr = s.view().substr(pos + needle.size());
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
+}
+
+Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    return this->substr_after(needle.lexical_form(), node_storage);
+}
+
+util::TriBool Literal::str_starts_with(std::string_view const needle) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto const s = this->lexical_form();
+    return s.view().starts_with(needle);
+}
+
+Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->str_starts_with(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
+Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (!needle.is_string_like()) {
+        return Literal{};
+    }
+
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    return this->as_str_starts_with(needle.lexical_form(), node_storage);
+}
+
+util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto const s = this->lexical_form();
+    return s.view().ends_with(needle);
+}
+
+Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const res = this->str_ends_with(needle);
+    return Literal::make_boolean(res, node_storage);
+}
+
+Literal Literal::as_str_ends_with(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
+    if (!needle.is_string_like()) {
+        return Literal{};
+    }
+
+    if (needle.datatype_id() == datatypes::rdf::LangString::datatype_id && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    return this->as_str_ends_with(needle.lexical_form(), node_storage);
+}
+
+Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    auto const s = this->lexical_form();
+    std::string upper;
+    upper.reserve(s.size());
+    std::transform(s.begin(), s.end(), std::back_inserter(upper), [](char const ch) { return std::toupper(ch); });
+
+    return Literal::make_string_like_copy_lang_tag(upper, *this, node_storage);
+}
+
+Literal Literal::lowercase(Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    auto const s = this->lexical_form();
+    std::string lower;
+    lower.reserve(s.size());
+    std::transform(s.begin(), s.end(), std::back_inserter(lower), [](char const ch) { return std::tolower(ch); });
+
+    return Literal::make_string_like_copy_lang_tag(lower, *this, node_storage);
+}
+
+Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    if (this->null() || other.null()) {
+        return Literal{};
+    }
+
+    auto const this_dt = this->datatype_id();
+    auto const other_dt = other.datatype_id();
+
+    std::ostringstream combined;
+    combined << this->lexical_form() << other.lexical_form();
+
+    if (this_dt == datatypes::rdf::LangString::datatype_id && other_dt == datatypes::rdf::LangString::datatype_id) {
+        if (auto const lang = this->language_tag(); lang == other.language_tag())  {
+            return Literal::make_lang_tagged_unchecked(combined.view(), lang, node_storage);
+        }
+    }
+
+    return Literal::make_simple_unchecked(combined.view(), node_storage);
+}
+
+Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storage) const noexcept {
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    auto const s = this->lexical_form();
+
+    if (start > s.size()) {
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
+    }
+
+    auto const substr = s.view().substr(start, len);
+    return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
+}
+
+Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStorage &node_storage) const noexcept {
+    using namespace datatypes;
+
+    if (!this->is_string_like()) {
+        return Literal{};
+    }
+
+    auto const start_double = start.cast<xsd::Double>(node_storage);
+    if (start_double.null()) {
+        return Literal{};
+    }
+
+    auto const len_double = len.cast<xsd::Double>(node_storage);
+    if (len_double.null()) {
+        return Literal{};
+    }
+
+    auto const start_val = start_double.value<xsd::Double>();
+    if (std::isnan(start_val) || (std::isinf(start_val) && start_val > 0)) [[unlikely]] {
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
+    }
+
+    auto const len_val = len_double.value<xsd::Double>();
+    if (std::isnan(len_val) || len_val <= 0) {
+        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
+    }
+
+    auto const start_ix = static_cast<size_t>(std::round(std::max(0.0, start_val - 1.0)));
+
+    if (std::isinf(len_val)) {
+        return this->substr(start_ix);
+    }
+
+    auto const len_ix = static_cast<size_t>(std::round(len_val) - (start_val < 1.0 ? std::round(1.0 - start_val) : 0.0));
+
+    return this->substr(start_ix, len_ix, node_storage);
+}
+
+
+inline namespace shorthands {
+
+Literal operator""_xsd_string(char const *str, size_t const len) {
+    return Literal::make_simple(std::string_view{str, len});
+}
+
+Literal operator""_xsd_double(long double d) {
+    return Literal::make_typed_from_value<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
+}
+
+Literal operator""_xsd_float(long double d) {
+    return Literal::make_typed_from_value<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
+}
+
+Literal operator""_xsd_decimal(char const *str, size_t const len) {
+    return Literal::make_typed<datatypes::xsd::Decimal>(std::string_view{str, len});
+}
+
+Literal operator""_xsd_integer(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(i);
+}
+
+Literal operator""_xsd_byte(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
+}
+
+Literal operator""_xsd_ubyte(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
+}
+
+Literal operator""_xsd_short(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
+}
+
+Literal operator""_xsd_ushort(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
+}
+
+Literal operator""_xsd_int(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
+}
+
+Literal operator""_xsd_uint(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
+}
+
+Literal operator""_xsd_long(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
+}
+
+Literal operator""_xsd_ulong(unsigned long long int i) {
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
+}
+
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf

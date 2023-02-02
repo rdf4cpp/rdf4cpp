@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/util/Inlining.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 
+#include <cmath>
 #include <cstddef>
 #include <sstream>
 #include <string_view>
@@ -165,6 +166,10 @@ struct Numeric {
     using div_result = typename DatatypeDivResultMapping<type_iri>::op_result;
     using pos_result = typename DatatypePosResultMapping<type_iri>::op_result;
     using neg_result = typename DatatypeNegResultMapping<type_iri>::op_result;
+    using abs_result = typename DatatypeAbsResultMapping<type_iri>::op_result;
+    using round_result = typename DatatypeRoundResultMapping<type_iri>::op_result;
+    using floor_result = typename DatatypeFloorResultMapping<type_iri>::op_result;
+    using ceil_result  = typename DatatypeCeilResultMapping<type_iri>::op_result;
 
     static_assert(LiteralDatatypeOrUndefined<add_result>, "add result must be a literal datatype");
     static_assert(LiteralDatatypeOrUndefined<sub_result>, "sub result must be a literal datatype");
@@ -179,6 +184,10 @@ struct Numeric {
     using div_result_cpp_type = typename detail::SelectOpResult<div_result, cpp_type>::type;
     using pos_result_cpp_type = typename detail::SelectOpResult<pos_result, cpp_type>::type;
     using neg_result_cpp_type = typename detail::SelectOpResult<neg_result, cpp_type>::type;
+    using abs_result_cpp_type = typename detail::SelectOpResult<abs_result, cpp_type>::type;
+    using round_result_cpp_type = typename detail::SelectOpResult<round_result, cpp_type>::type;
+    using floor_result_cpp_type = typename detail::SelectOpResult<floor_result, cpp_type>::type;
+    using ceil_result_cpp_type = typename detail::SelectOpResult<ceil_result, cpp_type>::type;
 
     inline static cpp_type zero_value() noexcept {
         return 0;
@@ -259,6 +268,26 @@ struct Numeric {
         } else {
             return -operand;
         }
+    }
+
+    // https://www.w3.org/TR/xpath-functions/#func-abs
+    inline static nonstd::expected<abs_result_cpp_type, DynamicError> abs([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
+    }
+
+    // https://www.w3.org/TR/xpath-functions/#func-round
+    inline static nonstd::expected<round_result_cpp_type, DynamicError> round([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
+    }
+
+    // https://www.w3.org/TR/xpath-functions/#func-floor
+    inline static nonstd::expected<floor_result_cpp_type, DynamicError> floor([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
+    }
+
+    // https://www.w3.org/TR/xpath-functions/#func-ceiling
+    inline static nonstd::expected<ceil_result_cpp_type, DynamicError> ceil([[maybe_unused]] cpp_type const &operand) noexcept {
+        return nonstd::make_unexpected(DynamicError::Unsupported);
     }
 };
 

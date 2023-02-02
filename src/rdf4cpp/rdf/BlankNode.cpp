@@ -40,4 +40,12 @@ std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
     return os;
 }
 
+
+inline namespace shorthands {
+
+BlankNode operator""_bnode(char const *str, size_t len) {
+    return BlankNode{std::string_view{str, len}};
+}
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf

@@ -24,6 +24,18 @@ bool capabilities::Logical<owl_real>::effective_boolean_value(cpp_type const &va
 template<>
 std::partial_ordering capabilities::Comparable<owl_real>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::abs_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::abs(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::round_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::round(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::floor_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::floor(cpp_type const &operand) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<owl_real>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::ceil(cpp_type const &operand) noexcept;
+
 extern template struct LiteralDatatypeImpl<owl_real,
                                            capabilities::Logical,
                                            capabilities::Numeric,

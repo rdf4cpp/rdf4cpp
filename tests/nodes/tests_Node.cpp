@@ -70,7 +70,8 @@ TEST_SUITE("comparisions") {
         }
 
         SUBCASE("incomparability") {
-            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Incomparable>(1) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Incomparable>(2) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Incomparable>(1) == std::partial_ordering::equivalent); // exactly the same object so still equal
             CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Incomparable>(1) == std::partial_ordering::unordered);
             CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
         }
