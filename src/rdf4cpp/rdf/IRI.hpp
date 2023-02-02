@@ -27,6 +27,9 @@ private:
 public:
     explicit IRI(Node::NodeBackendHandle handle) noexcept;
 
+    /**
+     * Constructs the null-iri
+     */
     IRI() noexcept;
 
     /**
@@ -34,8 +37,19 @@ public:
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    explicit IRI(std::string_view iri,
-                 NodeStorage &node_storage = NodeStorage::default_instance());
+    explicit IRI(std::string_view iri, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs the null-iri
+     */
+    [[nodiscard]] static IRI make_null() noexcept;
+
+    /**
+     * Constructs an IRI object from a IRI string
+     * @param iri IRI string
+     * @param node_storage optional custom node_storage used to store the IRI
+     */
+    [[nodiscard]] static IRI make(std::string_view iri, NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Get the IRI string of this.

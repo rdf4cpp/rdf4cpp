@@ -86,24 +86,31 @@ struct Default {
     }
 };
 
+
 /**
  * The capability to be promoted to another LiteralDatatype, e.g. Decimal -> Float.
  */
 template<util::ConstexprString type_iri>
 struct Promotable {
-    using promoted = typename DatatypePromotionMapping<type_iri>::promoted;
-
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
-    using promoted_cpp_type = typename DatatypeMapping<promoted::identifier>::cpp_datatype;
 
-    static constexpr unsigned promotion_rank = detail_rank::DatatypePromotionRank<type_iri>::value;
+    static constexpr size_t promotion_rank = detail_rank::DatatypePromotionRank<type_iri>::value;
+    static constexpr size_t max_promotion_specialization_ix = DatatypePromotionSpecializationOverride<type_iri>::max_specialization_ix;
 
-    inline static promoted_cpp_type promote(cpp_type const &value) noexcept {
-        return static_cast<promoted_cpp_type>(value);
+    template<size_t ix = 0>
+    using promoted = typename detail_rank::NthPromotion<type_iri, ix>::promoted;
+
+    template<size_t ix = 0>
+    using promoted_cpp_type = typename DatatypeMapping<promoted<ix>::identifier>::cpp_datatype;
+
+    template<size_t ix = 0>
+    inline static promoted_cpp_type<ix> promote(cpp_type const &value) noexcept {
+        return static_cast<promoted_cpp_type<ix>>(value);
     }
 
-    inline static nonstd::expected<cpp_type, DynamicError> demote(promoted_cpp_type const &value) noexcept {
-        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<promoted_cpp_type>) {
+    template<size_t ix = 0>
+    inline static nonstd::expected<cpp_type, DynamicError> demote(promoted_cpp_type<ix> const &value) noexcept {
+        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<promoted_cpp_type<ix>>) {
             if (!std::in_range<cpp_type>(value)) {
                 return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
             }
@@ -118,19 +125,25 @@ struct Promotable {
  */
 template<util::ConstexprString type_iri>
 struct Subtype {
-    using supertype = typename DatatypeSupertypeMapping<type_iri>::supertype;
-
     using cpp_type = typename DatatypeMapping<type_iri>::cpp_datatype;
-    using super_cpp_type = typename DatatypeMapping<supertype::identifier>::cpp_datatype;
 
-    static constexpr unsigned subtype_rank = detail_rank::DatatypeSubtypeRank<type_iri>::value;
+    static constexpr size_t subtype_rank = detail_rank::DatatypeSubtypeRank<type_iri>::value;
+    static constexpr size_t max_supertype_specialization_ix = DatatypeSupertypeSpecializationOverride<type_iri>::max_specialization_ix;
 
-    inline static super_cpp_type into_supertype(cpp_type const &value) noexcept {
-        return static_cast<super_cpp_type>(value);
+    template<size_t ix = 0>
+    using supertype = typename detail_rank::NthSupertype<type_iri, ix>::supertype;
+
+    template<size_t ix = 0>
+    using super_cpp_type = typename DatatypeMapping<supertype<ix>::identifier>::cpp_datatype;
+
+    template<size_t ix = 0>
+    inline static super_cpp_type<ix> into_supertype(cpp_type const &value) noexcept {
+        return static_cast<super_cpp_type<ix>>(value);
     }
 
-    inline static nonstd::expected<cpp_type, DynamicError> from_supertype(super_cpp_type const &value) noexcept {
-        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<super_cpp_type>) {
+    template<size_t ix = 0>
+    inline static nonstd::expected<cpp_type, DynamicError> from_supertype(super_cpp_type<ix> const &value) noexcept {
+        if constexpr (std::is_integral_v<cpp_type> && std::is_integral_v<super_cpp_type<ix>>) {
             if (!std::in_range<cpp_type>(value)) {
                 return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
             }

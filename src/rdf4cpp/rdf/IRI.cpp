@@ -3,11 +3,11 @@
 namespace rdf4cpp::rdf {
 
 IRI::IRI(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
-IRI::IRI() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::IRI, {}}) {}
+IRI::IRI() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::IRI, {}}} {}
 IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::IRIBackendView{.identifier = iri}),
+    : Node{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::IRIBackendView{.identifier = iri}),
                              storage::node::identifier::RDFNodeType::IRI,
-                             node_storage.id()}) {}
+                             node_storage.id()}} {}
 
 IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
     : IRI{visit(datatypes::registry::DatatypeIDVisitor{
@@ -20,6 +20,14 @@ IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage
                             return IRI{dynamic, node_storage};
                         }},
                 id)} {
+}
+
+IRI IRI::make_null() noexcept {
+    return IRI{};
+}
+
+IRI IRI::make(std::string_view iri, Node::NodeStorage &node_storage) {
+    return IRI{iri, node_storage};
 }
 
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
@@ -44,7 +52,7 @@ bool IRI::is_iri() const noexcept { return true; }
 
 
 IRI IRI::default_graph(NodeStorage &node_storage) {
-    return IRI("", node_storage);
+    return IRI{"", node_storage};
 }
 std::ostream &operator<<(std::ostream &os, const IRI &iri) {
     os << static_cast<std::string>(iri);
@@ -54,12 +62,12 @@ std::string_view IRI::identifier() const noexcept {
     return handle_.iri_backend().identifier;
 }
 
-
 inline namespace shorthands {
 
 IRI operator""_iri(char const *str, size_t const len) {
     return IRI{std::string_view{str, len}};
 }
 
-}  // namespace literals
+}  // namespace shorthands
+
 }  // namespace rdf4cpp::rdf

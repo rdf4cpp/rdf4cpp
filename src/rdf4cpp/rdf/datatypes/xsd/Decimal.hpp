@@ -23,6 +23,11 @@ struct DatatypePromotionMapping<xsd_decimal> {
 };
 
 template<>
+struct DatatypePromotionSpecializationOverride<xsd_decimal> {
+    static constexpr size_t max_specialization_ix = 1;
+};
+
+template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s);
 
 template<>

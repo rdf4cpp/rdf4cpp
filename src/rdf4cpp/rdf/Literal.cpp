@@ -6,24 +6,141 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/Utf8.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/util/LangTag.hpp>
+#include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
 
 namespace rdf4cpp::rdf {
-
-Literal::Literal() noexcept
-    : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}) {}
 
 Literal::Literal(Node::NodeBackendHandle handle) noexcept
     : Node{handle} {}
 
-Literal::Literal(std::string_view lexical_form, Node::NodeStorage &node_storage)
-    : Literal{make_simple_unchecked(lexical_form, node_storage)} {}
+Literal::Literal() noexcept
+    : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Literal, {}}} {}
 
-Literal::Literal(std::string_view lexical_form, const IRI &datatype, Node::NodeStorage &node_storage)
-    : Literal{make(lexical_form, datatype, node_storage)} {}
+Literal Literal::make_null() noexcept {
+    return Literal{};
+}
 
-Literal::Literal(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage)
-    : Literal{make_lang_tagged_unchecked(lexical_form, lang, node_storage)} {}
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
+                                             .lexical_form = lexical_form,
+                                             .language_tag = ""}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
+Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                             .lexical_form = lexical_form,
+                                             .language_tag = ""}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
+    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+                                             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+                                             .lexical_form = lexical_form,
+                                             .language_tag = lang}),
+                                     storage::node::identifier::RDFNodeType::Literal,
+                                     node_storage.id()}};
+}
+
+Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+    using namespace storage::node::identifier;
+
+    assert(inlined_value >> LiteralID::width == 0);
+    assert(fixed_id != LiteralType::other());
+
+    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
+                                     RDFNodeType::Literal,
+                                     node_storage.id(),
+                                     true}};
+}
+
+Literal Literal::make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, Node::NodeStorage &node_storage) noexcept {
+    if (entry.inlining_ops.has_value()) {
+        if (auto const maybe_inlined = entry.inlining_ops->try_into_inlined_fptr(value); maybe_inlined.has_value()) {
+            return Literal::make_inlined_typed_unchecked(*maybe_inlined, datatype.get_fixed(), node_storage);
+        }
+    }
+
+    return Literal::make_noninlined_typed_unchecked(entry.to_canonical_string_fptr(value),
+                                                    IRI{datatype, node_storage},
+                                                    node_storage);
+}
+
+Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto const lt_dt = lang_tag_src.datatype_id();
+
+    if (lt_dt == datatypes::rdf::LangString::datatype_id) {
+        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+    }
+
+    assert(lt_dt == datatypes::xsd::String::datatype_id);
+    return Literal::make_simple_unchecked(str, node_storage);
+}
+
+Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
+    return Literal::make_simple_unchecked(lexical_form, node_storage);
+}
+
+Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
+    std::string lowercase_lang_tag;
+    std::transform(lang_tag.begin(), lang_tag.end(), std::back_inserter(lowercase_lang_tag), [](char const ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+
+    return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
+}
+
+Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
+    using namespace datatypes::registry;
+
+    DatatypeIDView const datatype_identifier{datatype};
+
+    if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
+        // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+    }
+
+    if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
+        // exists => canonize
+
+        auto const cpp_value = entry->factory_fptr(lexical_form);
+        return Literal::make_typed_unchecked(cpp_value, datatype_identifier, *entry, node_storage);
+    } else {
+        // doesn't exist in the registry no way to canonicalize
+        return Literal::make_noninlined_typed_unchecked(lexical_form, datatype, node_storage);
+    }
+}
+
+Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_storage) {
+    if (b == util::TriBool::Err) {
+        return Literal{};
+    }
+
+    return Literal::make_typed<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+}
+
+Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
+    struct RngState {
+        std::default_random_engine rng{std::random_device{}()};
+        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
+    };
+
+    static thread_local RngState state;
+    return Literal::make_typed<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+}
+
+bool Literal::datatype_matches(IRI const &datatype) const noexcept {
+    return this->datatype_id() == datatypes::registry::DatatypeIDView{datatype};
+}
+
+bool Literal::datatype_matches(Literal const &other) const noexcept {
+    return this->datatype_id() == other.datatype_id();
+}
 
 IRI Literal::datatype() const noexcept {
     if (this->is_fixed()) {
@@ -192,115 +309,6 @@ std::any Literal::value() const noexcept {
     return {};
 }
 
-Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
-    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                             .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
-                                             .lexical_form = lexical_form,
-                                             .language_tag = ""}),
-                                     storage::node::identifier::RDFNodeType::Literal,
-                                     node_storage.id()}};
-}
-
-Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
-    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                             .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
-                                             .lexical_form = lexical_form,
-                                             .language_tag = ""}),
-                                     storage::node::identifier::RDFNodeType::Literal,
-                                     node_storage.id()}};
-}
-
-Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
-    using namespace storage::node::identifier;
-
-    assert(inlined_value >> LiteralID::width == 0);
-    assert(fixed_id != LiteralType::other());
-
-    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
-                                     RDFNodeType::Literal,
-                                     node_storage.id(),
-                                     true}};
-}
-
-Literal Literal::make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, Node::NodeStorage &node_storage) noexcept {
-    if (entry.inlining_ops.has_value()) {
-        if (auto const maybe_inlined = entry.inlining_ops->try_into_inlined_fptr(value); maybe_inlined.has_value()) {
-            return Literal::make_inlined_typed_unchecked(*maybe_inlined, datatype.get_fixed(), node_storage);
-        }
-    }
-
-    return Literal::make_noninlined_typed_unchecked(entry.to_canonical_string_fptr(value),
-                                                    IRI{datatype, node_storage},
-                                                    node_storage);
-}
-
-Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
-    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                             .lexical_form = lexical_form,
-                                             .language_tag = lang}),
-                                     storage::node::identifier::RDFNodeType::Literal,
-                                     node_storage.id()}};
-}
-
-Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
-    auto const lt_dt = lang_tag_src.datatype_id();
-
-    if (lt_dt == datatypes::rdf::LangString::datatype_id) {
-        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
-    }
-
-    assert(lt_dt == datatypes::xsd::String::datatype_id);
-    return Literal::make_simple_unchecked(str, node_storage);
-}
-
-Literal Literal::make(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
-    using namespace datatypes::registry;
-
-    DatatypeIDView const datatype_identifier{datatype};
-
-    if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
-        // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
-        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other constructors"};
-    }
-
-    if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
-        // exists => canonize
-
-        auto const cpp_value = entry->factory_fptr(lexical_form);
-        return Literal::make_typed_unchecked(cpp_value, datatype_identifier, *entry, node_storage);
-    } else {
-        // doesn't exist in the registry no way to canonicalize
-        return Literal::make_noninlined_typed_unchecked(lexical_form, datatype, node_storage);
-    }
-}
-
-Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_storage) {
-    if (b == util::TriBool::Err) {
-        return Literal{};
-    }
-
-    return Literal::make<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
-}
-
-Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
-    struct RngState {
-        std::default_random_engine rng{std::random_device{}()};
-        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
-    };
-
-    static thread_local RngState state;
-    return Literal::make<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
-}
-
-bool Literal::datatype_matches(IRI const &datatype) const noexcept {
-    return this->datatype_id() == datatypes::registry::DatatypeIDView{datatype};
-}
-
-bool Literal::datatype_matches(Literal const &other) const noexcept {
-    return this->datatype_id() == other.datatype_id();
-}
-
 Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
     using namespace datatypes::xsd;
@@ -319,7 +327,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
     if (this_dtid == String::datatype_id) {
         // string -> any
         try {
-            return Literal::make(this->lexical_form(), target, node_storage);
+            return Literal::make_typed(this->lexical_form(), target, node_storage);
         } catch (std::runtime_error const &) {
             return Literal{};
         }
@@ -871,7 +879,7 @@ Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
+    return Literal::make_typed<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
 }
 
 util::TriBool Literal::lang_matches(std::string_view const lang_range) const noexcept {
@@ -889,8 +897,8 @@ util::TriBool Literal::lang_matches(std::string_view const lang_range) const noe
         return !lang.empty();
     }
 
-    auto const lang_ci = datatypes::registry::util::LangTagView{lang.data(), lang.size()}; // todo replace when merging develop
-    auto const lang_range_ci = datatypes::registry::util::LangTagView{lang_range.data(), lang_range.size()};
+    auto const lang_ci = util::CiStringView{lang.data(), lang.size()};
+    auto const lang_range_ci = util::CiStringView{lang_range.data(), lang_range.size()};
 
     return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
 }
@@ -1242,56 +1250,56 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
 inline namespace shorthands {
 
 Literal operator""_xsd_string(char const *str, size_t const len) {
-    return Literal{std::string_view{str, len}};
+    return Literal::make_simple(std::string_view{str, len});
 }
 
 Literal operator""_xsd_double(long double d) {
-    return Literal::make<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
+    return Literal::make_typed<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
 }
 
 Literal operator""_xsd_float(long double d) {
-    return Literal::make<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
+    return Literal::make_typed<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
 }
 
 Literal operator""_xsd_decimal(char const *str, size_t const len) {
-    return Literal::make(std::string_view{str, len}, IRI{datatypes::xsd::Decimal::identifier});
+    return Literal::make_typed(std::string_view{str, len}, IRI{datatypes::xsd::Decimal::identifier});
 }
 
 Literal operator""_xsd_integer(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Integer>(i);
+    return Literal::make_typed<datatypes::xsd::Integer>(i);
 }
 
 Literal operator""_xsd_byte(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
 }
 
 Literal operator""_xsd_ubyte(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
 }
 
 Literal operator""_xsd_short(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
 }
 
 Literal operator""_xsd_ushort(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
 }
 
 Literal operator""_xsd_int(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
 }
 
 Literal operator""_xsd_uint(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
 }
 
 Literal operator""_xsd_long(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
 }
 
 Literal operator""_xsd_ulong(unsigned long long int i) {
-    return Literal::make<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
+    return Literal::make_typed<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
 }
 
-}  // namespace literals
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf

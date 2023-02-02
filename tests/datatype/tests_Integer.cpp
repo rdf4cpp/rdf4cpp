@@ -27,39 +27,39 @@ TEST_CASE("Datatype Integer") {
     CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
     int64_t value = 1.00;
-    auto lit1 = Literal::make<datatypes::xsd::Integer>(value);
+    auto lit1 = Literal::make_typed<datatypes::xsd::Integer>(value);
     CHECK(lit1.value<datatypes::xsd::Integer>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -2147483648;
-    auto lit2 = Literal::make<datatypes::xsd::Integer>(value);
+    auto lit2 = Literal::make_typed<datatypes::xsd::Integer>(value);
     CHECK(lit2.value<datatypes::xsd::Integer>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 2147483647;
-    auto lit3 = Literal::make<datatypes::xsd::Integer>(value);
+    auto lit3 = Literal::make_typed<datatypes::xsd::Integer>(value);
     CHECK(lit3.value<datatypes::xsd::Integer>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     //Testing Literal Constructor
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::Integer>() == value);
 
     value = 2147483647;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::Integer>() == value);
 
-    auto lit6 = Literal{"+1", type_iri};
+    auto lit6 = Literal::make_typed("+1", type_iri);
     CHECK(lit6.value<datatypes::xsd::Integer>() == 1);
 
     value = std::numeric_limits<int64_t>::max();
-    auto lit7 = Literal::make<datatypes::xsd::Integer>(value);
+    auto lit7 = Literal::make_typed<datatypes::xsd::Integer>(value);
     CHECK(lit7.value<datatypes::xsd::Integer>() == value);
     CHECK(lit7.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<int64_t>::min();
-    auto lit8 = Literal::make<datatypes::xsd::Integer>(value);
+    auto lit8 = Literal::make_typed<datatypes::xsd::Integer>(value);
     CHECK(lit8.value<datatypes::xsd::Integer>() == value);
     CHECK(lit8.lexical_form() == std::to_string(value));
 
@@ -73,33 +73,33 @@ TEST_CASE("Datatype Integer") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg", type_iri));
-    CHECK_THROWS(no_discard_dummy = Literal("2.2e-308", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("2.2e-308", type_iri));
 }
 
 TEST_CASE("Datatype Integer overread UB") {
     std::string const s = "123456";
     std::string_view const sv{ s.data(), 3 };
 
-    Literal const lit{sv, IRI{datatypes::xsd::Integer::identifier}};
+    auto const lit = Literal::make_typed(sv, IRI{datatypes::xsd::Integer::identifier});
     CHECK(lit.value<datatypes::xsd::Integer>() == 123);
 }
 
 TEST_CASE("other int types serializing") {
     using namespace datatypes::xsd;
 
-    auto lit1 = Literal::make<Int>(std::numeric_limits<Int::cpp_type>::min());
+    auto lit1 = Literal::make_typed<Int>(std::numeric_limits<Int::cpp_type>::min());
     CHECK(lit1.lexical_form() == std::to_string(std::numeric_limits<Int::cpp_type>::min()));
 }
 
 TEST_CASE("integer inlining") {
     SUBCASE("small") {
-        auto lit = Literal::make<xsd::Integer>((1l << 41) - 1);
+        auto lit = Literal::make_typed<xsd::Integer>((1l << 41) - 1);
         CHECK(lit.backend_handle().is_inlined());
     }
 
     SUBCASE("too large") {
-        auto lit = Literal::make<xsd::Integer>(xsd::Integer::cpp_type{"9999999999999999999999"});
+        auto lit = Literal::make_typed<xsd::Integer>(xsd::Integer::cpp_type{"9999999999999999999999"});
         CHECK(!lit.backend_handle().is_inlined());
     }
 }

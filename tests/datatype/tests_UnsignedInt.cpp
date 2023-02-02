@@ -19,30 +19,30 @@ TEST_CASE("Datatype UnsignedInt") {
     CHECK(std::is_same_v<type, uint32_t>);
 
     uint32_t value = 1;
-    auto lit1 = Literal::make<datatypes::xsd::UnsignedInt>(value);
+    auto lit1 = Literal::make_typed<datatypes::xsd::UnsignedInt>(value);
     CHECK(lit1.value<datatypes::xsd::UnsignedInt>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit2 = Literal::make<datatypes::xsd::UnsignedInt>(value);
+    auto lit2 = Literal::make_typed<datatypes::xsd::UnsignedInt>(value);
     CHECK(lit2.value<datatypes::xsd::UnsignedInt>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<uint32_t>::max();
-    auto lit3 = Literal::make<datatypes::xsd::UnsignedInt>(value);
+    auto lit3 = Literal::make_typed<datatypes::xsd::UnsignedInt>(value);
     CHECK(lit3.value<datatypes::xsd::UnsignedInt>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::UnsignedInt>() == value);
 
     value = 0;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::UnsignedInt>() == value);
 
     value = std::numeric_limits<uint32_t>::min();
-    auto lit6 = Literal::make<datatypes::xsd::UnsignedInt>(value);
+    auto lit6 = Literal::make_typed<datatypes::xsd::UnsignedInt>(value);
     CHECK(lit6.value<datatypes::xsd::UnsignedInt>() == value);
     CHECK(lit6.lexical_form() == std::to_string(value));
 
@@ -56,11 +56,11 @@ TEST_CASE("Datatype UnsignedInt") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("4294967296", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("4294967296", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-1", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-1", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg.59566", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-0.01", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-0.01", type_iri));
 }

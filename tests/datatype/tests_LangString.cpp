@@ -8,17 +8,17 @@ using namespace rdf4cpp::rdf;
 TEST_CASE("rdf:langString") {
     static_assert(!datatypes::InlineableLiteralDatatype<datatypes::rdf::LangString>, "beware: making rdf:langString inlineable requires additional code in Literal");
 
-    CHECK_THROWS(Literal{"hello", IRI{datatypes::rdf::LangString::identifier}});
-    CHECK_THROWS(Literal::make("hello", IRI{datatypes::rdf::LangString::identifier}));
+    Literal dummy;
+    CHECK_THROWS(dummy = Literal::make_typed("hello", IRI{datatypes::rdf::LangString::identifier}));
 
-    Literal const lit1{"hello", "en"};
-    Literal const lit2 = Literal::make<datatypes::rdf::LangString>(datatypes::registry::LangStringRepr{"hello", "en"});
+    auto const lit1 = Literal::make_lang_tagged("hello", "en");
+    auto const lit2 = Literal::make_typed<datatypes::rdf::LangString>(datatypes::registry::LangStringRepr{"hello", "en"});
 
     CHECK(lit1 == lit2);
 
-    Literal const lit3{"hello", "de-DE"};
-    Literal const lit4{"hallo", "de-DE"};
-    Literal const lit5{"hallo", "de-de"};
+    auto const lit3 = Literal::make_lang_tagged("hello", "de-DE");
+    auto const lit4 = Literal::make_lang_tagged("hallo", "de-DE");
+    auto const lit5 = Literal::make_lang_tagged("hallo", "de-de");
     CHECK(lit1 != lit3);
     CHECK(lit1 != lit4);
     CHECK(lit3 != lit4);

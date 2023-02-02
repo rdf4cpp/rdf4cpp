@@ -5,10 +5,10 @@ using namespace rdf4cpp::rdf;
 
 void value_construction() {
     // runtime construction
-    [[maybe_unused]] Literal float_1{"1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"}};
+    [[maybe_unused]] Literal float_1 = Literal::make_typed("1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"});
 
     // using compile time knowledge
-    [[maybe_unused]] Literal double_1 = Literal::make<datatypes::xsd::Double>(1.2);
+    [[maybe_unused]] Literal double_1 = Literal::make_typed<datatypes::xsd::Double>(1.2);
 
     // simplification: using user-defined-literal function
     [[maybe_unused]] Literal int_1 = 1_xsd_int;
@@ -19,7 +19,7 @@ void lexical_access() {
     assert(double_1.lexical_form() == "1.8E0");
     assert(std::string{double_1} == R"#("1.8E0"^^<http://www.w3.org/2001/XMLSchema#double>)#");
 
-    Literal lang_string{"Hello", "en-US"};
+    Literal lang_string = Literal::make_lang_tagged("Hello", "en-US");
     assert(lang_string.lexical_form() == "Hello");
     assert(lang_string.language_tag() == "en-US");
     assert(lang_string.lang_matches("*"));

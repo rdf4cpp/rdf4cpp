@@ -92,8 +92,8 @@ TEST_CASE("QuadPattern - Check validity") {
             IRI{"http://example.com/2"},
             BlankNode{"b1"},
             BlankNode{"b2"},
-            Literal{"l1"},
-            Literal{"l2"},
+            Literal::make_simple("l1"),
+            Literal::make_simple("l2"),
             query::Variable{"v1"},
             query::Variable{"v2", true},
     };

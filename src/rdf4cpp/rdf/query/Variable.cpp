@@ -2,11 +2,19 @@
 
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
-Variable::Variable(std::string_view identifier, bool anonymous, NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::VariableBackendView{.name = identifier, .is_anonymous = anonymous}),
+Variable::Variable(std::string_view name, bool anonymous, NodeStorage &node_storage)
+    : Node{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
                              storage::node::identifier::RDFNodeType::Variable,
-                             node_storage.id()}) {}
-Variable::Variable(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
+                             node_storage.id()}} {}
+Variable::Variable(Node::NodeBackendHandle handle) noexcept : Node{handle} {}
+
+Variable Variable::make_named(std::string_view name, Node::NodeStorage &node_storage) {
+    return Variable{name, false, node_storage};
+}
+
+Variable Variable::make_anonymous(std::string_view name, Node::NodeStorage &node_storage) {
+    return Variable{name, true, node_storage};
+}
 
 bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID
@@ -27,5 +35,7 @@ std::ostream &operator<<(std::ostream &os, const Variable &variable) {
     os << static_cast<std::string>(variable);
     return os;
 }
+
+
 
 }  // namespace rdf4cpp::rdf::query

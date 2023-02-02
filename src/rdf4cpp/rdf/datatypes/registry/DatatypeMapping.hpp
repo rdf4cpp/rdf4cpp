@@ -24,6 +24,11 @@ struct DatatypePromotionMapping {
     using promoted = std::false_type;
 };
 
+template<util::ConstexprString type_iri>
+struct DatatypePromotionSpecializationOverride {
+    static constexpr size_t max_specialization_ix = 0;
+};
+
 /**
  * Mapping type_iri -> supertype of itself
  * @note supertype must be LiteralDatatype
@@ -31,6 +36,11 @@ struct DatatypePromotionMapping {
 template<util::ConstexprString type_iri>
 struct DatatypeSupertypeMapping {
     using supertype = std::false_type;
+};
+
+template<util::ConstexprString type_iri>
+struct DatatypeSupertypeSpecializationOverride {
+    static constexpr size_t max_specialization_ix = 0;
 };
 
 /**
@@ -118,17 +128,39 @@ struct DatatypeCeilResultMapping {
 
 namespace detail_rank {
 
+template<util::ConstexprString type_iri, size_t N>
+struct NthPromotion {
+    using prev = typename NthPromotion<type_iri, N - 1>::promoted;
+    using promoted = typename DatatypePromotionMapping<prev::identifier>::promoted;
+};
+
+template<util::ConstexprString type_iri>
+struct NthPromotion<type_iri, 0> {
+    using promoted = typename DatatypePromotionMapping<type_iri>::promoted;
+};
+
+template<util::ConstexprString type_iri, size_t N>
+struct NthSupertype {
+    using prev = typename NthSupertype<type_iri, N - 1>::supertype;
+    using supertype = typename DatatypeSupertypeMapping<prev::identifier>::promoted;
+};
+
+template<util::ConstexprString type_iri>
+struct NthSupertype<type_iri, 0> {
+    using supertype = typename DatatypeSupertypeMapping<type_iri>::supertype;
+};
+
 /**
  * The promotion rank of a type (the number of times a type can be promoted)
  */
 template<util::ConstexprString type_iri, typename enable = void>
 struct DatatypePromotionRank {
-    static constexpr unsigned value = 0;
+    static constexpr size_t value = 0;
 };
 
 template<util::ConstexprString type_iri>
 struct DatatypePromotionRank<type_iri, std::enable_if_t<!std::is_same_v<typename DatatypePromotionMapping<type_iri>::promoted, std::false_type>>> {
-    static constexpr unsigned value = 1 + DatatypePromotionRank<DatatypePromotionMapping<type_iri>::promoted::identifier>::value;
+    static constexpr size_t value = 1 + DatatypePromotionRank<DatatypePromotionMapping<type_iri>::promoted::identifier>::value;
 };
 
 /**
@@ -136,12 +168,12 @@ struct DatatypePromotionRank<type_iri, std::enable_if_t<!std::is_same_v<typename
  */
 template<util::ConstexprString type_iri, typename enable = void>
 struct DatatypeSubtypeRank {
-    static constexpr unsigned value = 0;
+    static constexpr size_t value = 0;
 };
 
 template<util::ConstexprString type_iri>
 struct DatatypeSubtypeRank<type_iri, std::enable_if_t<!std::is_same_v<typename DatatypeSupertypeMapping<type_iri>::supertype, std::false_type>>> {
-    static constexpr unsigned value = 1 + DatatypeSubtypeRank<DatatypeSupertypeMapping<type_iri>::supertype::identifier>::value;
+    static constexpr size_t value = 1 + DatatypeSubtypeRank<DatatypeSupertypeMapping<type_iri>::supertype::identifier>::value;
 };
 
 }  // namespace detail_rank

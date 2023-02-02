@@ -32,42 +32,42 @@ TEST_CASE("Datatype Boolean") {
     std::string false_val{"false"};
 
     bool value = true;
-    auto lit1 = Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit1 = Literal::make_typed<datatypes::xsd::Boolean>(value);
     CHECK(lit1.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit1.lexical_form() == true_val);
 
     value = false;
-    auto lit2 = Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit2 = Literal::make_typed<datatypes::xsd::Boolean>(value);
     CHECK(lit2.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit2.lexical_form() == false_val);
 
     value = 1;
-    auto lit3 = Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit3 = Literal::make_typed<datatypes::xsd::Boolean>(value);
     CHECK(lit3.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit3.lexical_form() == true_val);
 
     value = 0;
-    auto lit4 = Literal::make<datatypes::xsd::Boolean>(value);
+    auto lit4 = Literal::make_typed<datatypes::xsd::Boolean>(value);
     CHECK(lit4.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit4.lexical_form() == false_val);
 
     value = true;
-    auto lit5 = Literal{true_val, type_iri};
+    auto lit5 = Literal::make_typed(true_val, type_iri);
     CHECK(lit5.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit5.value()) == value);
 
     value = false;
-    auto lit6 = Literal{false_val, type_iri};
+    auto lit6 = Literal::make_typed(false_val, type_iri);
     CHECK(lit6.value<datatypes::xsd::Boolean>() == value);
     CHECK(std::any_cast<bool>(lit6.value()) == value);
 
     value = 1;
-    auto lit7 = Literal{"1", type_iri};
+    auto lit7 = Literal::make_typed("1", type_iri);
     CHECK(lit7.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit7.lexical_form() == true_val);
 
     value = 0;
-    auto lit8 = Literal{"0", type_iri};
+    auto lit8 = Literal::make_typed("0", type_iri);
     CHECK(lit8.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit8.lexical_form() == false_val);
 
@@ -83,11 +83,11 @@ TEST_CASE("Datatype Boolean") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal("5", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("5", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("adsfg", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("adsfg", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("5.64566", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("5.64566", type_iri), "XSD Parsing Error", std::runtime_error);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal("1.7e", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("1.7e", type_iri), "XSD Parsing Error", std::runtime_error);
 }

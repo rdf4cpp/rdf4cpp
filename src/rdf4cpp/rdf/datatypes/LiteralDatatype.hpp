@@ -103,21 +103,23 @@ concept ComparableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requ
                                                                             };
 
 template<typename LiteralDatatypeImpl>
-concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value, typename LiteralDatatypeImpl::promoted_cpp_type const &promoted_value) {
-                                                                                requires LiteralDatatype<typename LiteralDatatypeImpl::promoted>;
-                                                                                typename LiteralDatatypeImpl::promoted_cpp_type;
-                                                                                { LiteralDatatypeImpl::promotion_rank } -> std::convertible_to<unsigned>;
-                                                                                { LiteralDatatypeImpl::promote(value) } -> std::convertible_to<typename LiteralDatatypeImpl::promoted_cpp_type>;
-                                                                                { LiteralDatatypeImpl::demote(promoted_value) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::cpp_type, DynamicError>>;
+concept PromotableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value, typename LiteralDatatypeImpl::template promoted_cpp_type<0> const &promoted_value) {
+                                                                                requires LiteralDatatype<typename LiteralDatatypeImpl::template promoted<0>>;
+                                                                                typename LiteralDatatypeImpl::template promoted_cpp_type<0>;
+                                                                                { LiteralDatatypeImpl::promotion_rank } -> std::convertible_to<size_t>;
+                                                                                { LiteralDatatypeImpl::max_promotion_specialization_ix } -> std::convertible_to<size_t>;
+                                                                                { LiteralDatatypeImpl::template promote<0>(value) } -> std::convertible_to<typename LiteralDatatypeImpl::template promoted_cpp_type<0>>;
+                                                                                { LiteralDatatypeImpl::template demote<0>(promoted_value) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::cpp_type, DynamicError>>;
                                                                             };
 
 template<typename LiteralDatatypeImpl>
-concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value, typename LiteralDatatypeImpl::super_cpp_type const &super_value) {
-                                                                              requires LiteralDatatype<typename LiteralDatatypeImpl::supertype>;
-                                                                              typename LiteralDatatypeImpl::super_cpp_type;
-                                                                              { LiteralDatatypeImpl::subtype_rank } -> std::convertible_to<unsigned>;
-                                                                              { LiteralDatatypeImpl::into_supertype(value) } -> std::convertible_to<typename LiteralDatatypeImpl::super_cpp_type>;
-                                                                              { LiteralDatatypeImpl::from_supertype(super_value) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::cpp_type, DynamicError>>;
+concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requires(typename LiteralDatatypeImpl::cpp_type const &value, typename LiteralDatatypeImpl::template super_cpp_type<0> const &super_value) {
+                                                                              requires LiteralDatatype<typename LiteralDatatypeImpl::template supertype<0>>;
+                                                                              typename LiteralDatatypeImpl::template super_cpp_type<0>;
+                                                                              { LiteralDatatypeImpl::subtype_rank } -> std::convertible_to<size_t>;
+                                                                              { LiteralDatatypeImpl::max_supertype_specialization_ix } -> std::convertible_to<size_t>;
+                                                                              { LiteralDatatypeImpl::template into_supertype<0>(value) } -> std::convertible_to<typename LiteralDatatypeImpl::template super_cpp_type<0>>;
+                                                                              { LiteralDatatypeImpl::template from_supertype<0>(super_value) } -> std::convertible_to<nonstd::expected<typename LiteralDatatypeImpl::cpp_type, DynamicError>>;
                                                                           };
 
 /**
