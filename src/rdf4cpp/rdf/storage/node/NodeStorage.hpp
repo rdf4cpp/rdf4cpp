@@ -8,8 +8,10 @@
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 #include <array>
+#include <concepts>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -17,6 +19,15 @@
 namespace rdf4cpp::rdf::storage::node {
 
 class INodeStorageBackend;
+struct WeakNodeStorage;
+
+static constexpr identifier::NodeStorageID INVALID_BACKEND_INDEX{static_cast<uint16_t>(-1)};
+
+struct ControlBlock {
+    std::atomic<INodeStorageBackend *> backend{nullptr};
+    std::atomic<size_t> refcount{0};
+    std::atomic<size_t> generation{0};
+};
 
 /**
  * NodeStorage provides an interface to the internal storage <div>Node</div>s.
@@ -24,27 +35,35 @@ class INodeStorageBackend;
  * There can be at most 1024 different INodeStorageBackend instances at once.
  * If no NodeStorage with the identifier::NodeStorageID of a certain INodeStorageBackend exists anymore, the corresponding INodeStorageBackend is destructed.
  * This does not apply to the default_instance.
- * The live cycle of NodeStorage's and their backends is managed by the static methods within this class.
+ * The lifecycle of NodeStorage's and their backends is managed by the static methods within this class.
  */
 class NodeStorage {
-    friend INodeStorageBackend;
-
-    /*
-     * Static fields and methods for life cycle management.
+    /**
+     * An instance of this type essentially behaves like a shared_ptr
+     * with a finite amount of fixed locations where it
+     * can store its records (NodeStorage::node_context_instances).
+     * These locations are also reused after the managed instance (in this case instances of INodeStorageBackend)
+     * is destroyed.
+     * This has a few implications for the design:
+     *
+     * 1. multiple threads trying to allocate a new backend will race to reserve a slot for themselves
+     * 2. multiple threads that own a NodeStorage pointing to the same backend will race to change the reference count
+     * 2.1. related: threads that own a NodeStorage pointing to the same backend will race to destroy it
+     * 3. Weak node storages will race with node storages trying to destroy the backend when trying to upgrade them
+     * 4. Threads owning a NodeStorage will race with threads owning a WeakNodeStorage on writing/reading the generation
      */
+
+    friend struct WeakNodeStorage;
 
     /**
-     * Static array storing up to 1024 node_context Instances. As key identifier::NodeStorageID is used.
+     * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
+     * The last value of a identifier::NodeStorageID (i.e. 1023) is reserved as the invalid index.
      */
-    static inline std::array<INodeStorageBackend *, 1024> node_context_instances{};
+    static inline std::array<ControlBlock, 1023> node_context_instances{};
     /**
      * Makes sure the default_instance_ and default_node_context_id are initialized only once
      */
     static inline std::once_flag default_init_once_flag;
-    /*
-     * identifier::NodeStorageID of the current default instance
-     */
-    static inline identifier::NodeStorageID default_node_context_id;
     /**
      * THe default instance used whenever no NodeStorage is explicitly provided.
      */
@@ -67,7 +86,7 @@ public:
      * Change the default instance.
      * @param node_context NodeStorage that becomes default NodeStorage.
      */
-    static void default_instance(const NodeStorage &node_context);
+    static void default_instance(NodeStorage const &node_context);
 
     /**
      * Create a NodeStorage with a custom Backend.
@@ -77,8 +96,8 @@ public:
      * @return NodeStorage encapsulating the instance.
      */
     template<typename BackendImpl, typename... Args>
-    static inline NodeStorage new_instance(Args... args) requires std::is_base_of<INodeStorageBackend, BackendImpl>::value {
-        return NodeStorage(new BackendImpl(args...));
+    static inline NodeStorage new_instance(Args... args) requires std::derived_from<BackendImpl, INodeStorageBackend> {
+        return register_backend(new BackendImpl(args...));
     }
 
     /**
@@ -95,10 +114,9 @@ public:
     static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id);
 
     /**
-     * <p>Use with caution!</p>
      * <p>Registers a INodeStorageBackend at the identifier::NodeStorageID provided by the instance.
-     * Will throw if either a null pointer is provided or the identifier::NodeStorageID is already taken.
-     * To ensure that NodeStorage reference counting works as expected, INodeStorageBackend::use_count_ must be 1.</p>
+     * Will throw if either a null pointer is provided.
+     *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
      */
@@ -113,15 +131,8 @@ public:
      */
     static void unregister_backend(INodeStorageBackend *backend_instance);
 
-    /*
-     * Fields
-     */
-
-    /**
-     * Backend instance which provides the actual implementation of the methods.
-     */
 private:
-    INodeStorageBackend *backend_{};
+    identifier::NodeStorageID backend_index = INVALID_BACKEND_INDEX;
 
     /*
      * Constructors & Destructor
@@ -136,11 +147,27 @@ private:
      * Constructs a NodeStorage with the given backend instance.
      * @param backend backend instance.
      */
-    explicit NodeStorage(INodeStorageBackend *backend) noexcept : backend_(backend) {}
+    explicit NodeStorage(identifier::NodeStorageID backend_index) noexcept;
+
+    [[nodiscard]] inline static ControlBlock &get_slot(identifier::NodeStorageID id) {
+        assert(id != INVALID_BACKEND_INDEX);
+        return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
+    }
+
+    [[nodiscard]] inline INodeStorageBackend &get_backend() noexcept {
+        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
+        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
+    }
+
+    [[nodiscard]] INodeStorageBackend const &get_backend() const noexcept {
+        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
+        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
+    }
+
+    void increase_refcount() noexcept;
+    void decrease_refcount() noexcept;
 
 public:
-    using DependentAssetCleaner = INodeStorageBackend::DependentAssetCleaner;
-
     NodeStorage(NodeStorage &&other) noexcept;
     NodeStorage(const NodeStorage &node_context) noexcept;
     NodeStorage &operator=(const NodeStorage &other) noexcept;
@@ -157,13 +184,13 @@ public:
      * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
      * @return current number of instances of this NodeStorage
      */
-    [[nodiscard]] size_t use_count() const noexcept;
+    [[nodiscard]] size_t ref_count() const noexcept;
 
     /**
-     * Number of nodes currently held by this node storage.
+     * Number of nodes currently allocated by this node storage.
      * @return
      */
-    [[nodiscard]] size_t nodes_in_use() const noexcept;
+    [[nodiscard]] size_t size() const noexcept;
 
     /**
      * Identifier of this NodeStorage
@@ -172,14 +199,9 @@ public:
     [[nodiscard]] identifier::NodeStorageID id() const noexcept;
 
     /**
-     * Registered dependent asset cleaners are called upon destruction of the INodeStorageBackend instance backing this NodeStorage.
-     * The user is responsible that only one dependent_asset_cleaner per asset to be removed is registered. The user is also responsible to make sure that no dangling references to the assets remain the NodeStorage was removed.
-     * @param dependent_asset_cleaner a function object that cleans up assets that depend on the NodeStorage.
+     * Creates a WeakNodeStorage pointing to the same backend as this NodeStorage
      */
-    void register_dependent_asset_cleaner(DependentAssetCleaner dependent_asset_cleaner) noexcept {
-        backend_->register_dependent_asset_cleaner(std::move(dependent_asset_cleaner));
-    }
-
+    [[nodiscard]] WeakNodeStorage downgrade() const noexcept;
 
     /**
      * Lookup the identifier::NodeID for the given view::BNodeBackendView. If it doesn't exist in the backend yet, it is added.
@@ -288,7 +310,7 @@ public:
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
      */
-    bool erase_iri(identifier::NodeID id) const;
+    bool erase_iri(identifier::NodeID id);
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
@@ -296,7 +318,7 @@ public:
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
      */
-    bool erase_literal(identifier::NodeID id) const;
+    bool erase_literal(identifier::NodeID id);
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
@@ -304,7 +326,7 @@ public:
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
      */
-    bool erase_bnode(identifier::NodeID id) const;
+    bool erase_bnode(identifier::NodeID id);
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
@@ -312,7 +334,7 @@ public:
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
      */
-    bool erase_variable(identifier::NodeID id) const;
+    bool erase_variable(identifier::NodeID id);
     /**
      * <p>Use with caution!</p>
      * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.
@@ -351,9 +373,52 @@ public:
      */
     static bool erase_variable(identifier::NodeBackendHandle handle);
 
-    bool operator==(const NodeStorage &other) const noexcept = default;
+    bool operator==(NodeStorage const &other) const noexcept = default;
+    bool operator!=(NodeStorage const &other) const noexcept = default;
 };
 
+/**
+ * WeakNodeStorage is to NodeStorage what std::weak_ptr is to std::shared_ptr, i.e. while WeakNodeStorage
+ * also points to a INodeStorageBackend (like a NodeStorage) it does not contribute to its reference count and
+ * therefore does not keep it alive.
+ */
+struct WeakNodeStorage {
+private:
+    friend class NodeStorage;
+    friend struct std::hash<WeakNodeStorage>;
+
+    identifier::NodeStorageID backend_index;
+    size_t generation;
+
+    WeakNodeStorage(identifier::NodeStorageID backend_index, size_t generation) noexcept;
+public:
+    /**
+     * Identifier of this NodeStorage
+     * @return
+     */
+    [[nodiscard]] identifier::NodeStorageID id() const noexcept;
+
+    /**
+     * Tries to upgrade this WeakNodeStorage into a NodeStorage.
+     * This will only succeed if the corresponding INodeStorageBackend is still alive.
+     *
+     * @return a NodeStorage pointing to the same backend as this, if the backend is still alive, otherwise nullopt
+     */
+    [[nodiscard]] std::optional<NodeStorage> try_upgrade() const noexcept;
+
+    /**
+     * Tries to upgrade this WeakNodeStorage into a NodeStorage.
+     * This will only succeed if the corresponding INodeStorageBackend is still alive.
+     * This function throws on failure to upgrade.
+     *
+     * @return a NodeStorage pointing to the same backend as this, if the backend is still alive
+     * @throws std::runtime_error on upgrade failure
+     */
+    [[nodiscard]] NodeStorage upgrade() const;
+
+    bool operator==(WeakNodeStorage const &) const noexcept = default;
+    bool operator!=(WeakNodeStorage const &) const noexcept = default;
+};
 
 }  // namespace rdf4cpp::rdf::storage::node
 

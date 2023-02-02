@@ -4,7 +4,7 @@
 
 namespace rdf4cpp::rdf::storage::tuple {
 
-IDatasetBackend::IDatasetBackend(node::NodeStorage node_storage) : node_storage_(std::move(node_storage)) {}
+IDatasetBackend::IDatasetBackend(node::NodeStorage &node_storage) : node_storage_{node_storage.downgrade()} {}
 
 IDatasetBackend::~IDatasetBackend() = default;
 IDatasetBackend::const_iterator::const_iterator(const IDatasetBackend::const_iterator &r) : _impl(r._impl->clone()) {}

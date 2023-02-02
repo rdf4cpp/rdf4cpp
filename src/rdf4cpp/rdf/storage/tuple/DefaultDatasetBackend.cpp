@@ -3,11 +3,11 @@
 #include <utility>
 
 namespace rdf4cpp::rdf::storage::tuple {
-node::NodeStorage &DefaultDatasetBackend::node_storage() const {
+node::WeakNodeStorage const &DefaultDatasetBackend::node_storage() const {
     return this->node_storage_;
 }
 
-DefaultDatasetBackend::DefaultDatasetBackend(node::NodeStorage node_storage) : IDatasetBackend(std::move(node_storage)) {}
+DefaultDatasetBackend::DefaultDatasetBackend(node::NodeStorage &node_storage) : IDatasetBackend{node_storage} {}
 
 void DefaultDatasetBackend::add(const Quad &quad) {
     if (not quad.valid())

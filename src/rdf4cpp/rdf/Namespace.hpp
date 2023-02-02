@@ -21,6 +21,7 @@ namespace rdf4cpp::rdf {
 class Namespace {
 public:
     using NodeStorage = storage::node::NodeStorage;
+    using WeakNodeStorage = storage::node::WeakNodeStorage;
 
 protected:
     /**
@@ -31,7 +32,7 @@ protected:
     /**
      * NodeStorage from which IRI objects are created.
      */
-    mutable NodeStorage node_storage_;
+    WeakNodeStorage node_storage_;
 
     // TODO: a faster, less memory efficient map would be better.
     /**
@@ -58,7 +59,7 @@ public:
     /**
      * @return NodeStorage used to create <div>IRI</div>s from this Namespace.
      */
-    const NodeStorage &node_storage() const noexcept;
+    WeakNodeStorage node_storage() const;
 
     /**
      * Create an IRI with the suffix added to the

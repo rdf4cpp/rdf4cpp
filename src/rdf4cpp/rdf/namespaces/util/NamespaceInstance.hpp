@@ -12,18 +12,20 @@ template<typename NamespaceClass>
 struct NamespaceInstance {
     static NamespaceClass &instance(storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) {
         static storage::util::tsl::sparse_map<uint16_t, NamespaceClass> instances;
+
         uint16_t const node_storage_id = node_storage.id().value;
         if (auto found = instances.find(node_storage_id); found != instances.end()) {
-            return found.value();
-        } else {
-            instances.emplace(node_storage_id, node_storage);
+            if (!found->second.node_storage().try_upgrade().has_value()) {
+                instances.erase(found);
+                auto [it, inserted] = instances.emplace(node_storage_id, node_storage);
+                return it.value();
+            }
 
-            node_storage.register_dependent_asset_cleaner(
-                    [instances = &instances, node_storage_id = node_storage_id]() {
-                        instances->erase(node_storage_id);
-                    });
+            return found.value();
         }
-        return instances.find(node_storage.id().value).value();
+
+        auto [it, inserted] = instances.emplace(node_storage_id, node_storage);
+        return it.value();
     }
 };
 }  // namespace rdf4cpp::rdf::namespaces::util

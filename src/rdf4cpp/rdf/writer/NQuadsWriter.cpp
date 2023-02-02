@@ -13,8 +13,10 @@ NQuadsWriter::operator std::string() const {
     return stream.str();
 }
 std::ostream &operator<<(std::ostream &os, const NQuadsWriter &writer) {
+    auto ns = writer.dataset_.backend().node_storage().upgrade();
+
     for (const Quad &quad : writer.dataset_) {
-        if (not(quad.graph().is_iri() and (static_cast<IRI>(quad.graph())) == IRI::default_graph(writer.dataset_.backend().node_storage())))
+        if (not(quad.graph().is_iri() and (static_cast<IRI>(quad.graph())) == IRI::default_graph(ns)))
             os << NNodeWriter(quad.graph()) << " ";
         os << NNodeWriter(quad.subject()) << " "
            << NNodeWriter(quad.predicate()) << " "

@@ -129,7 +129,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
-        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp

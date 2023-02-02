@@ -35,7 +35,7 @@ private:
 public:
     ReferenceNodeStorageBackend();
 
-    ~ReferenceNodeStorageBackend() override = default;
+    [[nodiscard]] size_t size() const noexcept override;
 
     [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &) noexcept override;
     [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &) noexcept override;
@@ -52,10 +52,10 @@ public:
     [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
     [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
 
-    bool erase_iri(identifier::NodeID id) const override;
-    bool erase_literal(identifier::NodeID id) const override;
-    bool erase_bnode(identifier::NodeID id) const override;
-    bool erase_variable(identifier::NodeID id) const override;
+    bool erase_iri(identifier::NodeID id) override;
+    bool erase_literal(identifier::NodeID id) override;
+    bool erase_bnode(identifier::NodeID id) override;
+    bool erase_variable(identifier::NodeID id) override;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

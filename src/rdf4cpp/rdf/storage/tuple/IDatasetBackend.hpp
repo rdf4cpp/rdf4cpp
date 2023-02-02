@@ -17,14 +17,14 @@ class IDatasetBackend {
     using QuadPattern = rdf4cpp::rdf::query::QuadPattern;
 
 protected:
-    mutable node::NodeStorage node_storage_;
+    mutable node::WeakNodeStorage node_storage_;
 
 public:
-    explicit IDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::default_instance());
+    explicit IDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 
     virtual ~IDatasetBackend() = 0;
     virtual void add(const Quad &quad) = 0;
-    [[nodiscard]] virtual node::NodeStorage &node_storage() const = 0;
+    [[nodiscard]] virtual node::WeakNodeStorage const &node_storage() const = 0;
     [[nodiscard]] virtual bool contains(const Quad &quad) const = 0;
     [[nodiscard]] virtual size_t size() const = 0;
     [[nodiscard]] virtual PatternSolutions match(const QuadPattern &quad_pattern) const = 0;

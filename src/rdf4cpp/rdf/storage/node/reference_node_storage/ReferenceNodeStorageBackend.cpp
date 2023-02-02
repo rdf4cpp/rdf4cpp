@@ -4,7 +4,7 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend() {
+ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend{} {
     // some iri's like xsd:string are there by default
 
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
@@ -14,6 +14,10 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend
         assert(inserted_successfully);
         iri_storage_.id2data.emplace(id, iter->first.get());
     }
+}
+
+size_t ReferenceNodeStorageBackend::size() const noexcept {
+    return this->iri_storage_.id2data.size() + this->bnode_storage_.id2data.size() + this->literal_storage_.id2data.size() + this->variable_storage_.id2data.size();
 }
 
 /**
@@ -27,7 +31,7 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend
  * @return the NodeID for the looked up Node Backend. Result is null() if there was no matching Node Backend.
  */
 template<class Backend_t, bool create_if_not_present, class NextIDFromView_func = void *>
-inline identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &view,
+static identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &view,
                                                 auto &storage,
                                                 NextIDFromView_func next_id_func = nullptr) noexcept {
     std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
@@ -108,9 +112,9 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::VariableBack
 }
 
 template<typename NodeTypeStorage>
-typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID id) {
+static typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID id) {
     std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
-    return typename NodeTypeStorage::BackendView(*storage.id2data.at(id));
+    return static_cast<typename NodeTypeStorage::BackendView>(*storage.id2data.at(id));
 }
 
 view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID id) const {
@@ -125,16 +129,37 @@ view::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(iden
 view::VariableBackendView ReferenceNodeStorageBackend::find_variable_backend_view(identifier::NodeID id) const {
     return find_backend_view(variable_storage_, id);
 }
-bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
+
+template<typename NodeTypeStorage>
+static bool erase_impl(NodeTypeStorage &storage, identifier::NodeID id) noexcept {
+    std::unique_lock lock{storage.mutex};
+    auto it = storage.id2data.find(id);
+    if (it == storage.id2data.end()) {
+        return false;
+    }
+
+    auto backend_ptr = it->second;
+
+    auto data_it = storage.data2id.find(static_cast<typename NodeTypeStorage::BackendView>(*backend_ptr));
+    assert(data_it != storage.data2id.end());
+
+    storage.id2data.erase(it);
+    storage.data2id.erase(data_it);
+
+    return true;
 }
-bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
+
+bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID id) {
+    return erase_impl(iri_storage_, id);
 }
-bool ReferenceNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) {
+    return erase_impl(literal_storage_, id);
 }
-bool ReferenceNodeStorageBackend::erase_variable([[maybe_unused]] identifier::NodeID id) const {
-    throw std::runtime_error("Deleting nodes is not implemented in ReferenceNodeStorageBackend.");
+bool ReferenceNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) {
+    return erase_impl(bnode_storage_, id);
 }
+bool ReferenceNodeStorageBackend::erase_variable([[maybe_unused]] identifier::NodeID id) {
+    return erase_impl(variable_storage_, id);
+}
+
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

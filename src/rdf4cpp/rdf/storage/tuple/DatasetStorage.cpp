@@ -37,7 +37,7 @@ DatasetStorage::const_iterator DatasetStorage::begin() const {
 DatasetStorage::const_iterator DatasetStorage::end() const {
     return backend_->end();
 }
-node::NodeStorage &DatasetStorage::node_storage() const {
+node::WeakNodeStorage const &DatasetStorage::node_storage() const {
     return backend_->node_storage();
 }
 const std::shared_ptr<IDatasetBackend> &DatasetStorage::backend_impl() const {

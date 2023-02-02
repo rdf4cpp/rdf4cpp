@@ -18,7 +18,7 @@ class Graph {
     using NodeStorage = storage::node::NodeStorage;
 
     DatasetStorage dataset_storage;
-    IRI graph_name = IRI::default_graph(dataset_storage.node_storage());
+    IRI graph_name;
 
     Graph(DatasetStorage dataset_backend, const IRI &graph_name);
 
@@ -26,7 +26,9 @@ public:
     template<typename BackendImpl, typename... Args>
     static inline Graph new_instance(Args... args) {
         DatasetStorage dataset_backend = DatasetStorage::new_instance<BackendImpl>(args...);
-        return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
+
+        auto ns = dataset_backend.node_storage().upgrade();
+        return {dataset_backend, IRI::default_graph(ns)};
     }
 
     explicit Graph(NodeStorage node_storage = NodeStorage::default_instance());
