@@ -293,6 +293,14 @@ Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
     return Literal::make<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
 }
 
+bool Literal::datatype_matches(IRI const &datatype) const noexcept {
+    return this->datatype_id() == datatypes::registry::DatatypeIDView{datatype};
+}
+
+bool Literal::datatype_matches(Literal const &other) const noexcept {
+    return this->datatype_id() == other.datatype_id();
+}
+
 Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const noexcept {
     using namespace datatypes::registry;
     using namespace datatypes::xsd;

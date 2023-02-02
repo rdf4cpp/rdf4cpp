@@ -212,6 +212,36 @@ public:
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
+     * Checks if the datatype of this matches the provided LiteralDatatype
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @tparam T the datatype to compare against
+     * @return true iff this datatype is T
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] bool datatype_matches() const noexcept {
+        return this->datatype_id() == T::datatype_id;
+    }
+
+    /**
+     * Checks if the datatype of this matches the given IRI
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param datatype the datatype to compare against
+     * @return true iff this datatype is datatype
+     */
+    [[nodiscard]] bool datatype_matches(IRI const &datatype) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the datatype of other
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param other other literal to check against
+     * @return true iff this' datatype matches other's datatype
+     */
+    [[nodiscard]] bool datatype_matches(Literal const &other) const noexcept;
+
+    /**
      * Tries to cast this literal to a literal of the given type IRI.
      *
      * @param target the IRI of the cast target
