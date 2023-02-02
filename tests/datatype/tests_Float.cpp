@@ -32,20 +32,20 @@ TEST_CASE("Datatype Float") {
     std::string const rdf_float_1_0{"1.0E0"};
 
     type value = 1.00f;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(lit1.value<datatypes::xsd::Float>() == value);
     CHECK(lit1.lexical_form() == rdf_float_1_0);
 
     value = 32568.2350f;
-    auto lit2 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(lit2.value<datatypes::xsd::Float>() == value);
 
     value = -14523.2350f;
-    auto lit3 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(lit3.value<datatypes::xsd::Float>() == value);
 
     value = 1;
-    auto lit4 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit4 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(lit4.value<datatypes::xsd::Float>() == value);
     CHECK(lit4.lexical_form() == rdf_float_1_0);
 
@@ -65,11 +65,11 @@ TEST_CASE("Datatype Float") {
     CHECK(std::isinf(lit9.value<datatypes::xsd::Float>()));
 
     value = INFINITY;
-    auto lit10 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit10 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(std::isinf(lit10.value<datatypes::xsd::Float>()));
 
     value = NAN;
-    auto lit11 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit11 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(std::isnan(lit11.value<datatypes::xsd::Float>()));
 
     value = 1.17e-38;
@@ -84,7 +84,7 @@ TEST_CASE("Datatype Float") {
     CHECK(lit14.value<datatypes::xsd::Float>() == -std::numeric_limits<type>::infinity());
 
     value = -INFINITY;
-    auto lit15 = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto lit15 = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     CHECK(std::isinf(lit15.value<datatypes::xsd::Float>()));
     CHECK(lit15.value<datatypes::xsd::Float>() == -std::numeric_limits<type>::infinity());
 
@@ -106,7 +106,7 @@ TEST_CASE("Datatype Float") {
 
 TEST_CASE("round-trip") {
     datatypes::xsd::Float::cpp_type const value = -0.123456789f;
-    auto const lit = Literal::make_typed<datatypes::xsd::Float>(value);
+    auto const lit = Literal::make_typed_from_value<datatypes::xsd::Float>(value);
     std::cout << lit.lexical_form() << std::endl;
     CHECK(lit.value<datatypes::xsd::Float>() == value);
 }

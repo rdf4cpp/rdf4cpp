@@ -19,17 +19,17 @@ TEST_CASE("Datatype UnsignedShort") {
     CHECK(std::is_same_v<type, uint16_t>);
 
     uint16_t value = 1;
-    auto lit1 = Literal::make_typed<datatypes::xsd::UnsignedShort>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(value);
     CHECK(lit1.value<datatypes::xsd::UnsignedShort>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit2 = Literal::make_typed<datatypes::xsd::UnsignedShort>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(value);
     CHECK(lit2.value<datatypes::xsd::UnsignedShort>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<uint16_t>::max();
-    auto lit3 = Literal::make_typed<datatypes::xsd::UnsignedShort>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(value);
     CHECK(lit3.value<datatypes::xsd::UnsignedShort>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
@@ -42,7 +42,7 @@ TEST_CASE("Datatype UnsignedShort") {
     CHECK(lit5.value<datatypes::xsd::UnsignedShort>() == value);
 
     value = std::numeric_limits<uint16_t>::min();
-    auto lit6 = Literal::make_typed<datatypes::xsd::UnsignedShort>(value);
+    auto lit6 = Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(value);
     CHECK(lit6.value<datatypes::xsd::UnsignedShort>() == value);
     CHECK(lit6.lexical_form() == std::to_string(value));
 

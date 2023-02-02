@@ -32,22 +32,22 @@ TEST_CASE("Datatype Boolean") {
     std::string false_val{"false"};
 
     bool value = true;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Boolean>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Boolean>(value);
     CHECK(lit1.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit1.lexical_form() == true_val);
 
     value = false;
-    auto lit2 = Literal::make_typed<datatypes::xsd::Boolean>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Boolean>(value);
     CHECK(lit2.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit2.lexical_form() == false_val);
 
     value = 1;
-    auto lit3 = Literal::make_typed<datatypes::xsd::Boolean>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Boolean>(value);
     CHECK(lit3.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit3.lexical_form() == true_val);
 
     value = 0;
-    auto lit4 = Literal::make_typed<datatypes::xsd::Boolean>(value);
+    auto lit4 = Literal::make_typed_from_value<datatypes::xsd::Boolean>(value);
     CHECK(lit4.value<datatypes::xsd::Boolean>() == value);
     CHECK(lit4.lexical_form() == false_val);
 

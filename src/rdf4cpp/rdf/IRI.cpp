@@ -30,6 +30,15 @@ IRI IRI::make(std::string_view iri, Node::NodeStorage &node_storage) {
     return IRI{iri, node_storage};
 }
 
+IRI IRI::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(handle_));
+    return IRI{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
+}
+
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::node::identifier;
 

@@ -8,7 +8,7 @@ void value_construction() {
     [[maybe_unused]] Literal float_1 = Literal::make_typed("1.1", IRI{"http://www.w3.org/2001/XMLSchema#float"});
 
     // using compile time knowledge
-    [[maybe_unused]] Literal double_1 = Literal::make_typed<datatypes::xsd::Double>(1.2);
+    [[maybe_unused]] Literal double_1 = Literal::make_typed_from_value<datatypes::xsd::Double>(1.2);
 
     // simplification: using user-defined-literal function
     [[maybe_unused]] Literal int_1 = 1_xsd_int;

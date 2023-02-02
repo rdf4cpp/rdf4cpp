@@ -12,7 +12,7 @@ TEST_CASE("rdf:langString") {
     CHECK_THROWS(dummy = Literal::make_typed("hello", IRI{datatypes::rdf::LangString::identifier}));
 
     auto const lit1 = Literal::make_lang_tagged("hello", "en");
-    auto const lit2 = Literal::make_typed<datatypes::rdf::LangString>(datatypes::registry::LangStringRepr{"hello", "en"});
+    auto const lit2 = Literal::make_typed_from_value<datatypes::rdf::LangString>(datatypes::registry::LangStringRepr{"hello", "en"});
 
     CHECK(lit1 == lit2);
 

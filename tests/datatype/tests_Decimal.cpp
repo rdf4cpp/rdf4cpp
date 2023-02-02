@@ -31,16 +31,16 @@ TEST_CASE("Datatype Decimal") {
     std::string rdf_dbl_0_0{"0.0"};
 
     type value = 1.00;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit1.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit1.lexical_form() == rdf_dbl_1_0);
 
     value = 64582165456988.6235896;
-    auto lit2 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit2.value<datatypes::xsd::Decimal>() == value);
 
     value = -64524654389.12345678;
-    auto lit3 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit3.value<datatypes::xsd::Decimal>() == value);
 
     value = 1.0;
@@ -70,11 +70,11 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit9.value<datatypes::xsd::Decimal>() == value);
 
     value = type{"3.111"};
-    auto lit10 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit10 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit10.value<datatypes::xsd::Decimal>() == value);
 
     value = 0;
-    auto lit11 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit11 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit11.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit11.lexical_form() == rdf_dbl_0_0);
 
@@ -84,12 +84,12 @@ TEST_CASE("Datatype Decimal") {
     CHECK(lit12.lexical_form() == rdf_dbl_1_0);
 
     value = type{"0.000000005"};
-    auto lit13 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit13 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit13.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit13.lexical_form() == "0.000000005");
 
     value = 6000000000.0;
-    auto lit14 = Literal::make_typed<datatypes::xsd::Decimal>(value);
+    auto lit14 = Literal::make_typed_from_value<datatypes::xsd::Decimal>(value);
     CHECK(lit14.value<datatypes::xsd::Decimal>() == value);
     CHECK(lit14.lexical_form() == "6000000000.0");
 
@@ -139,7 +139,7 @@ TEST_CASE("precision") {
     cpp_type const n = 18;
     cpp_type const x = i * pow(cpp_type{10}, -n);
 
-    Literal const lit = Literal::make_typed<datatypes::xsd::Decimal>(x);
+    Literal const lit = Literal::make_typed_from_value<datatypes::xsd::Decimal>(x);
     CHECK(lit.lexical_form() == "0.999999999999999999");
 }
 

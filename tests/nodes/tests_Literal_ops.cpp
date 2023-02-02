@@ -12,44 +12,44 @@ TEST_CASE("Literal - logical ops") {
     SUBCASE("Literal - logical ops - results") {
         SUBCASE("Literal - logical ops - bool results - and") {
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
                 auto const res = lhs && rhs;
                 auto const res2 = rhs && lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(false));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(false));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
             }
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
 
                 auto const res = lhs && rhs;
                 auto const res2 = rhs && lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(true));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(true));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
             }
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
                 auto const res = lhs && rhs;
                 auto const res2 = rhs && lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(false));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(false));
-            }
-            {
-                auto const lhs = Literal{};
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
-
-                auto const res = lhs && rhs;
-                auto const res2 = rhs && lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(false));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(false));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
             }
             {
                 auto const lhs = Literal{};
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
+
+                auto const res = lhs && rhs;
+                auto const res2 = rhs && lhs;
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
+            }
+            {
+                auto const lhs = Literal{};
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
 
                 auto const res = lhs && rhs;
                 auto const res2 = rhs && lhs;
@@ -69,35 +69,35 @@ TEST_CASE("Literal - logical ops") {
 
         SUBCASE("Literal - logical ops - bool results - or") {
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
                 auto const res = lhs || rhs;
                 auto const res2 = rhs || lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(true));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(true));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
             }
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
 
                 auto const res = lhs || rhs;
                 auto const res2 = rhs || lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(true));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(true));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
             }
             {
-                auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+                auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
                 auto const res = lhs || rhs;
                 auto const res2 = rhs || lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(false));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(false));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
             }
             {
                 auto const lhs = Literal{};
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
                 auto const res = lhs || rhs;
                 auto const res2 = rhs || lhs;
@@ -106,12 +106,12 @@ TEST_CASE("Literal - logical ops") {
             }
             {
                 auto const lhs = Literal{};
-                auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
+                auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
 
                 auto const res = lhs || rhs;
                 auto const res2 = rhs || lhs;
-                CHECK(res == Literal::make_typed<datatypes::xsd::Boolean>(true));
-                CHECK(res2 == Literal::make_typed<datatypes::xsd::Boolean>(true));
+                CHECK(res == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
+                CHECK(res2 == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
             }
             {
                 auto const lhs = Literal{};
@@ -126,12 +126,12 @@ TEST_CASE("Literal - logical ops") {
 
         SUBCASE("Literal - logical ops - bool results - not") {
             {
-                auto const op = Literal::make_typed<datatypes::xsd::Boolean>(true);
-                CHECK(!op == Literal::make_typed<datatypes::xsd::Boolean>(false));
+                auto const op = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+                CHECK(!op == Literal::make_typed_from_value<datatypes::xsd::Boolean>(false));
             }
             {
-                auto const op = Literal::make_typed<datatypes::xsd::Boolean>(false);
-                CHECK(!op == Literal::make_typed<datatypes::xsd::Boolean>(true));
+                auto const op = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
+                CHECK(!op == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
             }
             {
                 auto const op = Literal{};
@@ -143,18 +143,18 @@ TEST_CASE("Literal - logical ops") {
 
 #define GENERATE_BINOP_TESTCASE(lhs_type, lhs, op, rhs_type, rhs, expected_type, expected) \
     SUBCASE(#lhs_type " " #op " " #rhs_type) {                                             \
-        auto const lhs_lit = Literal::make_typed<datatypes::xsd::lhs_type>(lhs);                 \
-        auto const rhs_lit = Literal::make_typed<datatypes::xsd::rhs_type>(rhs);                 \
+        auto const lhs_lit = Literal::make_typed_from_value<datatypes::xsd::lhs_type>(lhs);                 \
+        auto const rhs_lit = Literal::make_typed_from_value<datatypes::xsd::rhs_type>(rhs);                 \
                                                                                            \
-        auto const expected_lit = Literal::make_typed<datatypes::xsd::expected_type>(expected);  \
+        auto const expected_lit = Literal::make_typed_from_value<datatypes::xsd::expected_type>(expected);  \
         CHECK(lhs_lit op rhs_lit == expected_lit);                                         \
     }
 
 #define GENERATE_UNOP_TESTCASE(type, value, op, expected_type, expected)                  \
     SUBCASE(#op " type") {                                                                \
-        auto const value_lit = Literal::make_typed<datatypes::xsd::type>(value);                \
+        auto const value_lit = Literal::make_typed_from_value<datatypes::xsd::type>(value);                \
                                                                                           \
-        auto const expected_lit = Literal::make_typed<datatypes::xsd::expected_type>(expected); \
+        auto const expected_lit = Literal::make_typed_from_value<datatypes::xsd::expected_type>(expected); \
         CHECK(op value_lit == expected_lit);                                              \
     }
 
@@ -192,22 +192,22 @@ TEST_CASE("Literal - numeric ops") {
     GENERATE_BINOP_TESTCASE(Int, int_max, *, Int, 2, Integer, static_cast<int64_t>(int_max) * 2);
 
     SUBCASE("boolean not add") {
-        auto const lhs = Literal::make_typed<datatypes::xsd::Boolean>(true);
-        auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+        auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+        auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
         CHECK((lhs + rhs).null());
     }
 
     SUBCASE("add literal type mismatch") {
-        auto const lhs = Literal::make_typed<datatypes::xsd::Float>(1.f);
-        auto const rhs = Literal::make_typed<datatypes::xsd::Boolean>(false);
+        auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Float>(1.f);
+        auto const rhs = Literal::make_typed_from_value<datatypes::xsd::Boolean>(false);
 
         CHECK((lhs + rhs).null());
     }
 
     SUBCASE("op with null") {
         {
-            auto const lhs = Literal::make_typed<datatypes::xsd::Float>(2.f);
+            auto const lhs = Literal::make_typed_from_value<datatypes::xsd::Float>(2.f);
             auto const rhs = Literal{};
 
             CHECK((lhs + rhs).null());

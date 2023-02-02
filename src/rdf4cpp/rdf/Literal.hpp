@@ -161,19 +161,48 @@ public:
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
                                             NodeStorage &node_storage = NodeStorage::default_instance());
 
+
+    /**
+     * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
+     * @tparam lexical_form the lexical form
+     * @param LiteralDatatype_t the datatype
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
+                                            NodeStorage &node_storage = NodeStorage::default_instance()) {
+
+        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+            // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+            throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        }
+
+        auto const value = LiteralDatatype_t::from_string(lexical_form);
+
+        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+            }
+        }
+
+        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_canonical_string(value),
+                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+                                                        node_storage);
+    }
+
     /**
      * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
      * No runtime lookup of the type information is required.
      * If type information is available at compile time, you should use this version of the function.
-     * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
-     * @tparam dtype_iri IRI string of the RDF datatype
+     *
+     * @tparam LiteralDatatype_t the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype LiteralDatatype_t>
-    [[nodiscard]] static Literal make_typed(typename LiteralDatatype_t::cpp_type compatible_value,
-                                            NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+    [[nodiscard]] static Literal make_typed_from_value(typename LiteralDatatype_t::cpp_type const &compatible_value,
+                                                       NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
@@ -209,6 +238,8 @@ public:
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype
@@ -719,7 +750,7 @@ public:
      *      - len is not xsd:double or derived from it
      */
     [[nodiscard]] Literal substr(Literal const &start,
-                                 Literal const &len = Literal::make_typed<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
+                                 Literal const &len = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
                                  NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**

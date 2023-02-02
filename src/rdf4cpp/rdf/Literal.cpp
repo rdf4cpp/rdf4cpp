@@ -121,7 +121,7 @@ Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_sto
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
 }
 
 Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
@@ -131,7 +131,21 @@ Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
     };
 
     static thread_local RngState state;
-    return Literal::make_typed<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+}
+
+Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto literal_view = NodeStorage::find_literal_backend_view(handle_);
+    auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal_view.datatype_id, storage::node::identifier::RDFNodeType::IRI, handle_.node_storage_id()});
+
+    literal_view.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+
+    auto const new_lit_id = node_storage.find_or_make_id(literal_view);
+    return Literal{NodeBackendHandle{new_lit_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
 bool Literal::datatype_matches(IRI const &datatype) const noexcept {
@@ -321,7 +335,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
     DatatypeIDView const target_dtid{target};
 
     if (this_dtid == target_dtid) {
-        return static_cast<Literal>(this->to_node_storage(node_storage));
+        return this->to_node_storage(node_storage);
     }
 
     if (this_dtid == String::datatype_id) {
@@ -837,7 +851,7 @@ Literal Literal::ebv_as_literal(NodeStorage &node_storage) const noexcept {
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return Literal::make_boolean(this->ebv() && other.ebv(), node_storage);
+    return Literal::make_boolean(this->ebv() && other.ebv(), node_storage);;
 }
 
 Literal Literal::operator&&(Literal const &other) const noexcept {
@@ -879,7 +893,7 @@ Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, node_storage);
 }
 
 util::TriBool Literal::lang_matches(std::string_view const lang_range) const noexcept {
@@ -1254,51 +1268,51 @@ Literal operator""_xsd_string(char const *str, size_t const len) {
 }
 
 Literal operator""_xsd_double(long double d) {
-    return Literal::make_typed<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
+    return Literal::make_typed_from_value<datatypes::xsd::Double>(static_cast<datatypes::xsd::Double::cpp_type>(d));
 }
 
 Literal operator""_xsd_float(long double d) {
-    return Literal::make_typed<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
+    return Literal::make_typed_from_value<datatypes::xsd::Float>(static_cast<datatypes::xsd::Float::cpp_type>(d));
 }
 
 Literal operator""_xsd_decimal(char const *str, size_t const len) {
-    return Literal::make_typed(std::string_view{str, len}, IRI{datatypes::xsd::Decimal::identifier});
+    return Literal::make_typed<datatypes::xsd::Decimal>(std::string_view{str, len});
 }
 
 Literal operator""_xsd_integer(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::Integer>(i);
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(i);
 }
 
 Literal operator""_xsd_byte(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::Byte>(static_cast<datatypes::xsd::Byte::cpp_type>(i));
 }
 
 Literal operator""_xsd_ubyte(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedByte>(static_cast<datatypes::xsd::UnsignedByte::cpp_type>(i));
 }
 
 Literal operator""_xsd_short(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::Short>(static_cast<datatypes::xsd::Short::cpp_type>(i));
 }
 
 Literal operator""_xsd_ushort(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedShort>(static_cast<datatypes::xsd::UnsignedShort::cpp_type>(i));
 }
 
 Literal operator""_xsd_int(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::Int>(static_cast<datatypes::xsd::Int::cpp_type>(i));
 }
 
 Literal operator""_xsd_uint(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedInt>(static_cast<datatypes::xsd::UnsignedInt::cpp_type>(i));
 }
 
 Literal operator""_xsd_long(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::Long>(static_cast<datatypes::xsd::Long::cpp_type>(i));
 }
 
 Literal operator""_xsd_ulong(unsigned long long int i) {
-    return Literal::make_typed<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
+    return Literal::make_typed_from_value<datatypes::xsd::UnsignedLong>(static_cast<datatypes::xsd::UnsignedLong::cpp_type>(i));
 }
 
 }  // namespace shorthands

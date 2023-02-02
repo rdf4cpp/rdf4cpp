@@ -19,17 +19,17 @@ TEST_CASE("Datatype Byte") {
     CHECK(std::is_same_v<type, int8_t>);
 
     auto value = 1;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Byte>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit1.value<datatypes::xsd::Byte>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -128;
-    auto lit2 = Literal::make_typed<datatypes::xsd::Byte>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit2.value<datatypes::xsd::Byte>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 127;
-    auto lit3 = Literal::make_typed<datatypes::xsd::Byte>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit3.value<datatypes::xsd::Byte>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 

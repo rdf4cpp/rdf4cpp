@@ -17,20 +17,20 @@ TEST_CASE("Datatype Double") {
     std::string rdf_dbl_1_0{"1.0E0"};
 
     double value = 1.00;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(lit1.value<datatypes::xsd::Double>() == value);
     CHECK(lit1.lexical_form() == rdf_dbl_1_0);
 
     value = 987456321123456.123586987;
-    auto lit2 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(lit2.value<datatypes::xsd::Double>() == value);
 
     value = -64545352389.2352345670;
-    auto lit3 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(lit3.value<datatypes::xsd::Double>() == value);
 
     value = 1;
-    auto lit4 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit4 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(lit4.value<datatypes::xsd::Double>() == value);
     CHECK(lit4.lexical_form() == rdf_dbl_1_0);
 
@@ -50,11 +50,11 @@ TEST_CASE("Datatype Double") {
     CHECK(std::isinf(lit9.value<datatypes::xsd::Double>()));
 
     value = INFINITY;
-    auto lit10 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit10 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(std::isinf(lit10.value<datatypes::xsd::Double>()));
 
     value = NAN;
-    auto lit11 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit11 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(std::isnan(lit11.value<datatypes::xsd::Double>()));
 
     value = 2.22e-308;
@@ -69,7 +69,7 @@ TEST_CASE("Datatype Double") {
     CHECK(lit14.value<datatypes::xsd::Double>() == -std::numeric_limits<type>::infinity());
 
     value = -INFINITY;
-    auto lit15 = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit15 = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(std::isinf(lit15.value<datatypes::xsd::Double>()));
     CHECK(lit15.value<datatypes::xsd::Double>() == -std::numeric_limits<type>::infinity());
 
@@ -91,14 +91,14 @@ TEST_CASE("Datatype Double") {
 
 TEST_CASE("round-trip") {
     datatypes::xsd::Double::cpp_type const value = -0.1234567890001;
-    auto const lit = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto const lit = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     std::cout << lit.lexical_form() << std::endl;
     CHECK(lit.value<datatypes::xsd::Double>() == value);
 }
 
 TEST_CASE("double inlining") {
     double value = 9999;
-    auto lit = Literal::make_typed<datatypes::xsd::Double>(value);
+    auto lit = Literal::make_typed_from_value<datatypes::xsd::Double>(value);
     CHECK(lit.backend_handle().is_inlined());
     CHECK(lit.value<datatypes::xsd::Double>() == value);
 }
