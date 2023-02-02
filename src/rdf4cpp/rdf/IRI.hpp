@@ -51,6 +51,8 @@ public:
      */
     [[nodiscard]] static IRI make(std::string_view iri, NodeStorage &node_storage = NodeStorage::default_instance());
 
+    [[nodiscard]] IRI to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
     /**
      * Get the IRI string of this.
      * @return IRI string

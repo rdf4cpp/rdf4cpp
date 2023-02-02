@@ -110,26 +110,30 @@ public:
      */
     [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+
     /**
-     * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
-     * @return a copy of type BlankNode
+     * Casts this Node into a BlankNode if it is one, otherwise returns the null BlankNode.
+     * @return a copy of this as BlankNode if it is one, else null BlankNode
      */
-    explicit operator BlankNode() const noexcept;
+    [[nodiscard]] BlankNode as_blank_node() const noexcept;
+
     /**
-     * Conversion to IRI is only safe if `(is_iri() == true)`
-     * @return a copy of type IRI
+     * Casts this Node into a IRI if it is one, otherwise returns the null IRI.
+     * @return a copy of this as IRI if it is one, else null IRI
      */
-    explicit operator IRI() const noexcept;
+    [[nodiscard]] IRI as_iri() const noexcept;
+
     /**
-     * Conversion to Literal is only safe if `(is_literal() == true)`
-     * @return a copy of type Literal
+     * Casts this Node into a Literal if it is one, otherwise returns the null Literal.
+     * @return a copy of this as Literal if it is one, else null Literal
      */
-    explicit operator Literal() const noexcept;
+    [[nodiscard]] Literal as_literal() const noexcept;
+
     /**
-     * Conversion to Variable is only safe if `(is_variable() == true)`
-     * @return a copy of type Variable
+     * Casts this Node into a Variable if it is one, otherwise returns the null Variable.
+     * @return a copy of this as Variable if it is one, else null Variable
      */
-    explicit operator query::Variable() const noexcept;
+    [[nodiscard]] query::Variable as_variable() const noexcept;
 
 
     /**

@@ -16,6 +16,15 @@ BlankNode BlankNode::make(std::string_view identifier, Node::NodeStorage &node_s
     return BlankNode{identifier, node_storage};
 }
 
+BlankNode BlankNode::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(handle_));
+    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
+}
+
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
 BlankNode::operator std::string() const noexcept {
