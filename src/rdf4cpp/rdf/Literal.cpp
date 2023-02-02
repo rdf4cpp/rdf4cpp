@@ -73,7 +73,12 @@ Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &n
 }
 
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
-    return Literal::make_lang_tagged_unchecked(lexical_form, lang_tag, node_storage);
+    std::string lowercase_lang_tag;
+    std::transform(lang_tag.begin(), lang_tag.end(), std::back_inserter(lowercase_lang_tag), [](char const ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+
+    return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
 }
 
 Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
