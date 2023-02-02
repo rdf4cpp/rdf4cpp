@@ -54,7 +54,7 @@ Node::operator std::string() const noexcept {
         case RDFNodeType::BNode:
             return handle_.bnode_backend().n_string();
         case RDFNodeType::Literal: {
-            return static_cast<std::string>(static_cast<Literal>(*this));
+            return static_cast<std::string>(Literal{handle_});
         }
         case RDFNodeType::Variable:
             return handle_.variable_backend().n_string();
@@ -105,7 +105,7 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
             case RDFNodeType::BNode:
                 return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
             case RDFNodeType::Literal:
-                return static_cast<Literal>(*this).compare_with_extensions(static_cast<Literal>(other));
+                return Literal{handle_}.compare_with_extensions(Literal{other.handle_});
             case RDFNodeType::Variable:
                 return this->handle_.variable_backend() <=> other.handle_.variable_backend();
             default:{
@@ -120,22 +120,38 @@ bool Node::operator==(const Node &other) const noexcept {
     return *this <=> other == std::strong_ordering::equivalent;
 }
 
-Node::operator BlankNode() const noexcept {
-    assert(is_blank_node());
+BlankNode Node::as_blank_node() const noexcept {
+    if (!this->is_blank_node()) {
+        return BlankNode{};
+    }
+
     return BlankNode{handle_};
 }
-Node::operator IRI() const noexcept {
-    assert(is_iri());
+
+IRI Node::as_iri() const noexcept {
+    if (!this->is_iri()) {
+        return IRI{};
+    }
+
     return IRI{handle_};
 }
-Node::operator Literal() const noexcept {
-    assert(is_literal());
+
+Literal Node::as_literal() const noexcept {
+    if (!this->is_literal()) {
+        return Literal{};
+    }
+
     return Literal{handle_};
 }
-Node::operator query::Variable() const noexcept {
-    assert(is_variable());
+
+query::Variable Node::as_variable() const noexcept {
+    if (!this->is_variable()) {
+        return query::Variable{};
+    }
+
     return query::Variable{handle_};
 }
+
 bool Node::null() const noexcept {
     return handle_.null();
 }
@@ -154,15 +170,11 @@ util::TriBool Node::ebv() const noexcept {
         return util::TriBool::Err;
     }
 
-    return static_cast<Literal>(*this).ebv();
+    return Literal{handle_}.ebv();
 }
 
-Literal Node::ebv_as_literal([[maybe_unused]] NodeStorage &node_storage) const noexcept {
-    if (this->null() || !this->is_literal()) {
-        return Literal{};
-    }
-
-    return static_cast<Literal>(*this).ebv_as_literal(node_storage);
+Literal Node::ebv_as_literal(NodeStorage &node_storage) const noexcept {
+    return this->as_literal().ebv_as_literal(node_storage);
 }
 
 }  // namespace rdf4cpp::rdf

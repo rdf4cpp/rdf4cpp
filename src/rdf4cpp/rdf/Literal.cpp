@@ -102,6 +102,19 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
     }
 }
 
+Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto literal_view = NodeStorage::find_literal_backend_view(handle_);
+    auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal_view.datatype_id, storage::node::identifier::RDFNodeType::IRI, handle_.node_storage_id()});
+
+    literal_view.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+
+    auto const new_lit_id = node_storage.find_or_make_id(literal_view);
+    return Literal{NodeBackendHandle{new_lit_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
 
 IRI Literal::datatype() const noexcept {
     if (this->is_fixed()) {
@@ -282,7 +295,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
     DatatypeIDView const target_dtid{target};
 
     if (this_dtid == target_dtid) {
-        return static_cast<Literal>(this->to_node_storage(node_storage));
+        return this->to_node_storage(node_storage);
     }
 
     if (this_dtid == String::datatype_id) {

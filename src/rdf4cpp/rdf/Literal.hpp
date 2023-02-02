@@ -172,6 +172,8 @@ public:
                                                         node_storage);
     }
 
+    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
     /**
      * Tries to cast this literal to a literal of the given type IRI.
      *

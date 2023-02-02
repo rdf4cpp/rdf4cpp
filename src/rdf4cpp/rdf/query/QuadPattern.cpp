@@ -2,7 +2,7 @@
 namespace rdf4cpp::rdf::query {
 QuadPattern::operator std::string() const {
 
-    return (graph().is_iri() and static_cast<IRI>(graph()).null())  // Graph
+    return (graph().is_iri() and graph().null())  // Graph
                     ? std::string{}
                     : static_cast<std::string>(graph()) + " " +
            static_cast<std::string>(subject()) + " " +    // Subject
