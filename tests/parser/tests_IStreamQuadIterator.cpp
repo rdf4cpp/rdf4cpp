@@ -148,7 +148,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
                                    IRI{"http://purl.org/dc/elements/1.1/title"},
-                                   Literal::make_typed<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
 
 
         ++qit;
@@ -170,7 +170,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
                                    IRI{"http://purl.org/dc/elements/1.1/title"},
-                                   Literal::make_typed<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
 
         ++qit;
         CHECK(qit != IStreamQuadIterator{});
@@ -182,7 +182,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{BlankNode{"b2"},
                                    IRI{"http://example.org/stuff/1.0/fullname"},
-                                   Literal::make_typed<datatypes::xsd::String>("Dave Beckett")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("Dave Beckett")});
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});

@@ -20,17 +20,17 @@ TEST_CASE("Datatype Long") {
     CHECK(std::is_same_v<type, int64_t>);
 
     int64_t value = 1;
-    auto lit1 = Literal::make_typed<datatypes::xsd::Long>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Long>(value);
     CHECK(lit1.value<datatypes::xsd::Long>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<int64_t>::min();
-    auto lit2 = Literal::make_typed<datatypes::xsd::Long>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Long>(value);
     CHECK(lit2.value<datatypes::xsd::Long>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<int64_t>::max();
-    auto lit3 = Literal::make_typed<datatypes::xsd::Long>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Long>(value);
     CHECK(lit3.value<datatypes::xsd::Long>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
@@ -61,7 +61,7 @@ TEST_CASE("Datatype Long") {
 
 TEST_CASE("small 64bit positive int inlining") {
     auto const i = (1l << 41) - 1;
-    auto const lit1 = Literal::make_typed<xsd::Long>(i);
+    auto const lit1 = Literal::make_typed_from_value<xsd::Long>(i);
     auto const lit2 = Literal::make_typed(std::to_string(i), IRI{xsd::Long::identifier});
     CHECK(lit1.backend_handle().is_inlined());
     CHECK(lit2.backend_handle().is_inlined());
@@ -75,7 +75,7 @@ TEST_CASE("small 64bit positive int inlining") {
 
 TEST_CASE("negative 64bit int inlining") {
     auto const i = -256;
-    auto const lit1 = Literal::make_typed<xsd::Long>(i);
+    auto const lit1 = Literal::make_typed_from_value<xsd::Long>(i);
     auto const lit2 = Literal::make_typed(std::to_string(i), IRI{xsd::Long::identifier});
     CHECK(lit1.backend_handle().is_inlined());
     CHECK(lit2.backend_handle().is_inlined());
