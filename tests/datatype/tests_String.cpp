@@ -30,17 +30,17 @@ TEST_CASE("Datatype String") {
 
 
     std::string value = "123";
-    auto lit1 = Literal::make_typed<datatypes::xsd::String>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::String>(value);
     CHECK(lit1.value<datatypes::xsd::String>() == value);
     CHECK(lit1.lexical_form() == value);
 
     value = "a";
-    auto lit2 = Literal::make_typed<datatypes::xsd::String>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::String>(value);
     CHECK(lit2.value<datatypes::xsd::String>() == value);
     CHECK(lit2.lexical_form() == value);
 
     value = "b";
-    auto lit3 = Literal::make_typed<datatypes::xsd::String>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::String>(value);
     CHECK(lit3.value<datatypes::xsd::String>() == value);
     CHECK(lit3.lexical_form() == value);
 

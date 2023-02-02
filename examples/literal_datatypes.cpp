@@ -20,6 +20,6 @@ int main() {
     // datatypes::xsd::Float is an alias for the built-in type float
     std::cout << float_ << std::endl;
     // make a new literal with new value
-    Literal updated_float = Literal::make_typed<datatypes::xsd::Float>(float_);
+    Literal updated_float = Literal::make_typed_from_value<datatypes::xsd::Float>(float_);
     std::cout << updated_float << std::endl;
 }

@@ -15,17 +15,17 @@ TEST_CASE("Datatype NonPositiveInteger") {
     CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
     int64_t value = -1;
-    auto lit1 = Literal::make_typed<datatypes::xsd::NonPositiveInteger>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::NonPositiveInteger>(value);
     CHECK(lit1.value<datatypes::xsd::NonPositiveInteger>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -18446744073709;
-    auto lit2 = Literal::make_typed<datatypes::xsd::NonPositiveInteger>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::NonPositiveInteger>(value);
     CHECK(lit2.value<datatypes::xsd::NonPositiveInteger>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit3 = Literal::make_typed<datatypes::xsd::NonPositiveInteger>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::NonPositiveInteger>(value);
     CHECK(lit3.value<datatypes::xsd::NonPositiveInteger>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
@@ -57,15 +57,15 @@ TEST_CASE("Datatype NonPositiveInteger") {
 TEST_CASE("xsd:nonPositiveInteger inlining") {
     using datatypes::xsd::NonPositiveInteger;
 
-    auto zero_lit = Literal::make_typed<NonPositiveInteger>(0);
+    auto zero_lit = Literal::make_typed_from_value<NonPositiveInteger>(0);
     CHECK(zero_lit.backend_handle().is_inlined());
     CHECK(zero_lit.value<NonPositiveInteger>() == 0);
 
-    auto one_lit = Literal::make_typed<NonPositiveInteger>(-1);
+    auto one_lit = Literal::make_typed_from_value<NonPositiveInteger>(-1);
     CHECK(one_lit.backend_handle().is_inlined());
     CHECK(one_lit.value<NonPositiveInteger>() == -1);
 
-    auto large_lit = Literal::make_typed<NonPositiveInteger>(-(1l << 42) + 1);
+    auto large_lit = Literal::make_typed_from_value<NonPositiveInteger>(-(1l << 42) + 1);
     CHECK(large_lit.backend_handle().is_inlined());
     CHECK(large_lit.value<NonPositiveInteger>() == (-(1l << 42) + 1));
 }

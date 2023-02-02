@@ -767,7 +767,7 @@ Literal Literal::ebv_as_literal(NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(ebv == util::TriBool::True, node_storage);
 }
 
 Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
@@ -777,7 +777,7 @@ Literal Literal::logical_and(Literal const &other, Node::NodeStorage &node_stora
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator&&(Literal const &other) const noexcept {
@@ -791,7 +791,7 @@ Literal Literal::logical_or(Literal const &other, Node::NodeStorage &node_storag
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Boolean>(res, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(res, node_storage);
 }
 
 Literal Literal::operator||(Literal const &other) const noexcept {
@@ -805,7 +805,7 @@ Literal Literal::logical_not(Node::NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make_typed<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(ebv == util::TriBool::False, node_storage);
 }
 
 Literal Literal::operator!() const noexcept {
