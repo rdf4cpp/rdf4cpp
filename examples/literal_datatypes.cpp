@@ -22,8 +22,8 @@ void lexical_access() {
     Literal lang_string = Literal::make_lang_tagged("Hello", "en-US");
     assert(lang_string.lexical_form() == "Hello");
     assert(lang_string.language_tag() == "en-US");
-    assert(lang_string.lang_matches("*"));
-    assert(lang_string.lang_matches("en"));
+    assert(lang_string.language_tag_matches_range("*"));
+    assert(lang_string.language_tag_matches_range("en"));
     assert(std::string{lang_string} == R"#("Hello"@en-US)#");
 }
 
@@ -57,7 +57,7 @@ void value_transformations() {
     lit = lit.cast<datatypes::xsd::String>();
     assert(lit.value<datatypes::xsd::String>() == "63");
 
-    lit = lit.ebv_as_literal();
+    lit = lit.as_ebv();
     assert(lit.value<datatypes::xsd::Boolean>() == true);
 }
 
