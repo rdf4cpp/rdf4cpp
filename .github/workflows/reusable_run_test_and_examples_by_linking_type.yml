@@ -67,12 +67,12 @@ jobs:
       - name: Build Tests & Examples
         run: |
           cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }} \
-          -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined ${{ fromJSON('[\"\", \"--coverage\"]')[inputs.with-coverage] }}"
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
           cmake --build build_dir
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
+          CXX_FLAGS: -fsanitize=address -fsanitize=undefined ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
 
       - name: Run tests
         working-directory: build_dir
