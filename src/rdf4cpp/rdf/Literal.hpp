@@ -15,6 +15,16 @@
 #include <rdf4cpp/rdf/util/CowString.hpp>
 
 namespace rdf4cpp::rdf {
+
+/**
+ * An RDF Literal.
+ *
+ * Functions behave based on the following rules:
+ * - public transformation functions (i.e. Literal -> Literal functions, that are usually called as_*) check for null and return back a null literal
+ * - public is_* functions check for null and return an appropriate value for null-literals
+ * - other public functions (i.e. Literal -> non-Literal) usually do not check for null (e.g. Literal::lexical_form),
+ *      but if the null-Literal has a meaningful value for that function it will behave correctly (e.g. for null-Literal <=> non-null-Literal)
+ */
 class Literal : public Node {
 private:
     /**
@@ -122,6 +132,17 @@ private:
      */
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
 
+    /**
+     * Checks if the dynamic datatype of this is equal to datatype
+     * @warning must only be called if this has dynamic datatype
+     *
+     * @param datatype datatype to check against
+     * @return true iff this dynamic datatype matches datatype
+     *
+     * @note this function only exists because IRI is an incomplete type in this header
+     *      which prevents the template version of datatype_eq from using IRIs
+     */
+    [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
@@ -165,28 +186,28 @@ public:
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
      * @tparam lexical_form the lexical form
-     * @param LiteralDatatype_t the datatype
+     * @param T the datatype
      * @param node_storage optional custom node_storage used to store the literal
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
                                             NodeStorage &node_storage = NodeStorage::default_instance()) {
 
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
         }
 
-        auto const value = LiteralDatatype_t::from_string(lexical_form);
+        auto const value = T::from_string(lexical_form);
 
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_canonical_string(value),
-                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
+                                                        IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
 
@@ -195,29 +216,29 @@ public:
      * No runtime lookup of the type information is required.
      * If type information is available at compile time, you should use this version of the function.
      *
-     * @tparam LiteralDatatype_t the datatype
+     * @tparam T the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
      * @return literal instance representing compatible_value
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
-    [[nodiscard]] static Literal make_typed_from_value(typename LiteralDatatype_t::cpp_type const &compatible_value,
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] static Literal make_typed_from_value(typename T::cpp_type const &compatible_value,
                                                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
                                                        compatible_value.language_tag,
                                                        node_storage);
         }
 
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_canonical_string(compatible_value),
-                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(compatible_value),
+                                                        IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
 
@@ -249,8 +270,16 @@ public:
      * @return true iff this datatype is T
      */
     template<datatypes::LiteralDatatype T>
-    [[nodiscard]] bool datatype_matches() const noexcept {
-        return this->datatype_id() == T::datatype_id;
+    [[nodiscard]] bool datatype_eq() const noexcept {
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (auto const type = this->handle_.node_id().literal_type(); type.is_fixed()) {
+                return type == T::fixed_id;
+            }
+
+            return false;
+        }
+
+        return this->dynamic_datatype_eq_impl(T::identifier);
     }
 
     /**
@@ -260,7 +289,7 @@ public:
      * @param datatype the datatype to compare against
      * @return true iff this datatype is datatype
      */
-    [[nodiscard]] bool datatype_matches(IRI const &datatype) const noexcept;
+    [[nodiscard]] bool datatype_eq(IRI const &datatype) const noexcept;
 
     /**
      * Checks if the datatype of this matches the datatype of other
@@ -269,7 +298,41 @@ public:
      * @param other other literal to check against
      * @return true iff this' datatype matches other's datatype
      */
-    [[nodiscard]] bool datatype_matches(Literal const &other) const noexcept;
+    [[nodiscard]] bool datatype_eq(Literal const &other) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the provided LiteralDatatype
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @tparam T the datatype to compare against
+     * @return true as xsd:boolean iff this datatype is T or null-literal if this is null
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] Literal as_datatype_eq(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
+        if (this->null()) {
+            return Literal{};
+        }
+
+        return Literal::make_boolean(this->datatype_eq<T>(), node_storage);
+    }
+
+    /**
+     * Checks if the datatype of this matches the given IRI
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param datatype the datatype to compare against
+     * @return true as xsd:boolean iff this datatype is datatype or null-literal if this is null
+     */
+    [[nodiscard]] Literal as_datatype_eq(IRI const &datatype, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the datatype of other
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param other other literal to check against
+     * @return true as xsd:boolean iff this' datatype matches other's datatype or null-literal if this or other is null
+     */
+    [[nodiscard]] Literal as_datatype_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.
@@ -283,9 +346,9 @@ public:
     /**
      * Identical to Literal::cast except with compile time specified target type.
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    template<datatypes::LiteralDatatype T>
     [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
-        return this->cast(IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
+        return this->cast(IRI{T::datatype_id, node_storage}, node_storage);
     }
 
     /**
@@ -327,6 +390,40 @@ public:
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
+    /**
+     * @return the language tag of this Literal as xsd:string. If the string is empty this has no lanugage tag.
+     */
+    [[nodiscard]] Literal as_language_tag(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @param lang_tag language tag to compare against
+     * @return if this->language_tag() == lang_tag or error if this is not langString
+     */
+    [[nodiscard]] util::TriBool language_tag_eq(std::string_view lang_tag) const noexcept;
+
+    /**
+     * @param other literal to compare against
+     * @return if this->language_tag() == other.language_tag() or error if:
+     *      - this is not rdf:langString
+     *      - other is not rdf:langString
+     */
+    [[nodiscard]] util::TriBool language_tag_eq(Literal const &other) const noexcept;
+
+    /**
+     * @param lang_tag language tag to compare against
+     * @return if this->language_tag() == lang_tag or null-literal if this is not langString
+     */
+    [[nodiscard]] Literal as_language_tag_eq(std::string_view lang_tag, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @param other literal to compare against
+     * @return if this->language_tag() == other.language_tag() or null-literal if:
+     *      - this is not rdf:langString
+     *      - other is not rdf:langString
+     */
+    [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+
     [[nodiscard]] explicit operator std::string() const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
@@ -342,20 +439,20 @@ public:
      * @tparam T datatype of the returned instance
      * @return T instance with the value from this
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
-    typename LiteralDatatype_t::cpp_type value() const {
-        if (this->datatype_id() != LiteralDatatype_t::datatype_id) [[unlikely]] {
+    template<datatypes::LiteralDatatype T>
+    typename T::cpp_type value() const {
+        if (!this->datatype_eq<T>()) [[unlikely]] {
             throw std::runtime_error{"Literal::value error: incompatible type"};
         }
 
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
+        if constexpr (datatypes::IsInlineable<T>) {
             if (this->is_inlined()) {
                 auto const inlined_value = this->handle_.node_id().literal_id().value;
-                return LiteralDatatype_t::from_inlined(inlined_value);
+                return T::from_inlined(inlined_value);
             }
         }
 
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             auto const &lit = this->handle_.literal_backend();
 
             return datatypes::registry::LangStringRepr{
@@ -363,7 +460,7 @@ public:
                     .language_tag = lit.language_tag};
         }
 
-        return LiteralDatatype_t::from_string(this->lexical_form());
+        return T::from_string(this->lexical_form());
     }
 
     [[nodiscard]] bool is_literal() const noexcept;
@@ -399,29 +496,41 @@ public:
     [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool eq(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator==(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool ne(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ne(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator!=(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool lt(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_lt(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator<(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool le(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_le(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator<=(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool gt(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_gt(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator>(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool ge(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ge(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator>=(Literal const &other) const noexcept;
 
     [[nodiscard]] bool eq_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_eq_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool ne_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ne_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool lt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_lt_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool le_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_le_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool gt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_gt_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool ge_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ge_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     [[nodiscard]] Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator+(Literal const &other) const noexcept;
@@ -482,7 +591,7 @@ public:
      * @param lang_range a basic language range
      * @return whether the language tag of this matches the given lang range if this is string-like, otherwise Err
      */
-    [[nodiscard]] util::TriBool lang_matches(std::string_view lang_range) const noexcept;
+    [[nodiscard]] util::TriBool language_tag_matches_range(std::string_view lang_range) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
@@ -490,7 +599,7 @@ public:
      * @return whether the language tag of this matches the given lang range or the null literal if
      *      - this is not string-like
      */
-    [[nodiscard]] Literal as_lang_matches(std::string_view lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_language_tag_matches_range(std::string_view lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
@@ -499,7 +608,7 @@ public:
      *      - this is not string-like
      *      - lang_range is not xsd:string
      */
-    [[nodiscard]] Literal as_lang_matches(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_language_tag_matches_range(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -759,10 +868,10 @@ public:
     [[nodiscard]] util::TriBool ebv() const noexcept;
 
     /**
-     * Converts this literal to it's effective boolean value
+     * Converts this literal to its effective boolean value
      * @return Literal containing the ebv
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_ebv(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     [[nodiscard]] Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator&&(Literal const &other) const noexcept;
@@ -775,6 +884,18 @@ public:
 
     friend class Node;
 };
+
+/**
+ * @return whether lang_tag matches the basic language range lang_range
+ */
+[[nodiscard]] bool lang_matches(std::string_view lang_tag, std::string_view lang_range) noexcept;
+
+/**
+ * @return whether lang_tag matches the basic language range lang_range as xsd:boolean or the null-literal if:
+ *      - lang_tag is not xsd:string
+ *      - lang_range is not xsd:string
+ */
+[[nodiscard]] Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
 inline namespace shorthands {
 

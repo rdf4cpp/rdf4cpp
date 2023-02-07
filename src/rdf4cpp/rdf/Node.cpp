@@ -173,8 +173,8 @@ util::TriBool Node::ebv() const noexcept {
     return Literal{handle_}.ebv();
 }
 
-Literal Node::ebv_as_literal(NodeStorage &node_storage) const noexcept {
-    return this->as_literal().ebv_as_literal(node_storage);
+Literal Node::as_ebv(NodeStorage &node_storage) const noexcept {
+    return this->as_literal().as_ebv(node_storage);
 }
 
 }  // namespace rdf4cpp::rdf
