@@ -15,6 +15,16 @@
 #include <rdf4cpp/rdf/util/CowString.hpp>
 
 namespace rdf4cpp::rdf {
+
+/**
+ * An RDF Literal.
+ *
+ * Functions behave based on the following rules:
+ * - public transformation functions (i.e. Literal -> Literal functions, that are usually called as_*) check for null and return back a null literal
+ * - public is_* functions check for null and return an appropriate value for null-literals
+ * - other public functions (i.e. Literal -> non-Literal) usually do not check for null (e.g. Literal::lexical_form),
+ *      but if the null-Literal has a meaningful value for that function it will behave correctly (e.g. for null-Literal <=> non-null-Literal)
+ */
 class Literal : public Node {
 private:
     /**

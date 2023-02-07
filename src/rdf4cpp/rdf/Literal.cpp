@@ -354,6 +354,10 @@ bool Literal::is_iri() const noexcept { return false; }
 bool Literal::is_numeric() const noexcept {
     using namespace datatypes::registry;
 
+    if (this->null()) {
+        return false;
+    }
+
     return this->handle_.node_id().literal_type().is_numeric()
            || DatatypeRegistry::get_numerical_ops(this->datatype_id()) != nullptr;
 }
