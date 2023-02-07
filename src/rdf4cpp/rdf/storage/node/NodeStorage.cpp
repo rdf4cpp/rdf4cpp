@@ -366,6 +366,8 @@ std::optional<NodeStorage> WeakNodeStorage::try_upgrade() const noexcept {
         }
 
         if (slot.refcount.compare_exchange_weak(old_rc, old_rc + 1, std::memory_order_acquire, std::memory_order_relaxed)) {
+            assert(slot.backend != nullptr);
+            assert(slot.generation == this->generation);
             return NodeStorage{this->backend_index};
         }
     }

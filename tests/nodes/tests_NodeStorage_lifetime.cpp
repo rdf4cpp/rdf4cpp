@@ -3,20 +3,22 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <atomic>
+#include <shared_mutex>
+#include <mutex>
 #include <chrono>
 #include <iostream>
 #include <thread>
 
 using namespace rdf4cpp::rdf;
 using namespace rdf4cpp::rdf::storage::node;
+using namespace std::chrono_literals;
 
 struct SlowDestructingBackend : reference_node_storage::ReferenceNodeStorageBackend {
     std::mutex m;
 
     ~SlowDestructingBackend() override {
-        std::cout << "begin destruction in " << std::this_thread::get_id() << std::endl;
-        CHECK(m.try_lock()); // if this doesnt work another thread got here first, and we are still executing this => error
-        std::this_thread::sleep_for(std::chrono::milliseconds{200});
+        REQUIRE(m.try_lock()); // if this doesnt work another thread got here first, and we are still executing this => error
     }
 };
 
@@ -169,27 +171,84 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
         CHECK(iri.backend_handle().node_id() != iri_id2);
     }
 
-    TEST_CASE("destruction race") {
-        using namespace std::chrono_literals;
+    /* the following functions are by nature non-deterministic, but they at least _attempt_ to detect race-conditions */
 
-        for (size_t i = 0; i < 10; ++i) {
+    TEST_CASE("destruction race") {
+        for (size_t i = 0; i < 100; ++i) {
+            std::atomic<bool> run{false};
             NodeStorage ns = NodeStorage::new_instance<SlowDestructingBackend>();
 
             auto t1 = std::jthread([&]() {
                 NodeStorage tn = ns;
-                std::this_thread::sleep_for(200ms);
+                while (!run.load(std::memory_order_acquire)) {} // spin before destruction
             });
 
             auto t2 = std::jthread([&]() {
                 NodeStorage tn = ns;
-                std::this_thread::sleep_for(200ms);
+                while (!run.load(std::memory_order_acquire)) {} // spin before destruction
             });
 
-            ns = NodeStorage::new_instance();
+            std::this_thread::sleep_for(50ms); // wait until threads run into lock
+            run.store(true, std::memory_order_release); // release threads
         }
     }
 
     TEST_CASE("allocation race") {
+        for (size_t i = 0; i < 100; ++i) {
+            std::atomic<bool> run{false};
 
+            uint16_t id1 = -1;
+            uint16_t id2 = -1;
+
+            {
+                auto t1 = std::jthread([&]() {
+                    auto backend = new reference_node_storage::ReferenceNodeStorageBackend{};
+
+                    while (!run.load(std::memory_order_acquire)) {} // spin until told not to
+
+                    NodeStorage ns = NodeStorage::register_backend(backend);
+                    id1 = ns.id().value;
+                    std::this_thread::sleep_for(50ms);
+                });
+
+                auto t2 = std::jthread([&]() {
+                    auto backend = new reference_node_storage::ReferenceNodeStorageBackend{};
+
+                    while (!run.load(std::memory_order_acquire)) {} // spin until told not to
+
+                    NodeStorage ns = NodeStorage::register_backend(backend);
+                    id2 = ns.id().value;
+                    std::this_thread::sleep_for(50ms);
+                });
+
+                std::this_thread::sleep_for(50ms);  // wait until threads run into lock
+                run.store(true, std::memory_order_release); // release threads
+            } // wait for join
+
+            REQUIRE(id1 != id2);
+            std::cout << "Constructed " << id1 << " " << id2 << std::endl;
+        }
+    }
+
+    TEST_CASE("destruction and upgrade race") {
+        for (size_t i = 0; i < 100; ++i) {
+            std::atomic<bool> run{false};
+
+            NodeStorage ns = NodeStorage::new_instance();
+            WeakNodeStorage weak = ns.downgrade();
+
+            auto t1 = std::jthread([&]() {
+                while (!run.load(std::memory_order_acquire)) {}
+                auto ns = weak.try_upgrade(); // trying to trigger asserts in try_upgrade
+            });
+
+            auto t2 = std::jthread([&]() {
+                while (!run.load(std::memory_order_acquire)) {}
+                ns.~NodeStorage();
+            });
+
+            std::this_thread::sleep_for(50ms);
+            run.store(true, std::memory_order_release);
+        }
     }
 }
