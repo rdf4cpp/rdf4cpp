@@ -1,9 +1,9 @@
 #ifndef RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 #define RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 
+#include <rdf4cpp/rdf/bnode_management/NodeGenerator.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 #include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
-#include <rdf4cpp/rdf/util/BlankNodeIdGenerator.hpp>
 
 #include <string>
 #include <string_view>
@@ -39,7 +39,7 @@ struct ParsingState {
             rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
             std::equal_to<>>;
 
-    using blank_node_generator_type = util::BlankNodeIdScope;
+    using blank_node_generator_type = util::NodeScope;
     using node_storage_type = storage::node::NodeStorage;
 
     /**
@@ -49,26 +49,16 @@ struct ParsingState {
     prefix_storage_type prefixes{};
 
     /**
-     * Optionally a skolem iri prefix.
-     * If this value is set the generator is used to generate skolem iris (using the specified prefix) and not blank nodes.
-     * @note default value is nullopt
-     * @note if the parser has ParsingFlag::KeepBlankNodeIds set this field is ignored
-     */
-    std::optional<std::string> skolem_iri_prefix{};
-
-    /**
      * The node storage to put the parsed quads into
      */
     node_storage_type node_storage = storage::node::NodeStorage::default_instance();
 
     /**
      * The scope that generates blank nodes.
-     * @note default value is a new, empty scope that puts generated bnodes into the default node storage.
+     * @note default value is a new, empty scope that puts randomly generated BlankNodes into the NodeStorage::default_instance().
      * @note if the parser has ParsingFlag::KeepBlankNodeIds set this field is ignored
-     * @note the generator has its own node storage,
-     *      a mismatch between this->node_storage and this->blank_node_generator's node storage may not be desired
      */
-    blank_node_generator_type blank_node_generator = util::BlankNodeIdGenerator::default_instance().scope();
+    blank_node_generator_type blank_node_generator = util::NodeGenerator::default_instance().scope();
 };
 
 }  //namespace rdf4cpp::rdf::parser

@@ -13,5 +13,5 @@ size_t BNodeBackendView::hash() const noexcept {
 
 size_t std::hash<rdf4cpp::rdf::storage::node::view::BNodeBackendView>::operator()(const rdf4cpp::rdf::storage::node::view::BNodeBackendView &x) const noexcept {
     using namespace rdf4cpp::rdf::storage::util;
-    return robin_hood::hash<std::string_view>()(x.identifier);
+    return robin_hood::hash<std::string_view>()(x.identifier) ^ x.scope.ptr_hash();
 }

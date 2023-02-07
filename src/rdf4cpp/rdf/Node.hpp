@@ -19,7 +19,13 @@ class BlankNode;
 class IRI;
 namespace query {
 class Variable;
-};
+}
+
+namespace util {
+struct NodeScope;
+struct NodeGenerator;
+}
+
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
@@ -27,6 +33,9 @@ class Variable;
  * You can determine if a Node is an edge by the the fact that it is used as predicate in a Dataset, Graph, Quad, Statement, QuadPattern or TriplePattern.</p>
  */
 class Node {
+    friend struct util::NodeScope;
+    friend struct util::NodeGenerator;
+
 protected:
     using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
     using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;

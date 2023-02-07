@@ -68,28 +68,10 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
         }
     }
 
-    if (this->state->skolem_iri_prefix.has_value()) {
-        try {
-            return this->state->blank_node_generator
-                    .subscope(std::move(graph_str))
-                    .get_or_generate_skolem_iri(*this->state->skolem_iri_prefix, node_str);
-        } catch (std::runtime_error const &e) {
-            // TODO: check when actual blank node validation implemented
-            // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-            this->last_error = ParsingError{
-                    .error_type = ParsingError::Type::BadIri,
-                    .line = serd_reader_get_current_line(this->reader.get()),
-                    .col = serd_reader_get_current_col(this->reader.get()),
-                    .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
-
-            return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_SYNTAX);
-        }
-    }
-
     try {
         return this->state->blank_node_generator
                 .subscope(std::move(graph_str))
-                .get_or_generate_bnode(node_str);
+                .get_or_generate_node(node_str, this->state->node_storage);
     } catch (std::runtime_error const &e) {
         // TODO: check when actual blank node validation implemented
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed

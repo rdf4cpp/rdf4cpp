@@ -327,7 +327,11 @@ TEST_SUITE("IStreamQuadIterator") {
         }
 
         SUBCASE("skolem iris") {
-            IStreamQuadIterator::state_type state{ .skolem_iri_prefix = "http://skolem-iris.org#" };
+
+
+            IStreamQuadIterator::state_type state{
+                    .blank_node_generator = util::NodeGenerator::default_instance()
+                                                    .scope<util::ReferenceSkolemIRIScope>("http://skolem-iris.org#")};
             std::istringstream iss{triples};
             IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
 

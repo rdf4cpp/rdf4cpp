@@ -90,6 +90,13 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/bnode_management/NodeGenerator.cpp
+        src/rdf4cpp/rdf/bnode_management/NodeScope.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/factory/SkolemIRIFactory.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/factory/UnscopedBNodeFactory.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/generator/RandomIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/generator/IncreasingIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceBNodeScope.cpp
         src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp
@@ -149,11 +156,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
-        src/rdf4cpp/rdf/util/BlankNodeIdGenerator.cpp
-        src/rdf4cpp/rdf/util/BlankNodeIdScope.cpp
-        src/rdf4cpp/rdf/util/reference_backends/RandomIdGeneratorBackend.cpp
-        src/rdf4cpp/rdf/util/reference_backends/IncreasingIdGeneratorBackend.cpp
-        src/rdf4cpp/rdf/util/reference_backends/ReferenceBlankNodeIdScope.cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp

@@ -6,12 +6,17 @@
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 
+namespace rdf4cpp::rdf::util  {
+struct NodeGenerator;
+}
+
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
 public:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
 
     BlankNode() noexcept;
+
     explicit BlankNode(std::string_view identifier,
                        NodeStorage &node_storage = NodeStorage::default_instance());
 
@@ -24,6 +29,9 @@ public:
     [[nodiscard]] std::string_view identifier() const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
+
+    [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
+    [[nodiscard]] std::optional<bool> union_eq(BlankNode const &other) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
     [[nodiscard]] bool is_literal() const noexcept;

@@ -4,18 +4,25 @@
 #include <compare>
 #include <string>
 #include <string_view>
+#include <rdf4cpp/rdf/util/SharedPtr.hpp>
+
+
+namespace rdf4cpp::rdf::util {
+struct INodeScope;
+}  //namespace rdf4cpp::rdf::util
 
 namespace rdf4cpp::rdf::storage::node::view {
 
 struct BNodeBackendView {
     std::string_view identifier;
+    rdf4cpp::rdf::util::WeakPtr<rdf4cpp::rdf::util::INodeScope const> scope;
 
     /**
      * N-Triples conform string representation.
      * @return N-Triples conform string representation.
      */
     [[nodiscard]] std::string n_string() const noexcept;
-    auto operator<=>(BNodeBackendView const &) const noexcept = default;
+    std::strong_ordering operator<=>(BNodeBackendView const &) const noexcept = default;
 
     [[nodiscard]] size_t hash() const noexcept;
 };
