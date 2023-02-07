@@ -74,7 +74,7 @@ jobs:
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
-          CXXFLAGS: ${{ fromJSON('["", "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fuse-ld=lld"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
+          CXXFLAGS: ${{ fromJSON('["", "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -Wno-unused-command-line-argument -fuse-ld=lld"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
 
       - name: Run tests
         working-directory: build_dir
