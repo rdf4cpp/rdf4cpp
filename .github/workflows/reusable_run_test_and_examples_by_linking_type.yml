@@ -15,6 +15,8 @@ on:
         type: boolean
       with-coverage:
         type: boolean
+      with-sanitizer:
+        type: boolean
     secrets:
       coverall-token:
         description: 'Access token for coverall. Required if inputs.with-coverage'
@@ -72,7 +74,7 @@ jobs:
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
-          CXXFLAGS: -fsanitize=address -fsanitize=undefined ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
+          CXXFLAGS: ${{ fromJSON('["", "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fuse-ld=lld"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
 
       - name: Run tests
         working-directory: build_dir
