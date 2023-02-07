@@ -1420,6 +1420,7 @@ bool lang_matches(std::string_view const lang_tag, std::string_view const lang_r
     auto const lang_ci = util::CiStringView{lang_tag.data(), lang_tag.size()};
     auto const lang_range_ci = util::CiStringView{lang_range.data(), lang_range.size()};
 
+    // case-insensitive comparison
     return lang_ci.starts_with(lang_range_ci) && (lang_ci.size() == lang_range_ci.size() || lang_ci[lang_range_ci.size()] == '-');
 }
 

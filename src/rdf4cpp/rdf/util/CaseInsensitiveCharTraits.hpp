@@ -5,6 +5,10 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * Case insensitive char traits.
+ * Identical to std::char_traits<char> except that CiCharTraits treats comparisons as case insensitive
+ */
 struct CiCharTraits : std::char_traits<char> {
     using char_type = std::char_traits<char>::char_type;
     using pos_type = std::char_traits<char>::pos_type;
@@ -55,6 +59,9 @@ struct CiCharTraits : std::char_traits<char> {
     }
 };
 
+/**
+ * Case insensitive view to a string
+ */
 using CiStringView = std::basic_string_view<char, CiCharTraits>;
 
 }  //namespace rdf4cpp::rdf::util
