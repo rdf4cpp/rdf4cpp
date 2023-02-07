@@ -21,6 +21,7 @@ namespace rdf4cpp::rdf::storage::node {
 class INodeStorageBackend;
 struct WeakNodeStorage;
 
+namespace node_storage_detail {
 static constexpr identifier::NodeStorageID INVALID_BACKEND_INDEX{static_cast<uint16_t>(-1)};
 
 struct ControlBlock {
@@ -28,6 +29,7 @@ struct ControlBlock {
     std::atomic<size_t> refcount{0};
     std::atomic<size_t> generation{0};
 };
+}  //namespace node_storage_detail
 
 /**
  * NodeStorage provides an interface to the internal storage <div>Node</div>s.
@@ -59,7 +61,7 @@ class NodeStorage {
      * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
      * The last value of a identifier::NodeStorageID (i.e. 1023) is reserved as the invalid index.
      */
-    static inline std::array<ControlBlock, 1023> node_context_instances{};
+    static inline std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
     /**
      * Makes sure the default_instance_ and default_node_context_id are initialized only once
      */
@@ -132,7 +134,7 @@ public:
     static void unregister_backend(INodeStorageBackend *backend_instance);
 
 private:
-    identifier::NodeStorageID backend_index = INVALID_BACKEND_INDEX;
+    identifier::NodeStorageID backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
 
     /*
      * Constructors & Destructor
@@ -149,8 +151,8 @@ private:
      */
     explicit NodeStorage(identifier::NodeStorageID backend_index) noexcept;
 
-    [[nodiscard]] inline static ControlBlock &get_slot(identifier::NodeStorageID id) {
-        assert(id != INVALID_BACKEND_INDEX);
+    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
+        assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
         return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
     }
 

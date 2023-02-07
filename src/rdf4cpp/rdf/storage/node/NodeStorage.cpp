@@ -114,14 +114,14 @@ NodeStorage::NodeStorage(identifier::NodeStorageID backend_index) noexcept : bac
 }
 
 NodeStorage::~NodeStorage() {
-    if (this->backend_index == INVALID_BACKEND_INDEX) {
+    if (this->backend_index == node_storage_detail::INVALID_BACKEND_INDEX) {
         return;
     }
 
     this->decrease_refcount();
 }
 NodeStorage::NodeStorage(NodeStorage &&other) noexcept : backend_index{other.backend_index} {
-    other.backend_index = INVALID_BACKEND_INDEX;
+    other.backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
 }
 
 NodeStorage::NodeStorage(NodeStorage const &other) noexcept : backend_index{other.backend_index} {
@@ -130,12 +130,12 @@ NodeStorage::NodeStorage(NodeStorage const &other) noexcept : backend_index{othe
 
 NodeStorage &NodeStorage::operator=(NodeStorage const &other) noexcept {
     if (this != &other && this->backend_index != other.backend_index) {
-        if (this->backend_index != INVALID_BACKEND_INDEX) {
+        if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
             this->decrease_refcount();
         }
 
         this->backend_index = other.backend_index;
-        if (this->backend_index != INVALID_BACKEND_INDEX) {
+        if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
             this->increase_refcount();
         }
     }
@@ -145,12 +145,12 @@ NodeStorage &NodeStorage::operator=(NodeStorage const &other) noexcept {
 
 NodeStorage &NodeStorage::operator=(NodeStorage &&other) noexcept {
     if (this != &other) {
-        if (this->backend_index != INVALID_BACKEND_INDEX) {
+        if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
             this->decrease_refcount();
         }
 
         this->backend_index = other.backend_index;
-        other.backend_index = INVALID_BACKEND_INDEX;
+        other.backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
     }
 
     return *this;
@@ -224,7 +224,7 @@ WeakNodeStorage NodeStorage::downgrade() const noexcept {
 }
 
 size_t NodeStorage::ref_count() const noexcept {
-    if (this->backend_index == INVALID_BACKEND_INDEX) {
+    if (this->backend_index == node_storage_detail::INVALID_BACKEND_INDEX) {
         return 0;
     }
 
