@@ -40,7 +40,7 @@ public:
     [[nodiscard]] const_iterator begin() const;
     [[nodiscard]] const_iterator end() const;
 
-    [[nodiscard]] node::WeakNodeStorage const &node_storage() const;
+    [[nodiscard]] node::NodeStorage &node_storage() const;
 
     [[nodiscard]] const std::shared_ptr<IDatasetBackend> &backend_impl() const;
     [[nodiscard]] std::shared_ptr<IDatasetBackend> &backend_impl();

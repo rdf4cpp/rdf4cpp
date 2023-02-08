@@ -22,7 +22,7 @@ public:
 
     explicit DefaultDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 
-    [[nodiscard]] node::WeakNodeStorage const &node_storage() const override;
+    [[nodiscard]] node::NodeStorage &node_storage() const override;
 
     void add(const Quad &quad) override;
 

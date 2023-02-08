@@ -26,9 +26,7 @@ public:
     template<typename BackendImpl, typename... Args>
     static inline Graph new_instance(Args... args) {
         DatasetStorage dataset_backend = DatasetStorage::new_instance<BackendImpl>(args...);
-
-        auto ns = dataset_backend.node_storage().upgrade();
-        return {dataset_backend, IRI::default_graph(ns)};
+        return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
     }
 
     explicit Graph(NodeStorage node_storage = NodeStorage::default_instance());

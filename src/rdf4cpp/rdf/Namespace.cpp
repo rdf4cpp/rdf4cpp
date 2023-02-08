@@ -1,5 +1,4 @@
 #include "Namespace.hpp"
-#include <fmt/format.h>
 
 namespace rdf4cpp::rdf {
 
@@ -17,7 +16,10 @@ rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) co
     if (auto found = cache_.find(suffix); found != cache_.end()) {
         return IRI{found->second};
     } else {
-        IRI iri{fmt::format("{}{}", namespace_iri_, suffix), nodes};
+        std::string namespace_iri{namespace_iri_};
+        namespace_iri.append(suffix);
+
+        IRI iri{namespace_iri, nodes};
         cache_.emplace(suffix, iri.backend_handle());
         return iri;
     }

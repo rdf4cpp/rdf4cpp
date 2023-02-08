@@ -3,7 +3,7 @@
 #include <utility>
 
 namespace rdf4cpp::rdf::storage::tuple {
-node::WeakNodeStorage const &DefaultDatasetBackend::node_storage() const {
+node::NodeStorage &DefaultDatasetBackend::node_storage() const {
     return this->node_storage_;
 }
 

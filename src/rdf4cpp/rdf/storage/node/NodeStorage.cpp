@@ -101,7 +101,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
             slot.refcount.store(1, std::memory_order_relaxed);
 
             return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}, backend_instance};
-        } else if (old_value == backend_instance) {
+        } else if (old_value == backend_instance) [[unlikely]] {
             throw std::runtime_error{"The provided backend is already registered"};
         }
     }

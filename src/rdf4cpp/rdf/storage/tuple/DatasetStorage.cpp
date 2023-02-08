@@ -6,10 +6,14 @@ namespace rdf4cpp::rdf::storage::tuple {
 
 DatasetStorage::DatasetStorage(std::shared_ptr<IDatasetBackend> dataset_backend) : backend_(std::move(dataset_backend)) {}
 
-DatasetStorage DatasetStorage::default_instance_ = new_instance();
+DatasetStorage DatasetStorage::default_instance_;
 
 DatasetStorage &DatasetStorage::primary_instance() {
-    return DatasetStorage::default_instance_;
+    std::call_once(default_init_once_flag, []() {
+        default_instance_ = new_instance();
+    });
+
+    return default_instance_;
 }
 
 DatasetStorage DatasetStorage::new_instance() {
@@ -37,7 +41,7 @@ DatasetStorage::const_iterator DatasetStorage::begin() const {
 DatasetStorage::const_iterator DatasetStorage::end() const {
     return backend_->end();
 }
-node::WeakNodeStorage const &DatasetStorage::node_storage() const {
+node::NodeStorage &DatasetStorage::node_storage() const {
     return backend_->node_storage();
 }
 const std::shared_ptr<IDatasetBackend> &DatasetStorage::backend_impl() const {

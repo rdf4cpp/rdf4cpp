@@ -10,30 +10,25 @@ Dataset::Dataset(Dataset::NodeStorage node_storage)
     : dataset_storage(Dataset::DatasetStorage::new_instance<storage::tuple::DefaultDatasetBackend>(std::move(node_storage))) {}
 
 void Dataset::add(const Quad &quad) {
-    auto ns = backend().node_storage().upgrade();
-    dataset_storage.add(quad.to_node_storage(ns));
+    dataset_storage.add(quad.to_node_storage(backend().node_storage()));
 }
 bool Dataset::contains(const Quad &quad) const {
-    auto ns = backend().node_storage().upgrade();
-    return dataset_storage.contains(quad.to_node_storage(ns));
+    return dataset_storage.contains(quad.to_node_storage(backend().node_storage()));
 }
 query::SolutionSequence Dataset::match(const query::QuadPattern &quad_pattern) const {
-    auto ns = backend().node_storage().upgrade();
-    return dataset_storage.match(quad_pattern.to_node_storage(ns));
+    return dataset_storage.match(quad_pattern.to_node_storage(backend().node_storage()));
 }
 size_t Dataset::size() const {
     return dataset_storage.size();
 }
 size_t Dataset::size(const IRI &graph_name) const {
-    auto ns = backend().node_storage().upgrade();
-    return dataset_storage.size(static_cast<IRI>(graph_name.to_node_storage(ns)));
+    return dataset_storage.size(static_cast<IRI>(graph_name.to_node_storage(backend().node_storage())));
 }
 Graph Dataset::graph(const IRI &graph_name) {
     return {dataset_storage, graph_name};
 }
 Graph Dataset::graph() {
-    auto ns = backend().node_storage().upgrade();
-    return {dataset_storage, IRI::default_graph(ns)};
+    return {dataset_storage, IRI::default_graph(backend().node_storage())};
 }
 Dataset::iterator Dataset::begin() const {
     return dataset_storage.begin();

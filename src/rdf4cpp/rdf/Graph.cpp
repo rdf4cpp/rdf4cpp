@@ -9,24 +9,21 @@ namespace rdf4cpp::rdf {
 Graph::Graph(storage::tuple::DatasetStorage dataset_storage, const IRI &graph_name)
     : dataset_storage(std::move(dataset_storage)) {
 
-    auto ns = this->backend().node_storage().upgrade();
-    this->graph_name = graph_name.to_node_storage(ns);
+    this->graph_name = graph_name.to_node_storage(this->backend().node_storage());
 }
 
 Graph::Graph(storage::node::NodeStorage node_storage)
     : dataset_storage(Dataset::DatasetStorage::new_instance<storage::tuple::DefaultDatasetBackend>(std::move(node_storage))) {
 
-    auto ns = this->backend().node_storage().upgrade();
-    this->graph_name = IRI::default_graph(ns);
+    this->graph_name = IRI::default_graph(this->backend().node_storage());
 }
 
 Graph::Graph(const IRI &graph_name, NodeStorage node_storage) : Graph(std::move(node_storage)) {
-    auto ns = this->backend().node_storage().upgrade();
-    this->graph_name = static_cast<IRI>(graph_name.to_node_storage(ns));
+    this->graph_name = static_cast<IRI>(graph_name.to_node_storage(this->backend().node_storage()));
 }
 
 void Graph::add(const Statement &statement) {
-    auto ns = this->backend().node_storage().upgrade();
+    auto &ns = this->backend().node_storage();
 
     Quad quad{graph_name,
               statement.subject().to_node_storage(ns),
@@ -36,7 +33,7 @@ void Graph::add(const Statement &statement) {
 }
 
 bool Graph::contains(const Statement &statement) const {
-    auto ns = this->backend().node_storage().upgrade();
+    auto &ns = this->backend().node_storage();
 
     Quad quad{graph_name,
               statement.subject().to_node_storage(ns),
@@ -46,7 +43,7 @@ bool Graph::contains(const Statement &statement) const {
 }
 
 query::SolutionSequence Graph::match(const query::TriplePattern &triple_pattern) const {
-    auto ns = this->backend().node_storage().upgrade();
+    auto &ns = this->backend().node_storage();
 
     query::QuadPattern quad_pattern{graph_name,
                                     triple_pattern.subject().to_node_storage(ns),
