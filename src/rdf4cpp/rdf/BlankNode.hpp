@@ -1,10 +1,9 @@
 #ifndef RDF4CPP_BLANKNODE_HPP
 #define RDF4CPP_BLANKNODE_HPP
 
-#include <optional>
-
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 
 namespace rdf4cpp::rdf::util  {
 struct NodeGenerator;
@@ -31,7 +30,7 @@ public:
     [[nodiscard]] explicit operator std::string() const noexcept;
 
     [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
-    [[nodiscard]] std::optional<bool> union_eq(BlankNode const &other) const noexcept;
+    [[nodiscard]] util::TriBool union_eq(BlankNode const &other) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
     [[nodiscard]] bool is_literal() const noexcept;
