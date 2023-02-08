@@ -4,7 +4,7 @@ std::vector<Variable> Solution::extract_variables(const QuadPattern &quad) {
     std::vector<Variable> variables;
     for (const auto &entry : quad) {
         if (entry.is_variable())
-            variables.push_back(static_cast<Variable>(entry));
+            variables.push_back(entry.as_variable());
     }
     return variables;
 }

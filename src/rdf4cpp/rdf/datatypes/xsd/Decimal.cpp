@@ -103,6 +103,26 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, Dynami
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::abs(cpp_type const &operand) noexcept {
+    return boost::multiprecision::abs(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::round_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::round(cpp_type const &operand) noexcept {
+    return boost::multiprecision::round(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::floor_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::floor(cpp_type const &operand) noexcept {
+    return boost::multiprecision::floor(operand);
+}
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::ceil(cpp_type const &operand) noexcept {
+    return boost::multiprecision::ceil(operand);
+}
+
+template<>
 bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const &value) noexcept {
     return !isnan(value) && value != 0.0;
 }

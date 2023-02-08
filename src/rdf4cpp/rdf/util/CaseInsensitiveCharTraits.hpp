@@ -1,11 +1,15 @@
-#ifndef RDF4CPP_REGISTRY_UTIL_LANGTAG_HPP
-#define RDF4CPP_REGISTRY_UTIL_LANGTAG_HPP
+#ifndef RDF4CPP_RDF_UTIL_CASEINSENSITIVECHARTRAITS_HPP
+#define RDF4CPP_RDF_UTIL_CASEINSENSITIVECHARTRAITS_HPP
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::rdf::util {
 
-struct LangTagCharTraits : std::char_traits<char> {
+/**
+ * Case insensitive char traits.
+ * Identical to std::char_traits<char> except that CiCharTraits treats comparisons as case insensitive
+ */
+struct CiCharTraits : std::char_traits<char> {
     using char_type = std::char_traits<char>::char_type;
     using pos_type = std::char_traits<char>::pos_type;
     using int_type = std::char_traits<char>::int_type;
@@ -55,8 +59,11 @@ struct LangTagCharTraits : std::char_traits<char> {
     }
 };
 
-using LangTagView = std::basic_string_view<char, LangTagCharTraits>;
+/**
+ * Case insensitive view to a string
+ */
+using CiStringView = std::basic_string_view<char, CiCharTraits>;
 
-}  //namespace rdf4cpp::rdf::datatypes::registry::util
+}  //namespace rdf4cpp::rdf::util
 
-#endif  //RDF4CPP_REGISTRY_UTIL_LANGTAG_HPP
+#endif  //RDF4CPP_RDF_UTIL_CASEINSENSITIVECHARTRAITS_HPP

@@ -56,6 +56,11 @@ public:
 
         unop_fptr_t pos_fptr;  // +a
         unop_fptr_t neg_fptr;  // -a
+
+        unop_fptr_t abs_fptr;   // abs(a)
+        unop_fptr_t round_fptr; // round(a)
+        unop_fptr_t floor_fptr; // floor(a)
+        unop_fptr_t ceil_fptr;  // ceil(a)
     };
 
     struct NumericOpsStub {
@@ -272,6 +277,14 @@ public:
      * @return A pointer to the inlining ops of the given datatype if it exists and fullfills Inlineable, else nullptr
      */
     [[nodiscard]] static InliningOps const *get_inlining_ops(DatatypeIDView datatype_id) noexcept;
+
+    inline static RuntimeConversionTable const *get_conversion_table(DatatypeIDView const datatype_id) noexcept {
+        auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
+            return &entry.conversion_table;
+        });
+
+        return res.has_value() ? *res : nullptr;
+    }
 
     /**
      * Tries to find a conversion to a common type in the conversion tables lhs_conv and rhs_conv.
@@ -509,6 +522,38 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
+            },
+            // abs(a)
+            .abs_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
+
+                return NumericOpResult{
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::abs_result, LiteralDatatype_t>::select(),
+                        .result_value = detail::map_expected(LiteralDatatype_t::abs(operand_val))};
+            },
+            // round(a)
+            .round_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
+
+                return NumericOpResult{
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::round_result, LiteralDatatype_t>::select(),
+                        .result_value = detail::map_expected(LiteralDatatype_t::round(operand_val))};
+            },
+            // floor(a)
+            .floor_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
+
+                return NumericOpResult{
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::floor_result, LiteralDatatype_t>::select(),
+                        .result_value = detail::map_expected(LiteralDatatype_t::floor(operand_val))};
+            },
+            // ceil(a)
+            .ceil_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
+
+                return NumericOpResult{
+                        .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::ceil_result, LiteralDatatype_t>::select(),
+                        .result_value = detail::map_expected(LiteralDatatype_t::ceil(operand_val))};
             }};
 }
 

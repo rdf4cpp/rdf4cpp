@@ -19,27 +19,27 @@ TEST_CASE("Datatype Byte") {
     CHECK(std::is_same_v<type, int8_t>);
 
     auto value = 1;
-    auto lit1 = Literal::make<datatypes::xsd::Byte>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit1.value<datatypes::xsd::Byte>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -128;
-    auto lit2 = Literal::make<datatypes::xsd::Byte>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit2.value<datatypes::xsd::Byte>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 127;
-    auto lit3 = Literal::make<datatypes::xsd::Byte>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Byte>(value);
     CHECK(lit3.value<datatypes::xsd::Byte>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::Byte>() == value);
     CHECK(lit4.lexical_form() == std::to_string(value));
 
     value = 127;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::Byte>() == value);
     CHECK(lit5.lexical_form() == std::to_string(value));
 
@@ -51,13 +51,13 @@ TEST_CASE("Datatype Byte") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("139", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("139", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-130", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-130", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("0.00001", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("0.00001", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("qwerty", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("qwerty", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg.59566", type_iri));
 }

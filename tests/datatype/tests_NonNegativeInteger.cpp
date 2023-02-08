@@ -15,26 +15,26 @@ TEST_CASE("Datatype NonNegativeInteger") {
     CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
     int64_t value = 1;
-    auto lit1 = Literal::make<datatypes::xsd::NonNegativeInteger>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::NonNegativeInteger>(value);
     CHECK(lit1.value<datatypes::xsd::NonNegativeInteger>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = 18446744073709;
-    auto lit2 = Literal::make<datatypes::xsd::NonNegativeInteger>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::NonNegativeInteger>(value);
     CHECK(lit2.value<datatypes::xsd::NonNegativeInteger>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit3 = Literal::make<datatypes::xsd::NonNegativeInteger>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::NonNegativeInteger>(value);
     CHECK(lit3.value<datatypes::xsd::NonNegativeInteger>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::NonNegativeInteger>() == value);
 
     value = 18446744073709;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::NonNegativeInteger>() == value);
 
     CHECK(lit1 != lit2);
@@ -45,27 +45,27 @@ TEST_CASE("Datatype NonNegativeInteger") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("qwerty", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("qwerty", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-1", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-1", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg.59566", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-0.01", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-0.01", type_iri));
 }
 
 TEST_CASE("xsd:nonNegativeInteger inlining") {
     using datatypes::xsd::NonNegativeInteger;
 
-    auto zero_lit = Literal::make<NonNegativeInteger>(0);
+    auto zero_lit = Literal::make_typed_from_value<NonNegativeInteger>(0);
     CHECK(zero_lit.backend_handle().is_inlined());
     CHECK(zero_lit.value<NonNegativeInteger>() == 0);
 
-    auto one_lit = Literal::make<NonNegativeInteger>(1);
+    auto one_lit = Literal::make_typed_from_value<NonNegativeInteger>(1);
     CHECK(one_lit.backend_handle().is_inlined());
     CHECK(one_lit.value<NonNegativeInteger>() == 1);
 
-    auto large_lit = Literal::make<NonNegativeInteger>((1ul << 42) - 1);
+    auto large_lit = Literal::make_typed_from_value<NonNegativeInteger>((1ul << 42) - 1);
     CHECK(large_lit.backend_handle().is_inlined());
     CHECK(large_lit.value<NonNegativeInteger>() == ((1ul << 42) - 1));
 }

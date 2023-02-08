@@ -48,8 +48,8 @@ TEST_SUITE("comparisions") {
         IRI iri1 = IRI{"http://www.example.org/test2"};
         IRI iri2 = IRI{"http://www.example.org/test1"};
         IRI iri3 = IRI{"http://www.example.org/oest"};
-        Literal lit1 = Literal::make<String>("testlit1");
-        Literal lit2 = Literal::make<String>("testlit2");
+        Literal lit1 = Literal::make_typed_from_value<String>("testlit1");
+        Literal lit2 = Literal::make_typed_from_value<String>("testlit2");
         CHECK(iri2 < iri1);
         CHECK(iri3 < iri1);
         CHECK(iri3 < iri2);
@@ -60,74 +60,75 @@ TEST_SUITE("comparisions") {
     TEST_CASE("filter compare tests") {
         SUBCASE("nulls") {
             CHECK(Literal{} <=> Literal{} == std::partial_ordering::equivalent);
-            CHECK(Literal{} <=> Literal::make<Int>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make<Decimal>(1.0) <=> Literal{} == std::partial_ordering::unordered);
+            CHECK(Literal{} <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Decimal>(1.0) <=> Literal{} == std::partial_ordering::unordered);
         }
 
         SUBCASE("inconvertibility") {
-            CHECK(Literal::make<String>("hello") <=> Literal::make<Int>(5) == std::partial_ordering::unordered);
-            CHECK(Literal::make<Float>(1.f) <=> Literal::make<String>("world") == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<String>("hello") <=> Literal::make_typed_from_value<Int>(5) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<String>("world") == std::partial_ordering::unordered);
         }
 
         SUBCASE("incomparability") {
-            CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Incomparable>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make<Int>(1) <=> Literal::make<Incomparable>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make<Incomparable>(1) <=> Literal::make<Int>(1) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Incomparable>(2) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Incomparable>(1) == std::partial_ordering::equivalent); // exactly the same object so still equal
+            CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Incomparable>(1) == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1) <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
         }
 
         SUBCASE("conversion") {
-            CHECK(Literal::make<Int>(1) <=> Literal::make<Integer>(10) == std::partial_ordering::less);
-            CHECK(Literal::make<Integer>(0) <=> Literal::make<Float>(1.2f) == std::partial_ordering::less);
-            CHECK(Literal::make<Float>(1.f) <=> Literal::make<Decimal>(1.0) == std::partial_ordering::equivalent);
+            CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Integer>(10) == std::partial_ordering::less);
+            CHECK(Literal::make_typed_from_value<Integer>(0) <=> Literal::make_typed_from_value<Float>(1.2f) == std::partial_ordering::less);
+            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(1.0) == std::partial_ordering::equivalent);
         }
     }
 
     TEST_CASE("order by compare tests") {
         // Incomparable <=> Incomparable
         SUBCASE("incomparability") {
-            CHECK(Literal::make<Incomparable>(5).compare_with_extensions(Literal::make<Incomparable>(10)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Incomparable>(5).compare_with_extensions(Literal::make_typed_from_value<Incomparable>(10)) == std::weak_ordering::greater);
 
             // reason: float has fixed id and any fixed id type is always less than a dynamic one
-            CHECK(Literal::make<Float>(10.f).compare_with_extensions(Literal::make<Incomparable>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Float>(10.f).compare_with_extensions(Literal::make_typed_from_value<Incomparable>(1)) == std::weak_ordering::less);
 
             // reason: decimal has fixed id and any fixed id type is always less than a dynamic one
-            CHECK(Literal::make<Incomparable>(1).compare_with_extensions(Literal::make<Decimal>(10.0)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(10.0)) == std::weak_ordering::greater);
         }
 
         SUBCASE("nulls") {
             CHECK(Literal{}.compare_with_extensions(Literal{}) == std::weak_ordering::equivalent);
 
             // null <=> other (expecting null < any other a)
-            CHECK(Literal{}.compare_with_extensions(Literal::make<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<String>("123").compare_with_extensions(Literal{}) == std::weak_ordering::greater);
+            CHECK(Literal{}.compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<String>("123").compare_with_extensions(Literal{}) == std::weak_ordering::greater);
         }
 
         SUBCASE("test type ordering extensions") {
             // expected: string < float < decimal < integer < int
 
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Float>(1)) == std::weak_ordering::greater);
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Decimal>(1.0).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(1.0).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(1.0).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(1.0).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(1.0).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
 
-            CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make<Float>(1.f).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
 
-            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::greater);
-            CHECK(Literal::make<Int>(1).compare_with_extensions(Literal::make<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Int>(1).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Int>(1).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
         }
 
         SUBCASE("test ordering extensions ignored when not equal") {
-            CHECK(Literal::make<Float>(2.f).compare_with_extensions(Literal::make<Integer>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Float>(2.f).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::greater);
         }
     }
 
     TEST_CASE("std::set") {
-        Literal const lit = Literal::make<Int>(5);
-        Literal const lit2 = Literal::make<Int>(5); // duplicate to check if it's filtered out
-        Literal const lit3 = Literal::make<Integer>(10);
-        Literal const lit4 = Literal::make<String>("hello world");
+        Literal const lit = Literal::make_typed_from_value<Int>(5);
+        Literal const lit2 = Literal::make_typed_from_value<Int>(5); // duplicate to check if it's filtered out
+        Literal const lit3 = Literal::make_typed_from_value<Integer>(10);
+        Literal const lit4 = Literal::make_typed_from_value<String>("hello world");
         IRI const iri{"some random iri"};
         IRI const null_iri{};
         Node const node{};
@@ -148,10 +149,10 @@ TEST_SUITE("comparisions") {
     }
 
     TEST_CASE("std::unordered_set") {
-        Literal const lit = Literal::make<Int>(5);
-        Literal const lit2 = Literal::make<Int>(5); // duplicate to check if it's filtered out
-        Literal const lit3 = Literal::make<Integer>(10);
-        Literal const lit4 = Literal::make<String>("hello world");
+        Literal const lit = Literal::make_typed_from_value<Int>(5);
+        Literal const lit2 = Literal::make_typed_from_value<Int>(5); // duplicate to check if it's filtered out
+        Literal const lit3 = Literal::make_typed_from_value<Integer>(10);
+        Literal const lit4 = Literal::make_typed_from_value<String>("hello world");
         IRI const iri{"some random iri"};
         IRI const null_iri{};
         Node const node{};
@@ -178,8 +179,8 @@ TEST_CASE("effective boolean value") {
     Node const iri = IRI{"http://hello.com"};
     Node const bnode = BlankNode{"asd"};
     Node const var = query::Variable{"x"};
-    Node const falsy_lit = Literal::make<datatypes::xsd::Float>(0.f);
-    Node const truthy_lit = Literal::make<datatypes::xsd::Integer>(100);
+    Node const falsy_lit = Literal::make_typed_from_value<datatypes::xsd::Float>(0.f);
+    Node const truthy_lit = Literal::make_typed_from_value<datatypes::xsd::Integer>(100);
     Node const null_lit = Literal{};
     Node const null_bnode = BlankNode{};
 

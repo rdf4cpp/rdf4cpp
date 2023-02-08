@@ -1,5 +1,5 @@
 #include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
-#include <rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.hpp>
+#include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
 namespace rdf4cpp::rdf::parser {
 
