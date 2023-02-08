@@ -22,15 +22,12 @@ class NodeStorage;
  */
 class INodeStorageBackend {
 public:
-    /**
-     * Constructor. Synchronized.
-     */
-    INodeStorageBackend() = default;
-    virtual ~INodeStorageBackend() = default;
+    INodeStorageBackend() noexcept = default;
+    virtual ~INodeStorageBackend() noexcept = default;
 
     /**
-     * Number of <dev>Node</dev>s managed by this INodeStorageBackend.
-     * @return
+     * @return number of nodes managed by this INodeStorageBackend. Implementations are free
+     *      to always report 0.
      */
     [[nodiscard]] virtual size_t size() const noexcept = 0;
 

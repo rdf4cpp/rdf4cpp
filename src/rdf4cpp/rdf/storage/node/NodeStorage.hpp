@@ -24,6 +24,11 @@ struct WeakNodeStorage;
 namespace node_storage_detail {
 static constexpr identifier::NodeStorageID INVALID_BACKEND_INDEX{static_cast<uint16_t>(-1)};
 
+/**
+ * The control block for managing a single backend instance.
+ * The reasoning for the atomicity of the fields can be found
+ * in the first comment inside NodeStorage.
+ */
 struct ControlBlock {
     std::atomic<INodeStorageBackend *> backend{nullptr};
     std::atomic<size_t> refcount{0};
@@ -32,12 +37,12 @@ struct ControlBlock {
 }  //namespace node_storage_detail
 
 /**
- * NodeStorage provides an interface to the internal storage <div>Node</div>s.
+ * NodeStorage provides an interface to the internal storage for nodes.
  * Each NodeStorage has a INodeStorageBackend, which is uniquely identified by a identifier::NodeStorageID.
- * There can be at most 1024 different INodeStorageBackend instances at once.
+ * There can be at most 1023 different INodeStorageBackend instances at once.
  * If no NodeStorage with the identifier::NodeStorageID of a certain INodeStorageBackend exists anymore, the corresponding INodeStorageBackend is destructed.
  * This does not apply to the default_instance.
- * The lifecycle of NodeStorage's and their backends is managed by the static methods within this class.
+ * The lifecycle of NodeStorage's and their backends is managed automatically by this class, similar to a shared_ptr.
  */
 class NodeStorage {
     /**
@@ -63,19 +68,74 @@ class NodeStorage {
      */
     static inline std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
     /**
-     * Makes sure the default_instance_ and default_node_context_id are initialized only once
+     * Makes sure the default_instance_ is initialized only once
      */
     static inline std::once_flag default_init_once_flag;
     /**
      * THe default instance used whenever no NodeStorage is explicitly provided.
      */
     static NodeStorage default_instance_;
+
     /**
-     * Retrieve a backend_instance from node_context_instances by its ID
-     * @param id ID of the INodeStorage
-     * @return pointer to the instance or null pointer if no instance is registered for the given ID
+     * Index of the backend this NodeStorage is referring to.
      */
-    static INodeStorageBackend *lookup_backend_instance(identifier::NodeStorageID id);
+    identifier::NodeStorageID backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
+
+    /**
+     * Constructs a NodeStorage pointing to no instance
+     */
+    NodeStorage() noexcept = default;
+
+    /**
+     * Constructs a NodeStorage with the given backend instance.
+     * @param backend backend instance.
+     * @safety This function is only safe to call if you can guarantee that the reference count of the backend at backend_index can _not_
+     *      reach zero while this constructed node storage is alive.
+     */
+    explicit NodeStorage(identifier::NodeStorageID backend_index) noexcept;
+
+    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
+        assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
+        return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
+    }
+
+    /**
+     * @return a reference to the backend of this NodeStorage
+     * @safety this function is always safe to call
+     */
+    [[nodiscard]] inline INodeStorageBackend &get_backend() noexcept {
+        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
+        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
+    }
+
+    /**
+     * @return a const reference to the backend of this NodeStorage
+     * @safety this function is always safe to call
+     */
+    [[nodiscard]] INodeStorageBackend const &get_backend() const noexcept {
+        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
+        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
+    }
+
+    /**
+     * Increases the reference count of the backend instance pointed to by
+     * this NodeStorage.
+     *
+     * @safety This function must only be called if you can guarantee
+     *      that the reference count of this backend cannot reach zero while calling this function.
+     *      I.e. Something like NodeStorage{id}.increase_refcount(); is inherently undefined behaviour.
+     */
+    void increase_refcount() noexcept;
+
+    /**
+     * Decreases the reference count of the backend instance pointed to by
+     * this NodeStorage.
+     *
+     * @safety This function must only be called on destruction or similar events (like assignment)
+     *      calling it in any other scenario is undefined behaviour as it could destroy the backend
+     *      other or this NodeStorage is referring to.
+     */
+    void decrease_refcount() noexcept;
 
 public:
     /**
@@ -88,18 +148,17 @@ public:
      * Change the default instance.
      * @param node_context NodeStorage that becomes default NodeStorage.
      */
-    static void default_instance(NodeStorage const &node_context);
+    static void set_default_instance(NodeStorage const &node_context);
 
     /**
      * Create a NodeStorage with a custom Backend.
      * @tparam BackendImpl Class deriving from INodeStorage
-     * @tparam Args types of args
      * @param args arguments to construct BackendImpl
-     * @return NodeStorage encapsulating the instance.
+     * @return NodeStorage referring to the instance.
      */
-    template<typename BackendImpl, typename... Args>
-    static inline NodeStorage new_instance(Args... args) requires std::derived_from<BackendImpl, INodeStorageBackend> {
-        return register_backend(new BackendImpl(args...));
+    template<typename BackendImpl, typename... Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
+    static NodeStorage new_instance(Args &&...args) {
+        return register_backend(new BackendImpl(std::forward<Args>(args)...));
     }
 
     /**
@@ -109,65 +168,22 @@ public:
     static NodeStorage new_instance();
 
     /**
-     * Retrieve NodeStorage for the given ID. If no such NodeStorage exists, std::nullopt is returned.
+     * Retrieve NodeStorage for the given ID. If no such NodeStorage exists or the backend is already dead, std::nullopt is returned.
      * @param id NodeStorage id
      * @return optional NodeStorage
      */
     static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id);
 
     /**
-     * <p>Registers a INodeStorageBackend at the identifier::NodeStorageID provided by the instance.
-     * Will throw if either a null pointer is provided.
+     * Registers a INodeStorageBackend at the identifier::NodeStorageID provided by the instance.
      *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
+     * @throws std::runtime_error if a nullptr is provided
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
      */
-    static NodeStorage register_backend(INodeStorageBackend *backend_instance);
-
-    /**
-     * <p>Use with caution!</p>
-     * <p>Unregisters the InodeStorageBackend at the identifier::NodeStorageID provided in backend_instance.
-     * This method should only be used if the backend_instance was registered with NodeStorage::register_backend and had an initial use_count_ of >1.
-     * At the time of calling this method, backend_instance must not be the default_instance and there must be no NodeStorage instances using backend_instance.</p>
-     * @param backend_instance
-     */
-    static void unregister_backend(INodeStorageBackend *backend_instance);
-
-private:
-    identifier::NodeStorageID backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
-
-    /*
-     * Constructors & Destructor
-     */
-
-    /**
-     * Default construction is private. Use NodeStorage::default_instance or NodeStorage::new_instance.
-     */
-    NodeStorage() = default;
-
-    /**
-     * Constructs a NodeStorage with the given backend instance.
-     * @param backend backend instance.
-     */
-    explicit NodeStorage(identifier::NodeStorageID backend_index) noexcept;
-
-    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
-        assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
-        return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
-    }
-
-    [[nodiscard]] inline INodeStorageBackend &get_backend() noexcept {
-        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
-        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
-    }
-
-    [[nodiscard]] INodeStorageBackend const &get_backend() const noexcept {
-        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
-        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
-    }
-
-    void increase_refcount() noexcept;
-    void decrease_refcount() noexcept;
+    static NodeStorage register_backend(INodeStorageBackend *&&backend_instance);
 
 public:
     NodeStorage(NodeStorage &&other) noexcept;
@@ -177,14 +193,12 @@ public:
 
     ~NodeStorage();
 
-    /*
-     * Member functions
-     */
-
     /**
      * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed.
      * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
      * @return current number of instances of this NodeStorage
+     * @safey this function is inherently racy as the reference count can even change between fetching it and looking at the value
+     *      do _not_ use it to check the reference count for _any_ kind of synchronization.
      */
     [[nodiscard]] size_t ref_count() const noexcept;
 
@@ -211,18 +225,21 @@ public:
      * @return identifier::NodeID identifying the requested BlankNode.
      */
     [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::IRIBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view IRI description (MUST be valid)
      * @return identifier::NodeID identifying the requested IRI.
      */
     [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::LiteralBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view Literal description (MUST be valid)
      * @return identifier::NodeID identifying the requested Literal.
      */
     [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::VariableBackendView. If it doesn't exist in the backend yet, it is added.
      * @param view Variable description (MUST be valid)
@@ -236,18 +253,21 @@ public:
      * @return identifier::NodeID identifying the requested BlankNode.
      */
     [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::IRIBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view IRI description (MUST be valid)
      * @return identifier::NodeID identifying the requested IRI.
      */
     [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::LiteralBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view Literal description (MUST be valid)
      * @return identifier::NodeID identifying the requested Literal.
      */
     [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept;
+
     /**
      * Lookup the identifier::NodeID for the given view::VariableBackendView. If it doesn't exist, the method will return a null() identifier::NodeID.
      * @param view Variable description (MUST be valid)
@@ -261,121 +281,184 @@ public:
      * @return view::IRIBackendView describing the requested resource.
      */
     [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
+
     /**
      * Lookup the view::LiteralBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::LiteralBackendView describing the requested resource.
      */
     [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
+
     /**
      * Lookup the view::BNodeBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::BNodeBackendView describing the requested resource.
      */
     [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
+
     /**
      * Lookup the view::VariableBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::VariableBackendView describing the requested resource.
      */
     [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
+
     /**
-     * Lookup the view::IRIBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::IRIBackendView for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the requested resource
      * @return view::IRIBackendView describing the requested resource.
+     * @throws std::exception if there is no backend at handle.node_storage_id()
+     * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *      it is undefined from which node storage the node will actually be fetched, if any.
      */
     [[nodiscard]] static view::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle);
+
     /**
      * Lookup the view::LiteralBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
+     *
      * @param handle NodeBackendHandle of the requested resource
      * @return view::LiteralBackendView describing the requested resource.
+     * @throws std::exception if there is no backend at handle.node_storage_id()
+     * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *      it is undefined from which node storage the node will actually be fetched, if any.
      */
     [[nodiscard]] static view::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle);
+
     /**
-     * Lookup the view::BNodeBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::BNodeBackendView for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the requested resource
-     * @return view::BNodeBackendView describing the requested resource.
+     * @return view::IRIBackendView describing the requested resource.
+     * @throws std::exception if there is no backend at handle.node_storage_id()
+     * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *      it is undefined from which node storage the node will actually be fetched, if any.
      */
     [[nodiscard]] static view::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle);
+
     /**
-     * Lookup the view::VariableBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
+     * Lookup the view::VariableBackendView for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the requested resource
-     * @return view::VariableBackendView describing the requested resource.
+     * @return view::IRIBackendView describing the requested resource.
+     * @throws std::exception if there is no backend at handle.node_storage_id()
+     * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *      it is undefined from which node storage the node will actually be fetched, if any.
      */
     [[nodiscard]] static view::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle);
 
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.
-     * This includes also Literals which use this IRI as datatype.  </p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erases the iri backend for the given identifier::NodeID.
+     *
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
+     * @safety The user must make sure that no more Nodes exist which use the referenced resource, this also applies
+     *      to literals using this iri as a datatype.
      */
     bool erase_iri(identifier::NodeID id);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the literal backend for the given identifier::NodeID.
+     *
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
+     * @safety The user must make sure that no more Nodes exist which use the referenced resource.
      */
     bool erase_literal(identifier::NodeID id);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the literal backend for the given identifier::NodeID.
+     *
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
+     * @safety The user must make sure that no more Nodes exist which use the referenced resource.
      */
     bool erase_bnode(identifier::NodeID id);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeID. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the literal backend for the given identifier::NodeID.
+     *
      * @param id NodeID of the resource to be erased
      * @return if a resource was erased
+     * @safety The user must make sure that no more Nodes exist which use the referenced resource.
      */
     bool erase_variable(identifier::NodeID id);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.
-     * This includes also Literals which use this IRI as datatype.  </p>
-     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the iri backend for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
+     * @throws std::exception if the NodeStorage for handle.node_storage_id() does not exist
+     * @safety
+     *      - The user must make sure that no more Nodes exist which use the referenced resource, this
+     *          also applies to any literals using the iri as a datatype.
+     *      - If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *          it is undefined from which node storage the node will actually be removed, if any.
      */
     static bool erase_iri(identifier::NodeBackendHandle handle);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.
-     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the literal backend for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
+     * @throws std::exception if the NodeStorage for handle.node_storage_id() does not exist
+     * @safety
+     *      - The user must make sure that no more Nodes exist which use the referenced resource.
+     *      - If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *          it is undefined from which node storage the node will actually be removed, if any.
      */
     static bool erase_literal(identifier::NodeBackendHandle handle);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erases the bnode backend for the given identifier::NodeBackendHandle
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
+     * @throws std::exception if the NodeStorage for handle.node_storage_id() does not exist
+     * @safety
+     *      - The user must make sure that no more Nodes exist which use the referenced resource.
+     *      - If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *          it is undefined from which node storage the node will actually be removed, if any.
      */
     static bool erase_bnode(identifier::NodeBackendHandle handle);
+
     /**
-     * <p>Use with caution!</p>
-     * <p>Erase the backend for the given identifier::NodeBackendHandle. The user must make sure that no more Nodes exist which use the referenced resource.</p>
-     * <p>If view.node_storage_id() doesn't exist, the method will throw.</p>
-     * <p>This method is not implemented in reference_node_storage::ReferenceNodeStorageBackend.</p>
+     * Erase the variable backend for the given identifier::NodeBackendHandle.
+     * @warning Prefer the non-static version of this function whenever possible
+     *      as it is inherently less racy.
+     *
      * @param handle NodeBackendHandle of the resource to be erased
      * @return if a resource was erased
+     * @throws std::exception if the NodeStorage for handle.node_storage_id() does not exist
+     * @safety
+     *      - The user must make sure that no more Nodes exist which use the referenced resource.
+     *      - If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
+     *          it is undefined from which node storage the node will actually be removed, if any.
      */
     static bool erase_variable(identifier::NodeBackendHandle handle);
 
+    /**
+     * @return whether this and other are referring to the same backend
+     */
     bool operator==(NodeStorage const &other) const noexcept = default;
+
+    /**
+     * @return whether this and other are _not_ referring to the same backend
+     */
     bool operator!=(NodeStorage const &other) const noexcept = default;
 };
 
@@ -418,7 +501,14 @@ public:
      */
     [[nodiscard]] NodeStorage upgrade() const;
 
+    /**
+     * @return whether this and other are referring to the same backend
+     */
     bool operator==(WeakNodeStorage const &) const noexcept = default;
+
+    /**
+     * @return whether this and other are _not_ referring to the same backend
+     */
     bool operator!=(WeakNodeStorage const &) const noexcept = default;
 };
 

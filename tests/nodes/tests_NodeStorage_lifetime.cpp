@@ -48,7 +48,7 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
         {
             NodeStorage dns_copy = dns;
             id = dns_copy.id();
-            NodeStorage::default_instance(NodeStorage::new_instance());
+            NodeStorage::set_default_instance(NodeStorage::new_instance());
 
             CHECK(dns_copy.ref_count() == 1);
             CHECK(dns.ref_count() == 1);
@@ -240,6 +240,34 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
             auto t1 = std::jthread([&]() {
                 while (!run.load(std::memory_order_acquire)) {}
                 auto ns = weak.try_upgrade(); // trying to trigger asserts in try_upgrade
+            });
+
+            auto t2 = std::jthread([&]() {
+                while (!run.load(std::memory_order_acquire)) {}
+                ns.~NodeStorage();
+            });
+
+            std::this_thread::sleep_for(50ms);
+            run.store(true, std::memory_order_release);
+        }
+    }
+
+    TEST_CASE("destruction and lookup race") {
+        for (size_t i = 0; i < 100; ++i) {
+            std::atomic<bool> run{false};
+
+            NodeStorage ns = NodeStorage::new_instance();
+            WeakNodeStorage weak = ns.downgrade();
+            auto const id = ns.id();
+
+            auto t1 = std::jthread([&]() {
+                while (!run.load(std::memory_order_acquire)) {}
+                auto ns = NodeStorage::lookup_instance(id);
+
+                if (ns.has_value()) {
+                    REQUIRE(ns->ref_count() > 0);
+                    REQUIRE(weak.try_upgrade().has_value()); // weak referring to node storage must still be valid else ns is not valid
+                }
             });
 
             auto t2 = std::jthread([&]() {

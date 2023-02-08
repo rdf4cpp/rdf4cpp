@@ -3,14 +3,49 @@
 #include <algorithm>
 
 namespace rdf4cpp::rdf::storage::node {
-NodeStorage NodeStorage::default_instance_ = {};
-INodeStorageBackend *NodeStorage::lookup_backend_instance(identifier::NodeStorageID id) {
-    std::call_once(default_init_once_flag, []() {
-        default_instance_ = new_instance();
-    });
 
-    return node_context_instances[id.value].backend;
+NodeStorage NodeStorage::default_instance_ = {};
+
+void NodeStorage::increase_refcount() noexcept {
+    /**
+     * Can be relaxed as this object is keeping the backend alive anyways.
+     *
+     * see https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.example_reference_counters
+     */
+    get_slot(this->backend_index)
+            .refcount
+            .fetch_add(1, std::memory_order_relaxed);
 }
+
+void NodeStorage::decrease_refcount() noexcept {
+    auto &slot = get_slot(this->backend_index);
+
+    /**
+     * All memory accesses must happen before this store because it is
+     * a release-store that prevents preceding memory ops to be reordered past itself.
+     */
+    if (slot.refcount.fetch_sub(1, std::memory_order_release) != 1) {
+        return;
+    }
+
+    /**
+     * Deletion of data cannot be reordered before this fence.
+     * Refcount decrease cannot be reordered after this fence as release->acquire.
+     *
+     * So:
+     * data access -> refcount decrease -> fence -> (reset to nullptr & deletion)
+     */
+    std::atomic_thread_fence(std::memory_order_acquire);
+
+    /**
+     * Can be a relaxed-store as using release only influences how fast this slot will be found.
+     * Release would force register_backend to find it earlier as the acquire-read of the backend there would synchronize with the
+     * release-store here.
+     */
+    INodeStorageBackend *old = slot.backend.exchange(nullptr, std::memory_order_relaxed);
+    delete old;
+}
+
 NodeStorage &NodeStorage::default_instance() {
     std::call_once(default_init_once_flag, []() {
         default_instance_ = new_instance();
@@ -18,7 +53,8 @@ NodeStorage &NodeStorage::default_instance() {
 
     return default_instance_;
 }
-void NodeStorage::default_instance(NodeStorage const &node_context) {
+
+void NodeStorage::set_default_instance(NodeStorage const &node_context) {
     default_instance_ = node_context;
 }
 
@@ -26,7 +62,7 @@ NodeStorage NodeStorage::new_instance() {
     return register_backend(new reference_node_storage::ReferenceNodeStorageBackend());
 }
 
-NodeStorage NodeStorage::register_backend(INodeStorageBackend *backend_instance) {
+NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
     if (backend_instance == nullptr) {
         throw std::runtime_error("Backend instance must not be null.");
     }
@@ -73,41 +109,34 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *backend_instance)
     throw std::runtime_error{"Maximum number of backend instances exceeded"};
 }
 
-void NodeStorage::unregister_backend(INodeStorageBackend *backend_instance) {
-    if (backend_instance == nullptr) {
-        throw std::runtime_error("Backend instance must not be null.");
-    }
-
-    auto it = std::find_if(NodeStorage::node_context_instances.begin(), NodeStorage::node_context_instances.end(), [&](auto const &slot) {
-        return slot.backend == backend_instance;
-    });
-
-    if (it == NodeStorage::node_context_instances.end()) {
-        throw std::runtime_error{"Backend instance not found"};
-    }
-
-    // TODO: just remove this function? It is basically just always UB when the reference count
-    // is not 0, and if it is zero calling this function is useless.
-    // And I'm not sure what the purpose of this function is.
-    assert(false);
-}
-
 std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) {
-    if (lookup_backend_instance(id) == nullptr) {
-        return std::nullopt;
-    }
+    auto &slot = get_slot(id);
 
     /**
-     * Release-store to synchronize with acquire-load in decrease_refcount.
-     * As there is currently no guaranteed object of NodeStorage alive
-     * we need to make sure that this reference count increase happens before
-     * the potentially running destructor deletes the backend.
+     * This function is in essence almost identical to WeakNodeStorage::try_upgrade.
+     * We do not have a guarantee that a NodeStorage is alive right now so we have to be cautious
+     * to not give out a NodeStorage pointing to a dropped backend.
+     *
+     * For more details on the ordering used see WeakNodeStorage::try_upgrade
      */
-    get_slot(id)
-            .refcount
-            .fetch_add(1, std::memory_order_release);
+    auto old_rc = slot.refcount.load(std::memory_order_relaxed);
+    while (true) {
+        if (old_rc == 0) {
+            return std::nullopt;
+        }
 
-    return NodeStorage{id};
+        if (slot.refcount.compare_exchange_weak(old_rc, old_rc + 1, std::memory_order_acquire, std::memory_order_relaxed)) {
+            assert(slot.backend != nullptr);
+            assert(slot.refcount > 0);
+
+            /**
+             * We do not actually have to check for backend == nullptr here
+             * because having a reference count of greater than zero
+             * directly implies that the backend cannot be nullptr.
+             */
+            return NodeStorage{id};
+        }
+    }
 }
 
 NodeStorage::NodeStorage(identifier::NodeStorageID backend_index) noexcept : backend_index{backend_index} {
@@ -154,46 +183,6 @@ NodeStorage &NodeStorage::operator=(NodeStorage &&other) noexcept {
     }
 
     return *this;
-}
-
-void NodeStorage::decrease_refcount() noexcept {
-    auto &slot = get_slot(this->backend_index);
-
-    /**
-     * All memory accesses must happen before this store because it is
-     * a release-store that prevents preceding memory ops to be reordered past itself.
-     */
-    if (slot.refcount.fetch_sub(1, std::memory_order_release) != 1) {
-        return;
-    }
-
-    /**
-     * Deletion of data cannot be reordered before this fence.
-     * Refcount decrease cannot be reordered after this fence as release->acquire.
-     *
-     * So:
-     * data access -> refcount decrease -> fence -> (reset to nullptr & deletion)
-     */
-    std::atomic_thread_fence(std::memory_order_acquire);
-
-    /**
-     * Can be a relaxed-store as using release only influences how fast this slot will be found.
-     * Release would force register_backend to find it earlier as the acquire-read of the backend there would synchronize with the
-     * release-store here.
-     */
-    INodeStorageBackend *old = slot.backend.exchange(nullptr, std::memory_order_relaxed);
-    delete old;
-}
-
-void NodeStorage::increase_refcount() noexcept {
-    /**
-     * Can be relaxed as this object is keeping the backend alive anyways.
-     *
-     * see https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.example_reference_counters
-     */
-    get_slot(this->backend_index)
-            .refcount
-            .fetch_add(1, std::memory_order_relaxed);
 }
 
 WeakNodeStorage NodeStorage::downgrade() const noexcept {
@@ -278,20 +267,20 @@ view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::No
     return get_backend().find_variable_backend_view(id);
 }
 view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->find_iri_backend_view(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().find_iri_backend_view(handle.node_id());
 }
 view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->find_literal_backend_view(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().find_literal_backend_view(handle.node_id());
 }
 view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->find_bnode_backend_view(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().find_bnode_backend_view(handle.node_id());
 }
 view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->find_variable_backend_view(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().find_variable_backend_view(handle.node_id());
 }
 bool NodeStorage::erase_iri(identifier::NodeID id) {
     return get_backend().erase_iri(id);
@@ -306,20 +295,20 @@ bool NodeStorage::erase_variable(identifier::NodeID id) {
     return get_backend().erase_variable(id);
 }
 bool NodeStorage::erase_iri(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->erase_iri(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().erase_iri(handle.node_id());
 }
 bool NodeStorage::erase_literal(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->erase_literal(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().erase_literal(handle.node_id());
 }
 bool NodeStorage::erase_bnode(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->erase_bnode(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().erase_bnode(handle.node_id());
 }
 bool NodeStorage::erase_variable(identifier::NodeBackendHandle handle) {
-    INodeStorageBackend *backend = NodeStorage::lookup_backend_instance(handle.node_storage_id());
-    return backend->erase_literal(handle.node_id());
+    auto ns = lookup_instance(handle.node_storage_id());
+    return ns.value().erase_literal(handle.node_id());
 }
 
 
@@ -355,6 +344,8 @@ std::optional<NodeStorage> WeakNodeStorage::try_upgrade() const noexcept {
      *
      * Therefore we cannot use a simple fetch_add as it would increase the reference count from 0.
      * Instead we are doing a compare exchange loop and fail if the old value is 0.
+     *
+     * Acquire on success because we need to synchronize with decrease_refcount
      *
      * Relaxed-loads are fine here since in the failure case we do nothing and also do not care about
      * whatever state the refcount is in.

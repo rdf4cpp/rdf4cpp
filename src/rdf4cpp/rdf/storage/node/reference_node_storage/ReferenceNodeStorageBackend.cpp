@@ -4,7 +4,7 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() : INodeStorageBackend{} {
+ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() noexcept {
     // some iri's like xsd:string are there by default
 
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
