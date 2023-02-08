@@ -25,7 +25,7 @@ on:
 
 jobs:
   tests-and-examples:
-    name: ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", " + report code coverage"]')[inputs.with-coverage] }}
+    name: ${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }} lib${{ fromJSON('["", " + sanitizers"]')[inputs.with-sanitizer] }}${{ fromJSON('["", " + code coverage"]')[inputs.with-coverage] }}
     runs-on: ${{ inputs.os }}
     defaults:
       run:
