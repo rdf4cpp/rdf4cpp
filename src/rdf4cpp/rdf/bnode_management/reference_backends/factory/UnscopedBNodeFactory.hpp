@@ -5,6 +5,10 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * A factory that created BlankNodes.
+ * The resulting BlankNodes are not explicitly scoped in the node storage.
+ */
 struct UnscopedBNodeFactory : INodeFactory {
     static UnscopedBNodeFactory &default_instance() noexcept;
 

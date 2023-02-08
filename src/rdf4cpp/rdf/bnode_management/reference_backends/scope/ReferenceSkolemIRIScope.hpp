@@ -6,6 +6,11 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * Reference implementation for a Skolem IRI scope.
+ * The generated Skolem IRIs are not explicitly scoped to this scope
+ * in the node storage.
+ */
 struct ReferenceSkolemIRIScope final : SkolemIRIFactory, ReferenceScopeBase<ReferenceSkolemIRIScope> {
 private:
     friend ReferenceScopeBase<ReferenceSkolemIRIScope>;

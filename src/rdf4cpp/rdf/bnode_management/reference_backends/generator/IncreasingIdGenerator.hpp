@@ -8,12 +8,21 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * Generates identifiers consisting of a optional prefix and an integer in increasing value.
+ */
 struct IncreasingIdGenerator : IIdGenerator {
 private:
     std::string prefix;
     std::atomic<size_t> counter;
 
 public:
+    /**
+     * Creates a generator from a given start value and a prefix
+     *
+     * @param prefix prefix for the generated ids
+     * @param initial_value initial value of the counter
+     */
     explicit IncreasingIdGenerator(std::string prefix = "", size_t initial_value = 0) noexcept;
 
     [[nodiscard]] size_t max_generated_id_size() const noexcept override;

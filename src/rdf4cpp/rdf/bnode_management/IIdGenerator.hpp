@@ -6,6 +6,11 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * A generator for identifiers.
+ * Implementations are required to be thread safe and conform to the rules laid
+ * out by the documentation on the interface functions.
+ */
 struct IIdGenerator {
     virtual ~IIdGenerator() = default;
 

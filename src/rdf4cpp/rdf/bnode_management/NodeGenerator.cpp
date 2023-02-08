@@ -25,8 +25,8 @@ std::string NodeGenerator::generate_id() {
     return buf;
 }
 
-Node NodeGenerator::generate_node(INodeFactory &facade, NodeGenerator::NodeStorage &node_storage) {
-    return Node{facade.make_node(*this->impl, node_storage)};
+Node NodeGenerator::generate_node(INodeFactory &factory, NodeGenerator::NodeStorage &node_storage) {
+    return Node{factory.make_node(*this->impl, node_storage)};
 }
 
 NodeScope NodeGenerator::scope() {

@@ -12,9 +12,21 @@ namespace rdf4cpp::rdf::util {
 
 namespace shared_ptr_detail {
 
+/**
+ * The control block of SharedPtr/WeakPtr
+ */
 struct ControlBlock {
-    std::atomic<size_t> strong; // keeps data alive
-    std::atomic<size_t> weak;   // keeps control block alive
+    /**
+     * Number of SharedPtrs (pointing to this control block) currently alive
+     * Values greater than 0 keep the data (not stored here) alive.
+     */
+    std::atomic<size_t> strong;
+
+    /**
+     * Number of WeakPtrs (pointing to this control block) currently alive.
+     * Values greater than 0 keep this control block alive.
+     */
+    std::atomic<size_t> weak;
 };
 
 }  //namespace shared_ptr_detail
@@ -25,6 +37,9 @@ struct WeakPtr;
 template<typename T>
 struct SharedPtr;
 
+/**
+ * Equivalent to std::enable_shared_from_this<T>
+ */
 template<typename T>
 struct EnableSharedFromThis {
 private:
@@ -47,8 +62,9 @@ public:
 };
 
 /**
- * Shared pointer implementation, that exposes ptr equality and hash on weaks.
+ * Shared pointer implementation, that exposes ptr equality and hash on WeakPtrs.
  * This implementation is inspired by Rust's std::sync::Arc and boost's boost::shared_ptr.
+ * @tparam T type of object to manage
  */
 template<typename T>
 struct SharedPtr {
@@ -74,18 +90,24 @@ private:
             return;
         }
 
+        // Release-store to synchronize deletion with
+        // weak upgrade
         if (this->control_block->strong.fetch_sub(1, std::memory_order_release) != 1) {
             return;
         }
 
+        // Prevent reordering of deletion of data with use of data
+        // www.boost.org/doc/libs/1_55_0/doc/html/atomic/usage_examples.html
         std::atomic_thread_fence(std::memory_order_acquire);
         delete this->data;
 
-        // every shared_ptr holds a single weak ref collectively
+        // every SharedPtr holds a single weak ref collectively
+        // this is the last SharedPtr so drop the ref
         if (this->control_block->weak.fetch_sub(1, std::memory_order_release) != 1) {
             return;
         }
 
+        // Same reordering-prevention logic here
         std::atomic_thread_fence(std::memory_order_acquire);
         delete this->control_block;
     }
@@ -93,6 +115,10 @@ private:
     template<typename U>
     void assign_owner(EnableSharedFromThis<U> const *obj) {
         obj->set_owner(WeakPtr<U>{*this});
+    }
+
+    void assign_owner(void const *) {
+        // noop for types which are not EnabledSharedFromThis
     }
 
     explicit SharedPtr(control_block_type *control_block, element_type *data) noexcept : control_block{control_block},
@@ -122,6 +148,11 @@ public:
         this->drop();
         this->control_block = other.control_block;
         this->data = other.data;
+
+        // using relaxed here is fine as new references can only be formed
+        // when there is currently another SharedPtr alive
+        //
+        // www.boost.org/doc/libs/1_55_0/doc/html/atomic/usage_examples.html
         this->control_block->strong.fetch_add(1, std::memory_order_relaxed);
 
         return *this;
@@ -139,11 +170,20 @@ public:
         return *this;
     }
 
-    ~SharedPtr() {
+    ~SharedPtr() noexcept(std::is_nothrow_destructible_v<T>) {
         this->drop();
     }
 
-    static SharedPtr from_raw(T *raw) noexcept {
+    /**
+     * Creates a shared pointer from a raw pointer.
+     * @warning This function takes ownership of the given pointer.
+     *
+     * @param raw the raw pointer to take ownership of
+     * @return a SharedPtr to the provided raw pointer
+     * @safety Using the provided pointer in any way after passing it to
+     *      this function is undefined behaviour. Especially deleting it manually.
+     */
+    static SharedPtr from_raw(T *&&raw) noexcept {
         auto *control_block = new control_block_type{
                 .strong = 1,
                 .weak = 1};
@@ -154,6 +194,12 @@ public:
         return self;
     }
 
+    /**
+     * equivalent to std::make_shared<T>
+     *
+     * @param args constructor arguments to construct a T
+     * @return a SharedPtr to the constructed T
+     */
     template<typename ...Us>
     static SharedPtr make(Us &&...args) noexcept(std::is_nothrow_constructible_v<T, decltype(std::forward<Us>(args))...>) {
         auto *control_block = new control_block_type{
@@ -186,6 +232,7 @@ public:
             return SharedPtr<U>{};
         }
 
+        // same reasoning for relaxed as in copy-ctor
         this->control_block->strong.fetch_add(1, std::memory_order_relaxed);
         return SharedPtr<U>{this->control_block, static_cast<U *>(this->data)};
     }
@@ -212,15 +259,25 @@ public:
         return this->control_block >= other.control_block;
     }
 
+    /**
+     * @return if this is null
+     */
     [[nodiscard]] bool null() const noexcept {
         return this->control_block == nullptr || this->data == nullptr;
     }
 
+    /**
+     * @return hash of the control block pointer
+     */
     [[nodiscard]] bool ptr_hash() const noexcept {
         return storage::util::robin_hood::hash<control_block_type *>{}(this->control_block);
     }
 };
 
+/**
+ * This is to SharedPtr what std::weak_ptr is to std::shared_ptr.
+ * @tparam T type of object to manage
+ */
 template<typename T>
 struct WeakPtr {
     using strong_type = SharedPtr<T>;
@@ -276,6 +333,7 @@ public:
             return;
         }
 
+        // same reasoning for relaxed as in SharedPtrs copy-ctor
         this->control_block->weak.fetch_add(1, std::memory_order_relaxed);
     }
 
@@ -291,6 +349,8 @@ public:
         this->drop();
         this->control_block = other.control_block;
         this->data = other.data;
+
+        // same reasoning for relaxed as in copy-ctor
         this->control_block->weak.fetch_add(1, std::memory_order_relaxed);
         return *this;
     }
@@ -312,15 +372,21 @@ public:
 
     std::optional<strong_type> try_upgrade() const noexcept {
         if (this->control_block == nullptr) {
+            // return back nullptr if this is nullptr
             return strong_type{nullptr, nullptr};
         }
 
-        auto cur = this->control_block->strong.load(std::memory_order_acquire);
+        // relaxed is fine here as the value is checked by the following compare exchange loop
+        auto cur = this->control_block->strong.load(std::memory_order_relaxed);
         while (true) {
             if (cur == 0) {
+                // we can never increase the reference count from 0
+                // as this would mean we are giving out a reference to an already destroyed object
                 return std::nullopt;
             }
 
+            // relaxed for failure is fine because we don't care about the state in the failure case
+            // on success however we need to synchronize with the destructor, therefore need an acquire-load
             if (this->control_block->strong.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) {
                 return strong_type{this->control_block, this->data};
             }
@@ -341,6 +407,7 @@ public:
             return WeakPtr<U>{};
         }
 
+        // same reasoning for relaxed as in copy-ctor
         this->control_block->weak.fetch_add(1, std::memory_order_relaxed);
         return WeakPtr<U>{this->control_block, static_cast<U *>(this->data)};
     }

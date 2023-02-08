@@ -6,6 +6,10 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * A factory for nodes. Any kind of node. That given a generator
+ * produces a node that somehow incorporates the generated id of the generator.
+ */
 struct INodeFactory {
     virtual ~INodeFactory() = default;
 

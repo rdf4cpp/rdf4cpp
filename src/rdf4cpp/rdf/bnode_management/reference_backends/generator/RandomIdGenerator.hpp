@@ -8,6 +8,9 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * Generates 32-char long random ids consisting of [0-9a-z]
+ */
 struct RandomIdGenerator : IIdGenerator {
 private:
     std::mutex mutable mutex;
@@ -16,7 +19,15 @@ private:
 
     char next_char();
 public:
+    /**
+     * Creates a generator by seeding it with os entropy
+     */
     RandomIdGenerator();
+
+    /**
+     * Creates a generator by seeding it with the given seed
+     * @param seed seed for the random generator
+     */
     explicit RandomIdGenerator(uint64_t seed);
 
     [[nodiscard]] size_t max_generated_id_size() const noexcept override;

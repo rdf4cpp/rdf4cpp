@@ -7,6 +7,10 @@
 
 namespace rdf4cpp::rdf::util {
 
+/**
+ * A factory that created Skolem IRIs.
+ * The resulting IRIs are not explicitly scoped in the node storage.
+ */
 struct SkolemIRIFactory : virtual INodeFactory {
 private:
     std::string iri_prefix;
