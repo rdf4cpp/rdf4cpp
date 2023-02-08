@@ -51,7 +51,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value().subject() == IRI{"http://www.example.org/s2"});
         CHECK(qit->value().predicate() == IRI{"http://www.example.org/p3"});
-        CHECK(qit->value().object() == Literal{"test"});
+        CHECK(qit->value().object() == Literal::make_simple("test"));
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
@@ -70,7 +70,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit != IStreamQuadIterator{});
             CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"search"});
+            CHECK(qit->value().object() == Literal::make_simple("search"));
 
             ++qit;
             CHECK(qit != IStreamQuadIterator{});
@@ -100,7 +100,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit != IStreamQuadIterator{});
             CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"search"});
+            CHECK(qit->value().object() == Literal::make_simple("search"));
 
             ++qit;
             CHECK(qit != IStreamQuadIterator{});
@@ -148,7 +148,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
                                    IRI{"http://purl.org/dc/elements/1.1/title"},
-                                   Literal::make<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
 
 
         ++qit;
@@ -170,7 +170,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
                                    IRI{"http://purl.org/dc/elements/1.1/title"},
-                                   Literal::make<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("RDF/XML Syntax Specification (Revised)")});
 
         ++qit;
         CHECK(qit != IStreamQuadIterator{});
@@ -182,7 +182,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit != IStreamQuadIterator{});
         CHECK(qit->value() == Quad{BlankNode{"b2"},
                                    IRI{"http://example.org/stuff/1.0/fullname"},
-                                   Literal::make<datatypes::xsd::String>("Dave Beckett")});
+                                   Literal::make_typed_from_value<datatypes::xsd::String>("Dave Beckett")});
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
@@ -244,7 +244,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit->has_value());
         CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
                                    IRI{"https://hello.com#predicate"},
-                                   Literal{"search"}});
+                                   Literal::make_simple("search")});
 
         ++qit;
         CHECK(qit == IStreamQuadIterator{});
@@ -273,7 +273,7 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit->has_value());
         CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
                                    IRI{"http://purl.org/dc/elements/1.1/subject"},
-                                   Literal{"search"}});
+                                   Literal::make_simple("search")});
 
         ++qit;
         CHECK(qit != IStreamQuadIterator{});
@@ -320,7 +320,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(b2_1 != b1_1);
             std::cout << b2_1 << std::endl;
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"Some Subject"});
+            CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
 
             ++qit;
             CHECK(qit == IStreamQuadIterator{});
@@ -361,7 +361,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(b2_1 != b1_1);
             std::cout << b2_1 << std::endl;
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal{"Some Subject"});
+            CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
 
             ++qit;
             CHECK(qit == IStreamQuadIterator{});

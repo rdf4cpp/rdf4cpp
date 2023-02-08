@@ -148,7 +148,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -180,7 +180,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -212,14 +212,14 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate") {
-        auto literal1 = Literal{"name"};
+        auto literal1 = Literal::make_simple("name");
         auto pred = Node{literal1};
 
         SUBCASE("Check for variable as object") {
@@ -244,7 +244,7 @@ TEST_CASE("TriplePattern - Check for variable as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal2 = Literal{"str1"};
+            auto literal2 = Literal::make_simple("str1");
             auto obj = Node{literal2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -283,7 +283,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -315,7 +315,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -347,14 +347,14 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate") {
-        auto literal1 = Literal{"name"};
+        auto literal1 = Literal::make_simple("name");
         auto pred = Node{literal1};
 
         SUBCASE("Check for variable as object") {
@@ -379,7 +379,7 @@ TEST_CASE("TriplePattern - Check for blank node as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal2 = Literal{"str1"};
+            auto literal2 = Literal::make_simple("str1");
             auto obj = Node{literal2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -418,7 +418,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -450,7 +450,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, true);
@@ -482,14 +482,14 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate") {
-        auto literal1 = Literal{"name"};
+        auto literal1 = Literal::make_simple("name");
         auto pred = Node{literal1};
 
         SUBCASE("Check for variable as object") {
@@ -514,7 +514,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal2 = Literal{"str1"};
+            auto literal2 = Literal::make_simple("str1");
             auto obj = Node{literal2};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -524,7 +524,7 @@ TEST_CASE("TriplePattern - Check for iri as subject") {
 
 TEST_CASE("TriplePattern - Check for literal as subject") {
 
-    auto literal1 = Literal{"str1"};
+    auto literal1 = Literal::make_simple("str1");
     auto sub = Node{literal1};
 
     SUBCASE("Check for variable as predicate") {
@@ -553,7 +553,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -585,7 +585,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
@@ -617,14 +617,14 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal = Literal{"str1"};
+            auto literal = Literal::make_simple("str1");
             auto obj = Node{literal};
 
             validate_triple_pattern(sub, pred, obj, false);
         }
     }
     SUBCASE("Check for literal as predicate") {
-        auto literal2 = Literal{"name"};
+        auto literal2 = Literal::make_simple("name");
         auto pred = Node{literal2};
 
         SUBCASE("Check for variable as object") {
@@ -649,7 +649,7 @@ TEST_CASE("TriplePattern - Check for literal as subject") {
         }
 
         SUBCASE("Check for literal as object") {
-            auto literal3 = Literal{"str1"};
+            auto literal3 = Literal::make_simple("str1");
             auto obj = Node{literal3};
 
             validate_triple_pattern(sub, pred, obj, false);

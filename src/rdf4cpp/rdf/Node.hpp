@@ -31,6 +31,8 @@ struct NodeGenerator;
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
  * For the sake of simplicity, we decided to have no separate class for edges in an RDF graph.
  * You can determine if a Node is an edge by the the fact that it is used as predicate in a Dataset, Graph, Quad, Statement, QuadPattern or TriplePattern.</p>
+ *
+ * @warning This type is a POD.
  */
 class Node {
     friend struct util::NodeScope;
@@ -53,8 +55,15 @@ public:
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
+     *
+     * @warning This type is POD. The constructor needs to be invoked explicitly. Alternatively: call Node::make_null()
      */
     Node() noexcept = default;
+
+    /**
+     * Construct the null-node
+     */
+    [[nodiscard]] static Node make_null() noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -108,28 +117,32 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_ebv(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
 
     /**
-     * Conversion to BlankNode is only safe if `(is_blank_node() == true)`
-     * @return a copy of type BlankNode
+     * Casts this Node into a BlankNode if it is one, otherwise returns the null BlankNode.
+     * @return a copy of this as BlankNode if it is one, else null BlankNode
      */
-    explicit operator BlankNode() const noexcept;
+    [[nodiscard]] BlankNode as_blank_node() const noexcept;
+
     /**
-     * Conversion to IRI is only safe if `(is_iri() == true)`
-     * @return a copy of type IRI
+     * Casts this Node into a IRI if it is one, otherwise returns the null IRI.
+     * @return a copy of this as IRI if it is one, else null IRI
      */
-    explicit operator IRI() const noexcept;
+    [[nodiscard]] IRI as_iri() const noexcept;
+
     /**
-     * Conversion to Literal is only safe if `(is_literal() == true)`
-     * @return a copy of type Literal
+     * Casts this Node into a Literal if it is one, otherwise returns the null Literal.
+     * @return a copy of this as Literal if it is one, else null Literal
      */
-    explicit operator Literal() const noexcept;
+    [[nodiscard]] Literal as_literal() const noexcept;
+
     /**
-     * Conversion to Variable is only safe if `(is_variable() == true)`
-     * @return a copy of type Variable
+     * Casts this Node into a Variable if it is one, otherwise returns the null Variable.
+     * @return a copy of this as Variable if it is one, else null Variable
      */
-    explicit operator query::Variable() const noexcept;
+    [[nodiscard]] query::Variable as_variable() const noexcept;
 
 
     /**

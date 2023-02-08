@@ -20,40 +20,40 @@ TEST_CASE("Datatype Int") {
     CHECK(std::is_same_v<type, int32_t>);
 
     int32_t value = 1;
-    auto lit1 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit1 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit1.value<datatypes::xsd::Int>() == value);
     CHECK(lit1.lexical_form() == std::to_string(value));
 
     value = -2147483648;
-    auto lit2 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit2 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit2.value<datatypes::xsd::Int>() == value);
     CHECK(lit2.lexical_form() == std::to_string(value));
 
     value = 2147483647;
-    auto lit3 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit3 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit3.value<datatypes::xsd::Int>() == value);
     CHECK(lit3.lexical_form() == std::to_string(value));
 
     value = 1;
-    auto lit4 = Literal{std::to_string(value), type_iri};
+    auto lit4 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit4.value<datatypes::xsd::Int>() == value);
 
     value = 2147483647;
-    auto lit5 = Literal{std::to_string(value), type_iri};
+    auto lit5 = Literal::make_typed(std::to_string(value), type_iri);
     CHECK(lit5.value<datatypes::xsd::Int>() == value);
 
     value = std::numeric_limits<int32_t>::min();
-    auto lit6 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit6 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit6.value<datatypes::xsd::Int>() == value);
     CHECK(lit6.lexical_form() == std::to_string(value));
 
     value = std::numeric_limits<int32_t>::max();
-    auto lit7 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit7 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit7.value<datatypes::xsd::Int>() == value);
     CHECK(lit7.lexical_form() == std::to_string(value));
 
     value = 0;
-    auto lit8 = Literal::make<datatypes::xsd::Int>(value);
+    auto lit8 = Literal::make_typed_from_value<datatypes::xsd::Int>(value);
     CHECK(lit8.value<datatypes::xsd::Int>() == value);
     CHECK(lit8.lexical_form() == std::to_string(value));
 
@@ -68,21 +68,21 @@ TEST_CASE("Datatype Int") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal("2147483649", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("2147483649", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-2147483650", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-2147483650", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("qwerty", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("qwerty", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("-2147483648.0001", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("-2147483648.0001", type_iri));
 
-    CHECK_THROWS(no_discard_dummy = Literal("a23dg.59566", type_iri));
+    CHECK_THROWS(no_discard_dummy = Literal::make_typed("a23dg.59566", type_iri));
 }
 
 TEST_CASE("32bit positive int inlining") {
     auto const i = std::numeric_limits<xsd::Int::cpp_type>::max();
-    auto const lit1 = Literal::make<xsd::Int>(i);
-    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+    auto const lit1 = Literal::make_typed_from_value<xsd::Int>(i);
+    auto const lit2 = Literal::make_typed(std::to_string(i), IRI{xsd::Int::identifier});
     CHECK(lit1.backend_handle().is_inlined());
     CHECK(lit2.backend_handle().is_inlined());
     CHECK(lit1 == lit2);
@@ -95,8 +95,8 @@ TEST_CASE("32bit positive int inlining") {
 
 TEST_CASE("32bit negative int inlining") {
     auto const i = std::numeric_limits<xsd::Int::cpp_type>::min();
-    auto const lit1 = Literal::make<xsd::Int>(i);
-    auto const lit2 = Literal::make(std::to_string(i), IRI{xsd::Int::identifier});
+    auto const lit1 = Literal::make_typed_from_value<xsd::Int>(i);
+    auto const lit2 = Literal::make_typed(std::to_string(i), IRI{xsd::Int::identifier});
     CHECK(lit1.backend_handle().is_inlined());
     CHECK(lit2.backend_handle().is_inlined());
     CHECK(lit1 == lit2);

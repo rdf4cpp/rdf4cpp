@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.8)
+project(rdf4cpp VERSION 0.0.11)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -14,6 +14,8 @@ endif ()
 find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
+find_package(re2 QUIET)
+find_package(utf8cpp QUIET)
 
 include(FetchContent)
 
@@ -38,6 +40,29 @@ if (NOT expected-lite_FOUND)
 
     FetchContent_MakeAvailable(expected-lite)
     message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
+endif ()
+
+if (NOT re2_FOUND)
+    FetchContent_Declare(
+            fetchre2
+            GIT_REPOSITORY https://github.com/google/re2
+            GIT_TAG 2022-12-01
+    )
+
+    set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
+    FetchContent_MakeAvailable(fetchre2)
+    message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
+endif ()
+
+if (NOT utf8cpp_FOUND)
+    FetchContent_Declare(
+            fetchutfcpp
+            GIT_REPOSITORY https://github.com/nemtrif/utfcpp
+            GIT_TAG v3.2.3
+    )
+
+    FetchContent_MakeAvailable(fetchutfcpp)
+    message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
 set(serd_source_files
@@ -130,12 +155,13 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
-        src/rdf4cpp/rdf/parser/private/IStreamQuadIteratorSerdImpl.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
+        src/rdf4cpp/rdf/regex/Regex.cpp
+        src/rdf4cpp/rdf/regex/RegexReplacer.cpp
         src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
@@ -159,6 +185,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
+        private/rdf4cpp/rdf/regex/RegexImpl.cpp
+        private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
         ${serd_source_files}
 )
 
@@ -169,6 +198,7 @@ target_include_directories(
         PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/private>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
 )
@@ -179,6 +209,8 @@ target_link_libraries(rdf4cpp
         Boost::headers
         PRIVATE
         fmt::fmt-header-only
+        re2::re2
+        utf8cpp
 )
 
 set_target_properties(rdf4cpp PROPERTIES

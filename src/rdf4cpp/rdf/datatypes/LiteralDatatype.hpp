@@ -31,6 +31,7 @@ enum struct DynamicError {
     DivideByZero = 0,    // https://www.w3.org/TR/xpath-functions/#ERRFOAR0001
     OverOrUnderFlow,     // https://www.w3.org/TR/xpath-functions/#ERRFOAR0002
     InvalidValueForCast, // https://www.w3.org/TR/xpath-functions/#ERRFORG0001
+    Unsupported,         // generic error that an operation is not supported right now
 };
 
 

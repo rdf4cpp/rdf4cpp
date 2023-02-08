@@ -4,15 +4,27 @@
 #include <any>
 #include <ostream>
 #include <type_traits>
+#include <optional>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/datatypes/owl.hpp>
+#include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
 
 namespace rdf4cpp::rdf {
+
+/**
+ * An RDF Literal.
+ *
+ * Functions behave based on the following rules:
+ * - public transformation functions (i.e. Literal -> Literal functions, that are usually called as_*) check for null and return back a null literal
+ * - public is_* functions check for null and return an appropriate value for null-literals
+ * - other public functions (i.e. Literal -> non-Literal) usually do not check for null (e.g. Literal::lexical_form),
+ *      but if the null-Literal has a meaningful value for that function it will behave correctly (e.g. for null-Literal <=> non-null-Literal)
+ */
 class Literal : public Node {
 private:
     /**
@@ -76,6 +88,11 @@ private:
 
 
     /**
+     * @return if this datatype is either xsd:string or rdf:langString
+     */
+    [[nodiscard]] bool is_string_like() const noexcept;
+
+    /**
      * Creates a simple Literal directly without any safety checks
      */
     [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
@@ -84,11 +101,6 @@ private:
      * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
     [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
-
-    /**
-     * Creates a language-tagged Literal directly without any safety checks
-     */
-    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates an inlined Literal without any safety checks
@@ -102,34 +114,102 @@ private:
      * Creates an inlined or non-inlined typed Literal without any safety checks
      */
     [[nodiscard]] static Literal make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates a language-tagged Literal directly without any safety checks
+     */
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates a string like type with contents of str.
+     * Will either create
+     *      - a xsd:string if lang_tag_src is xsd:string
+     *      - a rdf:langString with language tag equal to that of lang_tag_src if lang_tag_src is an rdf:langString
+     *
+     * @param str lexical form of the to be created string
+     * @param lang_tag_src source for the language tag of the newly created string
+     * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
+     */
+    [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Checks if the dynamic datatype of this is equal to datatype
+     * @warning must only be called if this has dynamic datatype
+     *
+     * @param datatype datatype to check against
+     * @return true iff this dynamic datatype matches datatype
+     *
+     * @note this function only exists because IRI is an incomplete type in this header
+     *      which prevents the template version of datatype_eq from using IRIs
+     */
+    [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
 protected:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
+    /**
+     * Constructs the null-literal
+     */
     Literal() noexcept;
+
     /**
-     * Constructs a Literal from a lexical form. Datatype is `xsd:string`.
+     * Constructs the null-literal
+     */
+    [[nodiscard]] static Literal make_null() noexcept;
+
+    /**
+     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
-    explicit Literal(std::string_view lexical_form,
-                     NodeStorage &node_storage = NodeStorage::default_instance());
-    /**
-     * Constructs a Literal from a lexical form and a datatype.
-     * @param lexical_form the lexical form
-     * @param datatype the datatype
-     * @param node_storage optional custom node_storage used to store the literal
-     */
-    Literal(std::string_view lexical_form, const IRI &datatype,
-            NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Literal make_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
+
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
-    Literal(std::string_view lexical_form, std::string_view lang,
-            NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Literal make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
+                                                  NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a Literal from a lexical form and a datatype.
+     * @param lexical_form the lexical form
+     * @param datatype the datatype
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
+                                            NodeStorage &node_storage = NodeStorage::default_instance());
+
+
+    /**
+     * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
+     * @tparam lexical_form the lexical form
+     * @param T the datatype
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
+                                            NodeStorage &node_storage = NodeStorage::default_instance()) {
+
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+            throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        }
+
+        auto const value = T::from_string(lexical_form);
+
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
+            }
+        }
+
+        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
+                                                        IRI{T::datatype_id, node_storage},
+                                                        node_storage);
+    }
 
     [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
@@ -137,43 +217,122 @@ public:
      * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
      * No runtime lookup of the type information is required.
      * If type information is available at compile time, you should use this version of the function.
-     * @tparam T a compatible type, i.e. RegisteredDatatype must be specialized for the type
-     * @tparam dtype_iri IRI string of the RDF datatype
+     *
+     * @tparam T the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
      * @return literal instance representing compatible_value
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
-    static Literal make(typename LiteralDatatype_t::cpp_type compatible_value,
-                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] static Literal make_typed_from_value(typename T::cpp_type const &compatible_value,
+                                                       NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
                                                        compatible_value.language_tag,
                                                        node_storage);
         }
 
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (auto const maybe_inlined = LiteralDatatype_t::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, LiteralDatatype_t::datatype_id.get_fixed(), node_storage);
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(LiteralDatatype_t::to_canonical_string(compatible_value),
-                                                        IRI{LiteralDatatype_t::datatype_id, node_storage},
+        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(compatible_value),
+                                                        IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
 
     /**
-     * Constructs a literal from a compatible type. In this version of the function the datatype is specified at runtime.
-     * Due to the lookup of the converter functions, this function is slightly slower than its templated version.
-     * @param lexical_form
-     * @param datatype
-     * @param node_storage
-     * @return
+     * Constructs a literal from a tri-bool with the following mappings
+     *      - TriBool::True => "true"^^xsd:boolean
+     *      - TriBool::False => "false"^^xsd:boolean
+     *      - TriBool::Err => the null literal
+     *
+     * @return the literal form of the given boolean
      */
-    static Literal make(std::string_view lexical_form, IRI const &datatype,
-                        NodeStorage &node_storage = NodeStorage::default_instance());
+    static Literal make_boolean(util::TriBool b, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Generates a random double in the range [0.0, 1.0).
+     * The values are generated in a thread-safe manner using a lazily initialized thread_local random generator.
+     *
+     * @see https://www.w3.org/TR/sparql11-query/#idp2130040
+     */
+    [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Checks if the datatype of this matches the provided LiteralDatatype
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @tparam T the datatype to compare against
+     * @return true iff this datatype is T
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] bool datatype_eq() const noexcept {
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (auto const type = this->handle_.node_id().literal_type(); type.is_fixed()) {
+                return type == T::fixed_id;
+            }
+
+            return false;
+        }
+
+        return this->dynamic_datatype_eq_impl(T::identifier);
+    }
+
+    /**
+     * Checks if the datatype of this matches the given IRI
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param datatype the datatype to compare against
+     * @return true iff this datatype is datatype
+     */
+    [[nodiscard]] bool datatype_eq(IRI const &datatype) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the datatype of other
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param other other literal to check against
+     * @return true iff this' datatype matches other's datatype
+     */
+    [[nodiscard]] bool datatype_eq(Literal const &other) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the provided LiteralDatatype
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @tparam T the datatype to compare against
+     * @return true as xsd:boolean iff this datatype is T or null-literal if this is null
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] Literal as_datatype_eq(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
+        if (this->null()) {
+            return Literal{};
+        }
+
+        return Literal::make_boolean(this->datatype_eq<T>(), node_storage);
+    }
+
+    /**
+     * Checks if the datatype of this matches the given IRI
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param datatype the datatype to compare against
+     * @return true as xsd:boolean iff this datatype is datatype or null-literal if this is null
+     */
+    [[nodiscard]] Literal as_datatype_eq(IRI const &datatype, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * Checks if the datatype of this matches the datatype of other
+     * @note You should prefer this function over comparing datatypes using Literal::datatype
+     *
+     * @param other other literal to check against
+     * @return true as xsd:boolean iff this' datatype matches other's datatype or null-literal if this or other is null
+     */
+    [[nodiscard]] Literal as_datatype_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Tries to cast this literal to a literal of the given type IRI.
@@ -187,9 +346,9 @@ public:
     /**
      * Identical to Literal::cast except with compile time specified target type.
      */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
+    template<datatypes::LiteralDatatype T>
     [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
-        return this->cast(IRI{LiteralDatatype_t::datatype_id, node_storage}, node_storage);
+        return this->cast(IRI{T::datatype_id, node_storage}, node_storage);
     }
 
     /**
@@ -231,6 +390,40 @@ public:
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
+    /**
+     * @return the language tag of this Literal as xsd:string. If the string is empty this has no lanugage tag.
+     */
+    [[nodiscard]] Literal as_language_tag(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @param lang_tag language tag to compare against
+     * @return if this->language_tag() == lang_tag or error if this is not langString
+     */
+    [[nodiscard]] util::TriBool language_tag_eq(std::string_view lang_tag) const noexcept;
+
+    /**
+     * @param other literal to compare against
+     * @return if this->language_tag() == other.language_tag() or error if:
+     *      - this is not rdf:langString
+     *      - other is not rdf:langString
+     */
+    [[nodiscard]] util::TriBool language_tag_eq(Literal const &other) const noexcept;
+
+    /**
+     * @param lang_tag language tag to compare against
+     * @return if this->language_tag() == lang_tag or null-literal if this is not langString
+     */
+    [[nodiscard]] Literal as_language_tag_eq(std::string_view lang_tag, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @param other literal to compare against
+     * @return if this->language_tag() == other.language_tag() or null-literal if:
+     *      - this is not rdf:langString
+     *      - other is not rdf:langString
+     */
+    [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+
     [[nodiscard]] explicit operator std::string() const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
@@ -240,6 +433,35 @@ public:
      * @return std::any wrapped value. might be empty if type is not registered.
      */
     [[nodiscard]] std::any value() const noexcept;
+
+    /**
+     * Get the value of an literal. T must be the registered datatype for the datatype iri.
+     * @tparam T datatype of the returned instance
+     * @return T instance with the value from this
+     */
+    template<datatypes::LiteralDatatype T>
+    typename T::cpp_type value() const {
+        if (!this->datatype_eq<T>()) [[unlikely]] {
+            throw std::runtime_error{"Literal::value error: incompatible type"};
+        }
+
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (this->is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                return T::from_inlined(inlined_value);
+            }
+        }
+
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            auto const &lit = this->handle_.literal_backend();
+
+            return datatypes::registry::LangStringRepr{
+                    .lexical_form = lit.lexical_form,
+                    .language_tag = lit.language_tag};
+        }
+
+        return T::from_string(this->lexical_form());
+    }
 
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
@@ -274,29 +496,41 @@ public:
     [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool eq(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator==(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool ne(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ne(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator!=(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool lt(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_lt(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator<(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool le(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_le(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator<=(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool gt(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_gt(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator>(Literal const &other) const noexcept;
 
     [[nodiscard]] util::TriBool ge(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ge(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     util::TriBool operator>=(Literal const &other) const noexcept;
 
     [[nodiscard]] bool eq_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_eq_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool ne_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ne_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool lt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_lt_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool le_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_le_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool gt_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_gt_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] bool ge_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] Literal as_ge_with_extensions(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     [[nodiscard]] Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator+(Literal const &other) const noexcept;
@@ -317,15 +551,327 @@ public:
     Literal operator-() const noexcept;
 
     /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-abs
+     * @return absolute value of this or the null literal if this is not numeric
+     */
+    [[nodiscard]] Literal abs(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-round
+     * @return the rounded value of this or the null literal if this is not numeric
+     */
+    [[nodiscard]] Literal round(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-floor
+     * @return the floored value of this or the null literal if this is not numeric
+     */
+    [[nodiscard]] Literal floor(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ceiling
+     * @return the ceiled value of this or the null literal if this is not numeric
+     */
+    [[nodiscard]] Literal ceil(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @return the length this' lexical form if it is string-like otherwise nullopt
+     */
+    [[nodiscard]] std::optional<size_t> strlen() const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @return the length this' lexical form (as xsd:integer) if it is string-like otherwise the null literal
+     */
+    [[nodiscard]] Literal as_strlen(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-langMatches
+     * @param lang_range a basic language range
+     * @return whether the language tag of this matches the given lang range if this is string-like, otherwise Err
+     */
+    [[nodiscard]] util::TriBool language_tag_matches_range(std::string_view lang_range) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @param lang_range a basic language range as xsd:string
+     * @return whether the language tag of this matches the given lang range or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_language_tag_matches_range(std::string_view lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-string-length
+     * @param lang_range a basic language range as xsd:string
+     * @return whether the language tag of this matches the given lang range or the null literal if
+     *      - this is not string-like
+     *      - lang_range is not xsd:string
+     */
+    [[nodiscard]] Literal as_language_tag_matches_range(Literal const &lang_range, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern regex to match against
+     * @return whether this' lexical form matches the regex or Err if this is not string-like
+     */
+    [[nodiscard]] util::TriBool regex_matches(regex::Regex const &pattern) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern xsd:string containing a regex to match against
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return whether this' lexical form matches the regex or the null literal if
+     *      - this is not string-like
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal as_regex_matches(regex::Regex const &pattern, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-matches
+     *
+     * @param pattern xsd:string containing a regex to match against
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return whether this' lexical form matches the regex or the null literal if
+     *      - this is not string-like
+     *      - regex is not string-like
+     *      - flags is not string-like or not parsable as flags
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal as_regex_matches(Literal const &pattern, Literal const &flags = Literal::make_simple(""), NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-replace
+     *
+     * @param pattern regex (as string) to match against
+     * @param replacement string to replace the matched pattern
+     * @return the new string with the matches substring replaced by replacement
+     */
+    [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-replace
+     *
+     * @param pattern regex (as string) to match against
+     * @param replacement string to replace the matched pattern
+     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
+     * @return the new string with the matches substring replaced by replacement
+     *
+     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
+     * @todo implement other flags
+     */
+    [[nodiscard]] Literal regex_replace(Literal const &pattern, Literal const &replacement,
+                                        Literal const &flags = Literal::make_simple(""),
+                                        NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string or Err if this is not string-like
+     */
+    [[nodiscard]] util::TriBool contains(std::string_view needle) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_contains(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-contains
+     *
+     * @param needle substring to search for in this
+     * @return whether this' lexical form contains the given string (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     */
+    [[nodiscard]] Literal as_contains(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' up to the position of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
+    [[nodiscard]] Literal substr_before(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     *
+     * @param needle string-like value to search for in this
+     * @return substring of this' up to the position of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *          - needle is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
+    [[nodiscard]] Literal substr_before(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' after the end of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
+    [[nodiscard]] Literal substr_after(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     *
+     * @param needle substring to search for in this
+     * @return substring of this' after the end of the needle
+     *      or null literal if
+     *          - this is not string-like
+     *          - needle is not string-like
+     *      or empty string if
+     *          - needle is the empty string
+     *          - needle could not be found in this
+     */
+    [[nodiscard]] Literal substr_after(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle or Err if
+     *      - this is not string-like
+     */
+    [[nodiscard]] util::TriBool str_starts_with(std::string_view needle) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_str_starts_with(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form starts with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     *      - the language tags of this and needle do not match
+     */
+    [[nodiscard]] Literal as_str_starts_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle or Err if
+     *      - this is not string-like
+     */
+    [[nodiscard]] util::TriBool str_ends_with(std::string_view needle) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal as_str_ends_with(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
+     *
+     * @param needle substring to check
+     * @return whether this' lexical form ends with needle (as xsd:boolean) or the null literal if
+     *      - this is not string-like
+     *      - needle is not string-like
+     *      - the language tags of this and needle do not match
+     */
+    [[nodiscard]] Literal as_str_ends_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-upper-case
+     *
+     * @return the upper case version if this' if this is string-like or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal uppercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-lower-case
+     *
+     * @return the lower case version if this' if this is string-like or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal lowercase(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-concat
+     *
+     * @param other other literal to append to this
+     * @return a string-like type that is the concatenation of the lexical forms of this and other
+     */
+    [[nodiscard]] Literal concat(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * akin to std::string_view::substr
+     * @see https://en.cppreference.com/w/cpp/string/basic_string_view/substr
+     * @warning 0-based indexing
+     *
+     * @param start position of the first character
+     * @param len requested length of the substring
+     * @return the characters in this whose position P satisfy: P >= start && P < start + len or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal substr(size_t start,
+                                 size_t len = std::string_view::npos,
+                                 NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-substring
+     * @warning 1-based indexing
+     *
+     * @param start position of the first character
+     * @param len requested length of the substring
+     * @return the characters in this whose position P satisfy: P >= round(start) && P < round(start) + round(len) or the null literal if
+     *      - this is not string-like
+     *      - start is not xsd:double or derived from it
+     *      - len is not xsd:double or derived from it
+     */
+    [[nodiscard]] Literal substr(Literal const &start,
+                                 Literal const &len = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
+                                 NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
      * @return the effective boolean value of this
      */
     [[nodiscard]] util::TriBool ebv() const noexcept;
 
     /**
-     * Converts this literal to it's effective boolean value
+     * Converts this literal to its effective boolean value
      * @return Literal containing the ebv
      */
-    [[nodiscard]] Literal ebv_as_literal(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_ebv(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     [[nodiscard]] Literal logical_and(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator&&(Literal const &other) const noexcept;
@@ -336,33 +882,45 @@ public:
     [[nodiscard]] Literal logical_not(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator!() const noexcept;
 
-    /**
-     * Get the value of an literal. T must be the registered datatype for the datatype iri.
-     * @tparam T datatype of the returned instance
-     * @return T instance with the value from this
-     */
-    template<datatypes::LiteralDatatype LiteralDatatype_t>
-    typename LiteralDatatype_t::cpp_type value() const noexcept {
-        if constexpr (datatypes::IsInlineable<LiteralDatatype_t>) {
-            if (this->is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
-                return LiteralDatatype_t::from_inlined(inlined_value);
-            }
-        }
-
-        if constexpr (std::is_same_v<LiteralDatatype_t, datatypes::rdf::LangString>) {
-            auto const &lit = this->handle_.literal_backend();
-
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        }
-
-        return LiteralDatatype_t::from_string(this->lexical_form());
-    }
-
     friend class Node;
 };
+
+/**
+ * @return whether lang_tag matches the basic language range lang_range
+ */
+[[nodiscard]] bool lang_matches(std::string_view lang_tag, std::string_view lang_range) noexcept;
+
+/**
+ * @return whether lang_tag matches the basic language range lang_range as xsd:boolean or the null-literal if:
+ *      - lang_tag is not xsd:string
+ *      - lang_range is not xsd:string
+ */
+[[nodiscard]] Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+
+inline namespace shorthands {
+
+Literal operator""_xsd_string(char const *str, size_t len);
+
+Literal operator""_xsd_double(long double d);
+Literal operator""_xsd_float(long double d);
+
+Literal operator""_xsd_decimal(char const *str, size_t len);
+
+Literal operator""_xsd_integer(unsigned long long int i);
+
+Literal operator""_xsd_byte(unsigned long long int i);
+Literal operator""_xsd_ubyte(unsigned long long int i);
+
+Literal operator""_xsd_short(unsigned long long int i);
+Literal operator""_xsd_ushort(unsigned long long int i);
+
+Literal operator""_xsd_int(unsigned long long int i);
+Literal operator""_xsd_uint(unsigned long long int i);
+
+Literal operator""_xsd_long(unsigned long long int i);
+Literal operator""_xsd_ulong(unsigned long long int i);
+
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>

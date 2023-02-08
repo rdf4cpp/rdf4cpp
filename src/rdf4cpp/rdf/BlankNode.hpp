@@ -11,13 +11,27 @@ struct NodeGenerator;
 
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
-public:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
-
+public:
+    /**
+     * Constructs the null-bnode
+     */
     BlankNode() noexcept;
 
-    explicit BlankNode(std::string_view identifier,
-                       NodeStorage &node_storage = NodeStorage::default_instance());
+    /**
+     * Constructs a bnode from an identifier
+     */
+    explicit BlankNode(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs the null-bnode
+     */
+    [[nodiscard]] static BlankNode make_null() noexcept;
+
+    /**
+     * Constructs a bnode from an identifier
+     */
+    [[nodiscard]] static BlankNode make(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
 
     [[nodiscard]] BlankNode to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
@@ -39,6 +53,12 @@ public:
     [[nodiscard]] bool is_iri() const noexcept;
     friend class Node;
 };
+
+inline namespace shorthands {
+
+BlankNode operator""_bnode(char const *str, size_t len);
+
+}  // namespace shorthands
 }  // namespace rdf4cpp::rdf
 
 template<>

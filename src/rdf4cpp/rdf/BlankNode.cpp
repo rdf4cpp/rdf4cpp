@@ -8,7 +8,25 @@ BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::iden
 BlankNode::BlankNode(std::string_view identifier, Node::NodeStorage &node_storage) : Node{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier, .scope = nullptr}),
                                                                                                             storage::node::identifier::RDFNodeType::BNode,
                                                                                                             node_storage.id()}} {}
+
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
+
+BlankNode BlankNode::make_null() noexcept {
+    return BlankNode{};
+}
+
+BlankNode BlankNode::make(std::string_view identifier, Node::NodeStorage &node_storage) {
+    return BlankNode{identifier, node_storage};
+}
+
+BlankNode BlankNode::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(handle_));
+    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
+}
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
@@ -23,15 +41,6 @@ bool BlankNode::is_iri() const noexcept { return false; }
 std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
     os << static_cast<std::string>(node);
     return os;
-}
-
-BlankNode BlankNode::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
-    if (this->backend_handle().node_storage_id() == node_storage.id()) {
-        return *this;
-    }
-
-    auto const node_id = node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(this->backend_handle()));
-    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
 }
 
 bool BlankNode::merge_eq(BlankNode const &other) const noexcept {
@@ -74,4 +83,12 @@ util::TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
 
     return *this_label == *other_label;
 }
+
+inline namespace shorthands {
+
+BlankNode operator""_bnode(char const *str, size_t len) {
+    return BlankNode{std::string_view{str, len}};
+}
+
+}  // namespace literals
 }  // namespace rdf4cpp::rdf

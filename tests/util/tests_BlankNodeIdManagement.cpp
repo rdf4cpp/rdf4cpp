@@ -129,14 +129,14 @@ TEST_SUITE("blank node id management") {
             auto sub1 = scope.subscope("a");
             auto sub2 = scope.subscope("b");
 
-            b1_1 = static_cast<BlankNode>(sub1.get_or_generate_node("b1"));
-            b1_2 = static_cast<BlankNode>(sub2.get_or_generate_node("b1"));
+            b1_1 = sub1.get_or_generate_node("b1").as_blank_node();
+            b1_2 = sub2.get_or_generate_node("b1").as_blank_node();
 
             CHECK(!b1_1.merge_eq(b1_2));
-            CHECK(b1_1.union_eq(b1_2) == true);
+            CHECK(b1_1.union_eq(b1_2) == util::TriBool::True);
         }
 
         CHECK(!b1_1.merge_eq(b1_2));
-        CHECK(b1_1.union_eq(b1_2) == std::nullopt);
+        CHECK(b1_1.union_eq(b1_2) == util::TriBool::Err);
     }
 }
