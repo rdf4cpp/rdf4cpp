@@ -100,7 +100,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
             slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade
             slot.refcount.store(1, std::memory_order_relaxed);
 
-            return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}};
+            return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}, backend_instance};
         } else if (old_value == backend_instance) {
             throw std::runtime_error{"The provided backend is already registered"};
         }
@@ -139,7 +139,14 @@ std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageI
     }
 }
 
-NodeStorage::NodeStorage(identifier::NodeStorageID backend_index) noexcept : backend_index{backend_index} {
+NodeStorage::NodeStorage(identifier::NodeStorageID backend_index) noexcept : backend_index{backend_index},
+                                                                             cached_backend_ptr{get_slot(backend_index).backend.load(std::memory_order_relaxed)} {
+    assert(this->cached_backend_ptr != nullptr);
+}
+
+NodeStorage::NodeStorage(identifier::NodeStorageID backend_index, INodeStorageBackend *cached_backend_ptr) noexcept : backend_index{backend_index},
+                                                                                                                      cached_backend_ptr{cached_backend_ptr} {
+    assert(get_slot(backend_index).backend == cached_backend_ptr);
 }
 
 NodeStorage::~NodeStorage() {
@@ -149,11 +156,12 @@ NodeStorage::~NodeStorage() {
 
     this->decrease_refcount();
 }
-NodeStorage::NodeStorage(NodeStorage &&other) noexcept : backend_index{other.backend_index} {
-    other.backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
+NodeStorage::NodeStorage(NodeStorage &&other) noexcept : backend_index{std::exchange(other.backend_index, node_storage_detail::INVALID_BACKEND_INDEX)},
+                                                         cached_backend_ptr{std::exchange(other.cached_backend_ptr, nullptr)} {
 }
 
-NodeStorage::NodeStorage(NodeStorage const &other) noexcept : backend_index{other.backend_index} {
+NodeStorage::NodeStorage(NodeStorage const &other) noexcept : backend_index{other.backend_index},
+                                                              cached_backend_ptr{other.cached_backend_ptr} {
     this->increase_refcount();
 }
 
@@ -164,6 +172,7 @@ NodeStorage &NodeStorage::operator=(NodeStorage const &other) noexcept {
         }
 
         this->backend_index = other.backend_index;
+        this->cached_backend_ptr = other.cached_backend_ptr;
         if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
             this->increase_refcount();
         }
@@ -178,8 +187,8 @@ NodeStorage &NodeStorage::operator=(NodeStorage &&other) noexcept {
             this->decrease_refcount();
         }
 
-        this->backend_index = other.backend_index;
-        other.backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
+        this->backend_index = std::exchange(other.backend_index, node_storage_detail::INVALID_BACKEND_INDEX);
+        this->cached_backend_ptr = std::exchange(other.cached_backend_ptr, nullptr);
     }
 
     return *this;
@@ -223,7 +232,7 @@ size_t NodeStorage::ref_count() const noexcept {
 }
 
 size_t NodeStorage::size() const noexcept {
-    return get_backend().size();
+    return this->cached_backend_ptr->size();
 }
 
 identifier::NodeStorageID NodeStorage::id() const noexcept {
@@ -231,40 +240,40 @@ identifier::NodeStorageID NodeStorage::id() const noexcept {
 }
 
 identifier::NodeID NodeStorage::find_or_make_id(const view::BNodeBackendView &view) noexcept {
-    return get_backend().find_or_make_id(view);
+    return this->cached_backend_ptr->find_or_make_id(view);
 }
 identifier::NodeID NodeStorage::find_or_make_id(const view::IRIBackendView &view) noexcept {
-    return get_backend().find_or_make_id(view);
+    return this->cached_backend_ptr->find_or_make_id(view);
 }
 identifier::NodeID NodeStorage::find_or_make_id(const view::LiteralBackendView &view) noexcept {
-    return get_backend().find_or_make_id(view);
+    return this->cached_backend_ptr->find_or_make_id(view);
 }
 identifier::NodeID NodeStorage::find_or_make_id(const view::VariableBackendView &view) noexcept {
-    return get_backend().find_or_make_id(view);
+    return this->cached_backend_ptr->find_or_make_id(view);
 }
 identifier::NodeID NodeStorage::find_id(const view::BNodeBackendView &view) const noexcept {
-    return get_backend().find_id(view);
+    return this->cached_backend_ptr->find_id(view);
 }
 identifier::NodeID NodeStorage::find_id(const view::IRIBackendView &view) const noexcept {
-    return get_backend().find_id(view);
+    return this->cached_backend_ptr->find_id(view);
 }
 identifier::NodeID NodeStorage::find_id(const view::LiteralBackendView &view) const noexcept {
-    return get_backend().find_id(view);
+    return this->cached_backend_ptr->find_id(view);
 }
 identifier::NodeID NodeStorage::find_id(const view::VariableBackendView &view) const noexcept {
-    return get_backend().find_id(view);
+    return this->cached_backend_ptr->find_id(view);
 }
 view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeID id) const {
-    return get_backend().find_iri_backend_view(id);
+    return this->cached_backend_ptr->find_iri_backend_view(id);
 }
 view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeID id) const {
-    return get_backend().find_literal_backend_view(id);
+    return this->cached_backend_ptr->find_literal_backend_view(id);
 }
 view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeID id) const {
-    return get_backend().find_bnode_backend_view(id);
+    return this->cached_backend_ptr->find_bnode_backend_view(id);
 }
 view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeID id) const {
-    return get_backend().find_variable_backend_view(id);
+    return this->cached_backend_ptr->find_variable_backend_view(id);
 }
 view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeBackendHandle handle) {
     auto ns = lookup_instance(handle.node_storage_id());
@@ -283,16 +292,16 @@ view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::No
     return ns.value().find_variable_backend_view(handle.node_id());
 }
 bool NodeStorage::erase_iri(identifier::NodeID id) {
-    return get_backend().erase_iri(id);
+    return this->cached_backend_ptr->erase_iri(id);
 }
 bool NodeStorage::erase_literal(identifier::NodeID id) {
-    return get_backend().erase_literal(id);
+    return this->cached_backend_ptr->erase_literal(id);
 }
 bool NodeStorage::erase_bnode(identifier::NodeID id) {
-    return get_backend().erase_bnode(id);
+    return this->cached_backend_ptr->erase_bnode(id);
 }
 bool NodeStorage::erase_variable(identifier::NodeID id) {
-    return get_backend().erase_variable(id);
+    return this->cached_backend_ptr->erase_variable(id);
 }
 bool NodeStorage::erase_iri(identifier::NodeBackendHandle handle) {
     auto ns = lookup_instance(handle.node_storage_id());
@@ -313,8 +322,8 @@ bool NodeStorage::erase_variable(identifier::NodeBackendHandle handle) {
 
 
 
-WeakNodeStorage::WeakNodeStorage(identifier::NodeStorageID backend_index, size_t generation) noexcept
-    : backend_index{backend_index}, generation{generation} {
+WeakNodeStorage::WeakNodeStorage(identifier::NodeStorageID backend_index, size_t generation) noexcept : backend_index{backend_index},
+                                                                                                        generation{generation} {
 }
 
 identifier::NodeStorageID WeakNodeStorage::id() const noexcept {

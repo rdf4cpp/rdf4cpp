@@ -82,39 +82,41 @@ class NodeStorage {
     identifier::NodeStorageID backend_index = node_storage_detail::INVALID_BACKEND_INDEX;
 
     /**
+     * A cache for get_slot(backend_index).backend to elide
+     * an atomic load for every backend access.
+     */
+    INodeStorageBackend *cached_backend_ptr;
+
+    /**
      * Constructs a NodeStorage pointing to no instance
      */
     NodeStorage() noexcept = default;
 
     /**
-     * Constructs a NodeStorage with the given backend instance.
-     * @param backend backend instance.
+     * Constructs a NodeStorage with the given backend index.
+     * @param backend_index backend instance
      * @safety This function is only safe to call if you can guarantee that the reference count of the backend at backend_index can _not_
      *      reach zero while this constructed node storage is alive.
      */
     explicit NodeStorage(identifier::NodeStorageID backend_index) noexcept;
 
+    /**
+     * Constructs a NodeStorage with the given backend index and instance
+     * @param backend_index the index to the backend slot
+     * @param cached_backend_ptr the backend residing in that slot
+     * @safety This function is only safe to call if you can guarantee that the reference count of the backend at backend_index can _not_
+     *      reach zero while this constructed node storage is alive. Additionally cached_backend_ptr must be equal to get_slot(backend_index).backend
+     */
+    NodeStorage(identifier::NodeStorageID backend_index, INodeStorageBackend *cached_backend_ptr) noexcept;
+
+    /**
+     * Retrives the control block at the slot with the given id
+     * @param id id of the slot
+     * @return the corresponding control block
+     */
     [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
         assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
         return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
-    }
-
-    /**
-     * @return a reference to the backend of this NodeStorage
-     * @safety this function is always safe to call
-     */
-    [[nodiscard]] inline INodeStorageBackend &get_backend() noexcept {
-        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
-        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
-    }
-
-    /**
-     * @return a const reference to the backend of this NodeStorage
-     * @safety this function is always safe to call
-     */
-    [[nodiscard]] INodeStorageBackend const &get_backend() const noexcept {
-        // SAFETY: this object is keeping the backend alive therefore the pointer must point to a valid backend instance
-        return *get_slot(this->backend_index).backend.load(std::memory_order_relaxed);
     }
 
     /**
