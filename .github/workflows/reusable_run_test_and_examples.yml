@@ -12,6 +12,8 @@ on:
         type: string
       with-coverage:
         type: boolean
+      with-sanitizer:
+        type: boolean
     secrets:
       coverall-token:
         description: 'Access token for coverall. Required if inputs.with-coverage'
@@ -25,6 +27,7 @@ jobs:
       compiler: ${{ inputs.compiler }}
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: false
+      with-sanitizer: ${{ inputs.with-sanitizer }}
 
   test-and-examples-shared:
     uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
