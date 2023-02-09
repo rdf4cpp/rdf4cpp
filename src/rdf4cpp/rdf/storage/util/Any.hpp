@@ -86,11 +86,11 @@ struct InternalManager final : ManagerBase {
     }
 
     [[nodiscard]] inline size_t hash(AnyStorage const &self) const noexcept override {
-        return 0;
+        return std::hash<T>{}(*reinterpret_cast<T const *>(&self.small));
     }
 
     [[nodiscard]] inline bool eq(AnyStorage const &lhs, AnyStorage const &rhs) const noexcept override {
-        return true;
+        return *reinterpret_cast<T const *>(&lhs.small) == *reinterpret_cast<T const *>(&rhs.small);
     }
 };
 

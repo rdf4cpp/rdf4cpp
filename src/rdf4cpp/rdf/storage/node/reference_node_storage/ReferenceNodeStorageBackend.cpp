@@ -1,9 +1,26 @@
 #include "ReferenceNodeStorageBackend.hpp"
 
 #include <rdf4cpp/rdf/storage/util/Overloaded.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/StaticFlatMap.hpp>
 #include <functional>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
+
+static consteval std::array<bool, 1 << identifier::LiteralType::width> make_storage_specialization_lut() noexcept {
+    using Entry = std::pair<identifier::LiteralType, bool>;
+
+    datatypes::registry::util::StaticFlatMap<identifier::LiteralType, bool, 1 << identifier::LiteralType::width> base{
+        Entry{datatypes::xsd::Long::fixed_id, true}};
+
+    std::array<bool, 1 << identifier::LiteralType::width> ret{};
+    for (auto const &[type, include] : base) {
+        ret[type.to_underlying()] = include;
+    }
+
+    return ret;
+}
+
+static constexpr std::array<bool, 1 << identifier::LiteralType::width> storage_specialization_lut = make_storage_specialization_lut();
 
 ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() noexcept {
     // some iri's like xsd:string are there by default
@@ -21,6 +38,10 @@ size_t ReferenceNodeStorageBackend::size() const noexcept {
     return this->iri_storage_.id2data.size() + this->bnode_storage_.id2data.size() + this->fallback_literal_storage_.id2data.size() + this->variable_storage_.id2data.size();
 }
 
+bool ReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType datatype) const noexcept {
+    return storage_specialization_lut[datatype.to_underlying()];
+}
+
 /**
  * Synchronized lookup (and creation) of IDs by a provided view of a Node Backend.
  * @tparam Backend_t the Backend type. One of BNodeBackend, IRIBackend, LiteralBackend or VariableBackend
@@ -31,9 +52,9 @@ size_t ReferenceNodeStorageBackend::size() const noexcept {
  * @param next_id_func function to generate the next ID which is assigned in case a new Node Backend is created
  * @return the NodeID for the looked up Node Backend. Result is null() if there was no matching Node Backend.
  */
-template<class Backend_t, bool create_if_not_present, class NextIDFromView_func = void *>
-static identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &view,
-                                                auto &storage,
+template<bool create_if_not_present, class Storage, class NextIDFromView_func = void *>
+static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView const &view,
+                                                Storage &storage,
                                                 NextIDFromView_func next_id_func = nullptr) noexcept {
 
     {
@@ -53,8 +74,8 @@ static identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &
             return it->second;
         }
 
-        identifier::NodeID const next_id = next_id_func(view);
-        auto const [it, inserted] = storage.id2data.emplace(next_id, std::make_unique<Backend_t>(view));
+        identifier::NodeID const next_id = next_id_func();
+        auto const [it, inserted] = storage.id2data.emplace(next_id, std::make_unique<typename Storage::Backend>(view));
         assert(inserted);
         storage.data2id.emplace(it->second.get(), next_id);
 
@@ -63,60 +84,81 @@ static identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
-    return lookup_or_insert_impl<LiteralBackend, true>(
-            view, fallback_literal_storage_,
-            [this]([[maybe_unused]] view::LiteralBackendView const &literal_view) {
-                auto const datatype = std::visit(util::Overloaded{
-                                                         [](view::LexicalFormBackendView const &lexical) {
-                                                             return identifier::iri_node_id_to_literal_type(lexical.datatype_id);
-                                                         },
-                                                         [](view::AnyBackendView const &any) {
-                                                             return any.datatype;
-                                                         }
-                                                 },
-                                                 literal_view.literal);
-
-                return identifier::NodeID{next_literal_id++, datatype};
-            });
+    return std::visit(util::Overloaded{
+                              [&](view::LexicalFormBackendView const &lexical) {
+                                  return lookup_or_insert_impl<true>(
+                                          lexical, fallback_literal_storage_,
+                                          [&]() {
+                                              return identifier::NodeID{next_literal_id++, identifier::iri_node_id_to_literal_type(lexical.datatype_id)};
+                                          });
+                              },
+                              [&](view::AnyBackendView const &any) {
+                                  switch (any.datatype.to_underlying()) {
+                                      case datatypes::xsd::Int::fixed_id.to_underlying():
+                                          return lookup_or_insert_impl<true>(
+                                                  any, int_literal_storage_,
+                                                  [&]() {
+                                                      return identifier::NodeID{next_literal_id++, any.datatype};
+                                                  });
+                                      default:
+                                          assert(false);
+                                  }
+                              }
+                      },
+                      view.literal);
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::IRIBackendView const &view) noexcept {
-    return lookup_or_insert_impl<IRIBackend, true>(
+    return lookup_or_insert_impl<true>(
             view, iri_storage_,
-            [this]([[maybe_unused]] view::IRIBackendView const &view) {
+            [this]() {
                 return next_iri_id++;
             });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::BNodeBackendView const &view) noexcept {
-    return lookup_or_insert_impl<BNodeBackend, true>(
+    return lookup_or_insert_impl<true>(
             view, bnode_storage_,
-            [this]([[maybe_unused]] view::BNodeBackendView const &view) {
+            [this]() {
                 return next_bnode_id++;
             });
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::VariableBackendView const &view) noexcept {
-    return lookup_or_insert_impl<VariableBackend, true>(
+    return lookup_or_insert_impl<true>(
             view, variable_storage_,
-            [this]([[maybe_unused]] view::VariableBackendView const &view) {
+            [this]() {
                 return next_variable_id++;
             });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::BNodeBackendView &view) const noexcept {
-    return lookup_or_insert_impl<BNodeBackend, false>(
+    return lookup_or_insert_impl<false>(
             view, bnode_storage_);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::IRIBackendView &view) const noexcept {
-    return lookup_or_insert_impl<IRIBackend, false>(
+    return lookup_or_insert_impl<false>(
             view, iri_storage_);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::LiteralBackendView &view) const noexcept {
-    return lookup_or_insert_impl<LiteralBackend, false>(
-            view, fallback_literal_storage_);
+    return std::visit(util::Overloaded{
+                              [&](view::LexicalFormBackendView const &lexical) {
+                                  return lookup_or_insert_impl<false>(
+                                          lexical, fallback_literal_storage_);
+                              },
+                              [&](view::AnyBackendView const &any) {
+                                  switch (any.datatype.to_underlying()) {
+                                      case datatypes::xsd::Long::fixed_id.to_underlying():
+                                          return lookup_or_insert_impl<false>(
+                                                  any, int_literal_storage_);
+                                      default:
+                                          assert(false);
+                                  }
+                              }
+                      },
+                      view.literal);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::VariableBackendView &view) const noexcept {
-    return lookup_or_insert_impl<VariableBackend, false>(
+    return lookup_or_insert_impl<false>(
             view, variable_storage_);
 }
 
@@ -130,7 +172,12 @@ view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifi
     return find_backend_view(iri_storage_, id);
 }
 view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
-    return find_backend_view(fallback_literal_storage_, id);
+    switch (id.literal_type().to_underlying()) {
+        case datatypes::xsd::Int::fixed_id.to_underlying():
+            return view::LiteralBackendView{ .literal = find_backend_view(int_literal_storage_, id) };
+        default:
+            return view::LiteralBackendView{ .literal = find_backend_view(fallback_literal_storage_, id) };
+    }
 }
 view::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID id) const {
     return find_backend_view(bnode_storage_, id);
@@ -163,6 +210,8 @@ bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID 
 }
 bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) {
     switch (id.literal_type().to_underlying()) {
+        case datatypes::xsd::Int::fixed_id.to_underlying():
+            return erase_impl(int_literal_storage_, id);
         default:
             return erase_impl(fallback_literal_storage_, id);
     }

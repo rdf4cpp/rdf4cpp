@@ -210,6 +210,8 @@ public:
      */
     [[nodiscard]] size_t size() const noexcept;
 
+    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept;
+
     /**
      * Identifier of this NodeStorage
      * @return

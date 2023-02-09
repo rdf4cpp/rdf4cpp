@@ -28,7 +28,7 @@ private:
     NodeTypeStorage<VariableBackend> variable_storage_;
 
     NodeTypeStorage<LiteralBackend> fallback_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<int>> int_literal_storage_;
+    NodeTypeStorage<SpecializedLiteralBackend<long>> int_literal_storage_;
 
     LiteralID next_literal_id = NodeID::min_literal_id;
     NodeID next_bnode_id = NodeID::min_bnode_id;
@@ -39,6 +39,7 @@ public:
     ReferenceNodeStorageBackend() noexcept;
 
     [[nodiscard]] size_t size() const noexcept override;
+    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept override;
 
     [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &) noexcept override;
     [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &) noexcept override;

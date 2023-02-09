@@ -31,6 +31,8 @@ public:
      */
     [[nodiscard]] virtual size_t size() const noexcept = 0;
 
+    [[nodiscard]] virtual bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept = 0;
+
     /**
       * Backend for NodeStorage::find_or_make_id(view::BNodeBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.

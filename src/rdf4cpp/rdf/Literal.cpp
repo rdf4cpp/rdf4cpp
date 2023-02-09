@@ -69,6 +69,17 @@ Literal Literal::make_typed_unchecked(std::any const &value, datatypes::registry
         }
     }
 
+    // TODO
+    //if (datatype.is_fixed()) {
+    //    if (auto const fixed_id = datatype.get_fixed(); node_storage.has_specialized_storage_for(fixed_id)) {
+    //        return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
+    //                                                 .literal = storage::node::view::AnyBackendView{
+    //                                                         .datatype = fixed_id,
+    //                                                         .value = value}}),
+    //                                         storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+    //    }
+    //}
+
     return Literal::make_noninlined_typed_unchecked(entry.to_canonical_string_fptr(value),
                                                     IRI{datatype, node_storage},
                                                     node_storage);

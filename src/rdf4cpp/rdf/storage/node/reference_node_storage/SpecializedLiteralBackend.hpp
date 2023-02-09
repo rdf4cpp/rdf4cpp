@@ -14,17 +14,22 @@ class SpecializedLiteralBackend {
     size_t hash_;
 
 public:
-    using View = view::LiteralBackendView;
+    using View = view::AnyBackendView;
 
     SpecializedLiteralBackend(T value, identifier::LiteralType datatype) noexcept : datatype_{datatype},
                                                                                     value_{std::move(value)},
                                                                                     hash_{View(*this).hash()} {
     }
 
-    explicit SpecializedLiteralBackend(view::LiteralBackendView view) noexcept : datatype_{std::get<view::AnyBackendView>(view.literal).datatype},
-                                                                                 value_{std::get<view::AnyBackendView>(view.literal).value.get_unchecked<T>()},
-                                                                                 hash_{view.hash()} {
+    explicit SpecializedLiteralBackend(view::AnyBackendView const &view) noexcept : datatype_{view.datatype},
+                                                                                    value_{view.value.get_unchecked<T>()},
+                                                                                    hash_{view.hash()} {
     }
+
+    //explicit SpecializedLiteralBackend(view::LiteralBackendView view) noexcept : datatype_{std::get<view::AnyBackendView>(view.literal).datatype},
+    //                                                                             value_{std::get<view::AnyBackendView>(view.literal).value.get_unchecked<T>()},
+    //                                                                             hash_{view.hash()} {
+    //}
 
     [[nodiscard]] T const &value() const noexcept {
         return value_;
@@ -40,9 +45,13 @@ public:
 
     explicit operator view::LiteralBackendView() const noexcept {
         return view::LiteralBackendView{
-                .literal = view::AnyBackendView {
-                        .datatype = this->datatype_,
-                        .value = this->value_}};
+                .literal = static_cast<view::AnyBackendView>(*this)};
+    }
+
+    explicit operator view::AnyBackendView() const noexcept {
+        return view::AnyBackendView {
+                .datatype = this->datatype_,
+                .value = util::Any{this->value_}};
     }
 };
 
