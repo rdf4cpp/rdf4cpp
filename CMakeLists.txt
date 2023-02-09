@@ -155,7 +155,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/Variable.cpp
         src/rdf4cpp/rdf/regex/Regex.cpp
         src/rdf4cpp/rdf/regex/RegexReplacer.cpp
-        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp

@@ -20,7 +20,7 @@ public:
     // TODO: thread safety
     std::set<Quad> quads_{};
 
-    explicit DefaultDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::default_instance());
+    explicit DefaultDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 
     [[nodiscard]] node::NodeStorage &node_storage() const override;
 

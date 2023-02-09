@@ -20,7 +20,7 @@ protected:
     mutable node::NodeStorage node_storage_;
 
 public:
-    explicit IDatasetBackend(node::NodeStorage node_storage = node::NodeStorage::default_instance());
+    explicit IDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 
     virtual ~IDatasetBackend() = 0;
     virtual void add(const Quad &quad) = 0;
