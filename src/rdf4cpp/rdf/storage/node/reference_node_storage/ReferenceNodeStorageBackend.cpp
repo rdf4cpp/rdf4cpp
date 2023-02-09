@@ -1,5 +1,6 @@
 #include "ReferenceNodeStorageBackend.hpp"
 
+#include <rdf4cpp/rdf/storage/util/Overloaded.hpp>
 #include <functional>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
@@ -10,14 +11,14 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() noexcept {
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
         auto const id = literal_type.to_underlying();
 
-        auto [iter, inserted_successfully] = iri_storage_.data2id.emplace(std::make_unique<IRIBackend>(iri), id);
-        assert(inserted_successfully);
-        iri_storage_.id2data.emplace(id, iter->first.get());
+        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(iri));
+        assert(inserted);
+        iri_storage_.data2id.emplace(it->second.get(), id);
     }
 }
 
 size_t ReferenceNodeStorageBackend::size() const noexcept {
-    return this->iri_storage_.id2data.size() + this->bnode_storage_.id2data.size() + this->literal_storage_.id2data.size() + this->variable_storage_.id2data.size();
+    return this->iri_storage_.id2data.size() + this->bnode_storage_.id2data.size() + this->fallback_literal_storage_.id2data.size() + this->variable_storage_.id2data.size();
 }
 
 /**
@@ -34,40 +35,48 @@ template<class Backend_t, bool create_if_not_present, class NextIDFromView_func 
 static identifier::NodeID lookup_or_insert_impl(typename Backend_t::View const &view,
                                                 auto &storage,
                                                 NextIDFromView_func next_id_func = nullptr) noexcept {
-    std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
-    auto found = storage.data2id.find(view);
-    if (found == storage.data2id.end()) {
-        if constexpr (create_if_not_present) {
-            shared_lock.unlock();
-            std::unique_lock<std::shared_mutex> unique_lock{storage.mutex};
-            // update found (might have changed in the meantime)
-            found = storage.data2id.find(view);
-            if (found == storage.data2id.end()) {
-                identifier::NodeID id = next_id_func(view);
-                auto [found2, inserted_successfully] = storage.data2id.emplace(std::make_unique<Backend_t>(view), id);
-                assert(inserted_successfully);
-                found = std::move(found2);
-                storage.id2data.emplace(id, found->first.get());
-                return id;
-            } else {
-                unique_lock.unlock();
-                return found->second;
-            }
-        } else {
-            return {};
+
+    {
+        std::shared_lock lock{storage.mutex};
+        if (auto const it = storage.data2id.find(view); it != storage.data2id.end()) {
+            return it->second;
         }
+    }
+
+    if constexpr (!create_if_not_present) {
+        return identifier::NodeID{};
     } else {
-        shared_lock.unlock();
-        return found->second;
+        std::unique_lock lock{storage.mutex};
+
+        // check again, might have changed between unlocking of shared_lock and locking of unique_lock
+        if (auto const it = storage.data2id.find(view); it != storage.data2id.end()) {
+            return it->second;
+        }
+
+        identifier::NodeID const next_id = next_id_func(view);
+        auto const [it, inserted] = storage.id2data.emplace(next_id, std::make_unique<Backend_t>(view));
+        assert(inserted);
+        storage.data2id.emplace(it->second.get(), next_id);
+
+        return next_id;
     }
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
     return lookup_or_insert_impl<LiteralBackend, true>(
-            view, literal_storage_,
+            view, fallback_literal_storage_,
             [this]([[maybe_unused]] view::LiteralBackendView const &literal_view) {
-                return identifier::NodeID{next_literal_id++,
-                                          identifier::iri_node_id_to_literal_type(literal_view.datatype_id)};
+                auto const datatype = std::visit(util::Overloaded{
+                                                         [](view::LexicalFormBackendView const &lexical) {
+                                                             return identifier::iri_node_id_to_literal_type(lexical.datatype_id);
+                                                         },
+                                                         [](view::AnyBackendView const &any) {
+                                                             return any.datatype;
+                                                         }
+                                                 },
+                                                 literal_view.literal);
+
+                return identifier::NodeID{next_literal_id++, datatype};
             });
 }
 
@@ -104,7 +113,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::IRIBackendVi
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::LiteralBackendView &view) const noexcept {
     return lookup_or_insert_impl<LiteralBackend, false>(
-            view, literal_storage_);
+            view, fallback_literal_storage_);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::VariableBackendView &view) const noexcept {
     return lookup_or_insert_impl<VariableBackend, false>(
@@ -121,7 +130,7 @@ view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifi
     return find_backend_view(iri_storage_, id);
 }
 view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
-    return find_backend_view(literal_storage_, id);
+    return find_backend_view(fallback_literal_storage_, id);
 }
 view::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID id) const {
     return find_backend_view(bnode_storage_, id);
@@ -138,7 +147,7 @@ static bool erase_impl(NodeTypeStorage &storage, identifier::NodeID id) noexcept
         return false;
     }
 
-    auto backend_ptr = it->second;
+    auto const *backend_ptr = it->second.get();
 
     auto data_it = storage.data2id.find(static_cast<typename NodeTypeStorage::BackendView>(*backend_ptr));
     assert(data_it != storage.data2id.end());
@@ -153,7 +162,10 @@ bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID 
     return erase_impl(iri_storage_, id);
 }
 bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) {
-    return erase_impl(literal_storage_, id);
+    switch (id.literal_type().to_underlying()) {
+        default:
+            return erase_impl(fallback_literal_storage_, id);
+    }
 }
 bool ReferenceNodeStorageBackend::erase_bnode([[maybe_unused]] identifier::NodeID id) {
     return erase_impl(bnode_storage_, id);

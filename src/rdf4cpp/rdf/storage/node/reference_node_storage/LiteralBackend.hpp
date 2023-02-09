@@ -4,8 +4,6 @@
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 
-#include <compare>
-#include <memory>
 #include <string>
 #include <string_view>
 
@@ -24,7 +22,7 @@ public:
 
     [[nodiscard]] std::string_view lexical_form() const noexcept;
 
-    [[nodiscard]] const identifier::NodeID &datatype_id() const noexcept;
+    [[nodiscard]] identifier::NodeID datatype_id() const noexcept;
 
     [[nodiscard]] std::string_view language_tag() const noexcept;
 

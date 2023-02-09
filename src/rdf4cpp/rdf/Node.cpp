@@ -5,6 +5,7 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/Literal.hpp>
 #include <rdf4cpp/rdf/query/Variable.hpp>
+#include <rdf4cpp/rdf/storage/util/Overloaded.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -31,13 +32,19 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
                     return node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(backend_handle()));
                 }
                 case RDFNodeType::Literal: {
-                    // retrieve the literal_view
                     auto literal_view = NodeStorage::find_literal_backend_view(backend_handle());
-                    // exchange the datatype in literal_view for one managed by the new node_storage (the IRI of the datatype must live within the same NodeStorage as the Literal it is used for)
-                    auto dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{literal_view.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
-                    literal_view.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
-                    // find or make the requested node
-                    return node_storage.find_or_make_id(literal_view);
+                    return std::visit(storage::util::Overloaded{
+                                       [&](storage::node::view::LexicalFormBackendView &lexical) {
+                                           // exchange the datatype in literal_view for one managed by the new node_storage (the IRI of the datatype must live within the same NodeStorage as the Literal it is used for)
+                                           auto dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical.datatype_id, storage::node::identifier::RDFNodeType::IRI, backend_handle().node_storage_id()});
+                                           lexical.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+                                           // find or make the requested node
+                                           return node_storage.find_or_make_id(literal_view);
+                                       },
+                                       [&](storage::node::view::AnyBackendView const &any) {
+                                           return node_storage.find_or_make_id(literal_view);
+                                       }},
+                               literal_view.literal);
                 }
                 default:
                     return NodeID{};

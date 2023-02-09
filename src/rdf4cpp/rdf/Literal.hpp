@@ -13,6 +13,7 @@
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
+#include <rdf4cpp/rdf/storage/util/Overloaded.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -445,22 +446,34 @@ public:
             throw std::runtime_error{"Literal::value error: incompatible type"};
         }
 
-        if constexpr (datatypes::IsInlineable<T>) {
-            if (this->is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
-                return T::from_inlined(inlined_value);
+        return [&]() noexcept {
+            if constexpr (datatypes::IsInlineable<T>) {
+                if (this->is_inlined()) {
+                    auto const inlined_value = this->handle_.node_id().literal_id().value;
+                    return T::from_inlined(inlined_value);
+                }
             }
-        }
 
-        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const &lit = this->handle_.literal_backend();
+            if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+                auto const &view = this->handle_.literal_backend();
+                auto const &lit = std::get<storage::node::view::LexicalFormBackendView>(view.literal);
 
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        }
-
-        return T::from_string(this->lexical_form());
+                return datatypes::registry::LangStringRepr{
+                        .lexical_form = lit.lexical_form,
+                        .language_tag = lit.language_tag};
+            } else {
+                auto const backend = handle_.literal_backend();
+                return std::visit(storage::util::Overloaded{
+                                          [](storage::node::view::LexicalFormBackendView const &lexical) -> T::cpp_type {
+                                              return T::from_string(lexical.lexical_form); // TODO Revisit for perf
+                                          },
+                                          [](storage::node::view::AnyBackendView const &any) noexcept -> T::cpp_type {
+                                              return any.value.get_unchecked<typename T::cpp_type>();
+                                          }
+                                  },
+                                  backend.literal);
+            }
+        }();
     }
 
     [[nodiscard]] bool is_literal() const noexcept;

@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SpecializedLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
 
 
@@ -24,8 +25,10 @@ public:
 private:
     NodeTypeStorage<BNodeBackend> bnode_storage_;
     NodeTypeStorage<IRIBackend> iri_storage_;
-    NodeTypeStorage<LiteralBackend> literal_storage_;
     NodeTypeStorage<VariableBackend> variable_storage_;
+
+    NodeTypeStorage<LiteralBackend> fallback_literal_storage_;
+    NodeTypeStorage<SpecializedLiteralBackend<int>> int_literal_storage_;
 
     LiteralID next_literal_id = NodeID::min_literal_id;
     NodeID next_bnode_id = NodeID::min_bnode_id;

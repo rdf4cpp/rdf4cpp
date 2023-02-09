@@ -19,7 +19,7 @@ struct NodeTypeStorage {
     using Backend = BackendType_t;
     using BackendView = typename Backend::View;
     struct BackendTypeHash {
-        [[nodiscard]] size_t operator()(std::unique_ptr<Backend> const &x) const noexcept {
+        [[nodiscard]] size_t operator()(Backend const *x) const noexcept {
             return x->hash();
         }
         [[nodiscard]] size_t operator()(BackendView const &x) const noexcept {
@@ -30,11 +30,15 @@ struct NodeTypeStorage {
     struct BackendTypeEqual {
         using is_transparent = void;
 
-        bool operator()(std::unique_ptr<Backend> const &lhs, std::unique_ptr<Backend> const &rhs) const noexcept {
+        bool operator()(Backend const *lhs, Backend const *rhs) const noexcept {
             return lhs == rhs;
         }
-        bool operator()(BackendView const &lhs, std::unique_ptr<Backend> const &rhs) const noexcept {
+        bool operator()(BackendView const &lhs, Backend const *rhs) const noexcept {
             return lhs == BackendView(*rhs);
+        }
+
+        bool operator()(Backend const *lhs, BackendView const &rhs) const noexcept {
+            return BackendView(*lhs) == rhs;
         }
     };
 
@@ -44,9 +48,9 @@ struct NodeTypeStorage {
         }
     };
 
-    mutable std::shared_mutex mutex;
-    util::tsl::sparse_map<identifier::NodeID, Backend *, NodeIDHash> id2data;
-    util::tsl::sparse_map<std::unique_ptr<Backend>, identifier::NodeID, BackendTypeHash, BackendTypeEqual> data2id;
+    std::shared_mutex mutable mutex;
+    util::tsl::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
+    util::tsl::sparse_map<Backend *, identifier::NodeID, BackendTypeHash, BackendTypeEqual> data2id;
 };
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 

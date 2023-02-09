@@ -5,16 +5,30 @@
 #include <array>
 
 namespace rdf4cpp::rdf::storage::node::view {
-size_t LiteralBackendView::hash() const noexcept {
-    return std::hash<LiteralBackendView>()(*this);
+
+size_t LexicalFormBackendView::hash() const noexcept {
+    return util::robin_hood::hash<std::array<size_t, 3>>{}(
+                std::array<size_t, 3>{
+                        this->datatype_id.value(),
+                        util::robin_hood::hash<std::string_view>{}(this->lexical_form),
+                        util::robin_hood::hash<std::string_view>{}(this->language_tag)});
 }
-};  // namespace rdf4cpp::rdf::storage::node::view
+
+size_t AnyBackendView::hash() const noexcept {
+    return util::robin_hood::hash<std::array<size_t, 2>>{}(
+                std::array<size_t, 2>{
+                    this->datatype.to_underlying(),
+                    this->value.hash()});
+}
+
+size_t LiteralBackendView::hash() const noexcept {
+    return std::visit([](auto const &x) {
+        return x.hash();
+    }, this->literal);
+}
+
+}  // namespace rdf4cpp::rdf::storage::node::view
 
 size_t std::hash<rdf4cpp::rdf::storage::node::view::LiteralBackendView>::operator()(const rdf4cpp::rdf::storage::node::view::LiteralBackendView &x) const noexcept {
-    using namespace rdf4cpp::rdf::storage::util;
-    return robin_hood::hash<std::array<size_t, 3>>()(
-            std::array<size_t, 3>{
-                    x.datatype_id.value(),
-                    robin_hood::hash<std::string_view>()(x.lexical_form),
-                    robin_hood::hash<std::string_view>()(x.language_tag)});
+    return x.hash();
 }
