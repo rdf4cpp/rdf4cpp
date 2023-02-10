@@ -17,6 +17,9 @@ inline constexpr util::ConstexprString xsd_string{"http://www.w3.org/2001/XMLSch
 inline constexpr util::ConstexprString rdf_lang_string{"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
 inline constexpr util::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSchema#boolean"};
 
+inline constexpr util::ConstexprString xsd_base64_binary{"http://www.w3.org/2001/XMLSchema#base64Binary"};
+inline constexpr util::ConstexprString xsd_hex_binary{"http://www.w3.org/2001/XMLSchema#hexBinary"};
+
 inline constexpr util::ConstexprString xsd_decimal{"http://www.w3.org/2001/XMLSchema#decimal"};
 inline constexpr util::ConstexprString xsd_float{"http://www.w3.org/2001/XMLSchema#float"};
 inline constexpr util::ConstexprString xsd_double{"http://www.w3.org/2001/XMLSchema#double"};
@@ -48,6 +51,8 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
         ReservedDatatypeIdEntry{xsd_string,        LiteralType::from_parts(false, 2)},
         ReservedDatatypeIdEntry{rdf_lang_string,   LiteralType::from_parts(false, 3)},
         ReservedDatatypeIdEntry{xsd_boolean,       LiteralType::from_parts(false, 4)},
+        ReservedDatatypeIdEntry{xsd_base64_binary, LiteralType::from_parts(false, 5)},
+        ReservedDatatypeIdEntry{xsd_hex_binary,    LiteralType::from_parts(false, 6)},
 
         ReservedDatatypeIdEntry{xsd_float,   LiteralType::from_parts(true, 0)},
         ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},

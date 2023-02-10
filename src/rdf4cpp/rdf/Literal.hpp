@@ -202,16 +202,22 @@ public:
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
         }
 
-        auto const value = T::from_string(lexical_form);
+        auto value = T::from_string(lexical_form);
 
         if constexpr (datatypes::IsInlineable<T>) {
             if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+            }
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                return Literal::make_noninlined_special_unchecked(util::Any{std::move(value)}, T::fixed_id, node_storage);
             }
         }
 
         return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
-                                                        IRI{T::datatype_id, node_storage},
+                                                        IRI{T::identifier, node_storage},
                                                         node_storage);
     }
 
@@ -247,10 +253,9 @@ public:
 
         if constexpr (datatypes::HasFixedId<T>) {
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
-                return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LiteralBackendView{
-                                                .literal = storage::node::view::AnyBackendView{
-                                                        .datatype = T::fixed_id,
-                                                        .value = util::Any{compatible_value}}}),
+                return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
+                                                         .datatype = T::fixed_id,
+                                                         .value = util::Any{compatible_value}}),
                                         storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
             }
         }
@@ -471,28 +476,26 @@ public:
         }
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const &view = this->handle_.literal_backend();
-            auto const &lit = std::get<storage::node::view::LexicalFormBackendView>(view.literal);
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
 
             return datatypes::registry::LangStringRepr{
                     .lexical_form = lit.lexical_form,
                     .language_tag = lit.language_tag};
         } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            auto const &view = this->handle_.literal_backend();
-            auto const &lit = std::get<storage::node::view::LexicalFormBackendView>(view.literal);
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
 
             return lit.lexical_form;
         } else {
             auto const backend = handle_.literal_backend();
-            return std::visit(util::Overloaded{
-                                      [](storage::node::view::LexicalFormBackendView const &lexical) -> T::cpp_type {
-                                          return T::from_string(lexical.lexical_form); // TODO Revisit for perf
-                                      },
-                                      [](storage::node::view::AnyBackendView const &any) noexcept -> T::cpp_type {
-                                          return any.value.get_unchecked<typename T::cpp_type>();
-                                      }
-                              },
-                              backend.literal);
+            return visit(backend,
+                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) -> T::cpp_type {
+                        return T::from_string(lexical.lexical_form); // TODO Revisit for perf
+                    },
+                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept -> T::cpp_type {
+                        return any.value.get_unchecked<typename T::cpp_type>();
+                    });
         }
     }
 

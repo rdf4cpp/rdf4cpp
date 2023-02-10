@@ -234,15 +234,16 @@ size_t NodeStorage::ref_count() const noexcept {
 size_t NodeStorage::size() const noexcept {
     return this->cached_backend_ptr->size();
 }
-
 bool NodeStorage::has_specialized_storage_for(identifier::LiteralType datatype) const noexcept {
     return this->cached_backend_ptr->has_specialized_storage_for(datatype);
 }
-
+bool NodeStorage::has_specialized_storage_for(identifier::NodeStorageID id, identifier::LiteralType datatype) noexcept {
+    auto ns = lookup_instance(id);
+    return ns.value().has_specialized_storage_for(datatype);
+}
 identifier::NodeStorageID NodeStorage::id() const noexcept {
     return this->backend_index;
 }
-
 identifier::NodeID NodeStorage::find_or_make_id(const view::BNodeBackendView &view) noexcept {
     return this->cached_backend_ptr->find_or_make_id(view);
 }

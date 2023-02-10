@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -58,9 +58,6 @@ struct Base64BinaryRepr {
     std::strong_ordering operator<=>(Base64BinaryRepr const &) const noexcept = default;
 };
 
-
-inline constexpr util::ConstexprString xsd_base64_binary{"http://www.w3.org/2001/XMLSchema#base64Binary"};
-
 template<>
 struct DatatypeMapping<xsd_base64_binary> {
     using cpp_datatype = Base64BinaryRepr;
@@ -72,22 +69,15 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 template<>
 std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept;
 
-extern template struct LiteralDatatypeImpl<xsd_base64_binary>;
+extern template struct LiteralDatatypeImpl<xsd_base64_binary,
+                                           capabilities::FixedId>;
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 
-template<>
-struct std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept {
-        using namespace rdf4cpp::rdf::storage::util;
-
-        return robin_hood::hash_bytes(x.bytes.data(), x.bytes.size());
-    }
-};
-
 namespace rdf4cpp::rdf::datatypes::xsd {
 
-struct Base64Binary : registry::LiteralDatatypeImpl<registry::xsd_base64_binary> {};
+struct Base64Binary : registry::LiteralDatatypeImpl<registry::xsd_base64_binary,
+                                                    registry::capabilities::FixedId> {};
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
 
@@ -96,5 +86,11 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::Base64Binary const xsd_base64_binary_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+
+template<>
+struct std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept;
+};
 
 #endif //RDF4CPP_XSD_BASE64BINARY_HPP
