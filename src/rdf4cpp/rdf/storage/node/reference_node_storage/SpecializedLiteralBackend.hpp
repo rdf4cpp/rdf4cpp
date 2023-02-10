@@ -1,7 +1,6 @@
-#ifndef RDF4CPP_SPECIALIZEDLITERALBACKEND_HPP
-#define RDF4CPP_SPECIALIZEDLITERALBACKEND_HPP
+#ifndef RDF4CPP_RDF_STORAGE_REFERENCENODESTORAGE_SPECIALIZEDLITERALBACKEND_HPP
+#define RDF4CPP_RDF_STORAGE_REFERENCENODESTORAGE_SPECIALIZEDLITERALBACKEND_HPP
 
-#include <rdf4cpp/rdf/util/Any.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 
@@ -30,7 +29,7 @@ public:
                                                                        value{std::move(value)} {
     }
 
-    explicit SpecializedLiteralBackend(View const &view) noexcept : value{view.value.get_unchecked<typename T::cpp_type>()} {
+    explicit SpecializedLiteralBackend(View const &view) noexcept : value{std::any_cast<typename T::cpp_type>(view.value)} {
         assert(view.datatype == SpecializedLiteralBackend::datatype);
         this->hash_ = calculate_hash(value);
     }
@@ -42,7 +41,7 @@ public:
     explicit operator View() const noexcept {
         return view::ValueLiteralBackendView{
                 .datatype = SpecializedLiteralBackend::datatype,
-                .value = rdf::util::Any{this->value}};
+                .value = std::any{this->value}};
     }
 
 public:
@@ -54,12 +53,12 @@ public:
         }
         bool operator()(View const &lhs, SpecializedLiteralBackend const *rhs) const noexcept {
             assert(lhs.datatype == SpecializedLiteralBackend::datatype);
-            return lhs.value.get_unchecked<typename T::cpp_type>() == rhs->value;
+            return std::any_cast<typename T::cpp_type>(lhs.value) == rhs->value;
         }
 
         bool operator()(SpecializedLiteralBackend const *lhs, View const &rhs) const noexcept {
             assert(SpecializedLiteralBackend::datatype == rhs.datatype);
-            return lhs->value == rhs.value.get_unchecked<typename T::cpp_type>();
+            return lhs->value == std::any_cast<typename T::cpp_type>(rhs.value);
         }
     };
 
@@ -69,11 +68,11 @@ public:
         }
         [[nodiscard]] size_t operator()(View const &x) const noexcept {
             assert(x.datatype == SpecializedLiteralBackend::datatype);
-            return calculate_hash(x.value.get_unchecked<typename T::cpp_type>());
+            return calculate_hash(std::any_cast<typename T::cpp_type>(x.value));
         }
     };
 };
 
-}
+}  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
-#endif  //RDF4CPP_SPECIALIZEDLITERALBACKEND_HPP
+#endif  //RDF4CPP_RDF_STORAGE_REFERENCENODESTORAGE_SPECIALIZEDLITERALBACKEND_HPP

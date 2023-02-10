@@ -90,7 +90,7 @@ TEST_CASE("32bit positive int inlining") {
     auto const extracted1 = lit1.template value<xsd::Int>();
     auto const extracted2 = lit2.value();
     CHECK(extracted1 == i);
-    CHECK(extracted2->get<xsd::Int::cpp_type>() == i);
+    CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
 }
 
 TEST_CASE("32bit negative int inlining") {
@@ -104,5 +104,5 @@ TEST_CASE("32bit negative int inlining") {
     auto const extracted1 = lit1.template value<xsd::Int>();
     auto const extracted2 = lit2.value();
     CHECK(extracted1 == i);
-    CHECK(extracted2->get<xsd::Int::cpp_type>() == i);
+    CHECK(std::any_cast<xsd::Int::cpp_type>(extracted2) == i);
 }

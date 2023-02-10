@@ -37,8 +37,8 @@ TEST_CASE("rdf:langString") {
 
         using datatypes::registry::LangStringRepr;
 
-        CHECK(lit1.value()->get<LangStringRepr>() == LangStringRepr{"hello", "en"});
-        CHECK(lit2.value()->get<LangStringRepr>() == LangStringRepr{"hello", "en"});
+        CHECK(std::any_cast<LangStringRepr>(lit1.value()) == LangStringRepr{"hello", "en"});
+        CHECK(std::any_cast<LangStringRepr>(lit2.value()) == LangStringRepr{"hello", "en"});
 
         CHECK(lit1.value<datatypes::rdf::LangString>() == LangStringRepr{"hello", "en"});
         CHECK(lit2.value<datatypes::rdf::LangString>() == LangStringRepr{"hello", "en"});

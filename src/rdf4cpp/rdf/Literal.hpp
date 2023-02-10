@@ -104,7 +104,7 @@ private:
      */
     [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
-    [[nodiscard]] static Literal make_noninlined_special_unchecked(util::Any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates an inlined Literal without any safety checks
@@ -117,7 +117,7 @@ private:
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
      */
-    [[nodiscard]] static Literal make_typed_unchecked(util::Any &&value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_typed_unchecked(std::any &&value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
@@ -212,7 +212,7 @@ public:
 
         if constexpr (datatypes::HasFixedId<T>) {
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
-                return Literal::make_noninlined_special_unchecked(util::Any{std::move(value)}, T::fixed_id, node_storage);
+                return Literal::make_noninlined_special_unchecked(std::any{std::move(value)}, T::fixed_id, node_storage);
             }
         }
 
@@ -255,7 +255,7 @@ public:
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
                 return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
                                                          .datatype = T::fixed_id,
-                                                         .value = util::Any{compatible_value}}),
+                                                         .value = std::any{compatible_value}}),
                                         storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
             }
         }
@@ -453,9 +453,9 @@ public:
 
     /**
      * Constructs a datatype specific container from Literal.
-     * @return util::Any wrapped value. or nullopt if type is not registered.
+     * @return std::any wrapped value. will be empty if type is not registered.
      */
-    [[nodiscard]] std::optional<util::Any> value() const noexcept;
+    [[nodiscard]] std::any value() const noexcept;
 
     /**
      * Get the value of an literal. T must be the registered datatype for the datatype iri.
@@ -494,7 +494,7 @@ public:
                         return T::from_string(lexical.lexical_form); // TODO Revisit for perf
                     },
                     [](storage::node::view::ValueLiteralBackendView const &any) noexcept -> T::cpp_type {
-                        return any.value.get_unchecked<typename T::cpp_type>();
+                        return std::any_cast<typename T::cpp_type>(any.value);
                     });
         }
     }

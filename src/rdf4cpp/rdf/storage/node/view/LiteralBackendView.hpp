@@ -3,10 +3,10 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
+#include <any>
 #include <string>
 #include <string_view>
 
-#include <rdf4cpp/rdf/util/Any.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
 
 namespace rdf4cpp::rdf::storage::node::view {
@@ -22,7 +22,7 @@ struct LexicalFormLiteralBackendView {
 
 struct ValueLiteralBackendView {
     identifier::LiteralType datatype;
-    rdf::util::Any value;
+    std::any value;
 };
 
 struct LiteralBackendView {

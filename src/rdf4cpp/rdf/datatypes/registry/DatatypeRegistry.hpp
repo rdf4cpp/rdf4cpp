@@ -4,8 +4,8 @@
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
-#include <rdf4cpp/rdf/util/Any.hpp>
 
+#include <any>
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -28,22 +28,22 @@ public:
     /**
      * Constructs an instance of a type from a string.
      */
-    using factory_fptr_t = rdf::util::Any (*)(std::string_view);
-    using to_string_fptr_t = std::string (*)(rdf::util::Any const &) noexcept;
-    using ebv_fptr_t = bool (*)(rdf::util::Any const &) noexcept;
-    using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(rdf::util::Any const &) noexcept;
-    using from_inlined_fptr_t = rdf::util::Any (*)(uint64_t) noexcept;
+    using factory_fptr_t = std::any (*)(std::string_view);
+    using to_string_fptr_t = std::string (*)(std::any const &) noexcept;
+    using ebv_fptr_t = bool (*)(std::any const &) noexcept;
+    using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(std::any const &) noexcept;
+    using from_inlined_fptr_t = std::any (*)(uint64_t) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
-        nonstd::expected<rdf::util::Any, DynamicError> result_value;
+        nonstd::expected<std::any, DynamicError> result_value;
     };
 
-    using nullop_fptr_t = rdf::util::Any (*)() noexcept;
-    using unop_fptr_t = NumericOpResult (*)(rdf::util::Any const &) noexcept;
-    using binop_fptr_t = NumericOpResult (*)(rdf::util::Any const &, rdf::util::Any const &) noexcept;
+    using nullop_fptr_t = std::any (*)() noexcept;
+    using unop_fptr_t = NumericOpResult (*)(std::any const &) noexcept;
+    using binop_fptr_t = NumericOpResult (*)(std::any const &, std::any const &) noexcept;
 
-    using compare_fptr_t = std::partial_ordering (*)(rdf::util::Any const &, rdf::util::Any const &) noexcept;
+    using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &) noexcept;
 
     struct NumericOpsImpl {
         nullop_fptr_t zero_value_fptr; // 0
@@ -223,7 +223,7 @@ public:
     [[nodiscard]] static std::optional<std::string_view> get_iri(DatatypeIDView datatype_id) noexcept;
 
     /**
-     * Get a factory_fptr_t for a datatype. The factory_fptr_t can be used like `rdf::util::Any type_instance = factory_fptr("types string representation")`.
+     * Get a factory_fptr_t for a datatype. The factory_fptr_t can be used like `std::any type_instance = factory_fptr("types string representation")`.
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
@@ -371,8 +371,8 @@ inline void DatatypeRegistry::add() noexcept {
 
     auto const ebv_fptr = []() -> ebv_fptr_t {
         if constexpr (datatypes::LogicalLiteralDatatype<LiteralDatatype_t>) {
-            return [](rdf::util::Any const &operand) noexcept -> bool {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            return [](std::any const &operand) noexcept -> bool {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
                 return LiteralDatatype_t::effective_boolean_value(operand_val);
             };
         } else {
@@ -382,9 +382,9 @@ inline void DatatypeRegistry::add() noexcept {
 
     auto const compare_fptr = []() -> compare_fptr_t {
         if constexpr (datatypes::ComparableLiteralDatatype<LiteralDatatype_t>) {
-            return [](rdf::util::Any const &lhs, rdf::util::Any const &rhs) noexcept -> std::partial_ordering {
-                auto const &lhs_val = lhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
-                auto const &rhs_val = rhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            return [](std::any const &lhs, std::any const &rhs) noexcept -> std::partial_ordering {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return LiteralDatatype_t::compare(lhs_val, rhs_val);
             };
@@ -403,14 +403,14 @@ inline void DatatypeRegistry::add() noexcept {
 
     DatatypeEntry entry{
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
-            .factory_fptr = [](std::string_view string_repr) -> rdf::util::Any {
-                return rdf::util::Any{LiteralDatatype_t::from_string(string_repr)};
+            .factory_fptr = [](std::string_view string_repr) -> std::any {
+                return LiteralDatatype_t::from_string(string_repr);
             },
-            .to_canonical_string_fptr = [](rdf::util::Any const &value) noexcept -> std::string {
-                return LiteralDatatype_t::to_canonical_string(value.get_unchecked<typename LiteralDatatype_t::cpp_type>());
+            .to_canonical_string_fptr = [](std::any const &value) noexcept -> std::string {
+                return LiteralDatatype_t::to_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
             },
-            .to_simplified_string_fptr = [](rdf::util::Any const &value) noexcept -> std::string {
-                return LiteralDatatype_t::to_simplified_string(value.get_unchecked<typename LiteralDatatype_t::cpp_type>());
+            .to_simplified_string_fptr = [](std::any const &value) noexcept -> std::string {
+                return LiteralDatatype_t::to_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,
@@ -451,9 +451,9 @@ struct SelectOpResIRI {
 };
 
 template<typename T>
-[[nodiscard]] nonstd::expected<rdf::util::Any, DynamicError> map_expected(nonstd::expected<T, DynamicError> const &e) noexcept {
+[[nodiscard]] nonstd::expected<std::any, DynamicError> map_expected(nonstd::expected<T, DynamicError> const &e) noexcept {
     if (e.has_value()) {
-        return rdf::util::Any{*e};
+        return *e;
     } else {
         return nonstd::make_unexpected(e.error());
     }
@@ -464,92 +464,92 @@ template<datatypes::NumericImplLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexcept {
     return NumericOpsImpl{
             // 0
-            .zero_value_fptr = []() noexcept -> rdf::util::Any {
-                return rdf::util::Any{LiteralDatatype_t::zero_value()};
+            .zero_value_fptr = []() noexcept -> std::any {
+                return LiteralDatatype_t::zero_value();
             },
             // 1
-            .one_value_fptr = []() noexcept -> rdf::util::Any {
-                return rdf::util::Any{LiteralDatatype_t::one_value()};
+            .one_value_fptr = []() noexcept -> std::any {
+                return LiteralDatatype_t::one_value();
             },
             // a + b
-            .add_fptr = [](rdf::util::Any const &lhs, rdf::util::Any const &rhs) noexcept -> NumericOpResult {
-                auto const &lhs_val = lhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
-                auto const &rhs_val = rhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .add_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::add_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::add(lhs_val, rhs_val))};
             },
             // a - b
-            .sub_fptr = [](rdf::util::Any const &lhs, rdf::util::Any const &rhs) noexcept -> NumericOpResult {
-                auto const &lhs_val = lhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
-                auto const &rhs_val = rhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .sub_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::sub_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::sub(lhs_val, rhs_val))};
             },
             // a * b
-            .mul_fptr = [](rdf::util::Any const &lhs, rdf::util::Any const &rhs) noexcept -> NumericOpResult {
-                auto const &lhs_val = lhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
-                auto const &rhs_val = rhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .mul_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::mul_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::mul(lhs_val, rhs_val))};
             },
             // a / b
-            .div_fptr = [](rdf::util::Any const &lhs, rdf::util::Any const &rhs) noexcept -> NumericOpResult {
-                auto const &lhs_val = lhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
-                auto const &rhs_val = rhs.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .div_fptr = [](std::any const &lhs, std::any const &rhs) noexcept -> NumericOpResult {
+                auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(lhs);
+                auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(rhs);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::div_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::div(lhs_val, rhs_val))};
             },
             // +a
-            .pos_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .pos_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::pos_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::pos(operand_val))};
             },
             // -a
-            .neg_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .neg_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::neg_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::neg(operand_val))};
             },
             // abs(a)
-            .abs_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .abs_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::abs_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::abs(operand_val))};
             },
             // round(a)
-            .round_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .round_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::round_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::round(operand_val))};
             },
             // floor(a)
-            .floor_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .floor_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::floor_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::floor(operand_val))};
             },
             // ceil(a)
-            .ceil_fptr = [](rdf::util::Any const &operand) noexcept -> NumericOpResult {
-                auto const &operand_val = operand.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+            .ceil_fptr = [](std::any const &operand) noexcept -> NumericOpResult {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type>(operand);
 
                 return NumericOpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::ceil_result, LiteralDatatype_t>::select(),
@@ -560,12 +560,12 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
 template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
     return InliningOps {
-        .try_into_inlined_fptr = [](rdf::util::Any const &value) noexcept -> std::optional<uint64_t> {
-            auto const &val = value.get_unchecked<typename LiteralDatatype_t::cpp_type>();
+        .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<uint64_t> {
+            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
             return LiteralDatatype_t::try_into_inlined(val);
         },
-        .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> rdf::util::Any {
-            return rdf::util::Any{LiteralDatatype_t::from_inlined(inlined_value)};
+        .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> std::any {
+            return LiteralDatatype_t::from_inlined(inlined_value);
         }};
 }
 
