@@ -10,6 +10,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 template<datatypes::FixedIdLiteralDatatype T>
 struct SpecializedLiteralBackend {
     using View = view::ValueLiteralBackendView;
+    using Type = T;
 private:
     size_t hash_;
     static size_t calculate_hash(T::cpp_type const &value) noexcept {

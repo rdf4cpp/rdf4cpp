@@ -1,10 +1,10 @@
 #ifndef RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
 #define RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
 
+#include <tuple>
+
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
-
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/NodeTypeStorage.hpp>
-
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
@@ -29,27 +29,36 @@ private:
 
     NodeTypeStorage<FallbackLiteralBackend> fallback_literal_storage_;
 
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Integer>> xsd_integer_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonNegativeInteger>> xsd_non_negative_integer_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::PositiveInteger>> xsd_positive_integer_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonPositiveInteger>> xsd_non_positive_integer_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NegativeInteger>> xsd_negative_integer_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Long>> xsd_long_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::UnsignedLong>> xsd_unsigned_long_literal_storage_;
+    std::tuple<NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Integer>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonNegativeInteger>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::PositiveInteger>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonPositiveInteger>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NegativeInteger>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Long>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::UnsignedLong>>,
 
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Decimal>> xsd_decimal_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Double>> xsd_double_literal_storage_;
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Decimal>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Double>>,
 
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>> xsd_base64binary_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>> xsd_hexbinary_literal_storage_;
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>> specialized_literal_storage_;
 
     LiteralID next_literal_id = NodeID::min_literal_id;
     NodeID next_bnode_id = NodeID::min_bnode_id;
     NodeID next_iri_id = NodeID::min_iri_id;
     NodeID next_variable_id = NodeID::min_variable_id;
 
+    /**
+     * Visit the correct specialized literal storage for datatype
+     *
+     * @tparam Self a ReferenceNodeStorageBackend
+     * @param self this
+     * @param datatype datatype to visit the storage for
+     * @param f function to call with the found specialized literal storage
+     * @return whatever f returns
+     */
     template<typename Self, typename F>
-    friend auto visit_specialized(Self &&self, identifier::LiteralType datatype, F f);
+    static decltype(auto) visit_specialized(Self &&self, identifier::LiteralType datatype, F f);
 
 public:
     ReferenceNodeStorageBackend() noexcept;

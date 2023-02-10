@@ -1,65 +1,80 @@
 #include "ReferenceNodeStorageBackend.hpp"
 
 #include <array>
+#include <utility>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-static constexpr std::array specialization_list{
-        datatypes::xsd::Integer::fixed_id,
-        datatypes::xsd::NonNegativeInteger::fixed_id,
-        datatypes::xsd::PositiveInteger::fixed_id,
-        datatypes::xsd::NonPositiveInteger::fixed_id,
-        datatypes::xsd::NegativeInteger::fixed_id,
-        datatypes::xsd::Long::fixed_id,
-        datatypes::xsd::UnsignedLong::fixed_id,
-        datatypes::xsd::Decimal::fixed_id,
-        datatypes::xsd::Double::fixed_id,
-        datatypes::xsd::Base64Binary::fixed_id,
-        datatypes::xsd::HexBinary::fixed_id};
-
 namespace specialization_detail {
-template<size_t N>
-static consteval std::array<bool, 1 << identifier::LiteralType::width> make_storage_specialization_lut(std::array<identifier::LiteralType, N> const &specialized) noexcept {
+
+template<typename Tuple, typename Acc, typename FoldF, size_t ...Ixs>
+constexpr Acc tuple_type_fold_impl(std::index_sequence<Ixs...>, Acc init, FoldF f) noexcept {
+    ((init = f.template operator()<std::tuple_element_t<Ixs, Tuple>>(std::move(init))), ...);
+    return init;
+}
+
+template<typename Tuple, typename Acc, typename FoldF, size_t ...Ixs>
+constexpr Acc tuple_fold_impl(std::index_sequence<Ixs...>, Tuple const &tuple, Acc init, FoldF f) noexcept {
+    ((init = f(std::move(init), std::get<Ixs>(tuple))), ...);
+    return init;
+}
+
+template<typename Tuple, typename Acc, typename FoldF>
+constexpr Acc tuple_type_fold(Acc &&init, FoldF &&f) noexcept {
+    return tuple_type_fold_impl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, std::forward<Acc>(init), std::forward<FoldF>(f));
+}
+
+template<typename Tuple, typename Acc, typename FoldF>
+constexpr Acc tuple_fold(Tuple const &tuple, Acc &&init, FoldF &&f) noexcept {
+    return tuple_fold_impl(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, tuple, std::forward<Acc>(init), std::forward<FoldF>(f));
+}
+
+template<typename Tuple>
+static consteval std::array<bool, 1 << identifier::LiteralType::width> make_storage_specialization_lut() noexcept {
     std::array<bool, 1 << identifier::LiteralType::width> ret{};
-    for (auto const type : specialized) {
-        ret[type.to_underlying()] = true;
-    }
+
+    tuple_type_fold<Tuple>(0, [&]<typename T>(auto acc) {
+        ret[T::Backend::Type::fixed_id.to_underlying()] = true;
+        return acc;
+    });
 
     return ret;
 }
 
-static constexpr std::array<bool, 1 << identifier::LiteralType::width> specialization_lut = specialization_detail::make_storage_specialization_lut(specialization_list);
+template<datatypes::LiteralDatatype T>
+using S = NodeTypeStorage<SpecializedLiteralBackend<T>>;
+
 }  //specialization_detail
 
 template<typename Self, typename F>
-auto visit_specialized(Self &&self, identifier::LiteralType const datatype, F f) {
+decltype(auto) ReferenceNodeStorageBackend::visit_specialized(Self &&self, identifier::LiteralType const datatype, F f) {
     using namespace rdf4cpp::rdf::datatypes;
-
+    using specialization_detail::S;
     assert(self.has_specialized_storage_for(datatype));
 
     switch (datatype.to_underlying()) {
         case xsd::Integer::fixed_id.to_underlying():
-            return f(self.xsd_integer_literal_storage_);
+            return f(std::get<S<xsd::Integer>>(self.specialized_literal_storage_));
         case xsd::NonNegativeInteger::fixed_id.to_underlying():
-            return f(self.xsd_non_negative_integer_literal_storage_);
+            return f(std::get<S<xsd::NonNegativeInteger>>(self.specialized_literal_storage_));
         case xsd::PositiveInteger::fixed_id.to_underlying():
-            return f(self.xsd_positive_integer_literal_storage_);
+            return f(std::get<S<xsd::PositiveInteger>>(self.specialized_literal_storage_));
         case xsd::NonPositiveInteger::fixed_id.to_underlying():
-            return f(self.xsd_non_positive_integer_literal_storage_);
+            return f(std::get<S<xsd::NonPositiveInteger>>(self.specialized_literal_storage_));
         case xsd::NegativeInteger::fixed_id.to_underlying():
-            return f(self.xsd_negative_integer_literal_storage_);
+            return f(std::get<S<xsd::NegativeInteger>>(self.specialized_literal_storage_));
         case xsd::Long::fixed_id.to_underlying():
-            return f(self.xsd_long_literal_storage_);
+            return f(std::get<S<xsd::Long>>(self.specialized_literal_storage_));
         case xsd::UnsignedLong::fixed_id.to_underlying():
-            return f(self.xsd_unsigned_long_literal_storage_);
+            return f(std::get<S<xsd::UnsignedLong>>(self.specialized_literal_storage_));
         case xsd::Decimal::fixed_id.to_underlying():
-            return f(self.xsd_decimal_literal_storage_);
+            return f(std::get<S<xsd::Decimal>>(self.specialized_literal_storage_));
         case xsd::Double::fixed_id.to_underlying():
-            return f(self.xsd_double_literal_storage_);
+            return f(std::get<S<xsd::Double>>(self.specialized_literal_storage_));
         case xsd::Base64Binary::fixed_id.to_underlying():
-            return f(self.xsd_base64binary_literal_storage_);
+            return f(std::get<S<xsd::Base64Binary>>(self.specialized_literal_storage_));
         case xsd::HexBinary::fixed_id.to_underlying():
-            return f(self.xsd_hexbinary_literal_storage_);
+            return f(std::get<S<xsd::HexBinary>>(self.specialized_literal_storage_));
         default:
             assert(false);
             __builtin_unreachable();
@@ -83,21 +98,14 @@ size_t ReferenceNodeStorageBackend::size() const noexcept {
            bnode_storage_.id2data.size() +
            variable_storage_.id2data.size() +
            fallback_literal_storage_.id2data.size() +
-           xsd_integer_literal_storage_.id2data.size() +
-           xsd_non_negative_integer_literal_storage_.id2data.size() +
-           xsd_positive_integer_literal_storage_.id2data.size() +
-           xsd_non_positive_integer_literal_storage_.id2data.size() +
-           xsd_negative_integer_literal_storage_.id2data.size() +
-           xsd_long_literal_storage_.id2data.size() +
-           xsd_unsigned_long_literal_storage_.id2data.size() +
-           xsd_decimal_literal_storage_.id2data.size() +
-           xsd_double_literal_storage_.id2data.size() +
-           xsd_base64binary_literal_storage_.id2data.size() +
-           xsd_hexbinary_literal_storage_.id2data.size();
+           specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
+               return acc + storage.id2data.size();
+           });
 }
 
 bool ReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) const noexcept {
-    return specialization_detail::specialization_lut[datatype.to_underlying()];
+    static constexpr auto specialization_lut = specialization_detail::make_storage_specialization_lut<decltype(specialized_literal_storage_)>();
+    return specialization_lut[datatype.to_underlying()];
 }
 
 /**
