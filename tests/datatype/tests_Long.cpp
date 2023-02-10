@@ -70,7 +70,7 @@ TEST_CASE("small 64bit positive int inlining") {
     auto const extracted1 = lit1.template value<xsd::Long>();
     auto const extracted2 = lit2.value();
     CHECK(extracted1 == i);
-    CHECK(std::any_cast<xsd::Long::cpp_type>(extracted2) == i);
+    CHECK(extracted2->get<xsd::Long::cpp_type>() == i);
 }
 
 TEST_CASE("negative 64bit int inlining") {

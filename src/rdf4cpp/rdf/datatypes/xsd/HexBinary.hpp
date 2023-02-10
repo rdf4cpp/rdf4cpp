@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -78,6 +79,14 @@ extern template struct LiteralDatatypeImpl<xsd_hex_binary>;
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 
+template<>
+struct std::hash<rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &x) const noexcept {
+        using namespace rdf4cpp::rdf::storage::util;
+
+        return robin_hood::hash_bytes(x.bytes.data(), x.bytes.size());
+    }
+};
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 

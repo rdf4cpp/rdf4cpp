@@ -9,14 +9,22 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_string> {
-    using cpp_datatype = std::string;
+    using cpp_datatype = std::string_view;
 };
 
 template<>
-capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s);
+inline capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view) {
+    // dummy implementation, actual implementation in Literal
+    assert(false);
+    __builtin_unreachable();
+}
 
 template<>
-std::string capabilities::Default<xsd_string>::to_canonical_string(cpp_type const &value) noexcept;
+inline std::string capabilities::Default<xsd_string>::to_canonical_string(cpp_type const &) noexcept {
+    // dummy implementation, actual implementation in Literal
+    assert(false);
+    __builtin_unreachable();
+}
 
 template<>
 bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept;

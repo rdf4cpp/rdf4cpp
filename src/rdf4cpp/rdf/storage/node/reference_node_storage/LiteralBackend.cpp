@@ -30,11 +30,6 @@ std::string_view LiteralBackend::lexical_form() const noexcept {
     return lexical;
 }
 
-LiteralBackend::operator view::LiteralBackendView() const noexcept {
-    return view::LiteralBackendView{
-        .literal = static_cast<view::LexicalFormBackendView>(*this)};
-}
-
 LiteralBackend::operator view::LexicalFormBackendView() const noexcept {
     return view::LexicalFormBackendView{
             .datatype_id = this->datatype_id_,

@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/TypeList.hpp>
+#include <rdf4cpp/rdf/util/Any.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -72,8 +73,8 @@ concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
  * A type erased version of a ConversionEntry.
  */
 struct RuntimeConversionEntry {
-    using convert_fptr_t = std::any (*)(std::any const &) noexcept;
-    using inverted_convert_fptr_t = nonstd::expected<std::any, DynamicError> (*)(std::any const &) noexcept;
+    using convert_fptr_t = rdf::util::Any (*)(rdf::util::Any const &) noexcept;
+    using inverted_convert_fptr_t = nonstd::expected<rdf::util::Any, DynamicError> (*)(rdf::util::Any const &) noexcept;
 
     DatatypeID target_type_id;
     convert_fptr_t convert;
@@ -81,7 +82,7 @@ struct RuntimeConversionEntry {
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() noexcept {
-        DatatypeID target_type_iri = []() {
+        DatatypeID target_type_iri = []() noexcept {
             if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
                 return DatatypeID{Entry::target_type::fixed_id};
             } else {
@@ -91,19 +92,19 @@ struct RuntimeConversionEntry {
 
         return RuntimeConversionEntry{
                 .target_type_id = std::move(target_type_iri),
-                .convert = [](std::any const &value) noexcept -> std::any {
-                    auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
-                    return Entry::convert(actual_value);
+                .convert = [](rdf::util::Any const &value) noexcept -> rdf::util::Any {
+                    auto const actual_value = value.get_unchecked<typename Entry::source_type::cpp_type>();
+                    return rdf::util::Any{Entry::convert(actual_value)};
                 },
-                .inverted_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
-                    auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
+                .inverted_convert = [](rdf::util::Any const &value) noexcept -> nonstd::expected<rdf::util::Any, DynamicError> {
+                    auto const actual_value = value.get_unchecked<typename Entry::target_type::cpp_type>();
                     auto const maybe_converted = Entry::inverse_convert(actual_value);
 
                     if (!maybe_converted.has_value()) {
                         return nonstd::make_unexpected(maybe_converted.error());
                     }
 
-                    return *maybe_converted;
+                    return rdf::util::Any{*maybe_converted};
                 }};
     }
 };

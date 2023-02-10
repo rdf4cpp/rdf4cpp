@@ -28,7 +28,7 @@ private:
     NodeTypeStorage<VariableBackend> variable_storage_;
 
     NodeTypeStorage<LiteralBackend> fallback_literal_storage_;
-    NodeTypeStorage<SpecializedLiteralBackend<long>> int_literal_storage_;
+    NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Long::cpp_type>> xsd_long_literal_storage_;
 
     LiteralID next_literal_id = NodeID::min_literal_id;
     NodeID next_bnode_id = NodeID::min_bnode_id;

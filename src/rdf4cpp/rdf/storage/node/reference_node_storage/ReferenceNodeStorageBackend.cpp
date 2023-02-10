@@ -1,8 +1,7 @@
 #include "ReferenceNodeStorageBackend.hpp"
 
-#include <rdf4cpp/rdf/storage/util/Overloaded.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/StaticFlatMap.hpp>
-#include <functional>
+#include <rdf4cpp/rdf/util/Overloaded.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
@@ -84,7 +83,7 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView co
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
-    return std::visit(util::Overloaded{
+    return std::visit(rdf::util::Overloaded{
                               [&](view::LexicalFormBackendView const &lexical) {
                                   return lookup_or_insert_impl<true>(
                                           lexical, fallback_literal_storage_,
@@ -93,18 +92,17 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
                                           });
                               },
                               [&](view::AnyBackendView const &any) {
+                                  auto next_id_func = [&]() {
+                                      return identifier::NodeID{next_literal_id++, any.datatype};
+                                  };
+
                                   switch (any.datatype.to_underlying()) {
-                                      case datatypes::xsd::Int::fixed_id.to_underlying():
-                                          return lookup_or_insert_impl<true>(
-                                                  any, int_literal_storage_,
-                                                  [&]() {
-                                                      return identifier::NodeID{next_literal_id++, any.datatype};
-                                                  });
+                                      case datatypes::xsd::Long::fixed_id.to_underlying():
+                                          return lookup_or_insert_impl<true>(any, xsd_long_literal_storage_, next_id_func);
                                       default:
                                           assert(false);
                                   }
-                              }
-                      },
+                              }},
                       view.literal);
 }
 
@@ -140,7 +138,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::IRIBackendVi
             view, iri_storage_);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::LiteralBackendView &view) const noexcept {
-    return std::visit(util::Overloaded{
+    return std::visit(rdf::util::Overloaded{
                               [&](view::LexicalFormBackendView const &lexical) {
                                   return lookup_or_insert_impl<false>(
                                           lexical, fallback_literal_storage_);
@@ -148,13 +146,11 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::LiteralBacke
                               [&](view::AnyBackendView const &any) {
                                   switch (any.datatype.to_underlying()) {
                                       case datatypes::xsd::Long::fixed_id.to_underlying():
-                                          return lookup_or_insert_impl<false>(
-                                                  any, int_literal_storage_);
+                                          return lookup_or_insert_impl<false>(any, xsd_long_literal_storage_);
                                       default:
                                           assert(false);
                                   }
-                              }
-                      },
+                              }},
                       view.literal);
 }
 identifier::NodeID ReferenceNodeStorageBackend::find_id(const view::VariableBackendView &view) const noexcept {
@@ -173,8 +169,8 @@ view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifi
 }
 view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID id) const {
     switch (id.literal_type().to_underlying()) {
-        case datatypes::xsd::Int::fixed_id.to_underlying():
-            return view::LiteralBackendView{ .literal = find_backend_view(int_literal_storage_, id) };
+        case datatypes::xsd::Long::fixed_id.to_underlying():
+            return view::LiteralBackendView{ .literal = find_backend_view(xsd_long_literal_storage_, id) };
         default:
             return view::LiteralBackendView{ .literal = find_backend_view(fallback_literal_storage_, id) };
     }
@@ -210,8 +206,8 @@ bool ReferenceNodeStorageBackend::erase_iri([[maybe_unused]] identifier::NodeID 
 }
 bool ReferenceNodeStorageBackend::erase_literal([[maybe_unused]] identifier::NodeID id) {
     switch (id.literal_type().to_underlying()) {
-        case datatypes::xsd::Int::fixed_id.to_underlying():
-            return erase_impl(int_literal_storage_, id);
+        case datatypes::xsd::Long::fixed_id.to_underlying():
+            return erase_impl(xsd_long_literal_storage_, id);
         default:
             return erase_impl(fallback_literal_storage_, id);
     }

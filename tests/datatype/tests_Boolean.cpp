@@ -54,12 +54,12 @@ TEST_CASE("Datatype Boolean") {
     value = true;
     auto lit5 = Literal::make_typed(true_val, type_iri);
     CHECK(lit5.value<datatypes::xsd::Boolean>() == value);
-    CHECK(std::any_cast<bool>(lit5.value()) == value);
+    CHECK(lit5.value()->get<bool>() == value);
 
     value = false;
     auto lit6 = Literal::make_typed(false_val, type_iri);
     CHECK(lit6.value<datatypes::xsd::Boolean>() == value);
-    CHECK(std::any_cast<bool>(lit6.value()) == value);
+    CHECK(lit6.value()->get<bool>() == value);
 
     value = 1;
     auto lit7 = Literal::make_typed("1", type_iri);

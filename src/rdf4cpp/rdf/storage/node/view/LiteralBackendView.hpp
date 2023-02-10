@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-#include <rdf4cpp/rdf/storage/util/Any.hpp>
+#include "rdf4cpp/rdf/util/Any.hpp"
 
 namespace rdf4cpp::rdf::storage::node::view {
 
@@ -22,7 +22,7 @@ struct LexicalFormBackendView {
 
 struct AnyBackendView {
     identifier::LiteralType datatype;
-    util::Any value;
+    rdf::util::Any value;
 
     bool operator==(AnyBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;

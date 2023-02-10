@@ -1,13 +1,12 @@
-#ifndef RDF4CPP_ANY_HPP
-#define RDF4CPP_ANY_HPP
+#ifndef RDF4CPP_RDF_UTIL_ANY_HPP
+#define RDF4CPP_RDF_UTIL_ANY_HPP
 
 #include <concepts>
 #include <cstddef>
 #include <utility>
 #include <typeinfo>
-#include <type_traits>
 
-namespace rdf4cpp::rdf::storage::util {
+namespace rdf4cpp::rdf::util {
 
 namespace any_detail {
 
@@ -98,7 +97,7 @@ struct InternalManager final : ManagerBase {
 
 
 template<typename T>
-concept AnyHoldable = std::is_copy_constructible_v<T> &&
+concept AnyHoldable = std::copy_constructible<T> &&
                       std::equality_comparable<T> &&
                       requires (T const &a, T const &b) {
                           { std::hash<T>{}(a) } -> std::convertible_to<size_t>;
@@ -241,10 +240,10 @@ public:
 }  //namespace rdf4cpp::rdf::util
 
 template<>
-struct std::hash<rdf4cpp::rdf::storage::util::Any> {
-    inline size_t operator()(rdf4cpp::rdf::storage::util::Any const &self) const noexcept {
+struct std::hash<rdf4cpp::rdf::util::Any> {
+    inline size_t operator()(rdf4cpp::rdf::util::Any const &self) const noexcept {
         return self.hash();
     }
 };
 
-#endif  //RDF4CPP_ANY_HPP
+#endif  //RDF4CPP_RDF_UTIL_ANY_HPP

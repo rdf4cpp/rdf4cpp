@@ -23,10 +23,9 @@ public:
     [[nodiscard]] std::string_view lexical_form() const noexcept;
     [[nodiscard]] identifier::NodeID datatype_id() const noexcept;
     [[nodiscard]] std::string_view language_tag() const noexcept;
-    [[nodiscard]] size_t hash() const noexcept { return hash_; }
+    [[nodiscard]] inline size_t hash() const noexcept { return hash_; }
 
     explicit operator view::LexicalFormBackendView() const noexcept;
-    explicit operator view::LiteralBackendView() const noexcept;
 };
 
 
