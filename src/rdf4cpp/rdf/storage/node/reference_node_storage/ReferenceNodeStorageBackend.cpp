@@ -52,6 +52,8 @@ decltype(auto) ReferenceNodeStorageBackend::visit_specialized(Self &&self, ident
     using specialization_detail::S;
     assert(self.has_specialized_storage_for(datatype));
 
+    // manually translate runtime knowledge to compiletime
+    // can probably be done using metaprogramming, but this is faster
     switch (datatype.to_underlying()) {
         case xsd::Integer::fixed_id.to_underlying():
             return f(std::get<S<xsd::Integer>>(self.specialized_literal_storage_));
@@ -151,7 +153,7 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView co
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
-    return visit(view,
+    return view.visit(
             [this](view::LexicalFormLiteralBackendView const &lexical) noexcept {
                 auto const next_id_func = [this, datatype = lexical.datatype_id]() noexcept {
                     return identifier::NodeID{next_literal_id++, identifier::iri_node_id_to_literal_type(datatype)};
@@ -164,51 +166,45 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
                     return identifier::NodeID{next_literal_id++, datatype};
                 };
 
-                return visit_specialized(*this, any.datatype, [&](auto &storage) {
+                return visit_specialized(*this, any.datatype, [&](auto &storage) noexcept {
                     return lookup_or_insert_impl<true>(any, storage, next_id_func);
                 });
             });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::IRIBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(
-            view, iri_storage_,
-            [this]() noexcept {
-                return next_iri_id++;
-            });
+    return lookup_or_insert_impl<true>(view, iri_storage_,
+                                       [this]() noexcept {
+                                           return next_iri_id++;
+                                       });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::BNodeBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(
-            view, bnode_storage_,
-            [this]() noexcept {
-                return next_bnode_id++;
-            });
+    return lookup_or_insert_impl<true>(view, bnode_storage_,
+                                       [this]() noexcept {
+                                           return next_bnode_id++;
+                                       });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::VariableBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(
-            view, variable_storage_,
-            [this]() noexcept {
-                return next_variable_id++;
-            });
+    return lookup_or_insert_impl<true>(view, variable_storage_,
+                                       [this]() noexcept {
+                                           return next_variable_id++;
+                                       });
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_id(view::BNodeBackendView const &view) const noexcept {
-    return lookup_or_insert_impl<false>(
-            view, bnode_storage_);
+    return lookup_or_insert_impl<false>(view, bnode_storage_);
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_id(view::IRIBackendView const &view) const noexcept {
-    return lookup_or_insert_impl<false>(
-            view, iri_storage_);
+    return lookup_or_insert_impl<false>(view, iri_storage_);
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_id(view::LiteralBackendView const &view) const noexcept {
-    return visit(view,
+    return view.visit(
             [this](view::LexicalFormLiteralBackendView const &lexical) {
-                return lookup_or_insert_impl<false>(
-                        lexical, fallback_literal_storage_);
+                return lookup_or_insert_impl<false>(lexical, fallback_literal_storage_);
             },
             [this](view::ValueLiteralBackendView const &any) {
                 return visit_specialized(*this, any.datatype, [&any](auto const &storage) {
@@ -218,8 +214,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(view::LiteralBackendView
 }
 
 identifier::NodeID ReferenceNodeStorageBackend::find_id(view::VariableBackendView const &view) const noexcept {
-    return lookup_or_insert_impl<false>(
-            view, variable_storage_);
+    return lookup_or_insert_impl<false>(view, variable_storage_);
 }
 
 template<typename NodeTypeStorage>
@@ -269,11 +264,11 @@ static bool erase_impl(NodeTypeStorage &storage, identifier::NodeID const id) no
     return true;
 }
 
-bool ReferenceNodeStorageBackend::erase_iri(identifier::NodeID const id) {
+bool ReferenceNodeStorageBackend::erase_iri(identifier::NodeID const id) noexcept {
     return erase_impl(iri_storage_, id);
 }
 
-bool ReferenceNodeStorageBackend::erase_literal(identifier::NodeID const id) {
+bool ReferenceNodeStorageBackend::erase_literal(identifier::NodeID const id) noexcept {
     if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
         return visit_specialized(*this, id.literal_type(), [id](auto &storage) noexcept {
             return erase_impl(storage, id);
@@ -283,11 +278,11 @@ bool ReferenceNodeStorageBackend::erase_literal(identifier::NodeID const id) {
     return erase_impl(fallback_literal_storage_, id);
 }
 
-bool ReferenceNodeStorageBackend::erase_bnode(identifier::NodeID const id) {
+bool ReferenceNodeStorageBackend::erase_bnode(identifier::NodeID const id) noexcept {
     return erase_impl(bnode_storage_, id);
 }
 
-bool ReferenceNodeStorageBackend::erase_variable(identifier::NodeID const id) {
+bool ReferenceNodeStorageBackend::erase_variable(identifier::NodeID const id) noexcept {
     return erase_impl(variable_storage_, id);
 }
 

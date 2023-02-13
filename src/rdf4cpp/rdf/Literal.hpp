@@ -489,11 +489,11 @@ public:
             return lit.lexical_form;
         } else {
             auto const backend = handle_.literal_backend();
-            return visit(backend,
-                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) -> T::cpp_type {
-                        return T::from_string(lexical.lexical_form); // TODO Revisit for perf
+            return backend.visit(
+                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                        return T::from_string(lexical.lexical_form);
                     },
-                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept -> T::cpp_type {
+                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
                         return std::any_cast<typename T::cpp_type>(any.value);
                     });
         }

@@ -25,13 +25,18 @@ struct ValueLiteralBackendView {
     std::any value;
 };
 
+/**
+ * A LiteralBackendView is either a LexicalFormLiteralBackendView
+ * or a ValueLiteralBackendView.
+ */
 struct LiteralBackendView {
-    template<typename Self, typename ...Fs>
-    friend decltype(auto) visit(Self &&self, Fs &&...fs);
-
 private:
     std::variant<LexicalFormLiteralBackendView, ValueLiteralBackendView> inner;
 
+    template<typename Self, typename ...Fs>
+    static decltype(auto) visit_impl(Self &&self, Fs &&...fs) {
+        return std::visit(rdf::util::Overloaded{std::forward<Fs>(fs)...}, std::forward<Self>(self).inner);
+    }
 public:
     LiteralBackendView(ValueLiteralBackendView const &any);
     LiteralBackendView(ValueLiteralBackendView &&any) noexcept;
@@ -43,12 +48,27 @@ public:
     [[nodiscard]] LexicalFormLiteralBackendView const &get_lexical() const;
     [[nodiscard]] ValueLiteralBackendView const &get_value() const &;
     [[nodiscard]] ValueLiteralBackendView &&get_value() &&;
-};
 
-template<typename Self, typename ...Fs>
-decltype(auto) visit(Self &&self, Fs &&...fs) {
-    return std::visit(rdf::util::Overloaded{std::forward<Fs>(fs)...}, std::forward<Self>(self).inner);
-}
+    template<typename ...Fs>
+    decltype(auto) visit(Fs &&...fs) const & {
+        return visit_impl(*this, std::forward<Fs>(fs)...);
+    }
+
+    template<typename ...Fs>
+    decltype(auto) visit(Fs &&...fs) & {
+        return visit_impl(*this, std::forward<Fs>(fs)...);
+    }
+
+    template<typename ...Fs>
+    decltype(auto) visit(Fs &&...fs) && {
+        return visit_impl(std::move(*this), std::forward<Fs>(fs)...);
+    }
+
+    template<typename ...Fs>
+    decltype(auto) visit(Fs &&...fs) const && {
+        return visit_impl(*this, std::forward<Fs>(fs)...);
+    }
+};
 
 }  // namespace rdf4cpp::rdf::storage::node::view
 

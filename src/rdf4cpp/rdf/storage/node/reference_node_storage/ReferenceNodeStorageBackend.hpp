@@ -49,12 +49,11 @@ private:
     NodeID next_variable_id = NodeID::min_variable_id;
 
     /**
-     * Visit the correct specialized literal storage for datatype
+     * Calls the given function f with the specialized node storage for the given datatype
      *
-     * @tparam Self a ReferenceNodeStorageBackend
-     * @param self this
-     * @param datatype datatype to visit the storage for
-     * @param f function to call with the found specialized literal storage
+     * @param self a reference to a ReferenceNodeStorageBackend
+     * @param datatype the datatype of the specialized storage
+     * @param f the function to call with the corresponding specialized storage
      * @return whatever f returns
      */
     template<typename Self, typename F>
@@ -81,10 +80,10 @@ public:
     [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
     [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
 
-    bool erase_iri(identifier::NodeID id) override;
-    bool erase_literal(identifier::NodeID id) override;
-    bool erase_bnode(identifier::NodeID id) override;
-    bool erase_variable(identifier::NodeID id) override;
+    bool erase_iri(identifier::NodeID id) noexcept override;
+    bool erase_literal(identifier::NodeID id) noexcept override;
+    bool erase_bnode(identifier::NodeID id) noexcept override;
+    bool erase_variable(identifier::NodeID id) noexcept override;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
