@@ -22,11 +22,11 @@ public:
 
 
     explicit SpecializedLiteralBackend(typename T::cpp_type const &value) noexcept : hash_{calculate_hash(value)},
-                                                                            value{value} {
+                                                                                     value{value} {
     }
 
     explicit SpecializedLiteralBackend(typename T::cpp_type &&value) noexcept : hash_{calculate_hash(value)},
-                                                                       value{std::move(value)} {
+                                                                                value{std::move(value)} {
     }
 
     explicit SpecializedLiteralBackend(View const &view) noexcept : value{std::any_cast<typename T::cpp_type>(view.value)} {
