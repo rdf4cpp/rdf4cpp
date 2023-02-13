@@ -12,7 +12,7 @@ struct SpecializedLiteralBackend {
     using Type = T;
 private:
     size_t hash_;
-    static size_t calculate_hash(T::cpp_type const &value) noexcept {
+    static size_t calculate_hash(typename T::cpp_type const &value) noexcept {
         return util::robin_hood::hash<typename T::cpp_type>{}(value);
     }
 
@@ -21,11 +21,11 @@ public:
     T::cpp_type value;
 
 
-    explicit SpecializedLiteralBackend(T::cpp_type const &value) noexcept : hash_{calculate_hash(value)},
+    explicit SpecializedLiteralBackend(typename T::cpp_type const &value) noexcept : hash_{calculate_hash(value)},
                                                                             value{value} {
     }
 
-    explicit SpecializedLiteralBackend(T::cpp_type &&value) noexcept : hash_{calculate_hash(value)},
+    explicit SpecializedLiteralBackend(typename T::cpp_type &&value) noexcept : hash_{calculate_hash(value)},
                                                                        value{std::move(value)} {
     }
 
