@@ -241,6 +241,7 @@ bool NodeStorage::has_specialized_storage_for(identifier::NodeStorageID id, iden
     auto ns = lookup_instance(id);
     return ns.value().has_specialized_storage_for(datatype);
 }
+
 identifier::NodeStorageID NodeStorage::id() const noexcept {
     return this->backend_index;
 }

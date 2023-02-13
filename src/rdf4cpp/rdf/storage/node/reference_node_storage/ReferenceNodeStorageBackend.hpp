@@ -63,6 +63,7 @@ public:
     ReferenceNodeStorageBackend() noexcept;
 
     [[nodiscard]] size_t size() const noexcept override;
+
     [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept override;
 
     [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept override;
