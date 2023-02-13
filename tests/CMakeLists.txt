@@ -305,3 +305,4 @@ add_test(NAME tests_Namespace_life_cycle COMMAND tests_Namespace_life_cycle)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ./parser/tests_RDFFileParser_simple.ttl DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

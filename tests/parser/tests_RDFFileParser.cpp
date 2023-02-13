@@ -13,7 +13,19 @@ TEST_SUITE("RDFFileParser") {
         CHECK((parse.begin() == parse.end()));
     }
     TEST_CASE("existing file") {
-        // todo
+        int count = 0;
+        for (const auto& v : rdf4cpp::rdf::parser::RDFFileParser {"./tests_RDFFileParser_simple.ttl"}) {
+            if (v.has_value()) {
+                ++count;
+                CHECK(v.value().subject() == rdf4cpp::rdf::IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
+                CHECK(v.value().predicate() == rdf4cpp::rdf::IRI{"http://purl.org/dc/elements/1.1/subject"});
+                CHECK(v.value().object() == rdf4cpp::rdf::Literal::make_simple("search"));
+            }
+            else {
+                CHECK_MESSAGE(false, v.error());
+            }
+        }
+        CHECK(count == 1);
     }
-    // not checking if the parsing is correct, see tests for IStreamQuadIterator
+    // only testing basic iterator functionality here, see tests for IStreamQuadIterator for more parsing tests
 }
