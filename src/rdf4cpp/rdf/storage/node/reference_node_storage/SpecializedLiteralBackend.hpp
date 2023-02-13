@@ -18,7 +18,7 @@ private:
 
 public:
     static constexpr identifier::LiteralType datatype = T::fixed_id;
-    T::cpp_type value;
+    typename T::cpp_type value;
 
 
     explicit SpecializedLiteralBackend(typename T::cpp_type const &value) noexcept : hash_{calculate_hash(value)},
