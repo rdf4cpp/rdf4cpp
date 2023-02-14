@@ -8,7 +8,7 @@
 - [view](./view/README.md) contains proxy classes to access information about a node stored in an implementation-specific
   backend. 
 
-## Requirements for `INodeStorage` implementations
+## Requirements for `INodeStorage` Implementations
 
 - Implementations must not assume that all nodes are stored in the node storage,
   in fact small `Literals` that can fit in 42 bits (e.g. values of `xsd:int`) are usually _not_ stored there
@@ -17,11 +17,18 @@
 - `Literals` can be stored either as their canonical lexical form or as values
   - when trying to store `Literals` as values the implementation is
     required to accurately report which `Literal` types can be stored as
-    values via `INodeStorageBackend::has_specialized_storage_for`. Inaccurate
-    reporting will result in undefined behaviour.
+    values via `INodeStorageBackend::has_specialized_storage_for`. **Inaccurate
+    reporting will result in undefined behaviour.**
   - see [reference_node_storage](./reference_node_storage) for details
 - Some `IRIs` are reserved by default (see [reserved_datatype_ids](../../datatypes/registry/FixedIdMappings.hpp))
   these `IRIs` _must always_ be present in the `NodeStorage` 
-  and assigned the given `NodeID`. Not upholding this invariant results in undefined behaviour.
+  and assigned the given `NodeID`. **Not upholding this invariant results in undefined behaviour.
   See [ReferenceNodeStorage::ReferenceNodeStorage()](reference_node_storage/ReferenceNodeStorageBackend.cpp)
-  for the expected usage.
+  for the expected usage.**
+
+## General Notes for Implementors
+
+- **Passing a `Literal` that is supposed to be stored in lexical storage (as required by the `INodeStorage` implementation) 
+  as a value view results in undefined behaviour.**
+- **Passing a `Literal` that is supposed to be stored in value storage (as required by the `INodeStorage` implementation)
+  as a lexical view results in undefined behaviour.**
