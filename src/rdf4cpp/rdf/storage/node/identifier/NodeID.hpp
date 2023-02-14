@@ -20,6 +20,8 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  */
 class __attribute__((__packed__)) NodeID {
 public:
+    static constexpr size_t width = 48;
+
     static std::pair<NodeID, std::string_view> const default_graph_iri;
     static std::pair<NodeID, std::string_view> const xsd_string_iri;
     static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
@@ -39,7 +41,7 @@ private:
         /**
          * The actual 48 bit identifier.
          */
-        uint64_t value_ : 48;
+        uint64_t value_ : width;
         /**
          * Combined Literal ID consisting of LiteralID and literal_type.
          */
