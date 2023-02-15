@@ -12,7 +12,7 @@ rdf4cpp::rdf::parser::RDFFileParser::Iterator rdf4cpp::rdf::parser::RDFFileParse
     std::ifstream stream{filePath_};
     if (!stream.is_open())
         return {std::move(stream), {}};
-    return { std::move(stream), flags_, node_storage_};
+    return {std::move(stream), flags_, node_storage_};
 }
 std::default_sentinel_t rdf4cpp::rdf::parser::RDFFileParser::end() {
     return {};
@@ -23,7 +23,7 @@ rdf4cpp::rdf::parser::RDFFileParser::Iterator::Iterator(std::ifstream &&stream, 
 }
 rdf4cpp::rdf::parser::RDFFileParser::Iterator::Iterator(std::ifstream &&stream, rdf4cpp::rdf::parser::ParsingFlags flags,
                                                         rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : stream_(std::move(stream)), iter_(stream_, flags, {}, node_storage){
+    : stream_(std::move(stream)), iter_(stream_, flags, {}, node_storage) {
 }
 rdf4cpp::rdf::parser::RDFFileParser::Iterator::reference rdf4cpp::rdf::parser::RDFFileParser::Iterator::operator*() const noexcept {
     return iter_.operator*();
@@ -36,13 +36,13 @@ rdf4cpp::rdf::parser::RDFFileParser::Iterator &rdf4cpp::rdf::parser::RDFFilePars
     return *this;
 }
 bool rdf4cpp::rdf::parser::RDFFileParser::Iterator::operator==(const rdf4cpp::rdf::parser::RDFFileParser::Iterator &other) const noexcept {
-    return iter_==other.iter_;
+    return iter_ == other.iter_;
 }
 bool rdf4cpp::rdf::parser::operator==(const rdf4cpp::rdf::parser::RDFFileParser::Iterator &iter, std::default_sentinel_t s) noexcept {
     if (!iter.stream_.is_open())
         return true;
     return iter.iter_ == s;
 }
-bool rdf4cpp::rdf::parser::operator==(std::default_sentinel_t s, const rdf4cpp::rdf::parser::RDFFileParser::Iterator& iter) noexcept {
+bool rdf4cpp::rdf::parser::operator==(std::default_sentinel_t s, const rdf4cpp::rdf::parser::RDFFileParser::Iterator &iter) noexcept {
     return iter == s;
 }
