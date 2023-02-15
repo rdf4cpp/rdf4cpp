@@ -473,6 +473,8 @@ std::any Literal::value() const noexcept {
             },
             [&datatype](storage::node::view::ValueLiteralBackendView const &any) noexcept {
                 assert(any.datatype == datatype);
+                (void)datatype;
+
                 return any.value;
             });
 }
