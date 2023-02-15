@@ -24,14 +24,14 @@ namespace rdf4cpp::rdf::parser {
      * @endcode
      */
 class RDFFileParser {
-    std::string filePath_;
+    std::string file_path_;
     ParsingFlags flags_;
     storage::node::NodeStorage node_storage_;
 
 public:
-    explicit RDFFileParser(const std::string &filePath, ParsingFlags flags = ParsingFlags::none(),
+    explicit RDFFileParser(const std::string &file_path, ParsingFlags flags = ParsingFlags::none(),
                            storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance());
-    explicit RDFFileParser(std::string &&filePath, ParsingFlags flags = ParsingFlags::none(),
+    explicit RDFFileParser(std::string &&file_path, ParsingFlags flags = ParsingFlags::none(),
                            storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance());
 
     class Iterator {

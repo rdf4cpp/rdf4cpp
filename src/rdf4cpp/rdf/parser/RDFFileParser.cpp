@@ -1,15 +1,15 @@
 #include "RDFFileParser.hpp"
 
-rdf4cpp::rdf::parser::RDFFileParser::RDFFileParser(const std::string &filePath, rdf4cpp::rdf::parser::ParsingFlags flags,
+rdf4cpp::rdf::parser::RDFFileParser::RDFFileParser(const std::string &file_path, rdf4cpp::rdf::parser::ParsingFlags flags,
                                                    rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : filePath_(filePath), flags_(std::move(flags)), node_storage_(std::move(node_storage)) {
+    : file_path_(file_path), flags_(std::move(flags)), node_storage_(std::move(node_storage)) {
 }
-rdf4cpp::rdf::parser::RDFFileParser::RDFFileParser(std::string &&filePath, rdf4cpp::rdf::parser::ParsingFlags flags,
+rdf4cpp::rdf::parser::RDFFileParser::RDFFileParser(std::string &&file_path, rdf4cpp::rdf::parser::ParsingFlags flags,
                                                    rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : filePath_(std::move(filePath)), flags_(std::move(flags)), node_storage_(std::move(node_storage)) {
+    : file_path_(std::move(file_path)), flags_(std::move(flags)), node_storage_(std::move(node_storage)) {
 }
 rdf4cpp::rdf::parser::RDFFileParser::Iterator rdf4cpp::rdf::parser::RDFFileParser::begin() {
-    std::ifstream stream{filePath_};
+    std::ifstream stream{file_path_};
     if (!stream.is_open())
         return {std::move(stream), {}};
     return {std::move(stream), flags_, node_storage_};
