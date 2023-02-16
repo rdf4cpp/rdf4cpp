@@ -211,8 +211,17 @@ public:
     [[nodiscard]] size_t size() const noexcept;
 
     /**
-     * Identifier of this NodeStorage
-     * @return
+     * Checks if the current backend has specialized storage for the given datatype
+     */
+    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept;
+
+    /**
+     * Checks if the backend at id has specialized storage for the given datatype
+     */
+    [[nodiscard]] static bool has_specialized_storage_for(identifier::NodeStorageID id, identifier::LiteralType datatype) noexcept;
+
+    /**
+     * @return Identifier of this NodeStorage
      */
     [[nodiscard]] identifier::NodeStorageID id() const noexcept;
 

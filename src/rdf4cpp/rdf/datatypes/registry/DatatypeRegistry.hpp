@@ -5,8 +5,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
-#include <algorithm>
 #include <any>
+#include <algorithm>
 #include <functional>
 #include <optional>
 #include <string>
@@ -29,7 +29,7 @@ public:
      * Constructs an instance of a type from a string.
      */
     using factory_fptr_t = std::any (*)(std::string_view);
-    using to_string_fptr_t = std::string (*)(const std::any &) noexcept;
+    using to_string_fptr_t = std::string (*)(std::any const &) noexcept;
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
     using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(std::any const &) noexcept;
     using from_inlined_fptr_t = std::any (*)(uint64_t) noexcept;
@@ -404,7 +404,7 @@ inline void DatatypeRegistry::add() noexcept {
     DatatypeEntry entry{
             .datatype_iri = std::string{LiteralDatatype_t::identifier},
             .factory_fptr = [](std::string_view string_repr) -> std::any {
-                return std::any{LiteralDatatype_t::from_string(string_repr)};
+                return LiteralDatatype_t::from_string(string_repr);
             },
             .to_canonical_string_fptr = [](std::any const &value) noexcept -> std::string {
                 return LiteralDatatype_t::to_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));

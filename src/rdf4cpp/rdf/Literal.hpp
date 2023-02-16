@@ -1,18 +1,20 @@
 #ifndef RDF4CPP_LITERAL_HPP
 #define RDF4CPP_LITERAL_HPP
 
+
 #include <any>
-#include <ostream>
-#include <type_traits>
 #include <optional>
+#include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
+#include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
-#include <rdf4cpp/rdf/datatypes/owl.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
-#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
+#include <rdf4cpp/rdf/util/Overloaded.hpp>
+#include <type_traits>
 
 namespace rdf4cpp::rdf {
 
@@ -102,6 +104,8 @@ private:
      */
     [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
+    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+
     /**
      * Creates an inlined Literal without any safety checks
      *
@@ -113,7 +117,7 @@ private:
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
      */
-    [[nodiscard]] static Literal make_typed_unchecked(std::any const &value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_typed_unchecked(std::any &&value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
@@ -196,18 +200,26 @@ public:
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return Literal::make_simple_unchecked(lexical_form, node_storage);
         }
 
-        auto const value = T::from_string(lexical_form);
+        auto value = T::from_string(lexical_form);
 
         if constexpr (datatypes::IsInlineable<T>) {
             if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+            }
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                return Literal::make_noninlined_special_unchecked(std::any{std::move(value)}, T::fixed_id, node_storage);
             }
         }
 
         return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
-                                                        IRI{T::datatype_id, node_storage},
+                                                        IRI{T::identifier, node_storage},
                                                         node_storage);
     }
 
@@ -231,9 +243,22 @@ public:
                                                        node_storage);
         }
 
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return Literal::make_simple_unchecked(compatible_value, node_storage);
+        }
+
         if constexpr (datatypes::IsInlineable<T>) {
             if (auto const maybe_inlined = T::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
-                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::datatype_id.get_fixed(), node_storage);
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+            }
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
+                                                         .datatype = T::fixed_id,
+                                                         .value = std::any{compatible_value}}),
+                                        storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
             }
         }
 
@@ -430,7 +455,7 @@ public:
 
     /**
      * Constructs a datatype specific container from Literal.
-     * @return std::any wrapped value. might be empty if type is not registered.
+     * @return std::any wrapped value. will be empty if type is not registered.
      */
     [[nodiscard]] std::any value() const noexcept;
 
@@ -453,14 +478,28 @@ public:
         }
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const &lit = this->handle_.literal_backend();
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
 
             return datatypes::registry::LangStringRepr{
                     .lexical_form = lit.lexical_form,
                     .language_tag = lit.language_tag};
-        }
+        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
 
-        return T::from_string(this->lexical_form());
+            return lit.lexical_form;
+        } else {
+            auto const backend = handle_.literal_backend();
+            return backend.visit(
+                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                        return T::from_string(lexical.lexical_form);
+                    },
+                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                        assert(any.datatype == T::datatype_id);
+                        return std::any_cast<typename T::cpp_type>(any.value);
+                    });
+        }
     }
 
     [[nodiscard]] bool is_literal() const noexcept;

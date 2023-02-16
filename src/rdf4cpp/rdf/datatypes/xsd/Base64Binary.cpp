@@ -1,4 +1,5 @@
 #include <rdf4cpp/rdf/datatypes/xsd/Base64Binary.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 #include <array>
 #include <algorithm>
@@ -224,7 +225,13 @@ std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_ty
     return value.to_encoded();
 }
 
-template struct LiteralDatatypeImpl<xsd_base64_binary>;
+template struct LiteralDatatypeImpl<xsd_base64_binary,
+                                    capabilities::FixedId>;
 
 
 } // namespace rdf4cpp::rdf::datatypes::registry
+
+
+size_t std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr>::operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept {
+    return rdf4cpp::rdf::storage::util::robin_hood::hash_bytes(x.bytes.data(), x.bytes.size());
+}

@@ -99,17 +99,16 @@ NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
 NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
     : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, inlined, tagging_bits})) {}
 
-NodeBackendHandle NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(NodeBackendHandle lit_handle) noexcept {
-    assert(lit_handle.is_literal());
-    assert(lit_handle.node_id().literal_type().is_fixed());
-    return NodeBackendHandle{NodeID{static_cast<uint64_t>(lit_handle.node_id().literal_type().to_underlying())},
-                             storage::node::identifier::RDFNodeType::IRI,
-                             lit_handle.node_storage_id()};
-}
-
 uint64_t NodeBackendHandle::raw() const noexcept {
     return raw_;
 }
 
+NodeBackendHandle datatype_iri_handle_for_fixed_lit_handle(NodeBackendHandle lit_handle) noexcept {
+    assert(lit_handle.is_literal());
+    assert(lit_handle.node_id().literal_type().is_fixed());
+    return NodeBackendHandle{literal_type_to_iri_node_id(lit_handle.node_id().literal_type()),
+                             storage::node::identifier::RDFNodeType::IRI,
+                             lit_handle.node_storage_id()};
+}
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier

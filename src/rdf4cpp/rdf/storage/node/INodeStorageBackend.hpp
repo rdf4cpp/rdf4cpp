@@ -32,6 +32,13 @@ public:
     [[nodiscard]] virtual size_t size() const noexcept = 0;
 
     /**
+     * Backend for NodeStorage::has_specialized_storage_for(datatype)
+     * @param datatype datatype of specialized storage to check for
+     * @return whether this implementation has specialized storage for the given datatype
+     */
+    [[nodiscard]] virtual bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept = 0;
+
+    /**
       * Backend for NodeStorage::find_or_make_id(view::BNodeBackendView const &)
       * @param view Describes requested node. Can be expected to be valid.
       * @return identifier::NodeID identifying a BlankNode stored at the implementation of INodeStorageBackend.

@@ -81,7 +81,7 @@ struct RuntimeConversionEntry {
 
     template<ConversionEntry Entry>
     static RuntimeConversionEntry from_concrete() noexcept {
-        DatatypeID target_type_iri = []() {
+        DatatypeID target_type_iri = []() noexcept {
             if constexpr (FixedIdLiteralDatatype<typename Entry::target_type>) {
                 return DatatypeID{Entry::target_type::fixed_id};
             } else {
@@ -93,7 +93,7 @@ struct RuntimeConversionEntry {
                 .target_type_id = std::move(target_type_iri),
                 .convert = [](std::any const &value) noexcept -> std::any {
                     auto const actual_value = std::any_cast<typename Entry::source_type::cpp_type>(value);
-                    return Entry::convert(actual_value);
+                    return std::any{Entry::convert(actual_value)};
                 },
                 .inverted_convert = [](std::any const &value) noexcept -> nonstd::expected<std::any, DynamicError> {
                     auto const actual_value = std::any_cast<typename Entry::target_type::cpp_type>(value);
@@ -103,7 +103,7 @@ struct RuntimeConversionEntry {
                         return nonstd::make_unexpected(maybe_converted.error());
                     }
 
-                    return *maybe_converted;
+                    return std::any{*maybe_converted};
                 }};
     }
 };
