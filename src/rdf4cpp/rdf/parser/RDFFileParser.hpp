@@ -37,10 +37,10 @@ public:
     class Iterator {
         friend class RDFFileParser;
         friend bool operator==(const RDFFileParser::Iterator &iter, std::default_sentinel_t) noexcept;
-        std::ifstream stream_;
-        IStreamQuadIterator iter_;
+        std::unique_ptr<std::ifstream> stream_;
+        std::unique_ptr<IStreamQuadIterator> iter_;
 
-        Iterator(std::ifstream &&stream, IStreamQuadIterator &&iter);
+        Iterator();
         Iterator(std::ifstream &&stream, ParsingFlags flags, storage::node::NodeStorage node_storage);
 
     public:

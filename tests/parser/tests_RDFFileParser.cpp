@@ -40,5 +40,11 @@ TEST_SUITE("RDFFileParser") {
         }
         CHECK(count == 3);
     }
+    TEST_CASE("move iterator") {
+        rdf4cpp::rdf::parser::RDFFileParser pars{"./tests_RDFFileParser_simple.ttl"};
+        auto it = pars.begin();
+        ++it;
+        CHECK(it != pars.end());
+    }
     // only testing basic iterator functionality here, see tests for IStreamQuadIterator for more parsing tests
 }
