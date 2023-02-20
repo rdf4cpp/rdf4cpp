@@ -41,8 +41,7 @@ IRI IRI::make_uuid(Node::NodeStorage &node_storage) {
     boost::uuids::uuid u = gen();
     std::stringstream stream{};
     stream << "urn:uuid:" << u;
-    std::string s = stream.str();  // unfortunately there is no string_view into a stringstream
-    return IRI{s, node_storage};
+    return IRI{stream.view(), node_storage};
 }
 
 IRI IRI::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
