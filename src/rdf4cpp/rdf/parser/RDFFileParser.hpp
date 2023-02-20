@@ -41,7 +41,7 @@ public:
         std::unique_ptr<IStreamQuadIterator> iter_;
 
         Iterator();
-        Iterator(std::ifstream &&stream, ParsingFlags flags, storage::node::NodeStorage node_storage);
+        Iterator(std::ifstream &&stream, ParsingFlags flags, const storage::node::NodeStorage &node_storage);
 
     public:
         using value_type = IStreamQuadIterator::value_type;
