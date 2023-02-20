@@ -873,6 +873,19 @@ public:
     [[nodiscard]] Literal concat(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
+     * @param string literal to encode
+     * @return URL encoded string type literal
+     */
+    [[nodiscard]] static Literal encode_for_uri(std::string_view string, NodeStorage &node_storage = NodeStorage::default_instance());
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
+     * @return URL encoded string type literal or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal encode_for_uri(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
      * akin to std::string_view::substr
      * @see https://en.cppreference.com/w/cpp/string/basic_string_view/substr
      * @warning 0-based indexing
