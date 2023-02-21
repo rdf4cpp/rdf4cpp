@@ -200,6 +200,8 @@ public:
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return Literal::make_simple_unchecked(lexical_form, node_storage);
         }
 
         auto value = T::from_string(lexical_form);
@@ -494,6 +496,7 @@ public:
                         return T::from_string(lexical.lexical_form);
                     },
                     [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                        assert(any.datatype == T::datatype_id);
                         return std::any_cast<typename T::cpp_type>(any.value);
                     });
         }

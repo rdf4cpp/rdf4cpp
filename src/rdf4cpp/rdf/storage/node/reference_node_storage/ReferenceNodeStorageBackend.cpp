@@ -2,7 +2,6 @@
 
 #include <array>
 #include <utility>
-#include <functional>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
