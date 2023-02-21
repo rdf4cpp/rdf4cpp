@@ -159,7 +159,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
 
                 auto const next_id_func = [this, datatype]() noexcept {
                     auto const id = next_fallback_literal_id_.fetch_add(1, std::memory_order_relaxed);
-                    if (id >= 1ul << LiteralID::width) [[unlikely]] {
+                    if (id >= (1ul << LiteralID::width)) [[unlikely]] {
                         std::abort();
                     }
 
@@ -174,7 +174,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
                 auto const next_id_func = [this, datatype = any.datatype]() noexcept {
                     return visit_specialized(next_specialized_literal_ids_, datatype, [datatype](auto &lit_id) {
                         auto const id = lit_id.fetch_add(1, std::memory_order_relaxed);
-                        if (id >= 1ul << LiteralID::width) [[unlikely]] {
+                        if (id >= (1ul << LiteralID::width)) [[unlikely]] {
                             std::abort();
                         }
 
@@ -191,7 +191,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::LiteralBac
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::IRIBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, iri_storage_, [this]() noexcept {
         auto const id = next_iri_id_.fetch_add(1, std::memory_order_relaxed);
-        if (id >= 1ul << NodeID::width) [[unlikely]] {
+        if (id >= (1ul << NodeID::width)) [[unlikely]] {
             std::abort();
         }
 
@@ -202,7 +202,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::IRIBackend
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::BNodeBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, bnode_storage_, [this]() noexcept {
         auto const id = next_bnode_id_.fetch_add(1, std::memory_order_relaxed);
-        if (id >= 1ul << NodeID::width) [[unlikely]] {
+        if (id >= (1ul << NodeID::width)) [[unlikely]] {
             std::abort();
         }
 
@@ -213,7 +213,7 @@ identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::BNodeBacke
 identifier::NodeID ReferenceNodeStorageBackend::find_or_make_id(view::VariableBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, variable_storage_, [this]() noexcept {
         auto const id = next_variable_id_.fetch_add(1, std::memory_order_relaxed);
-        if (id >= 1ul << NodeID::width) [[unlikely]] {
+        if (id >= (1ul << NodeID::width)) [[unlikely]] {
             std::abort();
         }
 
