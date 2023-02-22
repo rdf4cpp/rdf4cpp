@@ -3,8 +3,6 @@
 #include <random>
 #include <sstream>
 
-#include <utf8.h>
-
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
@@ -1447,40 +1445,44 @@ Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) c
 }
 
 Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_storage) {
-    std::stringstream stream{};
-    auto it = utf8::iterator(string.begin(), string.begin(), string.end());
-    const auto end = utf8::iterator(string.end(), string.begin(), string.end());
-    // note that ASCII is a subset of UTF-8
-    auto is_valid = [](const uint32_t cp) {
-        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
-            return true;
-        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
-            return true;
-        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
-            return true;
-        if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
-            cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
-            return true;
-        return false;
-    };
-    while (it != end) {
-        const uint32_t cp = *it;
-        if (is_valid(cp)) {
-            stream << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
-        } else {
-            char utf[4]{};
-            const char *utf_end = utf8::append(cp, utf);  // at maximum outputs 4 chars
-            char *utf_it = utf;
-            while (utf_it != utf_end) {
-                char buff[3]{};                                                                                         // biggest char is FF\0
-                std::snprintf(buff, sizeof(buff), "%.2X", static_cast<uint32_t>(static_cast<unsigned char>(*utf_it)));  // make sure we 0-extend instead of sign-extend
-                stream << '%' << buff;
-                ++utf_it;
+    try {
+        std::stringstream stream{};
+        auto it = utf8::iterator(string.begin(), string.begin(), string.end());
+        const auto end = utf8::iterator(string.end(), string.begin(), string.end());
+        // note that ASCII is a subset of UTF-8
+        auto is_valid = [](const uint32_t cp) {
+            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
+                return true;
+            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
+                return true;
+            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
+                return true;
+            if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
+                cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
+                return true;
+            return false;
+        };
+        while (it != end) {
+            const uint32_t cp = *it;
+            if (is_valid(cp)) {
+                stream << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
+            } else {
+                char utf[4]{};
+                const char *utf_end = utf8::append(cp, utf);  // at maximum outputs 4 chars
+                char *utf_it = utf;
+                while (utf_it != utf_end) {
+                    char buff[3]{};                                                                                         // biggest char is FF\0
+                    std::snprintf(buff, sizeof(buff), "%.2X", static_cast<uint32_t>(static_cast<unsigned char>(*utf_it)));  // make sure we 0-extend instead of sign-extend
+                    stream << '%' << buff;
+                    ++utf_it;
+                }
             }
+            ++it;
         }
-        ++it;
+        return make_simple_unchecked(stream.view(), node_storage);
+    } catch (const utf8::exception &e) {  // anything invalid UTF-8 related
+        return Literal{};
     }
-    return make_simple_unchecked(stream.view(), node_storage);
 }
 
 Literal Literal::encode_for_uri(NodeStorage &node_storage) const {

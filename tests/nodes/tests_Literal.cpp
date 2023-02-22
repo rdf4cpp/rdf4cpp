@@ -724,4 +724,7 @@ TEST_CASE("URI encoding") {
         CHECK(Literal::make_lang_tagged(data, "en").encode_for_uri() == Literal::make_simple(data_encoded));
         CHECK(Literal::make_typed(data, IRI{"http://www.w3.org/2001/XMLSchema#string"}).encode_for_uri() == Literal::make_simple(data_encoded));
     }
+    SUBCASE("invalid UTF-8") {
+        CHECK(Literal::encode_for_uri("\xce") == Literal{});
+    }
 }
