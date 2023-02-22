@@ -18,7 +18,7 @@ IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
 IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
     : IRI{visit(datatypes::registry::DatatypeIDVisitor{
                         [&](storage::node::identifier::LiteralType const fixed) -> IRI {
-                            return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(fixed.to_underlying())},
+                            return IRI{NodeBackendHandle{storage::node::identifier::literal_type_to_iri_node_id(fixed),
                                                          storage::node::identifier::RDFNodeType::IRI,
                                                          node_storage.id()}};
                         },

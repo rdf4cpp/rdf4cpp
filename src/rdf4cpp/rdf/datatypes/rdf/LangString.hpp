@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -47,11 +48,24 @@ struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 
+template<>
+struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) const noexcept {
+        using namespace rdf4cpp::rdf::storage::util;
+
+        return robin_hood::hash<std::array<size_t, 2>>{}(
+                std::array<size_t, 2>{
+                        robin_hood::hash<std::string_view>{}(x.lexical_form),
+                        robin_hood::hash<std::string_view>{}(x.language_tag)});
+    }
+};
+
 
 namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline rdf::LangString const rdf_lang_string_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
 
 #endif  //RDF4CPP_RDF_LANGSTRING_HPP

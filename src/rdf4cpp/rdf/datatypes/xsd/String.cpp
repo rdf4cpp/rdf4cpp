@@ -7,16 +7,6 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
-capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_string>::from_string(std::string_view s) {
-    return std::string{s};
-}
-
-template<>
-std::string capabilities::Default<xsd_string>::to_canonical_string(cpp_type const &value) noexcept {
-    return value;
-}
-
-template<>
 bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept {
     return !value.empty();
 }

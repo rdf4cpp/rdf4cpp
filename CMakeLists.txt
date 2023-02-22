@@ -148,6 +148,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
+        src/rdf4cpp/rdf/parser/RDFFileParser.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
@@ -162,7 +163,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/node/identifier/RDFNodeType.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.cpp
-        src/rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.cpp
+        src/rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.cpp
         src/rdf4cpp/rdf/storage/node/view/BNodeBackendView.cpp

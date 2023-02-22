@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
 #include <cstddef>
 #include <vector>
@@ -60,9 +61,6 @@ struct HexBinaryRepr {
     std::strong_ordering operator<=>(HexBinaryRepr const &) const noexcept = default;
 };
 
-
-inline constexpr util::ConstexprString xsd_hex_binary{"http://www.w3.org/2001/XMLSchema#hexBinary"};
-
 template<>
 struct DatatypeMapping<xsd_hex_binary> {
     using cpp_datatype = HexBinaryRepr;
@@ -74,14 +72,15 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 template<>
 std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept;
 
-extern template struct LiteralDatatypeImpl<xsd_hex_binary>;
+extern template struct LiteralDatatypeImpl<xsd_hex_binary,
+                                           capabilities::FixedId>;
 
 } // namespace rdf4cpp::rdf::datatypes::registry
 
-
 namespace rdf4cpp::rdf::datatypes::xsd {
 
-struct HexBinary : registry::LiteralDatatypeImpl<registry::xsd_hex_binary> {};
+struct HexBinary : registry::LiteralDatatypeImpl<registry::xsd_hex_binary,
+                                                 registry::capabilities::FixedId> {};
 
 } // namespace rdf4cpp::rdf::datatypes::xsd
 
@@ -91,5 +90,11 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::HexBinary const xsd_hex_binary_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+
+template<>
+struct std::hash<rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &value) const noexcept;
+};
 
 #endif // RDF4CPP_XSD_HEXBINARY_HPP
