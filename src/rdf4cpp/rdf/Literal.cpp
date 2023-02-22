@@ -1,7 +1,10 @@
 #include "Literal.hpp"
 
-#include <sstream>
 #include <random>
+#include <sstream>
+
+#include <boost/locale.hpp>
+#include <boost/locale/generator.hpp>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
@@ -1407,9 +1410,9 @@ Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    std::string upper;
-    upper.reserve(s.size());
-    std::transform(s.begin(), s.end(), std::back_inserter(upper), [](char const ch) { return std::toupper(ch); });
+    boost::locale::generator gen{};
+    auto loc = gen("en_US.UTF-8");
+    std::string upper = boost::locale::to_upper(s.begin(), s.end(), loc);
 
     return Literal::make_string_like_copy_lang_tag(upper, *this, node_storage);
 }
@@ -1420,9 +1423,9 @@ Literal Literal::lowercase(Node::NodeStorage &node_storage) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    std::string lower;
-    lower.reserve(s.size());
-    std::transform(s.begin(), s.end(), std::back_inserter(lower), [](char const ch) { return std::tolower(ch); });
+    boost::locale::generator gen{};
+    auto loc = gen("en_US.UTF-8");
+    std::string lower = boost::locale::to_lower(s.begin(), s.end(), loc);
 
     return Literal::make_string_like_copy_lang_tag(lower, *this, node_storage);
 }

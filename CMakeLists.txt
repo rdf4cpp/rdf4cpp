@@ -200,6 +200,7 @@ target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
+        Boost::locale
         PRIVATE
         fmt::fmt-header-only
         re2::re2

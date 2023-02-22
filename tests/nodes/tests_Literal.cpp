@@ -565,12 +565,14 @@ TEST_CASE("Literal - misc functions") {
         // from https://www.w3.org/TR/sparql11-query/#func-ucase
         CHECK(("foo"_xsd_string).uppercase() == "FOO"_xsd_string);
         CHECK(Literal::make_lang_tagged("foo", "en").uppercase() == Literal::make_lang_tagged("FOO", "en"));
+        CHECK(Literal::make_simple("\xce\xbb").uppercase() == Literal::make_simple("\xce\x9b"));  // greek lambda
     }
 
     SUBCASE("lcase") {
         // from https://www.w3.org/TR/sparql11-query/#func-lcase
         CHECK(("BAR"_xsd_string).lowercase() == "bar"_xsd_string);
         CHECK(Literal::make_lang_tagged("BAR", "en").lowercase() == Literal::make_lang_tagged("bar", "en"));
+        CHECK(Literal::make_simple("\xce\x9b").lowercase() == Literal::make_simple("\xce\xbb"));  // greek lambda
     }
 
     SUBCASE("contains") {
