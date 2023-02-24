@@ -18,6 +18,7 @@ class Recipe(ConanFile):
     topics = ("rdf", "semantic-web", "sparql", "knowledge-graphs", "C++20")
 
     # Binary configuration
+    package_type = "library"
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}
     default_options = {"shared": False, "fPIC": True}
@@ -25,12 +26,16 @@ class Recipe(ConanFile):
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
 
     def requirements(self):
-        self.requires("expected-lite/0.6.2", transitive_headers=True)
-        self.requires("boost/1.79.0", transitive_headers=True, transitive_libs=True)
-        self.requires("re2/20221201", transitive_headers=True, transitive_libs=True)
+        transitive = {"headers": True, "libs": True, "transitive_headers": True, "transitive_libs": True}
+        transitive_header_only = {"headers": True, "transitive_headers": True}
         header_only_non_transitive = {"headers": True, "libs": False, "build": False, "run": False,
                                       "transitive_libs": False, "transitive_headers": False}
-        self.requires("fmt/9.0.0", **header_only_non_transitive)
+
+        self.requires("expected-lite/0.6.2", **transitive_header_only)
+        self.requires("boost/1.81.0", **transitive)
+        self.requires("re2/20230201", **transitive)
+
+        self.requires("fmt/9.1.0", **header_only_non_transitive)
         self.requires("utfcpp/3.2.3", **header_only_non_transitive)
 
     def set_version(self):
