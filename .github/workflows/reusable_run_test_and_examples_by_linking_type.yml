@@ -66,7 +66,7 @@ jobs:
 
       - name: Build Tests & Examples
         run: |
-          conan install . -s build_type=Release -of build_dir
+          conan install . -s build_type=Release -of build_dir --build missing
           cmake -DDCMAKE_TOOLCHAIN_FILE=build_dir/build/Release/generators/conan_toolchain.cmake \
           -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
           ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
