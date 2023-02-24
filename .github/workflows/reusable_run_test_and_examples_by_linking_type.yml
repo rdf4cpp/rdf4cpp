@@ -51,7 +51,7 @@ jobs:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          pip3 install "conan>=1.59,<2.0" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
