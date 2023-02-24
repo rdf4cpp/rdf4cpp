@@ -40,17 +40,15 @@ jobs:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
-          conan user
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
+          pip3 install "conan>=2.0" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          conan profile detect
 
       - name: Cache conan data
         id: cache-conan
         uses: actions/cache@v3
         with:
           path: ~/.conan/data
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2
 
       - name: Check out sources
         uses: actions/checkout@v3
@@ -61,8 +59,13 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing
-          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
+          conan_name=$(cmake --system-information | awk -F= '$1~/CMAKE_PROJECT_NAME:STATIC/{print$2}')
+          conan_version=$(cmake --system-information | awk -F= '$1~/CMAKE_PROJECT_VERSION:STATIC/{print$2}')
+          conan_user=ci
+          conan_channel=testing
+          
+          conan create . --user ${conan_user} --channel ${conan_channel} -pr:b=default -pr:h=default --build missing
+          conan remove -c "${conan_name}/${conan_version}@${conan_user}/${conan_channel}"
 
   test-fetch-content-static:
     name: Test cmake FetchContent (static lib)

@@ -13,7 +13,7 @@ macro(install_packages_via_conan conanfile conan_options)
     include(${CMAKE_BINARY_DIR}/conan.cmake)
 
     conan_cmake_autodetect(settings)
-    conan_check(VERSION 1 DETECT_QUIET)
+    conan_check(VERSION 2 DETECT_QUIET)
     if (CONAN_CMD)
         conan_cmake_install(PATH_OR_REFERENCE ${conanfile}
                 BUILD missing

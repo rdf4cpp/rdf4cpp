@@ -51,17 +51,15 @@ jobs:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install conan ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
-          conan user
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
+          pip3 install "conan>=2.0" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          conan profile detect
 
       - name: Cache conan data
         id: cache-conan
         uses: actions/cache@v3
         with:
-          path: ~/.conan/data
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+          path: ~/.conan2/data
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2
 
       - name: Check out sources
         uses: actions/checkout@v3
