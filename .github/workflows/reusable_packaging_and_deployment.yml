@@ -59,8 +59,13 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
+          #debub begin
+          cmake --system-information
           conan_name=$(cmake --system-information | awk -F= '$1~/CMAKE_PROJECT_NAME:STATIC/{print$2}')
           conan_version=$(cmake --system-information | awk -F= '$1~/CMAKE_PROJECT_VERSION:STATIC/{print$2}')
+          echo "$conan_name {conan_name}"
+          echo "conan_version {conan_version}"
+          #debub end
           conan_user=ci
           conan_channel=testing
           
