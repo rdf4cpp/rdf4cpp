@@ -44,6 +44,11 @@ class Recipe(ConanFile):
         self.requires("fmt/9.1.0", **header_only_non_transitive)
         self.requires("utfcpp/3.2.3", **header_only_non_transitive)
 
+    def set_version(self):
+        if not hasattr(self, 'version') or self.version is None:
+            cmake_file = load(self, os.path.join(self.recipe_folder, "CMakeLists.txt"))
+            self.version = re.search(r"project\([^)]*VERSION\s+(\d+\.\d+.\d+)[^)]*\)", cmake_file).group(1)
+
     def config_options(self):
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
