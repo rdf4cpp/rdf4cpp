@@ -9,7 +9,7 @@ jobs:
     with:
       os: ubuntu-22.04
       compiler: clang-14
-      cmake-version: 3.22.6
+      cmake-version: 3.23.5
 
   packaging-and-deployment-tests-gcc:
     name: Packaging and deployment tests gcc-12
@@ -17,4 +17,4 @@ jobs:
     with:
       os: ubuntu-22.04
       compiler: gcc-12
-      cmake-version: 3.22.6
+      cmake-version: 3.23.5

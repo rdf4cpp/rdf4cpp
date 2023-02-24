@@ -28,7 +28,7 @@ jobs:
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
-      cmake-version: 3.22.6
+      cmake-version: 3.23.5
       with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' }}
       with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-14' }}
     secrets:
