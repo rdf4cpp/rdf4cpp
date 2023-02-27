@@ -728,3 +728,12 @@ TEST_CASE("URI encoding") {
         CHECK(Literal::encode_for_uri("\xce") == Literal{});
     }
 }
+
+TEST_CASE("UUID") {
+    Literal uuid = Literal::make_string_uuid();
+    Literal uuid2 = Literal::make_string_uuid();
+
+    CHECK(uuid.datatype() == IRI{"http://www.w3.org/2001/XMLSchema#string"});
+    CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
+    CHECK(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}) == util::TriBool::True);
+}
