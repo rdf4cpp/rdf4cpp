@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
 #define RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
 
+#include <atomic>
 #include <tuple>
 
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
@@ -43,21 +44,23 @@ private:
                NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>>,
                NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>> specialized_literal_storage_;
 
-    LiteralID next_literal_id = NodeID::min_literal_id;
-    NodeID next_bnode_id = NodeID::min_bnode_id;
-    NodeID next_iri_id = NodeID::min_iri_id;
-    NodeID next_variable_id = NodeID::min_variable_id;
+    std::atomic<uint64_t> next_fallback_literal_id_{NodeID::min_literal_id.value};
+    std::array<std::atomic<uint64_t>, std::tuple_size_v<decltype(specialized_literal_storage_)>> next_specialized_literal_ids_;
+
+    std::atomic<uint64_t> next_bnode_id_{NodeID::min_bnode_id.value()};
+    std::atomic<uint64_t> next_iri_id_{NodeID::min_iri_id.value()};
+    std::atomic<uint64_t> next_variable_id_{NodeID::min_variable_id.value()};
 
     /**
-     * Calls the given function f with the specialized node storage for the given datatype
+     * Calls the given function f with the specialized object for the given datatype
      *
-     * @param self a reference to a ReferenceNodeStorageBackend
-     * @param datatype the datatype of the specialized storage
-     * @param f the function to call with the corresponding specialized storage
+     * @param self any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
+     * @param datatype the datatype of the specialized object
+     * @param f the function to call with the corresponding specialized object
      * @return whatever f returns
      */
-    template<typename Self, typename F>
-    static decltype(auto) visit_specialized(Self &&self, identifier::LiteralType datatype, F f);
+    template<typename S, typename F>
+    static decltype(auto) visit_specialized(S &&container, identifier::LiteralType datatype, F f);
 
 public:
     ReferenceNodeStorageBackend() noexcept;
