@@ -40,7 +40,7 @@ jobs:
       - name: Install systemlib boost for FetchContent
         run: |
           # FetchContent does not handle transitive dependencies and doesn't run conan.
-          sudo apt-get install libboost-math-dev
+          sudo apt-get install libboost-math-dev libboost-locale-dev
       - name: Check out sources
         uses: actions/checkout@v3
 
