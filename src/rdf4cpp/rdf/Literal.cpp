@@ -1,7 +1,11 @@
 #include "Literal.hpp"
 
-#include <sstream>
 #include <random>
+#include <sstream>
+
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
@@ -142,6 +146,13 @@ Literal Literal::make_boolean(util::TriBool const b, Node::NodeStorage &node_sto
     }
 
     return Literal::make_typed_from_value<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+}
+
+Literal Literal::make_string_uuid(Node::NodeStorage &node_storage) {
+    boost::uuids::random_generator_mt19937 gen{};
+    boost::uuids::uuid u = gen();
+    std::string s = boost::uuids::to_string(u);
+    return make_simple(s, node_storage);
 }
 
 Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {

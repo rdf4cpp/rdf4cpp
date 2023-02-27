@@ -697,3 +697,12 @@ TEST_CASE("Literal - misc functions") {
 TEST_CASE("indirect casting precision") {
     CHECK(Literal::make_typed_from_value<datatypes::xsd::Double>(2e-1) + Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{"0.2"}) == Literal::make_typed_from_value<datatypes::xsd::Double>(4e-1));
 }
+
+TEST_CASE("UUID") {
+    Literal uuid = Literal::make_string_uuid();
+    Literal uuid2 = Literal::make_string_uuid();
+
+    CHECK(uuid.datatype() == IRI{"http://www.w3.org/2001/XMLSchema#string"});
+    CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
+    CHECK(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}) == util::TriBool::True);
+}

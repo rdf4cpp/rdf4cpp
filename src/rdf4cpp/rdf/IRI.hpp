@@ -51,6 +51,12 @@ public:
      */
     [[nodiscard]] static IRI make(std::string_view iri, NodeStorage &node_storage = NodeStorage::default_instance());
 
+    /**
+     * creates a new IRI containing a random UUID (Universally Unique IDentifier)
+     * @return UUID IRI
+     */
+    [[nodiscard]] static IRI make_uuid(NodeStorage &node_storage = NodeStorage::default_instance());
+
     [[nodiscard]] IRI to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
