@@ -698,6 +698,37 @@ TEST_CASE("indirect casting precision") {
     CHECK(Literal::make_typed_from_value<datatypes::xsd::Double>(2e-1) + Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{"0.2"}) == Literal::make_typed_from_value<datatypes::xsd::Double>(4e-1));
 }
 
+TEST_CASE("URI encoding") {
+    static constexpr const char *data = "www.example %\t*}.com";
+    static constexpr const char *data_encoded = "www.example%20%25%09%2A%7D.com";
+    SUBCASE("valid URI") {
+        static constexpr const char *str = "www.example123_-AZaz09~.com";
+        CHECK(Literal::encode_for_uri(str) == Literal::make_simple(str));
+    }
+    SUBCASE("ASCII escapes") {
+        CHECK(Literal::encode_for_uri(" %\t*}") == Literal::make_simple("%20%25%09%2A%7D"));
+    }
+    SUBCASE("ASCII mixed") {
+        CHECK(Literal::encode_for_uri(data) == Literal::make_simple(data_encoded));
+    }
+    SUBCASE("high UTF-8") {
+        CHECK(Literal::encode_for_uri("\xce\xa4") == Literal::make_simple("%CE%A4"));                // greek capital sigma
+        CHECK(Literal::encode_for_uri("\xf0\x90\x8f\x92") == Literal::make_simple("%F0%90%8F%92"));  // old persian 2
+        CHECK(Literal::encode_for_uri("\xe2\x88\x80") == Literal::make_simple("%E2%88%80"));         // math forall
+    }
+    SUBCASE("high UTF-8 mixed") {
+        CHECK(Literal::encode_for_uri("www.e\xce\xa4\xf0\x90\x8f\x92\xe2\x88\x80xample.com") == Literal::make_simple("www.e%CE%A4%F0%90%8F%92%E2%88%80xample.com"));
+    }
+    SUBCASE("nonstatic") {
+        CHECK(Literal::make_simple(data).encode_for_uri() == Literal::make_simple(data_encoded));
+        CHECK(Literal::make_lang_tagged(data, "en").encode_for_uri() == Literal::make_simple(data_encoded));
+        CHECK(Literal::make_typed(data, IRI{"http://www.w3.org/2001/XMLSchema#string"}).encode_for_uri() == Literal::make_simple(data_encoded));
+    }
+    SUBCASE("invalid UTF-8") {
+        CHECK(Literal::encode_for_uri("\xce") == Literal{});
+    }
+}
+
 TEST_CASE("UUID") {
     Literal uuid = Literal::make_string_uuid();
     Literal uuid2 = Literal::make_string_uuid();
