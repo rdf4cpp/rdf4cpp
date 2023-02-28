@@ -692,6 +692,11 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "en"), "Z"_xsd_string) == Literal::make_lang_tagged("aZcd", "en"));
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
     }
+
+    SUBCASE("hashes") {
+        CHECK(Literal::make_simple("password").md5() == Literal::make_simple("5f4dcc3b5aa765d61d8327deb882cf99"));
+        CHECK(Literal::make_simple("password").sha1() == Literal::make_simple("5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8"));  // note that this hash contains bytes < 0x10, which checks 0 padding
+    }
 }
 
 TEST_CASE("indirect casting precision") {

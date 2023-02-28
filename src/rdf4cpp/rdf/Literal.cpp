@@ -12,6 +12,8 @@
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
 #include <rdf4cpp/rdf/util/Utf8.hpp>
 
+#include <openssl/evp.h>
+
 namespace rdf4cpp::rdf {
 
 Literal::Literal(Node::NodeBackendHandle handle) noexcept
@@ -1554,6 +1556,36 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
     auto const len_ix = static_cast<size_t>(std::round(len_val) - (start_val < 1.0 ? std::round(1.0 - start_val) : 0.0));
 
     return this->substr(start_ix, len_ix, node_storage);
+}
+
+Literal Literal::hash_with(const char *alg, NodeStorage &node_storage) const {
+    if (!this->is_string_like())
+        return Literal{};
+
+    auto s = this->lexical_form();
+    auto v = s.view();
+
+    unsigned char hash_buffer[EVP_MAX_MD_SIZE];
+    size_t len = 0;
+
+    if (!EVP_Q_digest(nullptr, alg, nullptr, &v[0], v.size(), hash_buffer, &len))
+        return Literal{};
+
+    std::stringstream stream{};
+
+    stream << std::hex << std::setfill('0');
+    for (size_t i = 0; i < len; ++i)
+        stream << std::setw(2) << static_cast<unsigned int>(hash_buffer[i]);
+
+    return Literal::make_simple(stream.view(), node_storage);
+}
+
+Literal Literal::md5(NodeStorage &node_storage) const {
+    return this->hash_with("MD5", node_storage);
+}
+
+Literal Literal::sha1(NodeStorage &node_storage) const {
+    return this->hash_with("SHA1", node_storage);
 }
 
 bool lang_matches(std::string_view const lang_tag, std::string_view const lang_range) noexcept {

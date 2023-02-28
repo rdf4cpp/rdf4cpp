@@ -920,6 +920,26 @@ public:
                                  Literal const &len = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
                                  NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+private:
+    /**
+     * hash via OpenSSL
+     * @param alg OpenSSL hash algorithm identifier
+     * @return hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal hash_with(const char *alg, NodeStorage &node_storage) const;
+
+public:
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-md5
+     * @return MD5 hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal md5(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-sha1
+     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal sha1(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
     /**
      * @return the effective boolean value of this
      */
