@@ -278,6 +278,12 @@ public:
     static Literal make_boolean(util::TriBool b, NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
+     * creates a new string Literal containing a random UUID (Universally Unique IDentifier)
+     * @return UUID Literal
+     */
+    [[nodiscard]] static Literal make_string_uuid(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
      * Generates a random double in the range [0.0, 1.0).
      * The values are generated in a thread-safe manner using a lazily initialized thread_local random generator.
      *
@@ -871,6 +877,19 @@ public:
      * @return a string-like type that is the concatenation of the lexical forms of this and other
      */
     [[nodiscard]] Literal concat(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
+     * @param string literal to encode
+     * @return URL encoded string type literal
+     */
+    [[nodiscard]] static Literal encode_for_uri(std::string_view string, NodeStorage &node_storage = NodeStorage::default_instance());
+    /**
+     * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
+     * @return URL encoded string type literal or the null literal if
+     *      - this is not string-like
+     */
+    [[nodiscard]] Literal encode_for_uri(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * akin to std::string_view::substr

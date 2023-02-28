@@ -192,3 +192,11 @@ TEST_CASE("effective boolean value") {
     CHECK(null_lit.ebv() == util::TriBool::Err);
     CHECK(null_bnode.ebv() == util::TriBool::Err);
 }
+
+TEST_CASE("IRI UUID") {
+    IRI uuid = IRI::make_uuid();
+    IRI uuid2 = IRI::make_uuid();
+
+    CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
+    CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
+}
