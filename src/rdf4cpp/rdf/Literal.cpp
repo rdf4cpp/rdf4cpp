@@ -1420,6 +1420,11 @@ Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
+    // according to https://www.w3.org/TR/sparql11-query/#func-ucase which links to https://www.w3.org/TR/xpath-functions/#func-upper-case
+    // we should make a locale independent case conversion here
+    // en_US should be as close as it gets, because it is not using any locale specific conversions
+    // (there seems to be no library that is capable of a locale independent case conversion to unicode standards)
+
     auto const s = this->lexical_form();
     boost::locale::generator gen{};
     auto loc = gen("en_US.UTF-8");
@@ -1432,6 +1437,8 @@ Literal Literal::lowercase(Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
+
+    // see uppercase for conversion notes
 
     auto const s = this->lexical_form();
     boost::locale::generator gen{};
