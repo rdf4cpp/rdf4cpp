@@ -1588,6 +1588,18 @@ Literal Literal::sha1(NodeStorage &node_storage) const {
     return this->hash_with("SHA1", node_storage);
 }
 
+Literal Literal::sha256(NodeStorage &node_storage) const {
+    return this->hash_with("SHA2-256", node_storage);
+}
+
+Literal Literal::sha384(NodeStorage &node_storage) const {
+    return this->hash_with("SHA2-384", node_storage);
+}
+
+Literal Literal::sha512(NodeStorage &node_storage) const {
+    return this->hash_with("SHA2-512", node_storage);
+}
+
 bool lang_matches(std::string_view const lang_tag, std::string_view const lang_range) noexcept {
     if (lang_range.empty()) {
         return lang_tag.empty();

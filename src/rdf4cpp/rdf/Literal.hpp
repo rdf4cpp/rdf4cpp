@@ -939,6 +939,23 @@ public:
      * @return SHA1 hash as simple literal, or null literal if this is not string-like
      */
     [[nodiscard]] Literal sha1(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-sha256
+     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal sha256(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-sha384
+     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal sha384(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * @see https://www.w3.org/TR/sparql11-query/#func-sha512
+     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     */
+    [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
 
     /**
      * @return the effective boolean value of this
