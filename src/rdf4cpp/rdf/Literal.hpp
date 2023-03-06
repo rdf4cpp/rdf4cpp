@@ -579,15 +579,19 @@ public:
 
     [[nodiscard]] Literal add(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator+(Literal const &other) const noexcept;
+    Literal &operator+=(Literal const &other) noexcept;
 
     [[nodiscard]] Literal sub(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator-(Literal const &other) const noexcept;
+    Literal &operator-=(Literal const &other) noexcept;
 
     [[nodiscard]] Literal mul(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator*(Literal const &other) const noexcept;
+    Literal &operator*=(Literal const &other) noexcept;
 
     [[nodiscard]] Literal div(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator/(Literal const &other) const noexcept;
+    Literal &operator/=(Literal const &other) noexcept;
 
     [[nodiscard]] Literal pos(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
     Literal operator+() const noexcept;

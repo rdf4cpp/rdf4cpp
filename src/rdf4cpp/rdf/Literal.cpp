@@ -966,47 +966,76 @@ bool Literal::is_string_like() const noexcept {
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.add_fptr;
-    }, other, node_storage);
+    },
+                                    other, node_storage);
 }
 
 Literal Literal::operator+(Literal const &other) const noexcept {
     return this->add(other);
 }
 
+Literal &Literal::operator+=(const Literal &other) noexcept {
+    auto result = *this + other;
+    this->handle_ = result.handle_;
+    return *this;
+}
+
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.sub_fptr;
-    }, other, node_storage);
+    },
+                                    other, node_storage);
 }
 
 Literal Literal::operator-(Literal const &other) const noexcept {
     return this->sub(other);
 }
 
+Literal &Literal::operator-=(const Literal &other) noexcept {
+    auto result = *this - other;
+    this->handle_ = result.handle_;
+    return *this;
+}
+
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.mul_fptr;
-    }, other, node_storage);
+    },
+                                    other, node_storage);
 }
 
 Literal Literal::operator*(Literal const &other) const noexcept {
     return this->mul(other);
 }
 
+Literal &Literal::operator*=(const Literal &other) noexcept {
+    auto result = *this * other;
+    this->handle_ = result.handle_;
+    return *this;
+}
+
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.div_fptr;
-    }, other, node_storage);
+    },
+                                    other, node_storage);
 }
 
 Literal Literal::operator/(Literal const &other) const noexcept {
     return this->div(other);
 }
 
+Literal &Literal::operator/=(const Literal &other) noexcept {
+    auto result = *this / other;
+    this->handle_ = result.handle_;
+    return *this;
+}
+
 Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
     return this->numeric_unop_impl([](auto const &num_ops) noexcept {
         return num_ops.pos_fptr;
-    }, node_storage);
+    },
+                                   node_storage);
 }
 
 Literal Literal::operator+() const noexcept {
