@@ -1,5 +1,7 @@
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(OpenSSL REQUIRED)
+
 add_executable(graphs_and_datasets_example graphs_and_datasets.cpp)
 target_link_libraries(graphs_and_datasets_example PRIVATE
         rdf4cpp::rdf4cpp

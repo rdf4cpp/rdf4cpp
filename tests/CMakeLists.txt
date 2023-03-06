@@ -5,9 +5,11 @@ include(FetchContent)
 FetchContent_Declare(
         DocTest
         GIT_REPOSITORY "https://github.com/onqtam/doctest"
-        GIT_TAG  "v2.4.8"
+        GIT_TAG "v2.4.8"
 )
 FetchContent_MakeAvailable(DocTest)
+
+find_package(OpenSSL REQUIRED)
 
 # add the executable for all tests
 add_executable(tests_Variable query/tests_Variable.cpp)
