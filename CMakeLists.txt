@@ -65,6 +65,14 @@ if (NOT utf8cpp_FOUND)
     message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
+FETCHCONTENT_DECLARE(
+        uni-algo
+        GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
+        GIT_SHALLOW ON
+        GIT_TAG v0.7.1
+)
+FetchContent_MakeAvailable(uni-algo)
+
 set(serd_source_files
         include/serd/serd.h
         src/attributes.h
@@ -204,6 +212,7 @@ target_link_libraries(rdf4cpp
         fmt::fmt-header-only
         re2::re2
         utf8cpp
+        uni-algo::uni-algo
 )
 
 set_target_properties(rdf4cpp PROPERTIES
@@ -216,7 +225,7 @@ set_target_properties(rdf4cpp PROPERTIES
 
 if (IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
-    install_cpp_library(rdf4cpp src)
+    install_cpp_library(rdf4cpp src uni-algo)
 endif ()
 
 if (BUILD_TESTING AND IS_TOP_LEVEL)

@@ -7,6 +7,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <uni_algo/case.h>
+
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
@@ -1418,9 +1420,7 @@ Literal Literal::uppercase(Node::NodeStorage &node_storage) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    std::string upper;
-    upper.reserve(s.size());
-    std::transform(s.begin(), s.end(), std::back_inserter(upper), [](char const ch) { return std::toupper(ch); });
+    auto const upper = una::cases::to_uppercase_utf8(s.view());
 
     return Literal::make_string_like_copy_lang_tag(upper, *this, node_storage);
 }
@@ -1431,9 +1431,7 @@ Literal Literal::lowercase(Node::NodeStorage &node_storage) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    std::string lower;
-    lower.reserve(s.size());
-    std::transform(s.begin(), s.end(), std::back_inserter(lower), [](char const ch) { return std::tolower(ch); });
+    const auto lower = una::cases::to_lowercase_utf8(s.view());
 
     return Literal::make_string_like_copy_lang_tag(lower, *this, node_storage);
 }
