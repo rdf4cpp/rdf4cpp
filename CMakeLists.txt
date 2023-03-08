@@ -73,6 +73,8 @@ FETCHCONTENT_DECLARE(
 )
 FetchContent_MakeAvailable(uni-algo)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
+
 set(serd_source_files
         include/serd/serd.h
         src/attributes.h
