@@ -974,10 +974,14 @@ Literal Literal::operator+(Literal const &other) const noexcept {
     return this->add(other);
 }
 
-Literal &Literal::operator+=(const Literal &other) noexcept {
-    auto result = *this + other;
+Literal &Literal::add_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->add(other, node_storage);
     this->handle_ = result.handle_;
     return *this;
+}
+
+Literal &Literal::operator+=(const Literal &other) noexcept {
+    return this->add_assign(other);
 }
 
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
@@ -991,10 +995,14 @@ Literal Literal::operator-(Literal const &other) const noexcept {
     return this->sub(other);
 }
 
-Literal &Literal::operator-=(const Literal &other) noexcept {
-    auto result = *this - other;
+Literal &Literal::sub_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->sub(other, node_storage);
     this->handle_ = result.handle_;
     return *this;
+}
+
+Literal &Literal::operator-=(const Literal &other) noexcept {
+    return this->sub_assign(other);
 }
 
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
@@ -1008,10 +1016,14 @@ Literal Literal::operator*(Literal const &other) const noexcept {
     return this->mul(other);
 }
 
-Literal &Literal::operator*=(const Literal &other) noexcept {
-    auto result = *this * other;
+Literal &Literal::mul_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->mul(other, node_storage);
     this->handle_ = result.handle_;
     return *this;
+}
+
+Literal &Literal::operator*=(const Literal &other) noexcept {
+    return this->mul_assign(other);
 }
 
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
@@ -1025,10 +1037,14 @@ Literal Literal::operator/(Literal const &other) const noexcept {
     return this->div(other);
 }
 
-Literal &Literal::operator/=(const Literal &other) noexcept {
-    auto result = *this / other;
+Literal &Literal::div_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->div(other, node_storage);
     this->handle_ = result.handle_;
     return *this;
+}
+
+Literal &Literal::operator/=(const Literal &other) noexcept {
+    return this->div_assign(other);
 }
 
 Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
