@@ -66,6 +66,8 @@ if (NOT utf8cpp_FOUND)
     message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
+
 set(serd_source_files
         include/serd/serd.h
         src/attributes.h
