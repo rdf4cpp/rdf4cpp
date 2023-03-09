@@ -28,7 +28,7 @@ class Recipe(ConanFile):
                 "boost/1.79.0",
                 "re2/20221201",
                 ("utfcpp/3.2.3", "private"),
-                ("openssl/3.0.8", "private"))
+                "openssl/3.0.8")
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
