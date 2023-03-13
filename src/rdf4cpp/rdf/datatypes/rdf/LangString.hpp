@@ -1,11 +1,50 @@
 #ifndef RDF4CPP_RDF_LANGSTRING_HPP
 #define RDF4CPP_RDF_LANGSTRING_HPP
 
+#include <optional>
+#include <string_view>
+
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
+
+namespace lang_tags {
+enum class InlinedTags : u_int8_t {
+    en,
+    de,
+    fr,
+    ch,
+};
+constexpr size_t inlined_size = 2;
+
+constexpr const char *from_inlined(InlinedTags t) noexcept {
+    switch (t) {
+        case InlinedTags::en:
+            return "en";
+        case InlinedTags::de:
+            return "de";
+        case InlinedTags::fr:
+            return "fr";
+        case InlinedTags::ch:
+            return "ch";
+        default:
+            return "";
+    }
+}
+constexpr std::optional<InlinedTags> try_into_inlined(std::string_view t) noexcept {
+    if (t == "en")
+        return InlinedTags::en;
+    if (t == "de")
+        return InlinedTags::de;
+    if (t == "fr")
+        return InlinedTags::fr;
+    if (t == "ch")
+        return InlinedTags::ch;
+    return std::nullopt;
+}
+}  // namespace lang_tags
 
 struct LangStringRepr {
     std::string_view lexical_form;
