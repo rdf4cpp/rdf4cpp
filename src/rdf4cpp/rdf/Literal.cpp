@@ -964,10 +964,11 @@ bool Literal::is_string_like() const noexcept {
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // clang-format off
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.add_fptr;
-    },
-                                    other, node_storage);
+    }, other, node_storage);
+    // clang-format on
 }
 
 Literal Literal::operator+(Literal const &other) const noexcept {
@@ -985,10 +986,11 @@ Literal &Literal::operator+=(const Literal &other) noexcept {
 }
 
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // clang-format off
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.sub_fptr;
-    },
-                                    other, node_storage);
+    }, other, node_storage);
+    // clang-format on
 }
 
 Literal Literal::operator-(Literal const &other) const noexcept {
@@ -1006,10 +1008,11 @@ Literal &Literal::operator-=(const Literal &other) noexcept {
 }
 
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // clang-format off
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.mul_fptr;
-    },
-                                    other, node_storage);
+    }, other, node_storage);
+    // clang-format on
 }
 
 Literal Literal::operator*(Literal const &other) const noexcept {
@@ -1027,10 +1030,11 @@ Literal &Literal::operator*=(const Literal &other) noexcept {
 }
 
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // clang-format off
     return this->numeric_binop_impl([](auto const &num_ops) noexcept {
         return num_ops.div_fptr;
-    },
-                                    other, node_storage);
+    }, other, node_storage);
+    // clang-format on
 }
 
 Literal Literal::operator/(Literal const &other) const noexcept {
@@ -1048,10 +1052,11 @@ Literal &Literal::operator/=(const Literal &other) noexcept {
 }
 
 Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
+    // clang-format off
     return this->numeric_unop_impl([](auto const &num_ops) noexcept {
         return num_ops.pos_fptr;
-    },
-                                   node_storage);
+    }, node_storage);
+    // clang-format on
 }
 
 Literal Literal::operator+() const noexcept {
