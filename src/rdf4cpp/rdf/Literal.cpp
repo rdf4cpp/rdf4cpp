@@ -1559,7 +1559,7 @@ Literal Literal::substr(Literal const &start, Literal const &len, Node::NodeStor
 }
 
 Literal Literal::hash_with(const char *alg, NodeStorage &node_storage) const {
-    if (!this->is_string_like())
+    if (this->handle_.node_id().literal_type() != datatypes::xsd::String::fixed_id)
         return Literal{};
 
     auto s = this->lexical_form();

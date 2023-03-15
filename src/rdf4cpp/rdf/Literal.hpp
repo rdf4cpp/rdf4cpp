@@ -923,36 +923,36 @@ public:
 private:
     /**
      * hash via OpenSSL
-     * @param alg OpenSSL hash algorithm identifier
-     * @return hash as simple literal, or null literal if this is not string-like
+     * @param alg OpenSSL hash algorithm identifier (see https://www.openssl.org/docs/man1.1.1/man3/EVP_Digest.html for all available hash algorithms)
+     * @return hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal hash_with(const char *alg, NodeStorage &node_storage) const;
 
 public:
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-md5
-     * @return MD5 hash as simple literal, or null literal if this is not string-like
+     * @return MD5 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal md5(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-sha1
-     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     * @return SHA1 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal sha1(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-sha256
-     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     * @return SHA2-256 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal sha256(NodeStorage &node_storage = NodeStorage::default_instance()) const;
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-sha384
-     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     * @return SHA2-384 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal sha384(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-sha512
-     * @return SHA1 hash as simple literal, or null literal if this is not string-like
+     * @return SHA2-512 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
