@@ -135,6 +135,12 @@ private:
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+    /**
+     * Creates a normal accessible Literal from a lang tagged string.
+     * Do not leak this, this would make lang tag inlining useless.
+     * @return de inlined lang tagged literal
+     */
+    [[nodiscard]] Literal lang_tagged_get_de_inlined() const noexcept;
 
     /**
      * Checks if the dynamic datatype of this is equal to datatype
@@ -478,6 +484,10 @@ public:
 
         if constexpr (datatypes::IsInlineable<T>) {
             if (this->is_inlined()) {
+                if (this->datatype_eq<datatypes::rdf::LangString>()) {
+                    return this->lang_tagged_get_de_inlined().value<T>();
+                }
+
                 auto const inlined_value = this->handle_.node_id().literal_id().value;
                 return T::from_inlined(inlined_value);
             }
