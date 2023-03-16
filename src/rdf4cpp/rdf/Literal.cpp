@@ -966,49 +966,99 @@ bool Literal::is_string_like() const noexcept {
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
-        return num_ops.add_fptr;
-    }, other, node_storage);
+    return this->numeric_binop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.add_fptr;
+            },
+            other, node_storage);
 }
 
 Literal Literal::operator+(Literal const &other) const noexcept {
     return this->add(other);
 }
 
+Literal &Literal::add_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->add(other, node_storage);
+    this->handle_ = result.handle_;
+    return *this;
+}
+
+Literal &Literal::operator+=(const Literal &other) noexcept {
+    return this->add_assign(other);
+}
+
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
-        return num_ops.sub_fptr;
-    }, other, node_storage);
+    return this->numeric_binop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.sub_fptr;
+            },
+            other, node_storage);
 }
 
 Literal Literal::operator-(Literal const &other) const noexcept {
     return this->sub(other);
 }
 
+Literal &Literal::sub_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->sub(other, node_storage);
+    this->handle_ = result.handle_;
+    return *this;
+}
+
+Literal &Literal::operator-=(const Literal &other) noexcept {
+    return this->sub_assign(other);
+}
+
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
-        return num_ops.mul_fptr;
-    }, other, node_storage);
+    return this->numeric_binop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.mul_fptr;
+            },
+            other, node_storage);
 }
 
 Literal Literal::operator*(Literal const &other) const noexcept {
     return this->mul(other);
 }
 
+Literal &Literal::mul_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->mul(other, node_storage);
+    this->handle_ = result.handle_;
+    return *this;
+}
+
+Literal &Literal::operator*=(const Literal &other) noexcept {
+    return this->mul_assign(other);
+}
+
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_binop_impl([](auto const &num_ops) noexcept {
-        return num_ops.div_fptr;
-    }, other, node_storage);
+    return this->numeric_binop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.div_fptr;
+            },
+            other, node_storage);
 }
 
 Literal Literal::operator/(Literal const &other) const noexcept {
     return this->div(other);
 }
 
+Literal &Literal::div_assign(const Literal &other, NodeStorage &node_storage) noexcept {
+    auto result = this->div(other, node_storage);
+    this->handle_ = result.handle_;
+    return *this;
+}
+
+Literal &Literal::operator/=(const Literal &other) noexcept {
+    return this->div_assign(other);
+}
+
 Literal Literal::pos(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.pos_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.pos_fptr;
+            },
+            node_storage);
 }
 
 Literal Literal::operator+() const noexcept {
@@ -1016,9 +1066,11 @@ Literal Literal::operator+() const noexcept {
 }
 
 Literal Literal::neg(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.neg_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.neg_fptr;
+            },
+            node_storage);
 }
 
 Literal Literal::operator-() const noexcept {
@@ -1026,27 +1078,35 @@ Literal Literal::operator-() const noexcept {
 }
 
 Literal Literal::abs(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.abs_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.abs_fptr;
+            },
+            node_storage);
 }
 
 Literal Literal::round(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.round_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.round_fptr;
+            },
+            node_storage);
 }
 
 Literal Literal::floor(Node::NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.floor_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.floor_fptr;
+            },
+            node_storage);
 }
 
 Literal Literal::ceil(NodeStorage &node_storage) const noexcept {
-    return this->numeric_unop_impl([](auto const &num_ops) noexcept {
-        return num_ops.ceil_fptr;
-    }, node_storage);
+    return this->numeric_unop_impl(
+            [](auto const &num_ops) noexcept {
+                return num_ops.ceil_fptr;
+            },
+            node_storage);
 }
 
 util::TriBool Literal::ebv() const noexcept {

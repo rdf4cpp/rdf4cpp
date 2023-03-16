@@ -447,3 +447,26 @@ TEST_CASE("complex hierarchy") {
     GENERATE_HIERARCHY_TEST(C, Y, Z);
     GENERATE_HIERARCHY_TEST(Z, Y, Z);
 }
+
+TEST_CASE("compound assignment operators") {
+    const auto ten = 10_xsd_int;
+    const auto five = 5_xsd_int;
+    const auto two = 2_xsd_int;
+
+    auto curr = five;
+    curr += five;
+    CHECK(curr == ten);
+
+    curr -= five;
+    CHECK(curr == five);
+
+    curr *= two;
+    CHECK(curr == ten);
+
+    curr /= two;
+    CHECK(curr == five);
+
+    const auto str = Literal::make_simple("some string");
+    curr += str;
+    CHECK(curr.null());
+}
