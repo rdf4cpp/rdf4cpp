@@ -65,13 +65,15 @@ if (NOT utf8cpp_FOUND)
     message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
-FETCHCONTENT_DECLARE(
-        uni-algo
-        GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
-        GIT_SHALLOW ON
-        GIT_TAG v0.7.1
-)
-FetchContent_MakeAvailable(uni-algo)
+if (NOT uni-algo_FOUND)
+    FETCHCONTENT_DECLARE(
+            uni-algo
+            GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
+            GIT_SHALLOW ON
+            GIT_TAG v0.7.1
+    )
+    FetchContent_MakeAvailable(uni-algo)
+endif ()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
 
