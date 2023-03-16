@@ -68,6 +68,7 @@ if (NOT utf8cpp_FOUND)
 endif ()
 
 if (NOT uni-algo_FOUND)
+    set(UNI_ALGO_INSTALL On)
     FetchContent_Declare(
             fetchuni-algo
             GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
@@ -232,7 +233,7 @@ set_target_properties(rdf4cpp PROPERTIES
 
 if (IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
-    install_cpp_library(rdf4cpp src uni-algo)
+    install_cpp_library(rdf4cpp src)
 endif ()
 
 if (BUILD_TESTING AND IS_TOP_LEVEL)
