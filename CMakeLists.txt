@@ -17,6 +17,7 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(utf8cpp QUIET)
 find_package(OpenSSL REQUIRED)
+find_package(uni-algo QUIET)
 
 include(FetchContent)
 
@@ -34,12 +35,12 @@ endif ()
 
 if (NOT expected-lite_FOUND)
     FetchContent_Declare(
-            expected-lite
+            fetchexpected-lite
             GIT_REPOSITORY https://github.com/martinmoene/expected-lite
             GIT_TAG 95b9cb015fa17baa749c2b396b335906e1596a9e # v0.6.2
     )
 
-    FetchContent_MakeAvailable(expected-lite)
+    FetchContent_MakeAvailable(fetchexpected-lite)
     message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
 
@@ -59,7 +60,7 @@ if (NOT utf8cpp_FOUND)
     FetchContent_Declare(
             fetchutfcpp
             GIT_REPOSITORY https://github.com/nemtrif/utfcpp
-            GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v3.2.3
+            GIT_TAG 79835a5fa57271f07a90ed36123e30ae9741178e # v3.2.3
     )
 
     FetchContent_MakeAvailable(fetchutfcpp)
@@ -67,13 +68,13 @@ if (NOT utf8cpp_FOUND)
 endif ()
 
 if (NOT uni-algo_FOUND)
-    FETCHCONTENT_DECLARE(
-            uni-algo
+    FetchContent_Declare(
+            fetchuni-algo
             GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
             GIT_SHALLOW ON
             GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v0.7.1
     )
-    FetchContent_MakeAvailable(uni-algo)
+    FetchContent_MakeAvailable(fetchuni-algo)
 endif ()
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
