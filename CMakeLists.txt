@@ -16,6 +16,7 @@ find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(utf8cpp QUIET)
+find_package(OpenSSL REQUIRED)
 
 include(FetchContent)
 
@@ -216,8 +217,9 @@ target_link_libraries(rdf4cpp
         fmt::fmt-header-only
         re2::re2
         utf8cpp
+        OpenSSL::Crypto
         uni-algo::uni-algo
-)
+        )
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}
