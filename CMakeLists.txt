@@ -46,7 +46,7 @@ if (NOT re2_FOUND)
     FetchContent_Declare(
             fetchre2
             GIT_REPOSITORY https://github.com/google/re2
-            GIT_TAG 2022-12-01
+            GIT_TAG 4be240789d5b322df9f02b7e19c8651f3ccbf205 # 2022-12-01
     )
 
     set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
@@ -58,7 +58,7 @@ if (NOT utf8cpp_FOUND)
     FetchContent_Declare(
             fetchutfcpp
             GIT_REPOSITORY https://github.com/nemtrif/utfcpp
-            GIT_TAG v3.2.3
+            GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v3.2.3
     )
 
     FetchContent_MakeAvailable(fetchutfcpp)
@@ -70,7 +70,7 @@ if (NOT uni-algo_FOUND)
             uni-algo
             GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
             GIT_SHALLOW ON
-            GIT_TAG v0.7.1
+            GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v0.7.1
     )
     FetchContent_MakeAvailable(uni-algo)
 endif ()
