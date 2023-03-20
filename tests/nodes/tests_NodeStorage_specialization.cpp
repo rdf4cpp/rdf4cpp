@@ -225,8 +225,19 @@ TEST_CASE("NodeStorage non-specialization xsd:String") {
 }
 
 TEST_CASE("NodeStorage non-specialization rdf:langString") {
+    auto extract_backend_handle = [](Literal l) {
+        auto h = l.backend_handle();
+        if (!h.is_inlined())
+            return h;
+        auto id = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(h.node_id().literal_id().value);
+        auto node_id = storage::node::identifier::NodeID{storage::node::identifier::LiteralID{id.second}, h.node_id().literal_type()};
+        return rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle{node_id,
+                                                                          storage::node::identifier::RDFNodeType::Literal,
+                                                                          h.node_storage_id()};
+    };
+
     CHECK(!NodeStorage::default_instance().has_specialized_storage_for(rdf::LangString::fixed_id));
-    
+
     std::array<rdf::LangString::cpp_type, 3> const test_values{
             rdf::LangString::cpp_type{.lexical_form = "Hello World", .language_tag = "en"},
             rdf::LangString::cpp_type{.lexical_form = "Spherical Cow", .language_tag = "en"},
@@ -255,10 +266,10 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         CHECK(lit1.backend_handle() == lit2.backend_handle());
         CHECK(lit2.backend_handle() == lit1.backend_handle());
 
-        assigned_ids[ix] = lit1.backend_handle();
+        assigned_ids[ix] = extract_backend_handle(lit1);
 
-        auto const backend1 = lit1.backend_handle().literal_backend().get_lexical();
-        auto const backend2 = lit2.backend_handle().literal_backend().get_lexical();
+        auto const backend1 = extract_backend_handle(lit1).literal_backend().get_lexical();
+        auto const backend2 = extract_backend_handle(lit2).literal_backend().get_lexical();
 
         CHECK(identifier::NodeID::rdf_langstring_iri.first == backend1.datatype_id);
         CHECK(backend1.datatype_id == backend2.datatype_id);
