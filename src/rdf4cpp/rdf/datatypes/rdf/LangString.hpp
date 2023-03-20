@@ -18,8 +18,9 @@ enum class InlinedTags : uint8_t {
     ch,
 };
 constexpr const size_t inlined_size = 2;
-constexpr const uint64_t mask_inlined = ((1l << inlined_size) - 1) << (storage::node::identifier::LiteralID::width - inlined_size);
-constexpr const uint64_t mask_id = (1l << (storage::node::identifier::LiteralID::width - inlined_size)) - 1;
+constexpr const uint64_t shift = storage::node::identifier::LiteralID::width - inlined_size;
+constexpr const uint64_t mask_inlined = ((1l << inlined_size) - 1) << shift;
+constexpr const uint64_t mask_id = (1l << shift) - 1;
 
 constexpr const char *from_inlined(InlinedTags t) noexcept {
     switch (t) {
@@ -51,10 +52,10 @@ constexpr std::optional<uint64_t> try_into_inlined(uint64_t id, InlinedTags tag)
     if ((id & mask_inlined) != 0)
         return std::nullopt;
     uint64_t t = static_cast<uint64_t>(static_cast<uint8_t>(tag));
-    return id | (t << (storage::node::identifier::LiteralID::width - inlined_size));
+    return id | (t << shift);
 }
 constexpr std::pair<InlinedTags, uint64_t> from_inlined(uint64_t id) noexcept {
-    uint64_t t = (id & mask_inlined) >> (storage::node::identifier::LiteralID::width - inlined_size);
+    uint64_t t = (id & mask_inlined) >> shift;
     uint64_t i = id & mask_id;
     return std::pair{static_cast<InlinedTags>(static_cast<uint8_t>(t)), i};
 }
