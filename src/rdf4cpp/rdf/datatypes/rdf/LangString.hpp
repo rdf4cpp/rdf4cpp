@@ -108,14 +108,14 @@ struct DatatypeMapping<rdf_lang_string> {
 };
 
 template<>
-inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rdf_lang_string>::from_string([[maybe_unused]] std::string_view) {
+inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rdf_lang_string>::from_string(std::string_view) {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
 }
 
 template<>
-inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string([[maybe_unused]] cpp_type const &) noexcept {
+inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(cpp_type const &) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
@@ -123,14 +123,14 @@ inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string([
 
 
 template<>
-inline std::optional<uint64_t> capabilities::Inlineable<rdf_lang_string>::try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
+inline std::optional<uint64_t> capabilities::Inlineable<rdf_lang_string>::try_into_inlined(cpp_type const &) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
 }
 
 template<>
-inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlineable<rdf_lang_string>::from_inlined([[maybe_unused]] uint64_t inlined) noexcept {
+inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlineable<rdf_lang_string>::from_inlined(uint64_t) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
