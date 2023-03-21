@@ -229,8 +229,8 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         auto h = l.backend_handle();
         if (!h.is_inlined())
             return h;
-        auto id = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(h.node_id().literal_id().value);
-        auto node_id = storage::node::identifier::NodeID{storage::node::identifier::LiteralID{id.second}, h.node_id().literal_type()};
+        auto [_, id] = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(h.node_id().literal_id());
+        auto node_id = storage::node::identifier::NodeID{id, h.node_id().literal_type()};
         return rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle{node_id,
                                                                           storage::node::identifier::RDFNodeType::Literal,
                                                                           h.node_storage_id()};

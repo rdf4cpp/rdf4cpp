@@ -42,3 +42,16 @@ TEST_CASE("rdf:langString") {
         CHECK(lit2.value<datatypes::rdf::LangString>() == LangStringRepr{"hello", "en"});
     }
 }
+
+TEST_CASE("rdf::langString inlining") {
+    using namespace rdf4cpp::rdf::datatypes::registry::lang_tags;
+    // these 2 checks need to be modified, if the default inlined tags change
+    CHECK(tags_to_inline.size() == 4);
+    CHECK(inlined_size() == 2);
+
+    CHECK(Literal::make_lang_tagged("hello world", "en").is_inlined());
+    CHECK(Literal::make_lang_tagged("hello world", "de").is_inlined());
+    CHECK(!Literal::make_lang_tagged("hello world", "en-us").is_inlined());
+
+    CHECK(!try_into_inlined(storage::node::identifier::LiteralID{1l << 41}, 0).has_value());
+}

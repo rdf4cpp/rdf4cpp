@@ -3,6 +3,7 @@
 
 #include <optional>
 #include <string_view>
+#include <vector>
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
@@ -11,53 +12,86 @@
 namespace rdf4cpp::rdf::datatypes::registry {
 
 namespace lang_tags {
-enum class InlinedTags : uint8_t {
-    en,
-    de,
-    fr,
-    ch,
-};
-constexpr const size_t inlined_size = 2;
-constexpr const uint64_t shift = storage::node::identifier::LiteralID::width - inlined_size;
-constexpr const uint64_t mask_inlined = ((1l << inlined_size) - 1) << shift;
-constexpr const uint64_t mask_id = (1l << shift) - 1;
+/**
+ * language tags to try to inline.
+ * the vector can be modified at startup.
+ * modifying the vector after any Literal was created is undefined behavior.
+ * this includes Literals already created in a persistent node storage.
+ */
+extern std::vector<std::string> tags_to_inline;
 
-constexpr const char *from_inlined(InlinedTags t) noexcept {
-    switch (t) {
-        case InlinedTags::en:
-            return "en";
-        case InlinedTags::de:
-            return "de";
-        case InlinedTags::fr:
-            return "fr";
-        case InlinedTags::ch:
-            return "ch";
-        default:
-            return "";
-    }
+using LangTagID = uint64_t;
+
+/**
+ * number of bits needed for the current tags to inline
+ */
+constexpr size_t inlined_size() {
+    // number of bits needed for the biggest id
+    return static_cast<size_t>(std::floor(std::log2(static_cast<double>(tags_to_inline.size() - 1)))) + 1;
 }
-constexpr std::optional<InlinedTags> try_into_inlined(std::string_view t) noexcept {
-    if (t == "en")
-        return InlinedTags::en;
-    if (t == "de")
-        return InlinedTags::de;
-    if (t == "fr")
-        return InlinedTags::fr;
-    if (t == "ch")
-        return InlinedTags::ch;
+/**
+ * shift where the inlined tag is located
+ */
+constexpr uint64_t shift() {
+    return storage::node::identifier::LiteralID::width - inlined_size();
+}
+/**
+ * mask for the inlined language tag
+ */
+constexpr uint64_t mask_inlined() {
+    return ((1l << inlined_size()) - 1) << shift();
+}
+/**
+ * mask for the base literal id
+ */
+constexpr uint64_t mask_base_id() {
+    return (1l << shift()) - 1;
+}
+
+/**
+ * converts a inlined language tag id back to its language tag.
+ * @param id
+ * @return language tag or the empty string on a invalid id
+ */
+constexpr std::string_view inlined_to_tag(LangTagID id) {
+    if (id < tags_to_inline.size())
+        return tags_to_inline[id];
+    return "";
+}
+/**
+ * tries to convert a language tag to its inlined id.
+ * @param tag
+ * @return id or std::nullopt
+ */
+constexpr std::optional<LangTagID> tag_to_inlined(std::string_view tag) {
+    for (uint64_t i = 0; i < tags_to_inline.size(); ++i) {
+        if (tags_to_inline[i] == tag) {
+            return i;
+        }
+    }
     return std::nullopt;
 }
 
-constexpr std::optional<uint64_t> try_into_inlined(uint64_t id, InlinedTags tag) noexcept {
-    if ((id & mask_inlined) != 0)
+/**
+ * tries to inline a language tag into a LiteralID
+ * @param id
+ * @param tag
+ * @return inlined LiteralID or std::nullopt
+ */
+constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
+    if ((id.value & mask_inlined()) != 0)
         return std::nullopt;
-    uint64_t t = static_cast<uint64_t>(static_cast<uint8_t>(tag));
-    return id | (t << shift);
+    return storage::node::identifier::LiteralID{id.value | (tag << shift())};
 }
-constexpr std::pair<InlinedTags, uint64_t> from_inlined(uint64_t id) noexcept {
-    uint64_t t = (id & mask_inlined) >> shift;
-    uint64_t i = id & mask_id;
-    return std::pair{static_cast<InlinedTags>(static_cast<uint8_t>(t)), i};
+/**
+ * extracts the base LiteralID and the language tag id
+ * @param id
+ * @return [language_tag_id, base_literal_id]
+ */
+constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
+    uint64_t t = (id.value & mask_inlined()) >> shift();
+    uint64_t i = id.value & mask_base_id();
+    return std::pair{t, storage::node::identifier::LiteralID{i}};
 }
 }  // namespace lang_tags
 

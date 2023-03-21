@@ -56,11 +56,11 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
             .language_tag = lang});
 
     bool inlined = false;
-    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::lang_tags::try_into_inlined(lang);  // check if the lang_tag can be inlined
+    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::lang_tags::tag_to_inlined(lang);  // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
-        auto inlined_id = rdf4cpp::rdf::datatypes::registry::lang_tags::try_into_inlined(node_id.literal_id().value, lang_tag_i.value());  // check if we have enough space
+        auto inlined_id = rdf4cpp::rdf::datatypes::registry::lang_tags::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
         if (inlined_id.has_value()) {
-            node_id = NodeID{storage::node::identifier::LiteralID{inlined_id.value()}, node_id.literal_type()};
+            node_id = NodeID{inlined_id.value(), node_id.literal_type()};
             inlined = true;
         }
     }
@@ -114,8 +114,8 @@ Literal Literal::lang_tagged_get_de_inlined() const noexcept {
         return {};
     if (!this->is_inlined())
         return *this;
-    auto id = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(handle_.node_id().literal_id().value);
-    auto node_id = NodeID{storage::node::identifier::LiteralID{id.second}, this->handle_.node_id().literal_type()};
+    auto [_, id] = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(handle_.node_id().literal_id());
+    auto node_id = NodeID{id, this->handle_.node_id().literal_type()};
     return Literal{NodeBackendHandle{node_id,
                                      storage::node::identifier::RDFNodeType::Literal,
                                      handle_.node_storage_id()}};
@@ -348,8 +348,8 @@ Literal Literal::as_simplified_lexical_form(NodeStorage &node_storage) const noe
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
         if (this->is_inlined()) {
-            auto id = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(this->handle_.node_id().literal_id().value);
-            return rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(id.first);
+            auto [tag, _] = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(this->handle_.node_id().literal_id());
+            return rdf4cpp::rdf::datatypes::registry::lang_tags::inlined_to_tag(tag);
         }
         return handle_.literal_backend().get_lexical().language_tag;
     }
