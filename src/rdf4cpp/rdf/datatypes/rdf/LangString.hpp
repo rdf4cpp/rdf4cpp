@@ -18,59 +18,48 @@ namespace lang_tags {
  * modifying the vector after any Literal was created is undefined behavior.
  * this includes Literals already created in a persistent node storage.
  */
-extern std::vector<std::string> tags_to_inline;
+extern
+#ifdef CONST_LANG_TAG_INLINES
+        const
+#endif
+        std::vector<std::string>
+                tags_to_inline;
 
 using LangTagID = uint64_t;
 
 /**
  * number of bits needed for the current tags to inline
  */
-constexpr size_t inlined_size() {
-    // number of bits needed for the biggest id
-    return static_cast<size_t>(std::floor(std::log2(static_cast<double>(tags_to_inline.size() - 1)))) + 1;
-}
+size_t inlined_size() noexcept;
+
 /**
  * shift where the inlined tag is located
  */
-constexpr uint64_t shift() {
-    return storage::node::identifier::LiteralID::width - inlined_size();
-}
+uint64_t shift() noexcept;
+
 /**
  * mask for the inlined language tag
  */
-constexpr uint64_t mask_inlined() {
-    return ((1l << inlined_size()) - 1) << shift();
-}
+uint64_t mask_inlined() noexcept;
+
 /**
  * mask for the base literal id
  */
-constexpr uint64_t mask_base_id() {
-    return (1l << shift()) - 1;
-}
+uint64_t mask_base_id() noexcept;
 
 /**
  * converts a inlined language tag id back to its language tag.
  * @param id
  * @return language tag or the empty string on a invalid id
  */
-constexpr std::string_view inlined_to_tag(LangTagID id) {
-    if (id < tags_to_inline.size())
-        return tags_to_inline[id];
-    return "";
-}
+std::string_view inlined_to_tag(LangTagID id) noexcept;
+
 /**
  * tries to convert a language tag to its inlined id.
  * @param tag
  * @return id or std::nullopt
  */
-constexpr std::optional<LangTagID> tag_to_inlined(std::string_view tag) {
-    for (uint64_t i = 0; i < tags_to_inline.size(); ++i) {
-        if (tags_to_inline[i] == tag) {
-            return i;
-        }
-    }
-    return std::nullopt;
-}
+std::optional<LangTagID> tag_to_inlined(std::string_view tag) noexcept;
 
 /**
  * tries to inline a language tag into a LiteralID
@@ -78,21 +67,14 @@ constexpr std::optional<LangTagID> tag_to_inlined(std::string_view tag) {
  * @param tag
  * @return inlined LiteralID or std::nullopt
  */
-constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
-    if ((id.value & mask_inlined()) != 0)
-        return std::nullopt;
-    return storage::node::identifier::LiteralID{id.value | (tag << shift())};
-}
+std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept;
+
 /**
  * extracts the base LiteralID and the language tag id
  * @param id
  * @return [language_tag_id, base_literal_id]
  */
-constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
-    uint64_t t = (id.value & mask_inlined()) >> shift();
-    uint64_t i = id.value & mask_base_id();
-    return std::pair{t, storage::node::identifier::LiteralID{i}};
-}
+std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept;
 }  // namespace lang_tags
 
 struct LangStringRepr {
