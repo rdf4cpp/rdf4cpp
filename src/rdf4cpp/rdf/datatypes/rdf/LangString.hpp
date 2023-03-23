@@ -27,6 +27,10 @@ extern
 
 using LangTagID = uint64_t;
 
+constexpr size_t bits_needed_for(uint64_t i) {
+    return static_cast<size_t>(std::floor(std::log2(static_cast<double>(i)))) + 1;
+}
+
 /**
  * number of bits needed for the current tags to inline
  */
@@ -59,7 +63,7 @@ std::string_view inlined_to_tag(LangTagID id) noexcept;
  * @param tag
  * @return id or std::nullopt
  */
-std::optional<LangTagID> tag_to_inlined(std::string_view tag) noexcept;
+std::optional<LangTagID> try_tag_to_inlined(std::string_view tag) noexcept;
 
 /**
  * tries to inline a language tag into a LiteralID

@@ -56,7 +56,7 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
             .language_tag = lang});
 
     bool inlined = false;
-    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::lang_tags::tag_to_inlined(lang);  // check if the lang_tag can be inlined
+    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::lang_tags::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
         auto inlined_id = rdf4cpp::rdf::datatypes::registry::lang_tags::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
         if (inlined_id.has_value()) {

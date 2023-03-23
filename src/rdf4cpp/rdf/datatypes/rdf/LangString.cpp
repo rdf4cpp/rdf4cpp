@@ -22,7 +22,7 @@ const
 
 size_t inlined_size() noexcept {
     // number of bits needed for the biggest id
-    return static_cast<size_t>(std::floor(std::log2(static_cast<double>(tags_to_inline.size() - 1)))) + 1;
+    return bits_needed_for(tags_to_inline.size() - 1);
 }
 
 uint64_t shift() noexcept {
@@ -43,7 +43,7 @@ std::string_view inlined_to_tag(LangTagID id) noexcept {
     return "";
 }
 
-std::optional<LangTagID> tag_to_inlined(std::string_view tag) noexcept {
+std::optional<LangTagID> try_tag_to_inlined(std::string_view tag) noexcept {
     for (uint64_t i = 0; i < tags_to_inline.size(); ++i) {
         if (tags_to_inline[i] == tag) {
             return i;

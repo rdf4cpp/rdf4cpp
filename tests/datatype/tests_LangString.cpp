@@ -45,6 +45,12 @@ TEST_CASE("rdf:langString") {
 
 TEST_CASE("rdf::langString inlining") {
     using namespace rdf4cpp::rdf::datatypes::registry::lang_tags;
+    CHECK(bits_needed_for(1) == 1);
+    CHECK(bits_needed_for(2) == 2);
+    CHECK(bits_needed_for(3) == 2);
+    CHECK(bits_needed_for(4) == 3);
+    CHECK(bits_needed_for(5) == 3);
+
     // these 2 checks need to be modified, if the default inlined tags change
     CHECK(tags_to_inline.size() == 4);
     CHECK(inlined_size() == 2);
