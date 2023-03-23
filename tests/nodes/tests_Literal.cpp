@@ -556,21 +556,34 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("Hello", "en").as_language_tag_matches_range("*"_xsd_string).ebv());
         CHECK(Literal::make_lang_tagged("Bonjour", "fr").as_language_tag_matches_range("FR"_xsd_string).ebv());
         CHECK(Literal::make_lang_tagged("Hello", "en-US").as_language_tag_matches_range("en-US"_xsd_string).ebv());
-        CHECK(5_xsd_int .as_language_tag_matches_range("*"_xsd_string).null());
+        CHECK((5_xsd_int).as_language_tag_matches_range("*"_xsd_string).null());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range(""_xsd_string).ebv());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv() == util::TriBool::False);
     }
 
+    static constexpr const char *case_number1 = "4.2";
+    static constexpr const char *case_number2 = "4,2";
     SUBCASE("ucase") {
         // from https://www.w3.org/TR/sparql11-query/#func-ucase
         CHECK(("foo"_xsd_string).uppercase() == "FOO"_xsd_string);
         CHECK(Literal::make_lang_tagged("foo", "en").uppercase() == Literal::make_lang_tagged("FOO", "en"));
+        CHECK(Literal::make_simple("\xce\xbb").uppercase() == Literal::make_simple("\xce\x9b"));  // greek lambda
+        CHECK(Literal::make_simple("\xc3\xa4").uppercase() == Literal::make_simple("\xc3\x84"));  // a diaresis
+        CHECK(Literal::make_simple("\xd0\xbe").uppercase() == Literal::make_simple("\xd0\x9e"));  // cyrillic o
+        CHECK(Literal::make_simple(case_number1).uppercase() == Literal::make_simple(case_number1));
+        CHECK(Literal::make_simple(case_number2).uppercase() == Literal::make_simple(case_number2));
+        CHECK(Literal::make_simple("\xc3\x9f").uppercase() == Literal::make_simple("SS"));  // german sharp s
     }
 
     SUBCASE("lcase") {
         // from https://www.w3.org/TR/sparql11-query/#func-lcase
         CHECK(("BAR"_xsd_string).lowercase() == "bar"_xsd_string);
         CHECK(Literal::make_lang_tagged("BAR", "en").lowercase() == Literal::make_lang_tagged("bar", "en"));
+        CHECK(Literal::make_simple("\xce\x9b").lowercase() == Literal::make_simple("\xce\xbb"));  // greek lambda
+        CHECK(Literal::make_simple("\xc3\x84").lowercase() == Literal::make_simple("\xc3\xa4"));  // a diaresis
+        CHECK(Literal::make_simple("\xd0\x9e").lowercase() == Literal::make_simple("\xd0\xbe"));  // cyrillic o
+        CHECK(Literal::make_simple(case_number1).lowercase() == Literal::make_simple(case_number1));
+        CHECK(Literal::make_simple(case_number2).lowercase() == Literal::make_simple(case_number2));
     }
 
     SUBCASE("contains") {

@@ -2,16 +2,16 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 function(install_cpp_library TARGET_NAME INCLUDE_PATH)
-    if(NOT ${ARGC} EQUAL 2)
+    if (NOT ${ARGC} GREATER_EQUAL 2)
         message(
                 FATAL_ERROR
                 "you did not specify the target and the include path in the parameter!")
-    endif()
+    endif ()
 
     target_include_directories(
             ${TARGET_NAME} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-    install(TARGETS ${TARGET_NAME}
+    install(TARGETS ${TARGET_NAME} ${ARGN}
             EXPORT ${TARGET_NAME}-targets
             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

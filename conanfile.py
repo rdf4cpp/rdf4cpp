@@ -28,7 +28,8 @@ class Recipe(ConanFile):
                 "boost/1.79.0",
                 "re2/20221201",
                 ("utfcpp/3.2.3", "private"),
-                "openssl/3.0.8")
+                "openssl/3.0.8",
+                "uni-algo/0.7.1@rdf4cpp/temporary")
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
