@@ -39,10 +39,10 @@ template<>
 nonstd::expected<capabilities::Default<xsd_positive_integer>::cpp_type, DynamicError> capabilities::Subtype<xsd_positive_integer>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
 
 template<>
-std::optional<uint64_t> capabilities::Inlineable<xsd_positive_integer>::try_into_inlined(cpp_type const &value) noexcept;
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_positive_integer>::try_into_inlined(cpp_type const &value) noexcept;
 
 template<>
-capabilities::Inlineable<xsd_positive_integer>::cpp_type capabilities::Inlineable<xsd_positive_integer>::from_inlined(uint64_t inlined) noexcept;
+capabilities::Inlineable<xsd_positive_integer>::cpp_type capabilities::Inlineable<xsd_positive_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_positive_integer,
                                            capabilities::Logical,

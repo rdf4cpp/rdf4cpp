@@ -109,14 +109,14 @@ inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(c
 
 
 template<>
-inline std::optional<uint64_t> capabilities::Inlineable<rdf_lang_string>::try_into_inlined(cpp_type const &) noexcept {
+inline std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<rdf_lang_string>::try_into_inlined(cpp_type const &) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
 }
 
 template<>
-inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlineable<rdf_lang_string>::from_inlined(uint64_t) noexcept {
+inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlineable<rdf_lang_string>::from_inlined(storage::node::identifier::LiteralID) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();

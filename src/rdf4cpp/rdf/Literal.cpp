@@ -70,13 +70,12 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                      node_storage.id(), inlined}};
 }
 
-Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
     using namespace storage::node::identifier;
 
-    assert(inlined_value >> LiteralID::width == 0);
     assert(fixed_id != LiteralType::other());
 
-    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
+    return Literal{NodeBackendHandle{NodeID{inlined_value, fixed_id},
                                      RDFNodeType::Literal,
                                      node_storage.id(),
                                      true}};
@@ -286,7 +285,7 @@ util::CowString Literal::lexical_form() const noexcept {
         assert(entry != nullptr);
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
@@ -323,7 +322,7 @@ util::CowString Literal::simplified_lexical_form() const noexcept {
 
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = handle_.node_id().literal_id().value;
+        auto const inlined_value = handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
@@ -504,7 +503,7 @@ std::any Literal::value() const noexcept {
         auto const ops = registry::DatatypeRegistry::get_inlining_ops(datatype);
         assert(ops != nullptr);
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return ops->from_inlined_fptr(inlined_value);
     }
 

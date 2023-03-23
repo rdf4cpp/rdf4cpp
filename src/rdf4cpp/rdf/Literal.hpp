@@ -112,7 +112,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -488,7 +488,7 @@ public:
                     return this->lang_tagged_get_de_inlined().value<T>();
                 }
 
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                auto const inlined_value = this->handle_.node_id().literal_id();
                 return T::from_inlined(inlined_value);
             }
         }
