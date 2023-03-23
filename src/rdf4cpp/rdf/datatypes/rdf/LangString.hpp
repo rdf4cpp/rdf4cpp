@@ -19,7 +19,7 @@ namespace lang_tags {
  * this includes Literals already created in a persistent node storage.
  */
 extern
-#ifdef CONST_LANG_TAG_INLINES
+#ifndef MODIFYABLE_LANG_TAG_INLINES
         const
 #endif
         std::vector<std::string>

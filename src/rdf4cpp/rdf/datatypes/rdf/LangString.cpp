@@ -9,7 +9,7 @@ template struct LiteralDatatypeImpl<rdf_lang_string,
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::registry::lang_tags {
-#ifdef CONST_LANG_TAG_INLINES
+#ifndef MODIFYABLE_LANG_TAG_INLINES
 const
 #endif
         std::vector<std::string>
