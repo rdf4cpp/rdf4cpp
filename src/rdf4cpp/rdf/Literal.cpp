@@ -1,13 +1,14 @@
 #include "Literal.hpp"
 
 #include <random>
+#include <ranges>
 #include <sstream>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include <uni_algo/case.h>
+#include <uni_algo/all.h>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
@@ -111,10 +112,7 @@ Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &n
 }
 
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
-    std::string lowercase_lang_tag;
-    std::transform(lang_tag.begin(), lang_tag.end(), std::back_inserter(lowercase_lang_tag), [](char const ch) {
-        return static_cast<char>(std::tolower(ch));
-    });
+    const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
 
     return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
 }
@@ -1159,11 +1157,8 @@ std::optional<size_t> Literal::strlen() const noexcept {
     }
 
     auto const lf = this->lexical_form();
-    try {
-        return utf8::distance(lf.begin(), lf.end());
-    } catch (utf8::exception const &) {
-        return std::nullopt;
-    }
+    auto u = lf.view() | una::views::utf8;
+    return std::distance(u.begin(), u.end());
 }
 
 Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
@@ -1325,7 +1320,11 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    return s.view().find(needle) != std::string_view::npos;
+    auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc | una::ranges::to_utf8<std::string>();
+    auto norm_this = s.view() | una::views::utf8 | una::views::norm::nfc | una::ranges::to_utf8<std::string>();
+
+    auto r = una::casesens::search_utf8(norm_this, norm_needle);
+    return static_cast<bool>(r);
 }
 
 Literal Literal::as_contains(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1360,13 +1359,15 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     }
 
     auto const s = this->lexical_form();
-    auto const pos = s.view().find(needle);
+    auto const norm_needle = una::norm::to_nfc_utf8(needle);
+    auto const norm_this = una::norm::to_nfc_utf8(s.view());
 
-    if (pos == std::string_view::npos) {
+    const auto r = una::casesens::search_utf8(norm_this, norm_needle);
+
+    if (!r)
         return Literal::make_simple_unchecked("", node_storage);
-    }
 
-    auto const substr = s.view().substr(0, pos);
+    auto substr = static_cast<std::string_view>(norm_this).substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1388,13 +1389,15 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     }
 
     auto const s = this->lexical_form();
-    auto const pos = s.view().find(needle);
+    auto const norm_needle = una::norm::to_nfc_utf8(needle);
+    auto const norm_this = una::norm::to_nfc_utf8(s.view());
 
-    if (pos == std::string_view::npos) {
+    const auto r = una::casesens::search_utf8(norm_this, norm_needle);
+
+    if (!r)
         return Literal::make_simple_unchecked("", node_storage);
-    }
 
-    auto const substr = s.view().substr(pos + needle.size());
+    auto substr = static_cast<std::string_view>(norm_this).substr(r.pos() + norm_needle.size());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1412,7 +1415,12 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     }
 
     auto const s = this->lexical_form();
-    return s.view().starts_with(needle);
+
+    auto norm_needle = needle | una::ranges::views::utf8 | una::views::norm::nfc;
+    auto norm_this = s.view() | una::ranges::views::utf8 | una::views::norm::nfc;
+    auto len = std::ranges::distance(norm_needle);
+    // TODO use std::ranges::starts_with as soon as c++ 23 arrives
+    return std::ranges::equal(norm_needle, norm_this | std::views::take(len));
 }
 
 Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1447,7 +1455,16 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
     }
 
     auto const s = this->lexical_form();
-    return s.view().ends_with(needle);
+    auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc;
+    auto norm_this = s.view() | una::views::utf8 | una::views::norm::nfc;
+    auto const len_needle = std::ranges::distance(norm_needle);
+    auto const len_this = std::ranges::distance(norm_this);
+
+    // TODO use std::ranges::ends_with as soon as c++ 23 arrives
+    if (len_needle > len_this)
+        return false;
+
+    return std::ranges::equal(norm_needle, norm_this | std::views::drop(len_this - len_needle));
 }
 
 Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1516,44 +1533,37 @@ Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) c
 }
 
 Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_storage) {
-    try {
-        std::stringstream stream{};
-        auto it = utf8::iterator(string.begin(), string.begin(), string.end());
-        const auto end = utf8::iterator(string.end(), string.begin(), string.end());
-        // note that ASCII is a subset of UTF-8
-        auto is_valid = [](const uint32_t cp) {
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
-                return true;
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
-                return true;
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
-                return true;
-            if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
-                cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
-                return true;
-            return false;
-        };
-        while (it != end) {
-            const uint32_t cp = *it;
-            if (is_valid(cp)) {
-                stream << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
-            } else {
-                char utf[4]{};
-                const char *utf_end = utf8::append(cp, utf);  // at maximum outputs 4 chars
-                char *utf_it = utf;
-                while (utf_it != utf_end) {
-                    char buff[3]{};                                                                                         // biggest char is FF\0
-                    std::snprintf(buff, sizeof(buff), "%.2X", static_cast<uint32_t>(static_cast<unsigned char>(*utf_it)));  // make sure we 0-extend instead of sign-extend
-                    stream << '%' << buff;
-                    ++utf_it;
-                }
-            }
-            ++it;
-        }
-        return make_simple_unchecked(stream.view(), node_storage);
-    } catch (const utf8::exception &e) {  // anything invalid UTF-8 related
+    if (!una::is_valid_utf8(string))
         return Literal{};
+
+    std::stringstream stream{};
+    stream << std::hex << std::setfill('0');
+    // note that ASCII is a subset of UTF-8
+    auto is_valid = [](const uint32_t cp) {
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
+            return true;
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
+            return true;
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
+            return true;
+        if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
+            cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
+            return true;
+        return false;
+    };
+    for (const uint32_t cp : string | una::views::utf8) {
+        if (is_valid(cp)) {
+            stream << std::nouppercase << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
+        } else {
+            const std::array<uint32_t, 1> data{cp};
+            const auto r = data | una::ranges::to_utf8<std::string>();  // at maximum 4 bytes + zero, guaranteed to fit into small string optimization
+            for (const char c : r) {
+                stream << '%';
+                stream << std::uppercase << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(c));
+            }
+        }
     }
+    return make_simple_unchecked(stream.view(), node_storage);
 }
 
 Literal Literal::encode_for_uri(NodeStorage &node_storage) const {
@@ -1570,11 +1580,12 @@ Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storag
 
     auto const s = this->lexical_form();
 
-    if (start > s.size()) {
+    if (start > this->strlen()) {
         return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
-    auto const substr = s.view().substr(start, len);
+    auto substr = s.view() | una::ranges::views::utf8 | std::views::drop(start) | std::views::take(len) | una::ranges::to_utf8<std::string>();
+
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 

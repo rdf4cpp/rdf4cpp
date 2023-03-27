@@ -550,6 +550,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(s.substr(2_xsd_long, -1.3_xsd_double) == ""_xsd_string);
         CHECK(s.substr(2.1_xsd_double, 3.2_xsd_double) == "ell"_xsd_string);
         CHECK(s.substr(100_xsd_integer, 10_xsd_int) == ""_xsd_string);
+
+        // unicode
+        CHECK(("met\U0001f34cdata"_xsd_string).substr(4_xsd_integer, 3_xsd_integer) == "\U0001f34cda"_xsd_string);
     }
 
     SUBCASE("langMatches") {
@@ -594,6 +597,9 @@ TEST_CASE("Literal - misc functions") {
 
         CHECK(Literal::make_lang_tagged("hello", "en").as_contains(Literal::make_lang_tagged("o", "fr")).null());
         CHECK(("123"_xsd_string).as_contains(Literal::make_lang_tagged("1", "en")).null());
+
+        // unicode
+        CHECK(Literal::make_lang_tagged("fo\u0174obar", "en").as_contains(Literal::make_lang_tagged("foW\u0302o", "en")).ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("substr_before") {
@@ -607,6 +613,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_before("z"_xsd_string) == ""_xsd_string);
         CHECK(Literal::make_lang_tagged("abc", "en").substr_before(Literal::make_lang_tagged("", "en")) == Literal::make_lang_tagged("", "en"));
         CHECK(Literal::make_lang_tagged("abc", "en").substr_before(""_xsd_string) == Literal::make_lang_tagged("", "en"));
+
+        // unicode
+        CHECK(("abc\U0001f34c\u0174"_xsd_string).substr_before("W\u0302"_xsd_string) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("substr_after") {
@@ -620,6 +629,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_after("z"_xsd_string) == ""_xsd_string);
         CHECK(Literal::make_lang_tagged("abc", "en").substr_after(Literal::make_lang_tagged("", "en")) == Literal::make_lang_tagged("abc", "en"));
         CHECK(Literal::make_lang_tagged("abc", "en").substr_after(""_xsd_string) == Literal::make_lang_tagged("abc", "en"));
+
+        // unicode
+        CHECK(("a\U0001f34cb\u0174c\U0001f34c"_xsd_string).substr_after("W\u0302"_xsd_string) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("str_start_with") {
@@ -630,6 +642,9 @@ TEST_CASE("Literal - misc functions") {
 
         CHECK(Literal::make_lang_tagged("foobar", "fr").as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
         CHECK(("foobar"_xsd_string).as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
+
+        // unicode
+        CHECK(Literal::make_lang_tagged("\u0174foobar", "en").as_str_starts_with("W\u0302foo"_xsd_string).ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("str_ends_with") {
@@ -640,6 +655,9 @@ TEST_CASE("Literal - misc functions") {
 
         CHECK(Literal::make_lang_tagged("foobar", "fr").as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
         CHECK(("foobar"_xsd_string).as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
+
+        // unicode
+        CHECK(Literal::make_lang_tagged("fooba\u0174r", "en").as_str_ends_with("baW\u0302r"_xsd_string).ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("concat") {

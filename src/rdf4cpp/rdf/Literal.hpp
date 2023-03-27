@@ -238,9 +238,9 @@ public:
                                                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
-                                                       compatible_value.language_tag,
-                                                       node_storage);
+            return Literal::make_lang_tagged(compatible_value.lexical_form,
+                                             compatible_value.language_tag,
+                                             node_storage);
         }
 
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
@@ -752,6 +752,7 @@ public:
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     * Note: returned string is always unicode normalized (NFC form).
      *
      * @param needle substring to search for in this
      * @return substring of this' up to the position of the needle
@@ -765,6 +766,7 @@ public:
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
+     * Note: returned string is always unicode normalized (NFC form).
      *
      * @param needle string-like value to search for in this
      * @return substring of this' up to the position of the needle
@@ -779,6 +781,7 @@ public:
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     * Note: returned string is always unicode normalized (NFC form).
      *
      * @param needle substring to search for in this
      * @return substring of this' after the end of the needle
@@ -792,6 +795,7 @@ public:
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
+     * Note: returned string is always unicode normalized (NFC form).
      *
      * @param needle substring to search for in this
      * @return substring of this' after the end of the needle
