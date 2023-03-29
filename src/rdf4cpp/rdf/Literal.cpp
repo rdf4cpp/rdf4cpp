@@ -1420,7 +1420,7 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     auto norm_this = s.view() | una::ranges::views::utf8 | una::views::norm::nfc;
     auto len = std::ranges::distance(norm_needle);
     // TODO use std::ranges::starts_with as soon as c++ 23 arrives
-    return std::ranges::equal(norm_needle, norm_this | std::views::take(len));
+    return std::ranges::equal(norm_needle, norm_this | una::views::take(len));
 }
 
 Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1464,7 +1464,7 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
     if (len_needle > len_this)
         return false;
 
-    return std::ranges::equal(norm_needle, norm_this | std::views::drop(len_this - len_needle));
+    return std::ranges::equal(norm_needle, norm_this | una::views::drop(len_this - len_needle));
 }
 
 Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1584,7 +1584,7 @@ Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storag
         return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
     }
 
-    auto substr = s.view() | una::ranges::views::utf8 | std::views::drop(start) | std::views::take(len) | una::ranges::to_utf8<std::string>();
+    auto substr = s.view() | una::ranges::views::utf8 | una::views::drop(start) | una::views::take(len) | una::ranges::to_utf8<std::string>();
 
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
