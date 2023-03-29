@@ -118,9 +118,8 @@ Literal Literal::lang_tagged_get_de_inlined() const noexcept {
     if (!this->is_inlined())
         return *this;
     auto [_, id] = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(handle_.node_id().literal_id());
-    auto node_id = NodeID{id, this->handle_.node_id().literal_type()};
-    return Literal{NodeBackendHandle{node_id,
-                                     storage::node::identifier::RDFNodeType::Literal,
+    return Literal{NodeBackendHandle{NodeID{id, this->handle_.node_id().literal_type()},
+                                     handle_.type(),
                                      handle_.node_storage_id()}};
 }
 
@@ -500,7 +499,7 @@ std::any Literal::value() const noexcept {
     auto const datatype = this->datatype_id();
 
     if (this->is_inlined()) {
-        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+        if (datatype == rdf::LangString::datatype_id) {
             return this->lang_tagged_get_de_inlined().value();
         }
 

@@ -135,6 +135,7 @@ private:
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+
     /**
      * Creates a normal accessible Literal from a lang tagged string.
      * Do not leak this, this would make lang tag inlining useless.
@@ -422,13 +423,13 @@ public:
     [[nodiscard]] IRI datatype() const noexcept;
 
     /**
-     * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
+     * Returns the language tag of this Literal. If the string is empty this has no language tag.
      * @return language tag
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
     /**
-     * @return the language tag of this Literal as xsd:string. If the string is empty this has no lanugage tag.
+     * @return the language tag of this Literal as xsd:string. If the string is empty this has no language tag.
      */
     [[nodiscard]] Literal as_language_tag(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
