@@ -36,6 +36,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
         CHECK(std::string(lit1) == "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
+        CHECK(Literal::make_simple("\u0174") == Literal::make_simple("W\u0302"));  // 2 different ways of writing Ŵ
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};

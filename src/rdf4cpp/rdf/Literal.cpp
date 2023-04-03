@@ -30,9 +30,10 @@ Literal Literal::make_null() noexcept {
 }
 
 Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
+    auto lf = una::norm::to_nfc_utf8(lexical_form);
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
-                                             .lexical_form = lexical_form,
+                                             .lexical_form = lf,
                                              .language_tag = ""}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
@@ -55,9 +56,10 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
+    auto lf = una::norm::to_nfc_utf8(lexical_form);
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                             .lexical_form = lexical_form,
+                                             .lexical_form = lf,
                                              .language_tag = lang}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
@@ -94,12 +96,13 @@ Literal Literal::make_typed_unchecked(std::any &&value, datatypes::registry::Dat
 }
 
 Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto s = una::norm::to_nfc_utf8(str);
     if (lang_tag_src.datatype_eq<datatypes::rdf::LangString>()) {
-        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+        return Literal::make_lang_tagged_unchecked(s, lang_tag_src.language_tag(), node_storage);
     }
 
     assert(lang_tag_src.datatype_eq<datatypes::xsd::String>());
-    return Literal::make_simple_unchecked(str, node_storage);
+    return Literal::make_simple_unchecked(s, node_storage);
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
@@ -1321,9 +1324,8 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
 
     auto const s = this->lexical_form();
     auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc | una::ranges::to_utf8<std::string>();
-    auto norm_this = s.view() | una::views::utf8 | una::views::norm::nfc | una::ranges::to_utf8<std::string>();
 
-    auto r = una::casesens::search_utf8(norm_this, norm_needle);
+    auto r = una::casesens::search_utf8(s.view(), norm_needle);
     return static_cast<bool>(r);
 }
 
@@ -1360,14 +1362,13 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
 
     auto const s = this->lexical_form();
     auto const norm_needle = una::norm::to_nfc_utf8(needle);
-    auto const norm_this = una::norm::to_nfc_utf8(s.view());
 
-    const auto r = una::casesens::search_utf8(norm_this, norm_needle);
+    const auto r = una::casesens::search_utf8(s.view(), norm_needle);
 
     if (!r)
         return Literal::make_simple_unchecked("", node_storage);
 
-    auto substr = static_cast<std::string_view>(norm_this).substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
+    auto substr = static_cast<std::string_view>(s.view()).substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1390,14 +1391,13 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
 
     auto const s = this->lexical_form();
     auto const norm_needle = una::norm::to_nfc_utf8(needle);
-    auto const norm_this = una::norm::to_nfc_utf8(s.view());
 
-    const auto r = una::casesens::search_utf8(norm_this, norm_needle);
+    const auto r = una::casesens::search_utf8(s.view(), norm_needle);
 
     if (!r)
         return Literal::make_simple_unchecked("", node_storage);
 
-    auto substr = static_cast<std::string_view>(norm_this).substr(r.pos() + norm_needle.size());  // search_utf8 returns byte position, not unicode character position
+    auto substr = static_cast<std::string_view>(s.view()).substr(r.pos() + norm_needle.size());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1417,10 +1417,9 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     auto const s = this->lexical_form();
 
     auto norm_needle = needle | una::ranges::views::utf8 | una::views::norm::nfc;
-    auto norm_this = s.view() | una::ranges::views::utf8 | una::views::norm::nfc;
     auto len = std::ranges::distance(norm_needle);
     // TODO use std::ranges::starts_with as soon as c++ 23 arrives
-    return std::ranges::equal(norm_needle, norm_this | una::views::take(len));
+    return std::ranges::equal(norm_needle, s.view() | una::ranges::views::utf8 | una::views::take(len));
 }
 
 Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1456,7 +1455,7 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
 
     auto const s = this->lexical_form();
     auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc;
-    auto norm_this = s.view() | una::views::utf8 | una::views::norm::nfc;
+    auto norm_this = s.view() | una::views::utf8;
     auto const len_needle = std::ranges::distance(norm_needle);
     auto const len_this = std::ranges::distance(norm_this);
 
