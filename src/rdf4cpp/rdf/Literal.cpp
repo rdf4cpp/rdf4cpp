@@ -113,10 +113,6 @@ Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal co
 }
 
 Literal Literal::lang_tagged_get_de_inlined() const noexcept {
-    if (!this->datatype_eq<datatypes::rdf::LangString>())
-        return {};
-    if (!this->is_inlined())
-        return *this;
     auto [_, id] = rdf4cpp::rdf::datatypes::registry::lang_tags::from_inlined(handle_.node_id().literal_id());
     return Literal{NodeBackendHandle{NodeID{id, this->handle_.node_id().literal_type()},
                                      handle_.type(),

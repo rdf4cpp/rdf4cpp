@@ -139,6 +139,7 @@ private:
     /**
      * Creates a normal accessible Literal from a lang tagged string.
      * Do not leak this, this would make lang tag inlining useless.
+     * note: no safety checks here, make sure this is actually a inlined language tagged string before calling!
      * @return de inlined lang tagged literal
      */
     [[nodiscard]] Literal lang_tagged_get_de_inlined() const noexcept;
