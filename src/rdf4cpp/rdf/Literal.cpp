@@ -1317,16 +1317,25 @@ Literal Literal::regex_replace(Literal const &pattern, Literal const &replacemen
     return this->regex_replace(*repl, node_storage);
 }
 
-util::TriBool Literal::contains(std::string_view const needle) const noexcept {
+util::TriBool Literal::contains_normalized(std::string_view const needle) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
     auto const s = this->lexical_form();
-    auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc | una::ranges::to_utf8<std::string>();
 
-    auto r = una::casesens::search_utf8(s.view(), norm_needle);
+    auto r = una::casesens::search_utf8(s.view(), needle);
     return static_cast<bool>(r);
+}
+
+util::TriBool Literal::contains(std::string_view const needle) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+
+    auto norm_needle = una::norm::to_nfc_utf8(needle);
+
+    return this->contains_normalized(norm_needle);
 }
 
 Literal Literal::as_contains(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1347,11 +1356,11 @@ Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_stor
         return Literal{};
     }
 
-    auto const res = this->contains(needle.lexical_form());
+    auto const res = this->contains_normalized(needle.lexical_form());
     return Literal::make_boolean(res, node_storage);
 }
 
-Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::substr_before_normalized(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
@@ -1361,9 +1370,8 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     }
 
     auto const s = this->lexical_form();
-    auto const norm_needle = una::norm::to_nfc_utf8(needle);
 
-    const auto r = una::casesens::search_utf8(s.view(), norm_needle);
+    const auto r = una::casesens::search_utf8(s.view(), needle);
 
     if (!r)
         return Literal::make_simple_unchecked("", node_storage);
@@ -1372,15 +1380,20 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
+Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const norm_needle = una::norm::to_nfc_utf8(needle);
+    return this->substr_before_normalized(norm_needle, node_storage);
+}
+
 Literal Literal::substr_before(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_eq<datatypes::rdf::LangString>() && this->language_tag() != needle.language_tag()) {
         return Literal{};
     }
 
-    return this->substr_before(needle.lexical_form(), node_storage);
+    return this->substr_before_normalized(needle.lexical_form(), node_storage);
 }
 
-Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::substr_after_normalized(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
     if (!this->is_string_like()) {
         return Literal{};
     }
@@ -1390,15 +1403,19 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     }
 
     auto const s = this->lexical_form();
-    auto const norm_needle = una::norm::to_nfc_utf8(needle);
 
-    const auto r = una::casesens::search_utf8(s.view(), norm_needle);
+    const auto r = una::casesens::search_utf8(s.view(), needle);
 
     if (!r)
         return Literal::make_simple_unchecked("", node_storage);
 
-    auto substr = static_cast<std::string_view>(s.view()).substr(r.pos() + norm_needle.size());  // search_utf8 returns byte position, not unicode character position
+    auto substr = static_cast<std::string_view>(s.view()).substr(r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
+}
+
+Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
+    auto const norm_needle = una::norm::to_nfc_utf8(needle);
+    return this->substr_after_normalized(needle, node_storage);
 }
 
 Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1406,20 +1423,25 @@ Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_sto
         return Literal{};
     }
 
-    return this->substr_after(needle.lexical_form(), node_storage);
+    return this->substr_after_normalized(needle.lexical_form(), node_storage);
 }
 
-util::TriBool Literal::str_starts_with(std::string_view const needle) const noexcept {
+util::TriBool Literal::str_starts_with_normalized(std::string_view const needle) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
     auto const s = this->lexical_form();
 
-    auto norm_needle = needle | una::ranges::views::utf8 | una::views::norm::nfc;
+    auto norm_needle = needle | una::ranges::views::utf8;
     auto len = std::ranges::distance(norm_needle);
     // TODO use std::ranges::starts_with as soon as c++ 23 arrives
     return std::ranges::equal(norm_needle, s.view() | una::ranges::views::utf8 | una::views::take(len));
+}
+
+util::TriBool Literal::str_starts_with(std::string_view const needle) const noexcept {
+    auto norm = una::norm::to_nfc_utf8(needle);
+    return this->str_starts_with_normalized(norm);
 }
 
 Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1444,17 +1466,17 @@ Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &no
         return Literal{};
     }
 
-    auto const res = this->str_starts_with(needle.lexical_form());
+    auto const res = this->str_starts_with_normalized(needle.lexical_form());
     return Literal::make_boolean(res, node_storage);
 }
 
-util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
+util::TriBool Literal::str_ends_with_normalized(std::string_view needle) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
     auto const s = this->lexical_form();
-    auto norm_needle = needle | una::views::utf8 | una::views::norm::nfc;
+    auto norm_needle = needle | una::views::utf8;
     auto norm_this = s.view() | una::views::utf8;
     auto const len_needle = std::ranges::distance(norm_needle);
     auto const len_this = std::ranges::distance(norm_this);
@@ -1464,6 +1486,14 @@ util::TriBool Literal::str_ends_with(std::string_view const needle) const noexce
         return false;
 
     return std::ranges::equal(norm_needle, norm_this | una::views::drop(len_this - len_needle));
+}
+
+util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
+    if (!this->is_string_like()) {
+        return util::TriBool::Err;
+    }
+    auto norm = una::norm::to_nfc_utf8(needle);
+    return this->str_starts_with_normalized(norm);
 }
 
 Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1488,7 +1518,7 @@ Literal Literal::as_str_ends_with(Literal const &needle, Node::NodeStorage &node
         return Literal{};
     }
 
-    auto const res = this->str_ends_with(needle.lexical_form());
+    auto const res = this->str_ends_with_normalized(needle.lexical_form());
     return Literal::make_boolean(res, node_storage);
 }
 
