@@ -19,12 +19,22 @@ namespace lang_tags {
  * modifying the vector after any Literal was created is undefined behavior.
  * this includes Literals already created in a persistent node storage.
  */
-extern
-#ifndef MODIFYABLE_LANG_TAG_INLINES
-        const
+#ifdef MODIFYABLE_LANG_TAG_INLINES
+inline const std::vector<std::string>
+        tags_to_inline{
+                "de",
+                "en",
+                "fr",
+                "ch",
+        };
+#else
+constexpr const std::array<std::string_view, 4> tags_to_inline{
+        "de",
+        "en",
+        "fr",
+        "ch",
+};
 #endif
-        std::vector<std::string>
-                tags_to_inline;
 
 using LangTagID = uint64_t;
 
