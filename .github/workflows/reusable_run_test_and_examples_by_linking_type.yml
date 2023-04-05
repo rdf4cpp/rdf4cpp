@@ -55,7 +55,6 @@ jobs:
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris # TODO: remove when uni-algo/0.7.1 is available on Conan Center
 
       - name: Cache conan data
         id: cache-conan
