@@ -44,20 +44,20 @@ TEST_CASE("rdf:langString") {
 }
 
 TEST_CASE("rdf::langString inlining") {
-    using namespace rdf4cpp::rdf::datatypes::registry::lang_tags;
-    CHECK(bits_needed_for(1) == 1);
-    CHECK(bits_needed_for(2) == 2);
-    CHECK(bits_needed_for(3) == 2);
-    CHECK(bits_needed_for(4) == 3);
-    CHECK(bits_needed_for(5) == 3);
+    using namespace rdf4cpp::rdf::datatypes::registry;
+    CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(1) == 1);
+    CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(2) == 2);
+    CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(3) == 2);
+    CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(4) == 3);
+    CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(5) == 3);
 
     // these 2 checks need to be modified, if the default inlined tags change
-    CHECK(tags_to_inline.size() == 4);
-    CHECK(inlined_size() == 2);
+    CHECK(DatatypeRegistry::LangTagInlines::tags_to_inline.size() == 4);
+    CHECK(DatatypeRegistry::LangTagInlines::inlined_size() == 2);
 
     CHECK(Literal::make_lang_tagged("hello world", "en").is_inlined());
     CHECK(Literal::make_lang_tagged("hello world", "de").is_inlined());
     CHECK(!Literal::make_lang_tagged("hello world", "en-us").is_inlined());
 
-    CHECK(!try_into_inlined(storage::node::identifier::LiteralID{1l << 41}, 0).has_value());
+    CHECK(!DatatypeRegistry::LangTagInlines::try_into_inlined(storage::node::identifier::LiteralID{1l << 41}, 0).has_value());
 }
