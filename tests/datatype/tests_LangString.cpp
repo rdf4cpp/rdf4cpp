@@ -52,7 +52,7 @@ TEST_CASE("rdf::langString inlining") {
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(5) == 3);
 
     // these 2 checks need to be modified, if the default inlined tags change
-    CHECK(DatatypeRegistry::LangTagInlines::tags_to_inline.size() == 4);
+    CHECK(DatatypeRegistry::LangTagInlines::get_tags_to_inline().size() == 4);
     CHECK(DatatypeRegistry::LangTagInlines::inlined_size() == 2);
 
     CHECK(Literal::make_lang_tagged("hello world", "en").is_inlined());

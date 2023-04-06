@@ -326,11 +326,10 @@ public:
 
 public:
     class LangTagInlines {
-    public:
         /**
          * language tags to try to inline.
          * the vector can be modified at startup.
-         * modifying the vector after any Literal was created is undefined behavior.
+         * WARNING: modifying the vector after any Literal was created is UNDEFINED BEHAVIOR.
          * this includes Literals already created in a persistent node storage.
          */
 #ifdef MODIFYABLE_LANG_TAG_INLINES
@@ -341,6 +340,26 @@ public:
                         "fr",
                         "ch",
                 };
+
+    public:
+        /**
+         * sets the language tags to try to inline.
+         * may only be called at startup.
+         * WARNING: calling this method after any Literal was created is UNDEFINED BEHAVIOR.
+         * this includes Literals already created in a persistent node storage.
+         */
+        static inline void set_tags_to_inline(std::initializer_list<std::string> li) {
+            tags_to_inline = li;
+        }
+        /**
+         * add one language tag to try to inline.
+         * may only be called at startup.
+         * WARNING: calling this method after any Literal was created is UNDEFINED BEHAVIOR.
+         * this includes Literals already created in a persistent node storage.
+         */
+        static inline void add_tag_to_inline(std::string_view t) {
+            tags_to_inline.emplace_back(t);
+        }
 #else
         static constexpr std::array<std::string_view, 4> tags_to_inline{
                 "de",
@@ -349,6 +368,11 @@ public:
                 "ch",
         };
 #endif
+
+    public:
+        static inline const auto &get_tags_to_inline() {
+            return tags_to_inline;
+        }
 
         using LangTagID = uint64_t;
 
