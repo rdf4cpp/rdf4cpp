@@ -54,15 +54,12 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
         return std::nullopt;
     }
 
-    auto p = util::try_pack_integral<uint64_t, storage::node::identifier::LiteralID::width>(static_cast<uint64_t>(to_pack_value));
-    if (p.has_value())
-        return storage::node::identifier::LiteralID{p.value()};
-    return std::nullopt;
+    return util::try_pack_integral<storage::node::identifier::LiteralID>(static_cast<uint64_t>(to_pack_value));
 }
 
 template<>
 capabilities::Inlineable<xsd_positive_integer>::cpp_type capabilities::Inlineable<xsd_positive_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    return cpp_type{util::unpack_integral<uint64_t, storage::node::identifier::LiteralID::width>(inlined.value)} + 1;
+    return cpp_type{util::unpack_integral<uint64_t>(inlined)} + 1;
 }
 
 template struct LiteralDatatypeImpl<xsd_positive_integer,

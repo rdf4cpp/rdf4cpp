@@ -49,19 +49,17 @@ nonstd::expected<capabilities::Default<xsd_non_positive_integer>::cpp_type, Dyna
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_non_positive_integer>::try_into_inlined(cpp_type const &value) noexcept {
-    if (-value >= (uint64_t{1} << storage::node::identifier::LiteralID::width)) {
+    auto const to_pack_value = -value;
+    if (to_pack_value >= (uint64_t{1} << storage::node::identifier::LiteralID::width)) {
         return std::nullopt;
     }
 
-    auto p = util::try_pack_integral<uint64_t, storage::node::identifier::LiteralID::width>(static_cast<uint64_t>(-value));
-    if (p.has_value())
-        return storage::node::identifier::LiteralID{p.value()};
-    return std::nullopt;
+    return util::try_pack_integral<storage::node::identifier::LiteralID>(static_cast<uint64_t>(to_pack_value));
 }
 
 template<>
 capabilities::Inlineable<xsd_non_positive_integer>::cpp_type capabilities::Inlineable<xsd_non_positive_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    return -cpp_type{util::unpack_integral<uint64_t, storage::node::identifier::LiteralID::width>(inlined.value)};
+    return -cpp_type{util::unpack_integral<uint64_t>(inlined)};
 }
 
 

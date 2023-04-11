@@ -32,6 +32,10 @@ struct __attribute__((__packed__)) LiteralID {
         return *this;
     }
 
+    [[nodiscard]] constexpr underlying_type to_underlying() const noexcept {
+        return value;
+    }
+
     constexpr LiteralID operator++(int) noexcept {
         LiteralID new_literal_id{*this};
         ++value;

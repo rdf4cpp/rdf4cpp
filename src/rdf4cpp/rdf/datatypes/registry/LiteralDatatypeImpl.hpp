@@ -351,28 +351,20 @@ struct Inlineable {
     static constexpr std::true_type is_inlineable{};
 
     static std::optional<storage::node::identifier::LiteralID> try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
-        static constexpr size_t pack_width = storage::node::identifier::LiteralID::width;
-
         if constexpr (std::integral<cpp_type>) {
-            auto p = util::try_pack_integral<uint64_t, pack_width>(value);
-            if (p.has_value())
-                return storage::node::identifier::LiteralID{p.value()};
-            return std::nullopt;
+            return util::try_pack_integral<storage::node::identifier::LiteralID>(value);
         } else {
             static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
+            return std::nullopt; // silence gcc no-return warning
         }
-
-        return std::nullopt;
     }
 
     static cpp_type from_inlined([[maybe_unused]] storage::node::identifier::LiteralID inlined) noexcept {
-        static constexpr size_t pack_width = storage::node::identifier::LiteralID::width;
-
         if constexpr (std::integral<cpp_type>) {
-            return util::unpack_integral<cpp_type, pack_width>(inlined.value);
+            return util::unpack_integral<cpp_type>(inlined);
         } else {
             static_assert(detail::always_false_v<cpp_type>, "from_inlined not implemented for inlineable type");
-            return {};  // silence gcc no-return warning
+            return {}; // silence gcc no-return warning
         }
     }
 };

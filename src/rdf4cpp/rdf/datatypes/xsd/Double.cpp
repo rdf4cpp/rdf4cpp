@@ -62,7 +62,7 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_double>::cpp_type capabilities::Inlineable<xsd_double>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    return util::unpack<double>(inlined.value << (64 - storage::node::identifier::LiteralID::width));
+    return util::unpack<cpp_type>(inlined.value << (64 - storage::node::identifier::LiteralID::width));
 }
 
 template struct LiteralDatatypeImpl<xsd_double,

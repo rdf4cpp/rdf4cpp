@@ -10,9 +10,31 @@ namespace rdf4cpp::rdf::datatypes::registry::util {
 
 namespace packing_detail {
 
+    template<typename T>
+    struct ReprType {
+        using type = T;
+    };
+
+    template<typename T> requires requires { typename T::underlying_type; }
+    struct ReprType<T> {
+        using type = typename T::underlying_type;
+    };
+
+    template<typename T>
+    using ReprType_t = typename ReprType<T>::type;
+
+    template<typename T>
+    constexpr ReprType_t<T> to_underlying(T value) {
+        if constexpr (std::is_same_v<ReprType_t<T>, T>) {
+            return value;
+        } else {
+            return value.to_underlying();
+        }
+    }
+
     template<typename P, typename T>
     union __attribute__((__packed__)) PackingHelper {
-        static_assert(sizeof(T) <= sizeof(P), "Packed into type must be at least as large as type to pack");
+        static_assert(sizeof(P) >= sizeof(T), "Packed into type must be at least as large as type to pack");
         static constexpr size_t value_padding = sizeof(P) - sizeof(T);
 
         struct __attribute__((__packed__)) {
@@ -48,13 +70,14 @@ namespace packing_detail {
  * @tparam T smaller type to be packed
  * @param value value to be packed
  * @return the packed value
+ * @note bits that do not fit into a P are discarded
  */
 template<typename P, typename T>
 constexpr P pack(T value) noexcept {
-    static_assert(sizeof(T) <= sizeof(P));
+    using RP = packing_detail::ReprType_t<P>;
 
-    packing_detail::PackingHelper<P, T> reinterpret{ .unpacked_value = { .value = value } };
-    return reinterpret.packed_value;
+    packing_detail::PackingHelper<RP, T> reinterpret{.unpacked_value = {.value = value}};
+    return P{reinterpret.packed_value};
 }
 
 /**
@@ -63,12 +86,13 @@ constexpr P pack(T value) noexcept {
  * @tparam P bigger type that the value of T was packed into
  * @param packed_value the packed value to unpack
  * @return the unpacked value
+ * @note bits that do not fit into a T are discarded
  */
 template<typename T, typename P>
 constexpr T unpack(P packed_value) noexcept {
-    static_assert(sizeof(T) <= sizeof(P));
+    using RP = packing_detail::ReprType_t<P>;
 
-    packing_detail::PackingHelper<P, T> reinterpret{ .packed_value = packed_value };
+    packing_detail::PackingHelper<RP, T> reinterpret{.packed_value = packing_detail::to_underlying(packed_value)};
     return reinterpret.unpacked_value.value;
 }
 
@@ -86,8 +110,10 @@ constexpr P pack_signed(T value) noexcept {
     assert(packing_detail::no_information_in_bits_after<bits - 1>(value));
 
     if constexpr (sizeof(T) * 8 > bits) {
+        using UT = std::make_unsigned_t<T>;
+
         // clear bits without information if necessary
-        P const keep_mask = (P{1} << bits) - 1;
+        UT const keep_mask = (UT{1} << bits) - 1;
         value &= keep_mask;
     }
 
@@ -135,6 +161,11 @@ constexpr std::optional<P> try_pack_integral(T value) noexcept {
     }
 }
 
+template<typename P, std::integral T>
+constexpr std::optional<P> try_pack_integral(T value) noexcept {
+    return try_pack_integral<P, P::width>(value);
+}
+
 /**
  * @brief reverse operation of pack_integral
  */
@@ -145,6 +176,11 @@ constexpr T unpack_integral(P packed_value) noexcept {
     } else {
         return unpack_signed<T, bits>(packed_value);
     }
+}
+
+template<std::integral T, typename P>
+constexpr T unpack_integral(P packed_value) noexcept {
+    return unpack_integral<T, P::width>(packed_value);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util
