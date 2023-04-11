@@ -30,10 +30,9 @@ Literal Literal::make_null() noexcept {
 }
 
 Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
-    auto lf = una::norm::to_nfc_utf8(lexical_form);
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
-                                             .lexical_form = lf,
+                                             .lexical_form = lexical_form,
                                              .language_tag = ""}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
@@ -56,10 +55,9 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
-    auto lf = una::norm::to_nfc_utf8(lexical_form);
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                             .lexical_form = lf,
+                                             .lexical_form = lexical_form,
                                              .language_tag = lang}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
@@ -111,13 +109,15 @@ bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept
 }
 
 Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
-    return Literal::make_simple_unchecked(lexical_form, node_storage);
+    const auto ln = una::norm::to_nfc_utf8(lexical_form);
+    return Literal::make_simple_unchecked(ln, node_storage);
 }
 
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
     const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+    const auto ln = una::norm::to_nfc_utf8(lexical_form);
 
-    return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
+    return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
 }
 
 Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
@@ -131,7 +131,7 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
     }
 
     if (datatype_identifier == datatypes::xsd::String::datatype_id) {
-        return Literal::make_simple_unchecked(lexical_form, node_storage);
+        return Literal::make_simple(lexical_form, node_storage);
     }
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {

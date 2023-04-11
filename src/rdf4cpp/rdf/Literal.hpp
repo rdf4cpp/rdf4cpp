@@ -201,7 +201,7 @@ public:
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
         } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(lexical_form, node_storage);
+            return Literal::make_simple(lexical_form, node_storage);
         }
 
         auto value = T::from_string(lexical_form);
@@ -244,7 +244,7 @@ public:
         }
 
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(compatible_value, node_storage);
+            return Literal::make_simple(compatible_value, node_storage);
         }
 
         if constexpr (datatypes::IsInlineable<T>) {
