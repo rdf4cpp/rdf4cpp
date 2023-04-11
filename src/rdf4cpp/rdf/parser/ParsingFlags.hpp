@@ -9,6 +9,10 @@ namespace rdf4cpp::rdf::parser {
 enum struct ParsingFlag : uint8_t {
     Strict = 1 << 0,
     NoParsePrefix = 1 << 1,
+    Turtle = 1 << 2,
+    NTriples = 1 << 3,
+    NQuads = 1 << 4,
+    TriG = 1 << 5,
 };
 
 struct ParsingFlags {

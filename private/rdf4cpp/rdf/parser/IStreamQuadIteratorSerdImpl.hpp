@@ -57,6 +57,18 @@ private:
     static SerdStatus on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept;
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
 
+    static constexpr SerdSyntax extract_syntax_from_flags(ParsingFlags flags) noexcept {
+        if (flags.contains(ParsingFlag::Turtle))
+            return SerdSyntax::SERD_TURTLE;
+        if (flags.contains(ParsingFlag::NTriples))
+            return SerdSyntax::SERD_NTRIPLES;
+        if (flags.contains(ParsingFlag::NQuads))
+            return SerdSyntax::SERD_NQUADS;
+        if (flags.contains(ParsingFlag::TriG))
+            return SerdSyntax::SERD_TRIG;
+        return SerdSyntax::SERD_TURTLE;
+    }
+
 public:
     Impl(std::istream &istream, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
 

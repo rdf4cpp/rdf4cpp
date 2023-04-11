@@ -281,3 +281,89 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit == IStreamQuadIterator{});
     }
 }
+
+TEST_CASE("N-Triple") {
+    SUBCASE("simple") {
+        std::stringstream str{"<http://example/s> <http://example/p> \"string\" ."};
+
+        IStreamQuadIterator it{str, ParsingFlag::NTriples};
+
+        CHECK(it != IStreamQuadIterator{});
+        CHECK(it->has_value());
+        CHECK(it->value() == Quad{IRI{"http://example/s"},
+                                  IRI{"http://example/p"},
+                                  Literal::make_simple("string")});
+
+        ++it;
+        CHECK(it == IStreamQuadIterator{});
+    }
+    SUBCASE("Turtle") {
+        constexpr char const *triples = "@base <http://invalid-url.org> .\n"
+                                        "@prefix xsd: <http://some-random-url.de#> .\n"
+                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
+                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->has_value());
+        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                   IRI{"http://purl.org/dc/elements/1.1/subject"},
+                                   Literal::make_simple("search")});
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
+    }
+}
+
+TEST_CASE("N-Quads") {
+    SUBCASE("simple") {
+        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> ."};
+
+        IStreamQuadIterator it{str, ParsingFlag::NQuads};
+
+        CHECK(it != IStreamQuadIterator{});
+        CHECK(it->has_value());
+        CHECK(it->value() == Quad{IRI{"http://example/g"},
+                                  IRI{"http://example/s"},
+                                  IRI{"http://example/p"},
+                                  IRI{"http://example/o"}});
+
+        ++it;
+        CHECK(it == IStreamQuadIterator{});
+    }
+}
+
+TEST_CASE("TriG") {
+    SUBCASE("simple") {
+        std::stringstream str{"<http://example/g> {<http://example/s> <http://example/p> <http://example/o> .}"};
+
+        IStreamQuadIterator it{str, ParsingFlag::TriG};
+
+        CHECK(it != IStreamQuadIterator{});
+        CHECK(it->has_value());
+        CHECK(it->value() == Quad{IRI{"http://example/g"},
+                                  IRI{"http://example/s"},
+                                  IRI{"http://example/p"},
+                                  IRI{"http://example/o"}});
+
+        ++it;
+        CHECK(it == IStreamQuadIterator{});
+    }
+}
