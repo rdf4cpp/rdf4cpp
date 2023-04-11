@@ -51,12 +51,10 @@ struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
 template<>
 struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
     size_t operator()(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) const noexcept {
-        using namespace rdf4cpp::rdf::storage::util;
-
-        return robin_hood::hash<std::array<size_t, 2>>{}(
+        return rdf4cpp::rdf::storage::util::robin_hood::hash<std::array<size_t, 2>>{}(
                 std::array<size_t, 2>{
-                        robin_hood::hash<std::string_view>{}(x.lexical_form),
-                        robin_hood::hash<std::string_view>{}(x.language_tag)});
+                        rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>{}(x.lexical_form),
+                        rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>{}(x.language_tag)});
     }
 };
 
