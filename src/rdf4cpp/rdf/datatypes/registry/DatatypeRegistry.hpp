@@ -393,38 +393,40 @@ public:
         /**
          * number of bits needed for the current tags to inline
          */
-        static inline size_t inlined_size() noexcept {
+        static constexpr size_t inlined_size() noexcept {
             // number of bits needed for the biggest id
             return bits_needed_for(tags_to_inline.size() - 1);
         }
 
+    private:
         /**
          * shift where the inlined tag is located
          */
-        static inline uint64_t shift() noexcept {
+        static constexpr uint64_t shift() noexcept {
             return storage::node::identifier::LiteralID::width - inlined_size();
         }
 
         /**
          * mask for the inlined language tag
          */
-        static inline uint64_t mask_inlined() noexcept {
+        static constexpr uint64_t mask_inlined() noexcept {
             return ((1l << inlined_size()) - 1) << shift();
         }
 
         /**
          * mask for the base literal id
          */
-        static inline uint64_t mask_base_id() noexcept {
+        static constexpr uint64_t mask_base_id() noexcept {
             return (1l << shift()) - 1;
         }
 
+    public:
         /**
          * converts a inlined language tag id back to its language tag.
          * @param id
          * @return language tag or the empty string on a invalid id
          */
-        static inline std::string_view inlined_to_tag(LangTagID id) noexcept {
+        static constexpr std::string_view inlined_to_tag(LangTagID id) noexcept {
             if (id < tags_to_inline.size())
                 return tags_to_inline[id];
             return "";
@@ -435,7 +437,7 @@ public:
          * @param tag
          * @return id or std::nullopt
          */
-        static inline std::optional<LangTagID> try_tag_to_inlined(std::string_view tag) noexcept {
+        static constexpr std::optional<LangTagID> try_tag_to_inlined(std::string_view tag) noexcept {
             for (uint64_t i = 0; i < tags_to_inline.size(); ++i) {
                 if (tags_to_inline[i] == tag) {
                     return i;
@@ -450,7 +452,7 @@ public:
          * @param tag
          * @return inlined LiteralID or std::nullopt
          */
-        static inline std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
+        static constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
             if ((id.value & mask_inlined()) != 0)
                 return std::nullopt;
             return storage::node::identifier::LiteralID{id.value | (tag << shift())};
@@ -461,7 +463,7 @@ public:
          * @param id
          * @return [language_tag_id, base_literal_id]
          */
-        static inline std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
+        static constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
             uint64_t t = (id.value & mask_inlined()) >> shift();
             uint64_t i = id.value & mask_base_id();
             return std::pair{t, storage::node::identifier::LiteralID{i}};
