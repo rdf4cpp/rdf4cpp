@@ -367,6 +367,16 @@ public:
                 "fr",
                 "ch",
         };
+
+    public:
+        /**
+         * define MODIFYABLE_LANG_TAG_INLINES to modify which tags get inlined at runtime.
+         */
+        static void set_tags_to_inline(std::initializer_list<std::string>) = delete;
+        /**
+         * define MODIFYABLE_LANG_TAG_INLINES to modify which tags get inlined at runtime.
+         */
+        static void add_tag_to_inline(std::string_view) = delete;
 #endif
 
     public:
