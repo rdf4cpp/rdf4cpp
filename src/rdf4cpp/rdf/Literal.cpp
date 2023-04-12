@@ -94,13 +94,12 @@ Literal Literal::make_typed_unchecked(std::any &&value, datatypes::registry::Dat
 }
 
 Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
-    auto s = una::norm::to_nfc_utf8(str);
     if (lang_tag_src.datatype_eq<datatypes::rdf::LangString>()) {
-        return Literal::make_lang_tagged_unchecked(s, lang_tag_src.language_tag(), node_storage);
+        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
     }
 
     assert(lang_tag_src.datatype_eq<datatypes::xsd::String>());
-    return Literal::make_simple_unchecked(s, node_storage);
+    return Literal::make_simple_unchecked(str, node_storage);
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
@@ -108,19 +107,32 @@ bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept
     return this->datatype().identifier() == datatype;
 }
 
-Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
-    const auto ln = una::norm::to_nfc_utf8(lexical_form);
-    return Literal::make_simple_unchecked(ln, node_storage);
+Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage, bool normalize) {
+    if (normalize) {
+        const auto ln = una::norm::to_nfc_utf8(lexical_form);
+        return Literal::make_simple_unchecked(ln, node_storage);
+    } else {
+        if (una::norm::is_nfc_utf8(lexical_form))
+            return Literal::make_simple_unchecked(lexical_form, node_storage);
+        else
+            return Literal{};
+    }
 }
 
-Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
+Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage, bool normalize) {
     const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
-    const auto ln = una::norm::to_nfc_utf8(lexical_form);
-
-    return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
+    if (normalize) {
+        const auto ln = una::norm::to_nfc_utf8(lexical_form);
+        return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
+    } else {
+        if (una::norm::is_nfc_utf8(lexical_form))
+            return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
+        else
+            return Literal{};
+    }
 }
 
-Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
+Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage, bool normalize) {
     using namespace datatypes::registry;
 
     DatatypeIDView const datatype_identifier{datatype};
@@ -131,7 +143,7 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
     }
 
     if (datatype_identifier == datatypes::xsd::String::datatype_id) {
-        return Literal::make_simple(lexical_form, node_storage);
+        return Literal::make_simple(lexical_form, node_storage, normalize);
     }
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
@@ -386,9 +398,9 @@ Literal::operator std::string() const noexcept {
                     break;
                 }
                 [[likely]] default : {
-                    out << character;
-                    break;
-                }
+                        out << character;
+                        break;
+                    }
             }
         }
         out << "\"";
@@ -396,7 +408,9 @@ Literal::operator std::string() const noexcept {
 
     std::ostringstream oss;
 
-    if (this->is_inlined()) {
+    if (this->null()) {
+        oss << "null";
+    } else if (this->is_inlined()) {
         quoted_lexical_into_stream(oss, this->lexical_form());
 
         // rdf:langString is not inlined, therefore can only have datatype not lang tag
@@ -1356,6 +1370,9 @@ Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_stor
         return Literal{};
     }
 
+    if (!needle.is_string_like())
+        return Literal::make_boolean(true, node_storage);
+
     auto const res = this->contains_normalized(needle.lexical_form());
     return Literal::make_boolean(res, node_storage);
 }
@@ -1390,6 +1407,10 @@ Literal Literal::substr_before(Literal const &needle, Node::NodeStorage &node_st
         return Literal{};
     }
 
+    if (!needle.is_string_like()) {
+        return Literal{};
+    }
+
     return this->substr_before_normalized(needle.lexical_form(), node_storage);
 }
 
@@ -1420,6 +1441,10 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
 
 Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_eq<datatypes::rdf::LangString>() && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    if (!needle.is_string_like()) {
         return Literal{};
     }
 
@@ -1696,6 +1721,10 @@ Literal Literal::sha384(NodeStorage &node_storage) const {
 
 Literal Literal::sha512(NodeStorage &node_storage) const {
     return this->hash_with("SHA2-512", node_storage);
+}
+
+std::string Literal::normalize_unicode(std::string_view utf8) {
+    return una::norm::to_nfc_utf8(utf8);
 }
 
 bool lang_matches(std::string_view const lang_tag, std::string_view const lang_range) noexcept {

@@ -36,7 +36,9 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
         CHECK(std::string(lit1) == "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
-        CHECK(Literal::make_simple("\u0174") == Literal::make_simple("W\u0302"));  // 2 different ways of writing Ŵ
+        CHECK(Literal::make_simple("W\u0302") == Literal{});
+        CHECK(Literal::make_lang_tagged("W\u0302", "de") == Literal{});
+        CHECK(Literal::make_simple("\u0174", storage::node::NodeStorage::default_instance(), true) == Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true));  // 2 different ways of writing Ŵ
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
@@ -600,7 +602,11 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("123"_xsd_string).as_contains(Literal::make_lang_tagged("1", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("fo\u0174obar", "en").as_contains(Literal::make_lang_tagged("foW\u0302o", "en")).ebv());  // 2 different ways of writing Ŵ
+        CHECK(Literal::make_lang_tagged("fo\u0174obar", "en",
+                                        storage::node::NodeStorage::default_instance(), true)
+                      .as_contains(
+                              Literal::make_lang_tagged("foW\u0302o", "en", storage::node::NodeStorage::default_instance(), true))
+                      .ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("substr_before") {
@@ -616,7 +622,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_before(""_xsd_string) == Literal::make_lang_tagged("", "en"));
 
         // unicode
-        CHECK(("abc\U0001f34c\u0174"_xsd_string).substr_before("W\u0302"_xsd_string) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+        CHECK(Literal::make_simple("abc\U0001f34c\u0174",
+                                   storage::node::NodeStorage::default_instance(), true)
+                      .substr_before(Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true)) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("substr_after") {
@@ -632,7 +640,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_after(""_xsd_string) == Literal::make_lang_tagged("abc", "en"));
 
         // unicode
-        CHECK(("a\U0001f34cb\u0174c\U0001f34c"_xsd_string).substr_after("W\u0302"_xsd_string) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+        CHECK(Literal::make_simple("a\U0001f34cb\u0174c\U0001f34c",
+                                   storage::node::NodeStorage::default_instance(), true)
+                      .substr_after(Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true)) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("str_start_with") {
@@ -645,7 +655,10 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("\u0174foobar", "en").as_str_starts_with("W\u0302foo"_xsd_string).ebv());  // 2 different ways of writing Ŵ
+        CHECK(Literal::make_lang_tagged("\u0174foobar", "en",
+                                        storage::node::NodeStorage::default_instance(), true)
+                      .as_str_starts_with(Literal::make_simple("W\u0302foo", storage::node::NodeStorage::default_instance(), true))
+                      .ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("str_ends_with") {
@@ -658,7 +671,10 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("fooba\u0174r", "en").as_str_ends_with("baW\u0302r"_xsd_string).ebv());  // 2 different ways of writing Ŵ
+        CHECK(Literal::make_lang_tagged("fooba\u0174r", "en",
+                                        storage::node::NodeStorage::default_instance(), true)
+                      .as_str_ends_with(Literal::make_simple("baW\u0302r", storage::node::NodeStorage::default_instance(), true))
+                      .ebv());  // 2 different ways of writing Ŵ
     }
 
     SUBCASE("concat") {
