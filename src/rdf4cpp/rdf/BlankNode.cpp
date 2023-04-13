@@ -1,6 +1,6 @@
 #include "BlankNode.hpp"
 
-#include <rdf4cpp/rdf/bnode_management/INodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -61,24 +61,24 @@ util::TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
     auto const this_backend = this->handle_.bnode_backend();
     auto const other_backend = other.handle_.bnode_backend();
 
-    if (this_backend.scope.null() || other_backend.scope.null()) {
-        return this_backend.scope.null() == other_backend.scope.null() && this_backend.identifier == other_backend.identifier;
+    if (this_backend.scope == nullptr || other_backend.scope == nullptr) {
+        return (this_backend.scope == nullptr) == (other_backend.scope == nullptr) && this_backend.identifier == other_backend.identifier;
     }
 
-    auto this_scope = this_backend.scope.try_upgrade();
+    auto this_scope = this_backend.scope->try_upgrade();
     if (!this_scope.has_value()) {
         return util::TriBool::Err;
     }
 
-    auto other_scope = other_backend.scope.try_upgrade();
+    auto other_scope = other_backend.scope->try_upgrade();
     if (!other_scope.has_value()) {
         return util::TriBool::Err;
     }
 
-    auto const this_label = (*this_scope)->find_label(this->handle_);
+    auto const this_label = this_scope->try_get_label(*this);
     assert(this_label.has_value());
 
-    auto const other_label = (*other_scope)->find_label(other.handle_);
+    auto const other_label = other_scope->try_get_label(other);
     assert(other_label.has_value());
 
     return *this_label == *other_label;

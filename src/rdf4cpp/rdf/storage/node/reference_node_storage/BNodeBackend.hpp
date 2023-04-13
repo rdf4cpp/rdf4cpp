@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
-#include <rdf4cpp/rdf/util/SharedPtr.hpp>
+#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
 
 #include <compare>
 #include <memory>
@@ -14,12 +14,12 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 class BNodeBackend {
     std::string identifier_;
-    rdf4cpp::rdf::util::WeakPtr<rdf4cpp::rdf::util::INodeScope const> scope_;
+    std::optional<rdf4cpp::rdf::util::WeakNodeScope> scope_;
     size_t hash_;
 
 public:
     using View = view::BNodeBackendView;
-    explicit BNodeBackend(std::string_view identifier, rdf4cpp::rdf::util::WeakPtr<rdf4cpp::rdf::util::INodeScope const> scope) noexcept;
+    explicit BNodeBackend(std::string_view identifier, std::optional<rdf4cpp::rdf::util::WeakNodeScope> scope) noexcept;
     explicit BNodeBackend(view::BNodeBackendView view) noexcept;
 
     [[nodiscard]] std::string_view identifier() const noexcept;

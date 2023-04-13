@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_RDF_UTIL_IBLANKNODEIDGENERATORBACKEND
 #define RDF4CPP_RDF_UTIL_IBLANKNODEIDGENERATORBACKEND
 
-#include <string>
 #include <cstddef>
 
 namespace rdf4cpp::rdf::util {

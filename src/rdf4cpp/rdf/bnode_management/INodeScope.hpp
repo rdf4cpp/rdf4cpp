@@ -1,8 +1,8 @@
 #ifndef RDF4CPP_INODESCOPE_HPP
 #define RDF4CPP_INODESCOPE_HPP
 
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/bnode_management/INodeFactory.hpp>
-#include <rdf4cpp/rdf/util/SharedPtr.hpp>
 
 #include <optional>
 #include <string_view>
@@ -13,7 +13,9 @@ namespace rdf4cpp::rdf::util {
  * Base backend interface for NodeScopes.
  * The scope remembers label <-> node relationships. For example as in BlankNode label <-> actual BlankNode in the storage.
  */
-struct INodeScope : virtual INodeFactory {
+struct INodeScope {
+    virtual ~INodeScope() noexcept = default;
+
     /**
      * Try to find a node with the given label in this scope.
      *
@@ -37,16 +39,6 @@ struct INodeScope : virtual INodeFactory {
      * @param handle the handle of the mapping
      */
     virtual void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) = 0;
-
-    /**
-     * Create a subscope of this scope. Subscopes should remember mappings from their parents
-     * but parents do not know the mappings of their children.
-     * Repeated calls with the same scope name should return the same scope.
-     *
-     * @param scope_name the name of the new subscope, could be a graph iri or some identifier identifying a subquery
-     * @return a shared ptr to the new subscope
-     */
-    [[nodiscard]] virtual SharedPtr<INodeScope> subscope(std::string scope_name) noexcept = 0;
 };
 
 }  //namespace rdf4cpp::rdf::util

@@ -133,10 +133,11 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/bnode_management/NodeGenerator.cpp
         src/rdf4cpp/rdf/bnode_management/NodeScope.cpp
         src/rdf4cpp/rdf/bnode_management/reference_backends/factory/SkolemIRIFactory.cpp
-        src/rdf4cpp/rdf/bnode_management/reference_backends/factory/UnscopedBNodeFactory.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/factory/BNodeFactory.cpp
         src/rdf4cpp/rdf/bnode_management/reference_backends/generator/RandomIdGenerator.cpp
         src/rdf4cpp/rdf/bnode_management/reference_backends/generator/IncreasingIdGenerator.cpp
-        src/rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceBNodeScope.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceNodeScope.cpp
+        src/rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
         src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp

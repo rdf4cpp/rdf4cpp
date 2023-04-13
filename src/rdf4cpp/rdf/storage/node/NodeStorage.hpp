@@ -3,7 +3,6 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
@@ -61,6 +60,7 @@ class NodeStorage {
      */
 
     friend struct WeakNodeStorage;
+    friend struct std::hash<NodeStorage>;
 
     /**
      * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
@@ -114,7 +114,7 @@ class NodeStorage {
      * @param id id of the slot
      * @return the corresponding control block
      */
-    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
+    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) noexcept {
         assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
         return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
     }
@@ -174,10 +174,10 @@ public:
      * @param id NodeStorage id
      * @return optional NodeStorage
      */
-    static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id);
+    static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id) noexcept;
 
     /**
-     * Registers a INodeStorageBackend at the identifier::NodeStorageID provided by the instance.
+     * Registers a INodeStorageBackend.
      *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
@@ -196,8 +196,8 @@ public:
     ~NodeStorage();
 
     /**
-     * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed.
-     * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
+     * NodeStorage does instance reference counting. If no instances of a NodeStorage exist anymore its backend is destroyed.
+     * For the default_instance an additional instance is kept so that its not even then destroyed if the there are no application held instances left.
      * @return current number of instances of this NodeStorage
      * @safey this function is inherently racy as the reference count can even change between fetching it and looking at the value
      *      do _not_ use it to check the reference count for _any_ kind of synchronization.
@@ -465,12 +465,12 @@ public:
     /**
      * @return whether this and other are referring to the same backend
      */
-    bool operator==(NodeStorage const &other) const noexcept = default;
+    bool operator==(NodeStorage const &other) const noexcept;
 
     /**
      * @return whether this and other are _not_ referring to the same backend
      */
-    bool operator!=(NodeStorage const &other) const noexcept = default;
+    bool operator!=(NodeStorage const &other) const noexcept;
 };
 
 /**
@@ -524,5 +524,15 @@ public:
 };
 
 }  // namespace rdf4cpp::rdf::storage::node
+
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::NodeStorage> {
+    size_t operator()(rdf4cpp::rdf::storage::node::NodeStorage const &storage) const noexcept;
+};
+
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::WeakNodeStorage> {
+    size_t operator()(rdf4cpp::rdf::storage::node::WeakNodeStorage const &storage) const noexcept;
+};
 
 #endif  //RDF4CPP_NODESTORAGE_HPP

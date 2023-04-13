@@ -5,11 +5,10 @@ namespace rdf4cpp::rdf::util {
 SkolemIRIFactory::SkolemIRIFactory(std::string iri_prefix) noexcept : iri_prefix{std::move(iri_prefix)} {
 }
 
-storage::node::identifier::NodeBackendHandle SkolemIRIFactory::make_null_node() const noexcept {
-    return storage::node::identifier::NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::IRI, {}};
-}
+storage::node::identifier::NodeBackendHandle SkolemIRIFactory::make_node(IIdGenerator &generator,
+                                                                         [[maybe_unused]] NodeScope const *scope,
+                                                                         storage::node::NodeStorage &node_storage) noexcept {
 
-storage::node::identifier::NodeBackendHandle SkolemIRIFactory::make_node(IIdGenerator &generator, storage::node::NodeStorage &node_storage) {
     size_t const buf_sz = generator.max_generated_id_size() + this->iri_prefix.size();
     auto buf = std::make_unique<char[]>(buf_sz);
 

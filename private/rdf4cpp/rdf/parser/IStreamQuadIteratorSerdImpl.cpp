@@ -1,5 +1,7 @@
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
+#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+
 #include <cassert>
 #include <cstddef>
 
@@ -69,9 +71,12 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
     }
 
     try {
-        return this->state->blank_node_generator
-                .subscope(std::move(graph_str))
-                .get_or_generate_node(node_str, this->state->node_storage);
+        assert(this->state->blank_node_generator != nullptr);
+        assert(this->state->blank_node_scope_manager != nullptr);
+
+        return this->state->blank_node_scope_manager->subscope(graph_str).get_or_generate_node(node_str,
+                                                                                               *this->state->blank_node_generator,
+                                                                                               this->state->node_storage);
     } catch (std::runtime_error const &e) {
         // TODO: check when actual blank node validation implemented
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed

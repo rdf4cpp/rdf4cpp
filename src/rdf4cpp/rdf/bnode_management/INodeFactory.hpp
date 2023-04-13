@@ -6,15 +6,18 @@
 
 namespace rdf4cpp::rdf::util {
 
+struct NodeScope;
+
 /**
- * A factory for nodes. Any kind of node. That given a generator
- * produces a node that somehow incorporates the generated id of the generator.
+ * A factory for nodes. Any kind of node. That given a generator and scope
+ * produces a node that somehow incorporates the generated id of the generator and maybe the scope.
  */
 struct INodeFactory {
-    virtual ~INodeFactory() = default;
+    virtual ~INodeFactory() noexcept = default;
 
-    [[nodiscard]] virtual storage::node::identifier::NodeBackendHandle make_null_node() const noexcept = 0;
-    [[nodiscard]] virtual storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator, storage::node::NodeStorage &node_storage) = 0;
+    [[nodiscard]] virtual storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
+                                                                                 NodeScope const *scope,
+                                                                                 storage::node::NodeStorage &node_storage) noexcept = 0;
 };
 
 }  //namespace rdf4cpp::rdf::util

@@ -1,10 +1,10 @@
 #ifndef RDF4CPP_RDF_UTIL_BLANKNODEMANAGER_HPP
 #define RDF4CPP_RDF_UTIL_BLANKNODEMANAGER_HPP
 
+#include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/bnode_management/IIdGenerator.hpp>
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_management/reference_backends/factory/BNodeFactory.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/factory/SkolemIRIFactory.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/factory/UnscopedBNodeFactory.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/generator/IncreasingIdGenerator.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/generator/RandomIdGenerator.hpp>
 
@@ -13,6 +13,8 @@
 #include <string_view>
 
 namespace rdf4cpp::rdf::util {
+
+struct NodeScope;
 
 /**
  * A standalone generator to generate nodes using a given backend.
@@ -25,8 +27,14 @@ namespace rdf4cpp::rdf::util {
 struct NodeGenerator {
     using NodeStorage = storage::node::NodeStorage;
 private:
-    std::unique_ptr<IIdGenerator> impl;
-    explicit NodeGenerator(std::unique_ptr<IIdGenerator> &&impl);
+    friend struct NodeScope;
+
+    std::unique_ptr<IIdGenerator> generator;
+    std::unique_ptr<INodeFactory> factory;
+
+    explicit NodeGenerator(std::unique_ptr<IIdGenerator> &&generator, std::unique_ptr<INodeFactory> &&factory) noexcept;
+
+    [[nodiscard]] Node generate_node_impl(NodeScope const *scope, NodeStorage &node_storage);
 public:
     NodeGenerator(NodeGenerator &&other) noexcept = default;
 
@@ -41,19 +49,73 @@ public:
      * @param backend the backend to use
      * @return a NodeGenerator using the given backend
      */
-    [[nodiscard]] static NodeGenerator with_backend(std::unique_ptr<IIdGenerator> backend);
+    [[nodiscard]] static NodeGenerator with_backends(std::unique_ptr<IIdGenerator> generator, std::unique_ptr<INodeFactory> factory);
 
     /**
-     * Creates a generator from a backend type a constructor arguments
-     * to construct the given backend type.
-     *
-     * @tparam GeneratorBackend type of the backend to use
-     * @param args arguments to pass to the constructor of GeneratorBackend to create it
-     * @return a NodeGenerator using the newly constructed backend
+     * Creates a new instances using the ReferenceNodeScope backend
      */
-    template<typename GeneratorBackend, typename ...Args> requires std::derived_from<GeneratorBackend, IIdGenerator>
-    static NodeGenerator with_backend(Args &&...args) {
-        return NodeGenerator{std::make_unique<GeneratorBackend>(std::forward<Args>(args)...)};
+    static NodeGenerator new_instance() noexcept;
+
+    /**
+     * Creates a generator from the generator backend type, the factory backend type and constructor arguments
+     * to construct the given backend types.
+     *
+     * @tparam GeneratorBackend type of generator backend to use
+     * @tparam FactoryBackend type of factory backend to use
+     * @param generator_args arguments to pass to the constructor of GeneratorBackend
+     * @param factory_args arguments to pass to the constructor of FactoryBackend
+     *
+     * @return a NodeGenerator using the newly constructed backends
+     */
+    template<typename GeneratorBackend, typename FactoryBackend, typename ...GeneratorArgs, typename ...FactoryArgs>
+        requires std::derived_from<GeneratorBackend, IIdGenerator> && std::derived_from<FactoryBackend, INodeFactory>
+    static NodeGenerator new_instance(std::piecewise_construct_t, std::tuple<GeneratorArgs ...> generator_args, std::tuple<FactoryArgs ...> factory_args) {
+        return NodeGenerator{std::apply(std::make_unique<GeneratorBackend>, std::move(generator_args)),
+                             std::apply(std::make_unique<FactoryBackend>, std::move(factory_args))};
+    }
+
+    /**
+     * Creates a new generator by default-constructing the given backends
+     *
+     * @tparam GeneratorBackend type of generator backend to use
+     * @tparam FactoryBackend type of factory backend to use
+     * @return the created generator
+     */
+    template<typename GeneratorBackend, typename FactoryBackend>
+        requires std::derived_from<GeneratorBackend, IIdGenerator> && std::derived_from<FactoryBackend, INodeFactory>
+    static NodeGenerator new_instance() {
+        return NodeGenerator{std::make_unique<GeneratorBackend>(),std::make_unique<BNodeFactory>()};
+    }
+
+    /**
+     * Creates a generator from the generator backend type and constructor arguments.
+     * The factory backend will be BNodeFactory.
+     *
+     * @tparam GeneratorBackend type of generator backend to use
+     * @param args arguments to pass to the constructor of GeneratorBackend
+     *
+     * @return a NodeGenerator using the newly constructed backends
+     */
+    template<typename GeneratorBackend, typename ...Args>
+        requires std::derived_from<GeneratorBackend, IIdGenerator>
+    static NodeGenerator new_instance_with_generator(Args &&...args) {
+        return NodeGenerator{std::make_unique<GeneratorBackend>(std::forward<Args>(args)...),std::make_unique<BNodeFactory>()};
+    }
+
+
+    /**
+     * Creates a generator from the factory backend type and constructor arguments.
+     * The generator backend will be RandomIdGenerator.
+     *
+     * @tparam FactoryBackend type of factory backend to use
+     * @param args arguments to pass to the constructor of FactoryBackend
+     *
+     * @return a NodeGenerator using the newly constructed backends
+     */
+    template<typename FactoryBackend, typename ...Args>
+        requires std::derived_from<FactoryBackend, INodeFactory>
+    static NodeGenerator new_instance_with_factory(Args &&...args) {
+        return NodeGenerator{std::make_unique<RandomIdGenerator>(),std::make_unique<FactoryBackend>(std::forward<Args>(args)...)};
     }
 
     /**
@@ -70,26 +132,7 @@ public:
      * @param node_storage the node storage in which the new node is placed
      * @return the generated node
      */
-    [[nodiscard]] Node generate_node(INodeFactory &factory = UnscopedBNodeFactory::default_instance(), NodeStorage &node_storage = NodeStorage::default_instance());
-
-    /**
-     * Creates a new NodeScope using this generator and the default NodeScope backend (i.e. reference_backends/scope/ReferenceBNodeScope).
-     * @return a new scope using the stated backends
-     */
-    NodeScope scope();
-
-    /**
-     * Creates a new NodeScope using this generator and an instance of Backend as the NodeScope.
-     * The NodeScope backend instance is constructed using the provided constructor arguments.
-     *
-     * @tparam Backend type of NodeScope backend to use
-     * @param args constructor arguments for Backend to construct an instance
-     * @return a new scope using the stated backends
-     */
-    template<typename Backend, typename ...Args> requires std::derived_from<Backend, INodeScope>
-    NodeScope scope(Args &&...args) {
-        return NodeScope{this->impl.get(), SharedPtr<Backend>::make(std::forward<Args>(args)...)};
-    }
+    [[nodiscard]] Node generate_node(NodeStorage &node_storage = NodeStorage::default_instance());
 };
 
 }  //namespace rdf4cpp::rdf::util

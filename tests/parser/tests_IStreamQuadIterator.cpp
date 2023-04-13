@@ -290,7 +290,10 @@ TEST_SUITE("IStreamQuadIterator") {
                                         "_:b2 <http://purl.org/dc/elements/1.1/subject> \"Some Subject\" .\n";
 
         SUBCASE("bnodes") {
-            IStreamQuadIterator::state_type state{};
+            IStreamQuadIterator::state_type state{
+                    .blank_node_generator = &util::NodeGenerator::default_instance(),
+                    .blank_node_scope_manager = &util::ReferenceNodeScopeManager::default_instance()};
+
             std::istringstream iss{triples};
             IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
 
@@ -327,11 +330,12 @@ TEST_SUITE("IStreamQuadIterator") {
         }
 
         SUBCASE("skolem iris") {
+            auto scope_mng = util::ReferenceNodeScopeManager::new_instance();
+            auto generator = util::NodeGenerator::new_instance_with_factory<util::SkolemIRIFactory>("http://skolem-iris.org#");
 
+            IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
+                                                  .blank_node_scope_manager = &scope_mng};
 
-            IStreamQuadIterator::state_type state{
-                    .blank_node_generator = util::NodeGenerator::default_instance()
-                                                    .scope<util::ReferenceSkolemIRIScope>("http://skolem-iris.org#")};
             std::istringstream iss{triples};
             IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
 

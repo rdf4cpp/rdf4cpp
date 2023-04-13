@@ -15,24 +15,24 @@ void blank_nodes() {
     print(b1);
 
     {
-        util::NodeScope scope = generator.scope();
+        util::NodeScope scope = util::NodeScope::new_instance();
 
         // can still generate fresh ids
-        Node not_remembered_b1 = scope.generate_node();
+        Node not_remembered_b1 = scope.generate_node(generator);
         print(not_remembered_b1);
 
         // generating ids based on blank node labels, these are remembered
-        Node remembered_b1 = scope.get_or_generate_node("some-bnode-label");
+        Node remembered_b1 = scope.get_or_generate_node("some-bnode-label", generator);
         print(remembered_b1);
 
-        Node remembered_b1_2 = scope.get_or_generate_node("some-bnode-label");
+        Node remembered_b1_2 = scope.get_or_generate_node("some-bnode-label", generator);
         assert(remembered_b1 == remembered_b1_2);
 
-        Node remembered_b2 = scope.get_or_generate_node("other-bnode-label");
+        Node remembered_b2 = scope.get_or_generate_node("other-bnode-label", generator);
         assert(remembered_b1 != remembered_b2);
         print(remembered_b2);
 
-        {
+        /*{
             // subscopes for e.g. multiple graphs in one file
             util::NodeScope subscope = scope.subscope("http://some-graph.com");
 
@@ -57,31 +57,30 @@ void blank_nodes() {
             Node remembered_b1_sub_again = subscope.try_get_node("some-bnode-label");
             assert(!remembered_b1_sub_again.null());
             print(remembered_b1_sub_again);
-        }
+        }*/
     }
 
     // all old scope state is destroyed here, labels are not remembered by new scopes
 }
 
 void skolem_iris() {
-    auto skolem_factory = util::SkolemIRIFactory{"http://skolem-iris.org#"};
-    auto &generator = util::NodeGenerator::default_instance();
+    auto generator = util::NodeGenerator::new_instance_with_factory<util::SkolemIRIFactory>("http://skolem-iris.org#");
 
-    Node i1 = generator.generate_node(skolem_factory);
+    Node i1 = generator.generate_node();
     print(i1);
 
     {
-        util::NodeScope skolem_scope = generator.scope<util::ReferenceSkolemIRIScope>(skolem_factory);
+        util::NodeScope skolem_scope = util::NodeScope::new_instance();
 
         // can still generate fresh ids
-        Node not_remembered_b1 = skolem_scope.generate_node();
+        Node not_remembered_b1 = skolem_scope.generate_node(generator);
         print(not_remembered_b1);
 
         // generating ids based on blank node labels, these are remembered
-        Node remembered_b1 = skolem_scope.get_or_generate_node("some-bnode-label");
+        Node remembered_b1 = skolem_scope.get_or_generate_node("some-bnode-label", generator);
         print(remembered_b1);
 
-        Node remembered_b1_2 = skolem_scope.get_or_generate_node("some-bnode-label");
+        Node remembered_b1_2 = skolem_scope.get_or_generate_node("some-bnode-label", generator);
         assert(remembered_b1 == remembered_b1_2);
 
         // everything else is identical to handling blank nodes

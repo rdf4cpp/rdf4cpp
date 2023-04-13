@@ -1,7 +1,8 @@
 #ifndef RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 #define RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 
-#include <rdf4cpp/rdf/bnode_management/NodeGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 #include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
 
@@ -39,8 +40,10 @@ struct ParsingState {
             rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
             std::equal_to<>>;
 
-    using blank_node_generator_type = util::NodeScope;
+    using blank_node_generator_type = util::NodeGenerator;
+    using blank_node_scope_type = util::NodeScope;
     using node_storage_type = storage::node::NodeStorage;
+    using blank_node_scope_manager_type = util::INodeScopeManager;
 
     /**
      * The initial prefixes the parser has knowledge of
@@ -53,12 +56,8 @@ struct ParsingState {
      */
     node_storage_type node_storage = storage::node::NodeStorage::default_instance();
 
-    /**
-     * The scope that generates blank nodes.
-     * @note default value is a new, empty scope that puts randomly generated BlankNodes into the NodeStorage::default_instance().
-     * @note if the parser has ParsingFlag::KeepBlankNodeIds set this field is ignored
-     */
-    blank_node_generator_type blank_node_generator = util::NodeGenerator::default_instance().scope();
+    blank_node_generator_type *blank_node_generator = &util::NodeGenerator::default_instance();
+    blank_node_scope_manager_type *blank_node_scope_manager = &util::ReferenceNodeScopeManager::default_instance();
 };
 
 }  //namespace rdf4cpp::rdf::parser

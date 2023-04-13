@@ -9,17 +9,18 @@ namespace rdf4cpp::rdf::util {
 
 /**
  * A factory that created Skolem IRIs.
- * The resulting IRIs are not explicitly scoped in the node storage.
+ * The resulting IRIs are not explicitly scoped in the node storage even if a scope is provided.
  */
-struct SkolemIRIFactory : virtual INodeFactory {
+struct SkolemIRIFactory final : INodeFactory {
 private:
     std::string iri_prefix;
 
 public:
     explicit SkolemIRIFactory(std::string iri_prefix) noexcept;
 
-    [[nodiscard]] storage::node::identifier::NodeBackendHandle make_null_node() const noexcept override;
-    [[nodiscard]] storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator, storage::node::NodeStorage &node_storage) override;
+    [[nodiscard]] storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
+                                                                         NodeScope const *scope,
+                                                                         storage::node::NodeStorage &node_storage) noexcept override;
 };
 
 }  //namespace rdf4cpp::rdf::util

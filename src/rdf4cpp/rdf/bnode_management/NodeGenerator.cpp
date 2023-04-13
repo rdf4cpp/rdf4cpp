@@ -1,36 +1,40 @@
 #include <rdf4cpp/rdf/bnode_management/NodeGenerator.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceBNodeScope.hpp>
 
 namespace rdf4cpp::rdf::util {
 
-NodeGenerator::NodeGenerator(std::unique_ptr<IIdGenerator> &&impl) : impl{std::move(impl)} {
+NodeGenerator::NodeGenerator(std::unique_ptr<IIdGenerator> &&generator, std::unique_ptr<INodeFactory> &&factory) noexcept : generator{std::move(generator)},
+                                                                                                                            factory{std::move(factory)} {
 }
 
 NodeGenerator &NodeGenerator::default_instance() {
-    static NodeGenerator instance = NodeGenerator::with_backend<RandomIdGenerator>();
+    static NodeGenerator instance = NodeGenerator::new_instance();
     return instance;
 }
 
-NodeGenerator NodeGenerator::with_backend(std::unique_ptr<IIdGenerator> backend) {
-    return NodeGenerator{std::move(backend)};
+NodeGenerator NodeGenerator::new_instance() noexcept {
+    return NodeGenerator::new_instance<RandomIdGenerator, BNodeFactory>();
+}
+
+NodeGenerator NodeGenerator::with_backends(std::unique_ptr<IIdGenerator> generator, std::unique_ptr<INodeFactory> factory) {
+    return NodeGenerator{std::move(generator), std::move(factory)};
 }
 
 std::string NodeGenerator::generate_id() {
     std::string buf;
-    buf.resize(this->impl->max_generated_id_size());
+    buf.resize(this->generator->max_generated_id_size());
 
-    auto *end = this->impl->generate_to_buf(buf.data());
+    auto *end = this->generator->generate_to_buf(buf.data());
     buf.resize(end - buf.data());
 
     return buf;
 }
 
-Node NodeGenerator::generate_node(INodeFactory &factory, NodeGenerator::NodeStorage &node_storage) {
-    return Node{factory.make_node(*this->impl, node_storage)};
+Node NodeGenerator::generate_node_impl(NodeScope const *scope, NodeGenerator::NodeStorage &node_storage) {
+    return Node{factory->make_node(*this->generator, scope, node_storage)};
 }
 
-NodeScope NodeGenerator::scope() {
-    return NodeScope{this->impl.get(), SharedPtr<ReferenceBNodeScope>::make()};
+Node NodeGenerator::generate_node(NodeGenerator::NodeStorage &node_storage) {
+    return generate_node_impl(nullptr, node_storage);
 }
 
 }  //namespace rdf4cpp::rdf::util

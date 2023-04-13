@@ -1,6 +1,6 @@
 #include "NodeStorage.hpp"
 
-#include <algorithm>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 
 namespace rdf4cpp::rdf::storage::node {
 
@@ -63,7 +63,7 @@ NodeStorage NodeStorage::new_instance() {
 }
 
 NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
-    if (backend_instance == nullptr) {
+    if (backend_instance == nullptr) [[unlikely]] {
         throw std::runtime_error("Backend instance must not be null.");
     }
 
@@ -97,7 +97,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
         INodeStorageBackend *old_value = nullptr;
         if (slot.backend.compare_exchange_strong(old_value, backend_instance, std::memory_order_release, std::memory_order_acquire)) {
             // found slot
-            slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade
+            slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade/lookup_instance
             slot.refcount.store(1, std::memory_order_relaxed);
 
             return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}, backend_instance};
@@ -109,7 +109,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
     throw std::runtime_error{"Maximum number of backend instances exceeded"};
 }
 
-std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) {
+std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) noexcept {
     auto &slot = get_slot(id);
 
     /**
@@ -173,9 +173,7 @@ NodeStorage &NodeStorage::operator=(NodeStorage const &other) noexcept {
 
         this->backend_index = other.backend_index;
         this->cached_backend_ptr = other.cached_backend_ptr;
-        if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
-            this->increase_refcount();
-        }
+        this->increase_refcount();
     }
 
     return *this;
@@ -326,6 +324,13 @@ bool NodeStorage::erase_variable(identifier::NodeBackendHandle handle) {
     return ns.value().erase_literal(handle.node_id());
 }
 
+bool NodeStorage::operator==(NodeStorage const &other) const noexcept {
+    return this->backend_index == other.backend_index;
+}
+
+bool NodeStorage::operator!=(NodeStorage const &other) const noexcept {
+    return this->backend_index != other.backend_index;
+}
 
 
 WeakNodeStorage::WeakNodeStorage(identifier::NodeStorageID backend_index, size_t generation) noexcept : backend_index{backend_index},
@@ -388,3 +393,13 @@ NodeStorage WeakNodeStorage::upgrade() const {
 }
 
 }  // namespace rdf4cpp::rdf::storage::node
+
+size_t std::hash<rdf4cpp::rdf::storage::node::NodeStorage>::operator()(rdf4cpp::rdf::storage::node::NodeStorage const &storage) const noexcept {
+    return rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(storage.backend_index.value);
+}
+
+size_t std::hash<rdf4cpp::rdf::storage::node::WeakNodeStorage>::operator()(rdf4cpp::rdf::storage::node::WeakNodeStorage const &storage) const noexcept {
+    return rdf4cpp::rdf::storage::util::robin_hood::hash<std::array<size_t, 2>>{}(std::array<size_t, 2>{
+            rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(storage.backend_index.value),
+            rdf4cpp::rdf::storage::util::robin_hood::hash<size_t>{}(storage.generation)});
+}
