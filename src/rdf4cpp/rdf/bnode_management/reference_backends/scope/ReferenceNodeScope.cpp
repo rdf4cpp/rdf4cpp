@@ -11,12 +11,11 @@ ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope &&other) noexcept : la
 storage::node::identifier::NodeBackendHandle ReferenceNodeScope::find_node(std::string_view label) const noexcept {
     std::shared_lock lock{this->mutex};
 
-    auto it = this->label_to_storage.find(label);
-    if (it == this->label_to_storage.end()) {
-        return storage::node::identifier::NodeBackendHandle{};
+    if (auto it = this->label_to_storage.find(label); it != this->label_to_storage.end()) {
+        return it->second;
     }
 
-    return it->second;
+    return storage::node::identifier::NodeBackendHandle{};
 }
 
 std::optional<std::string_view> ReferenceNodeScope::find_label(storage::node::identifier::NodeBackendHandle handle) const noexcept {
