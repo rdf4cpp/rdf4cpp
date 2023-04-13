@@ -16,6 +16,8 @@ find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(utf8cpp QUIET)
+find_package(OpenSSL REQUIRED)
+find_package(uni-algo QUIET)
 
 include(FetchContent)
 
@@ -33,12 +35,12 @@ endif ()
 
 if (NOT expected-lite_FOUND)
     FetchContent_Declare(
-            expected-lite
+            fetchexpected-lite
             GIT_REPOSITORY https://github.com/martinmoene/expected-lite
             GIT_TAG 95b9cb015fa17baa749c2b396b335906e1596a9e # v0.6.2
     )
 
-    FetchContent_MakeAvailable(expected-lite)
+    FetchContent_MakeAvailable(fetchexpected-lite)
     message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
 endif ()
 
@@ -46,7 +48,7 @@ if (NOT re2_FOUND)
     FetchContent_Declare(
             fetchre2
             GIT_REPOSITORY https://github.com/google/re2
-            GIT_TAG 2022-12-01
+            GIT_TAG 4be240789d5b322df9f02b7e19c8651f3ccbf205 # 2022-12-01
     )
 
     set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
@@ -58,12 +60,25 @@ if (NOT utf8cpp_FOUND)
     FetchContent_Declare(
             fetchutfcpp
             GIT_REPOSITORY https://github.com/nemtrif/utfcpp
-            GIT_TAG v3.2.3
+            GIT_TAG 79835a5fa57271f07a90ed36123e30ae9741178e # v3.2.3
     )
 
     FetchContent_MakeAvailable(fetchutfcpp)
     message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
+
+if (NOT uni-algo_FOUND)
+    set(UNI_ALGO_INSTALL On)
+    FetchContent_Declare(
+            fetchuni-algo
+            GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
+            GIT_SHALLOW ON
+            GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v0.7.1
+    )
+    FetchContent_MakeAvailable(fetchuni-algo)
+endif ()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
 
 set(serd_source_files
         include/serd/serd.h
@@ -155,6 +170,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/namespaces/RDFS.cpp
         src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
+        src/rdf4cpp/rdf/parser/RDFFileParser.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
         src/rdf4cpp/rdf/query/SolutionSequence.cpp
@@ -162,7 +178,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/query/Variable.cpp
         src/rdf4cpp/rdf/regex/Regex.cpp
         src/rdf4cpp/rdf/regex/RegexReplacer.cpp
-        src/rdf4cpp/rdf/storage/node/INodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/LiteralType.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp
@@ -170,7 +185,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/node/identifier/RDFNodeType.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.cpp
-        src/rdf4cpp/rdf/storage/node/reference_node_storage/LiteralBackend.cpp
+        src/rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.cpp
         src/rdf4cpp/rdf/storage/node/view/BNodeBackendView.cpp
@@ -211,7 +226,9 @@ target_link_libraries(rdf4cpp
         fmt::fmt-header-only
         re2::re2
         utf8cpp
-)
+        OpenSSL::Crypto
+        uni-algo::uni-algo
+        )
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}

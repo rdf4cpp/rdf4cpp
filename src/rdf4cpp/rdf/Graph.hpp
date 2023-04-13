@@ -18,7 +18,7 @@ class Graph {
     using NodeStorage = storage::node::NodeStorage;
 
     DatasetStorage dataset_storage;
-    IRI graph_name = IRI::default_graph(dataset_storage.node_storage());
+    IRI graph_name;
 
     Graph(DatasetStorage dataset_backend, const IRI &graph_name);
 

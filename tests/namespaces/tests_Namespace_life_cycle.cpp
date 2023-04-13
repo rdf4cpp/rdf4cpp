@@ -30,4 +30,13 @@ TEST_CASE("Namespace life cycle") {
         const IRI &rdf_bag = rdf + "Bag";
         REQUIRE(rdf_bag.identifier() == std::string{namespaces::RDF::NAMESPACE} + "Bag");
     }
+
+    {
+        auto volatile_node_storage3 = storage::node::NodeStorage::new_instance();
+        auto &rdf = namespaces::RDF::instance(volatile_node_storage3);
+
+        volatile_node_storage3 = storage::node::NodeStorage::new_instance();
+
+        CHECK_THROWS(rdf + "Bag");
+    }
 }

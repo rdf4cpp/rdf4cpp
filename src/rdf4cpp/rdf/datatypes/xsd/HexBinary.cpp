@@ -1,4 +1,5 @@
 #include <rdf4cpp/rdf/datatypes/xsd/HexBinary.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -121,6 +122,12 @@ std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type 
     return value.to_encoded();
 }
 
-template struct LiteralDatatypeImpl<xsd_hex_binary>;
+template struct LiteralDatatypeImpl<xsd_hex_binary,
+                                    capabilities::FixedId>;
 
 } // namespace rdf4cpp::rdf::datatypes::registry
+
+
+size_t std::hash<rdf4cpp::rdf::datatypes::registry::HexBinaryRepr>::operator()(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &value) const noexcept {
+    return rdf4cpp::rdf::storage::util::robin_hood::hash_bytes(value.bytes.data(), value.bytes.size());
+}

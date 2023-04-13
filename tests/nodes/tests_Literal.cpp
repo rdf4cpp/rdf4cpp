@@ -556,21 +556,34 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("Hello", "en").as_language_tag_matches_range("*"_xsd_string).ebv());
         CHECK(Literal::make_lang_tagged("Bonjour", "fr").as_language_tag_matches_range("FR"_xsd_string).ebv());
         CHECK(Literal::make_lang_tagged("Hello", "en-US").as_language_tag_matches_range("en-US"_xsd_string).ebv());
-        CHECK(5_xsd_int .as_language_tag_matches_range("*"_xsd_string).null());
+        CHECK((5_xsd_int).as_language_tag_matches_range("*"_xsd_string).null());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range(""_xsd_string).ebv());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv() == util::TriBool::False);
     }
 
+    static constexpr const char *case_number1 = "4.2";
+    static constexpr const char *case_number2 = "4,2";
     SUBCASE("ucase") {
         // from https://www.w3.org/TR/sparql11-query/#func-ucase
         CHECK(("foo"_xsd_string).uppercase() == "FOO"_xsd_string);
         CHECK(Literal::make_lang_tagged("foo", "en").uppercase() == Literal::make_lang_tagged("FOO", "en"));
+        CHECK(Literal::make_simple("\xce\xbb").uppercase() == Literal::make_simple("\xce\x9b"));  // greek lambda
+        CHECK(Literal::make_simple("\xc3\xa4").uppercase() == Literal::make_simple("\xc3\x84"));  // a diaresis
+        CHECK(Literal::make_simple("\xd0\xbe").uppercase() == Literal::make_simple("\xd0\x9e"));  // cyrillic o
+        CHECK(Literal::make_simple(case_number1).uppercase() == Literal::make_simple(case_number1));
+        CHECK(Literal::make_simple(case_number2).uppercase() == Literal::make_simple(case_number2));
+        CHECK(Literal::make_simple("\xc3\x9f").uppercase() == Literal::make_simple("SS"));  // german sharp s
     }
 
     SUBCASE("lcase") {
         // from https://www.w3.org/TR/sparql11-query/#func-lcase
         CHECK(("BAR"_xsd_string).lowercase() == "bar"_xsd_string);
         CHECK(Literal::make_lang_tagged("BAR", "en").lowercase() == Literal::make_lang_tagged("bar", "en"));
+        CHECK(Literal::make_simple("\xce\x9b").lowercase() == Literal::make_simple("\xce\xbb"));  // greek lambda
+        CHECK(Literal::make_simple("\xc3\x84").lowercase() == Literal::make_simple("\xc3\xa4"));  // a diaresis
+        CHECK(Literal::make_simple("\xd0\x9e").lowercase() == Literal::make_simple("\xd0\xbe"));  // cyrillic o
+        CHECK(Literal::make_simple(case_number1).lowercase() == Literal::make_simple(case_number1));
+        CHECK(Literal::make_simple(case_number2).lowercase() == Literal::make_simple(case_number2));
     }
 
     SUBCASE("contains") {
@@ -692,8 +705,57 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "en"), "Z"_xsd_string) == Literal::make_lang_tagged("aZcd", "en"));
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
     }
+
+    SUBCASE("hashes") {
+        static constexpr const char *pw = "password";
+        CHECK(Literal::make_simple(pw).md5() == Literal::make_simple("5f4dcc3b5aa765d61d8327deb882cf99"));
+        CHECK(Literal::make_simple(pw).sha1() == Literal::make_simple("5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8"));  // note that this hash contains bytes < 0x10, which checks 0 padding
+        CHECK(Literal::make_simple(pw).sha256() == Literal::make_simple("5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"));
+        CHECK(Literal::make_simple(pw).sha384() == Literal::make_simple("a8b64babd0aca91a59bdbb7761b421d4f2bb38280d3a75ba0f21f2bebc45583d446c598660c94ce680c47d19c30783a7"));
+        CHECK(Literal::make_simple(pw).sha512() == Literal::make_simple("b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86"));
+    }
 }
 
 TEST_CASE("indirect casting precision") {
     CHECK(Literal::make_typed_from_value<datatypes::xsd::Double>(2e-1) + Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{"0.2"}) == Literal::make_typed_from_value<datatypes::xsd::Double>(4e-1));
+}
+
+TEST_CASE("URI encoding") {
+    static constexpr const char *data = "www.example %\t*}.com";
+    static constexpr const char *data_encoded = "www.example%20%25%09%2A%7D.com";
+    SUBCASE("valid URI") {
+        static constexpr const char *str = "www.example123_-AZaz09~.com";
+        CHECK(Literal::encode_for_uri(str) == Literal::make_simple(str));
+    }
+    SUBCASE("ASCII escapes") {
+        CHECK(Literal::encode_for_uri(" %\t*}") == Literal::make_simple("%20%25%09%2A%7D"));
+    }
+    SUBCASE("ASCII mixed") {
+        CHECK(Literal::encode_for_uri(data) == Literal::make_simple(data_encoded));
+    }
+    SUBCASE("high UTF-8") {
+        CHECK(Literal::encode_for_uri("\xce\xa4") == Literal::make_simple("%CE%A4"));                // greek capital sigma
+        CHECK(Literal::encode_for_uri("\xf0\x90\x8f\x92") == Literal::make_simple("%F0%90%8F%92"));  // old persian 2
+        CHECK(Literal::encode_for_uri("\xe2\x88\x80") == Literal::make_simple("%E2%88%80"));         // math forall
+    }
+    SUBCASE("high UTF-8 mixed") {
+        CHECK(Literal::encode_for_uri("www.e\xce\xa4\xf0\x90\x8f\x92\xe2\x88\x80xample.com") == Literal::make_simple("www.e%CE%A4%F0%90%8F%92%E2%88%80xample.com"));
+    }
+    SUBCASE("nonstatic") {
+        CHECK(Literal::make_simple(data).encode_for_uri() == Literal::make_simple(data_encoded));
+        CHECK(Literal::make_lang_tagged(data, "en").encode_for_uri() == Literal::make_simple(data_encoded));
+        CHECK(Literal::make_typed(data, IRI{"http://www.w3.org/2001/XMLSchema#string"}).encode_for_uri() == Literal::make_simple(data_encoded));
+    }
+    SUBCASE("invalid UTF-8") {
+        CHECK(Literal::encode_for_uri("\xce") == Literal{});
+    }
+}
+
+TEST_CASE("UUID") {
+    Literal uuid = Literal::make_string_uuid();
+    Literal uuid2 = Literal::make_string_uuid();
+
+    CHECK(uuid.datatype() == IRI{"http://www.w3.org/2001/XMLSchema#string"});
+    CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
+    CHECK(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}) == util::TriBool::True);
 }

@@ -66,9 +66,6 @@ public:
      */
     IStreamQuadIterator(std::default_sentinel_t) noexcept;
 
-    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
-
     /**
      * Constructs an IStreamQuad iterator to parse an input stream in turtle syntax to quads
      *
@@ -81,6 +78,12 @@ public:
     explicit IStreamQuadIterator(istream_type &istream,
                                  flags_type flags = flags_type::none(),
                                  state_type *initial_state = nullptr) noexcept;
+
+    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
+
+    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
+    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
+
     ~IStreamQuadIterator() noexcept;
 
     reference operator*() const noexcept;

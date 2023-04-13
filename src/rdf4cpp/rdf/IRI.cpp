@@ -1,5 +1,11 @@
 #include "IRI.hpp"
 
+#include <sstream>
+
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 namespace rdf4cpp::rdf {
 
 IRI::IRI(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
@@ -12,7 +18,7 @@ IRI::IRI(std::string_view iri, Node::NodeStorage &node_storage)
 IRI::IRI(datatypes::registry::DatatypeIDView id, Node::NodeStorage &node_storage) noexcept
     : IRI{visit(datatypes::registry::DatatypeIDVisitor{
                         [&](storage::node::identifier::LiteralType const fixed) -> IRI {
-                            return IRI{NodeBackendHandle{NodeID{static_cast<uint64_t>(fixed.to_underlying())},
+                            return IRI{NodeBackendHandle{storage::node::identifier::literal_type_to_iri_node_id(fixed),
                                                          storage::node::identifier::RDFNodeType::IRI,
                                                          node_storage.id()}};
                         },
@@ -28,6 +34,14 @@ IRI IRI::make_null() noexcept {
 
 IRI IRI::make(std::string_view iri, Node::NodeStorage &node_storage) {
     return IRI{iri, node_storage};
+}
+
+IRI IRI::make_uuid(Node::NodeStorage &node_storage) {
+    boost::uuids::random_generator_mt19937 gen{};
+    boost::uuids::uuid u = gen();
+    std::stringstream stream{};
+    stream << "urn:uuid:" << u;
+    return IRI{stream.view(), node_storage};
 }
 
 IRI IRI::to_node_storage(Node::NodeStorage &node_storage) const noexcept {

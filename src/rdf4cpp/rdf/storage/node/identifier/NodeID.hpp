@@ -20,6 +20,8 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  */
 class __attribute__((__packed__)) NodeID {
 public:
+    static constexpr size_t width = 48;
+
     static std::pair<NodeID, std::string_view> const default_graph_iri;
     static std::pair<NodeID, std::string_view> const xsd_string_iri;
     static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
@@ -27,8 +29,6 @@ public:
     static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
     static NodeID const min_variable_id;
-
-    // TODO: that might be specified further for specific LiteralTypes
     static LiteralID const min_literal_id;
 
 private:
@@ -41,7 +41,7 @@ private:
         /**
          * The actual 48 bit identifier.
          */
-        uint64_t value_ : 48;
+        uint64_t value_ : width;
         /**
          * Combined Literal ID consisting of LiteralID and literal_type.
          */
@@ -127,15 +127,6 @@ public:
 
 static_assert(sizeof(NodeID) == 6);
 
-inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri].to_underlying(), datatypes::registry::default_graph_iri};
-inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{datatypes::xsd::String::fixed_id.to_underlying(), datatypes::xsd::String::identifier};
-inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{datatypes::rdf::LangString::fixed_id.to_underlying(), datatypes::rdf::LangString::identifier};
-
-inline constexpr NodeID NodeID::min_bnode_id{1};
-inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};
-inline constexpr NodeID NodeID::min_variable_id{1};
-inline constexpr LiteralID NodeID::min_literal_id{1};
-
 /**
  * Convert a NodeId for an IRI
  * to a LiteralType.
@@ -152,6 +143,31 @@ constexpr LiteralType iri_node_id_to_literal_type(NodeID const id) noexcept {
                    ? LiteralType::from_underlying(static_cast<LiteralType::underlying_type>(value))
                    : LiteralType::other();
 }
+
+/**
+ * Convert a LiteralType to the corresponding IRI NodeID.
+ *
+ * @param datatype fixed dataype
+ * @return NodeID of the IRI associated with the given datatype
+ */
+constexpr NodeID literal_type_to_iri_node_id(LiteralType const datatype) {
+    assert(datatype.is_fixed());
+    return NodeID{datatype.to_underlying()};
+}
+
+inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{literal_type_to_iri_node_id(datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri]),
+                                                                               datatypes::registry::default_graph_iri};
+
+inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{literal_type_to_iri_node_id(datatypes::xsd::String::fixed_id),
+                                                                            datatypes::xsd::String::identifier};
+
+inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{literal_type_to_iri_node_id(datatypes::rdf::LangString::fixed_id),
+                                                                                datatypes::rdf::LangString::identifier};
+
+inline constexpr NodeID NodeID::min_bnode_id{1};
+inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};
+inline constexpr NodeID NodeID::min_variable_id{1};
+inline constexpr LiteralID NodeID::min_literal_id{1};
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 

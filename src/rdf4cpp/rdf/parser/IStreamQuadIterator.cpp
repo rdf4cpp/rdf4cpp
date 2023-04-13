@@ -21,6 +21,7 @@ IStreamQuadIterator::IStreamQuadIterator(istream_type &istream, flags_type flags
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
+IStreamQuadIterator &IStreamQuadIterator::operator=(IStreamQuadIterator &&) noexcept = default;
 
 IStreamQuadIterator::~IStreamQuadIterator() noexcept = default;
 

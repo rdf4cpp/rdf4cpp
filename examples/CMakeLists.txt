@@ -24,3 +24,9 @@ add_executable(blank_node_example blank_node_management.cpp)
 target_link_libraries(blank_node_example PRIVATE
         rdf4cpp::rdf4cpp
         )
+
+add_executable(RDFFileParser_example RDFFileParser_example.cpp)
+target_link_libraries(RDFFileParser_example PRIVATE
+        rdf4cpp::rdf4cpp
+        )
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

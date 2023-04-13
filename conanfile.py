@@ -27,7 +27,10 @@ class Recipe(ConanFile):
                 "expected-lite/0.6.2",
                 "boost/1.79.0",
                 "re2/20221201",
-                ("utfcpp/3.2.3", "private"))
+                ("utfcpp/3.2.3", "private"),
+                "openssl/3.0.8",
+                "zlib/1.2.12",  # force override version from openssl and boost
+                "uni-algo/0.7.1")
 
     generators = ("CMakeDeps", "CMakeToolchain")
 

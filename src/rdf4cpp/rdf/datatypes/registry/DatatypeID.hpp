@@ -72,7 +72,7 @@ private:
     using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
     variant_t inner;
 public:
-    explicit constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed) noexcept
+    constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed) noexcept
         : inner{fixed} {
         assert(fixed.is_fixed());
     }

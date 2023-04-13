@@ -24,11 +24,6 @@ TEST_CASE("Datatype String") {
     auto type_iri = IRI(datatypes::xsd::String::identifier);
     CHECK(type_iri.identifier() == correct_type_iri_cstr);
 
-    using type = datatypes::xsd::String::cpp_type;
-
-    CHECK(std::is_same_v<type, std::string>);
-
-
     std::string value = "123";
     auto lit1 = Literal::make_typed_from_value<datatypes::xsd::String>(value);
     CHECK(lit1.value<datatypes::xsd::String>() == value);
