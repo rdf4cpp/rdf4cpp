@@ -30,7 +30,8 @@ class Recipe(ConanFile):
                 ("utfcpp/3.2.3", "private"),
                 "openssl/3.0.8",
                 "zlib/1.2.12",  # force override version from openssl and boost
-                "uni-algo/0.7.1")
+                "uni-algo/0.7.1",
+                "metall/0.21") # TODO fix dependency properly
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
