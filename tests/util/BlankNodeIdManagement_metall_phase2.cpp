@@ -25,13 +25,13 @@ int main(int argc, char **argv) {
         auto scope_impl_ptr = std::get<0>(manager.find<PersistableScope>(scope_name));
         NodeScope scope = NodeScope::new_instance<PersistableScopeFrontent>(scope_impl_ptr);
 
-        BlankNode bnode2 = scope.try_get_node("spherical cow").as_blank_node();
-        std::cout << bnode2.backend_handle().raw() << std::endl;
-        assert(!bnode2.null()); // can only check for presence, checking the node would require a persistent node storage
+        BlankNode bnode2 = scope.get_or_generate_node("spherical cow", generator).as_blank_node();
+        std::cout << bnode2.backend_handle().raw() << " " << bnode2.identifier() << std::endl;
+        assert(bnode2.identifier() == "1");
 
-        BlankNode bnode3 = scope.try_get_node("hello world").as_blank_node();
-        std::cout << bnode3.backend_handle().raw() << std::endl;
-        assert(bnode3.null()); // can only check for presence, checking the node would require a persistent node storage
+        BlankNode bnode3 = scope.get_or_generate_node("hello world", generator).as_blank_node();
+        std::cout << bnode3.backend_handle().raw() << " " << bnode3.identifier() << std::endl;
+        assert(bnode3.identifier() == "3");
     }
 
     metall::manager::remove(path);
