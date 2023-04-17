@@ -2,9 +2,10 @@
 #define RDF4CPP_XSD_DECIMAL_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+//#include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
