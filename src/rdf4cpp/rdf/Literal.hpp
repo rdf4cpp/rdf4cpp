@@ -732,16 +732,6 @@ public:
                                         Literal const &flags = Literal::make_simple(""),
                                         NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    /**
-     * @see https://www.w3.org/TR/xpath-functions/#func-contains
-     *
-     * @param needle substring to search for in this
-     * @return whether this' lexical form contains the given string or Err if this is not string-like
-     */
-    [[nodiscard]] util::TriBool contains_normalized(std::string_view needle) const noexcept;
-
-public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-contains
      *
@@ -769,21 +759,6 @@ public:
      */
     [[nodiscard]] Literal as_contains(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    /**
-     * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
-     *
-     * @param needle substring to search for in this
-     * @return substring of this' up to the position of the needle
-     *      or null literal if
-     *          - this is not string-like
-     *      or empty string if
-     *          - needle is the empty string
-     *          - needle could not be found in this
-     */
-    [[nodiscard]] Literal substr_before_normalized(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
-
-public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
      *
@@ -811,21 +786,6 @@ public:
      */
     [[nodiscard]] Literal substr_before(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    /**
-     * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
-     *
-     * @param needle substring to search for in this
-     * @return substring of this' after the end of the needle
-     *      or null literal if
-     *          - this is not string-like
-     *      or empty string if
-     *          - needle is the empty string
-     *          - needle could not be found in this
-     */
-    [[nodiscard]] Literal substr_after_normalized(std::string_view needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
-
-public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
      *
@@ -853,18 +813,6 @@ public:
      */
     [[nodiscard]] Literal substr_after(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    /**
-     * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
-     * requires UTF-8 NFC
-     *
-     * @param needle substring to check
-     * @return whether this' lexical form starts with needle or Err if
-     *      - this is not string-like
-     */
-    [[nodiscard]] util::TriBool str_starts_with_normalized(std::string_view needle) const noexcept;
-
-public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
      *
@@ -894,17 +842,6 @@ public:
      */
     [[nodiscard]] Literal as_str_starts_with(Literal const &needle, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    /**
-     * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
-     *
-     * @param needle substring to check
-     * @return whether this' lexical form ends with needle or Err if
-     *      - this is not string-like
-     */
-    [[nodiscard]] util::TriBool str_ends_with_normalized(std::string_view needle) const noexcept;
-
-public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
      *
