@@ -13,7 +13,6 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
-#include <rdf4cpp/rdf/util/Utf8.hpp>
 
 #include <openssl/evp.h>
 
