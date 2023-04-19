@@ -366,4 +366,19 @@ TEST_CASE("TriG") {
         ++it;
         CHECK(it == IStreamQuadIterator{});
     }
+    SUBCASE("simple NQuad") {
+        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> ."};
+
+        IStreamQuadIterator it{str, ParsingFlag::TriG};
+
+        CHECK(it != IStreamQuadIterator{});
+        CHECK(it->has_value());
+        CHECK(it->value() == Quad{IRI{"http://example/g"},
+                                  IRI{"http://example/s"},
+                                  IRI{"http://example/p"},
+                                  IRI{"http://example/o"}});
+
+        ++it;
+        CHECK(it == IStreamQuadIterator{});
+    }
 }
