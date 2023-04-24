@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
 using Dec = rdf4cpp::rdf::util::BigDecimal<>;
+using RoundingMode = rdf4cpp::rdf::util::RoundingMode;
 
 TEST_CASE("basics") {
     SUBCASE("ctor and compare") {
@@ -30,12 +31,51 @@ TEST_CASE("basics") {
 }
 
 TEST_CASE("arithmetic") {
+    SUBCASE("unary -") {
+        CHECK(-Dec{1, 0} == Dec{1, 0, true});
+        CHECK(-Dec{1, 5} == Dec{1, 5, true});
+        CHECK(-Dec{1, 0, true} == Dec{1, 0});
+        CHECK(-Dec{1, 5, true} == Dec{1, 5});
+    }
+    SUBCASE("+") {
+        CHECK((Dec{1, 0} + Dec{2, 0}) == Dec{3, 0});
+        CHECK((Dec{100, 1} + Dec{200, 1}) == Dec{300, 1});
+        CHECK((Dec{1, 0} + Dec{200, 2}) == Dec{300, 2});
+        CHECK((Dec{1, 2} + Dec{2, 0}) == Dec{201, 2});
+        CHECK((Dec{1, 0} + Dec{2, 0, true}) == Dec{1, 0, true});
+        CHECK((Dec{1, 0} + Dec{1, 0, true}) == Dec{0, 0});
+        CHECK((Dec{1, 0, true} + Dec{2, 0, true}) == Dec{3, 0, true});
+        CHECK((Dec{2, 0} + Dec{1, 0, true}) == Dec{1, 0});
+        CHECK((Dec{1, 0, true} + Dec{2, 0}) == Dec{1, 0});
+        CHECK((Dec{2, 0, true} + Dec{1, 0}) == Dec{1, 0, true});
+    }
+    SUBCASE("-") {
+        CHECK((Dec{1, 0} - Dec{2, 0}) == Dec{1, 0, true});  // implemented via + and unary -
+    }
     SUBCASE("*") {
         CHECK((Dec{2, 0} * Dec{2, 0}) == Dec{4, 0});
         CHECK((Dec{20, 0} * Dec{20, 0}) == Dec{400, 0});
         CHECK((Dec{2, 1} * Dec{2, 0}) == Dec{4, 1});
         CHECK((Dec{2, 1} * Dec{2, 1}) == Dec{4, 2});
         CHECK_THROWS_AS((Dec{2, std::numeric_limits<uint32_t>::max()} * Dec{2, std::numeric_limits<uint32_t>::max()}), std::overflow_error);
+        CHECK((Dec{2, 1, true} * Dec{2, 1}) == Dec{4, 2, true});
+        CHECK((Dec{2, 1} * Dec{2, 1, true}) == Dec{4, 2, true});
+        CHECK((Dec{2, 1, true} * Dec{2, 1, true}) == Dec{4, 2, false});
+    }
+    SUBCASE("/") {
+        CHECK((Dec{2, 0} / Dec{2, 0}) == Dec{1, 0});
+        CHECK((Dec{2, 0, true} / Dec{2, 0}) == Dec{1, 0, true});
+        CHECK((Dec{2, 0} / Dec{2, 0, true}) == Dec{1, 0, true});
+        CHECK((Dec{2, 0, true} / Dec{2, 0, true}) == Dec{1, 0});
+        CHECK_THROWS_AS((Dec{1, 0} / Dec{3, 0}), std::overflow_error);
+        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Floor)) == Dec{33, 2});
+        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Ceil)) == Dec{34, 2});
+        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{33, 2});
+        CHECK((Dec{2, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
+        CHECK((Dec{1, 0}.divide(Dec{3, 0, true}, 2, RoundingMode::Floor)) == Dec{33, 2, true});
+    }
+    SUBCASE("precision") {
+        CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
     }
 }
 
