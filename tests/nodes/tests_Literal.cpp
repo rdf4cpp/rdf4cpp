@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
@@ -36,9 +38,9 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK(lit1.datatype() == iri);
         CHECK(lit1.language_tag() == "");
         CHECK(std::string(lit1) == "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
-        CHECK(Literal::make_simple("W\u0302") == Literal{});
-        CHECK(Literal::make_lang_tagged("W\u0302", "de") == Literal{});
-        CHECK(Literal::make_simple("\u0174", storage::node::NodeStorage::default_instance(), true) == Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true));  // 2 different ways of writing Ŵ
+        CHECK_THROWS_AS(Literal::make_simple("\xc3\x28") == Literal{}, std::runtime_error);
+        CHECK_THROWS_AS(Literal::make_lang_tagged("\xc3\x28", "de") == Literal{}, std::runtime_error);
+        CHECK(Literal::make_simple_normalize("\u0174", storage::node::NodeStorage::default_instance()) == Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance()));  // 2 different ways of writing Ŵ
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
@@ -556,6 +558,7 @@ TEST_CASE("Literal - misc functions") {
 
         // unicode
         CHECK(("met\U0001f34cdata"_xsd_string).substr(4_xsd_integer, 3_xsd_integer) == "\U0001f34cda"_xsd_string);
+        CHECK(("abc"_xsd_string).substr(10, 50) == ""_xsd_string);
     }
 
     SUBCASE("langMatches") {
@@ -602,10 +605,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("123"_xsd_string).as_contains(Literal::make_lang_tagged("1", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("fo\u0174obar", "en",
-                                        storage::node::NodeStorage::default_instance(), true)
+        CHECK(Literal::make_lang_tagged_normalize("fo\u0174obar", "en", storage::node::NodeStorage::default_instance())
                       .as_contains(
-                              Literal::make_lang_tagged("foW\u0302o", "en", storage::node::NodeStorage::default_instance(), true))
+                              Literal::make_lang_tagged_normalize("foW\u0302o", "en", storage::node::NodeStorage::default_instance()))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -622,9 +624,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_before(""_xsd_string) == Literal::make_lang_tagged("", "en"));
 
         // unicode
-        CHECK(Literal::make_simple("abc\U0001f34c\u0174",
-                                   storage::node::NodeStorage::default_instance(), true)
-                      .substr_before(Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true)) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+        CHECK(Literal::make_simple_normalize("abc\U0001f34c\u0174",
+                                             storage::node::NodeStorage::default_instance())
+                      .substr_before(Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance())) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("substr_after") {
@@ -640,9 +642,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abc", "en").substr_after(""_xsd_string) == Literal::make_lang_tagged("abc", "en"));
 
         // unicode
-        CHECK(Literal::make_simple("a\U0001f34cb\u0174c\U0001f34c",
-                                   storage::node::NodeStorage::default_instance(), true)
-                      .substr_after(Literal::make_simple("W\u0302", storage::node::NodeStorage::default_instance(), true)) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+        CHECK(Literal::make_simple_normalize("a\U0001f34cb\u0174c\U0001f34c",
+                                             storage::node::NodeStorage::default_instance())
+                      .substr_after(Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance())) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("str_start_with") {
@@ -655,9 +657,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("\u0174foobar", "en",
-                                        storage::node::NodeStorage::default_instance(), true)
-                      .as_str_starts_with(Literal::make_simple("W\u0302foo", storage::node::NodeStorage::default_instance(), true))
+        CHECK(Literal::make_lang_tagged_normalize("\u0174foobar", "en", storage::node::NodeStorage::default_instance())
+                      .as_str_starts_with(Literal::make_simple_normalize("W\u0302foo", storage::node::NodeStorage::default_instance()))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -671,9 +672,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged("fooba\u0174r", "en",
-                                        storage::node::NodeStorage::default_instance(), true)
-                      .as_str_ends_with(Literal::make_simple("baW\u0302r", storage::node::NodeStorage::default_instance(), true))
+        CHECK(Literal::make_lang_tagged_normalize("fooba\u0174r", "en", storage::node::NodeStorage::default_instance())
+                      .as_str_ends_with(Literal::make_simple_normalize("baW\u0302r", storage::node::NodeStorage::default_instance()))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -794,3 +794,5 @@ TEST_CASE("UUID") {
     CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
     CHECK(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}) == util::TriBool::True);
 }
+
+#pragma clang diagnostic pop

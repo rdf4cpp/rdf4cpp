@@ -101,48 +101,52 @@ Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal co
     return Literal::make_simple_unchecked(str, node_storage);
 }
 
-bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
-    assert(!this->is_fixed());
-    return this->datatype().identifier() == datatype;
-}
+    bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
+        assert(!this->is_fixed());
+        return this->datatype().identifier() == datatype;
+    }
 
-Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage, bool normalize) {
-    if (normalize) {
-        const auto ln = una::norm::to_nfc_utf8(lexical_form);
-        return Literal::make_simple_unchecked(ln, node_storage);
-    } else {
-        if (una::norm::is_nfc_utf8(lexical_form))
+    Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
+        if (una::is_valid_utf8(lexical_form))
             return Literal::make_simple_unchecked(lexical_form, node_storage);
         else
-            return Literal{};
+            throw std::runtime_error{"invalid UTF-8"};
     }
-}
 
-Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage, bool normalize) {
-    const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
-    if (normalize) {
+    Literal Literal::make_simple_normalize(std::string_view lexical_form, Node::NodeStorage &node_storage) {
         const auto ln = una::norm::to_nfc_utf8(lexical_form);
-        return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
-    } else {
-        if (una::norm::is_nfc_utf8(lexical_form))
+        return Literal::make_simple_unchecked(ln, node_storage);
+    }
+
+    Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
+                                      Node::NodeStorage &node_storage) {
+        const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+        if (una::is_valid_utf8(lexical_form))
             return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
         else
-            return Literal{};
+            throw std::runtime_error{"invalid UTF-8"};
     }
-}
 
-Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage, bool normalize) {
-    using namespace datatypes::registry;
-
-    DatatypeIDView const datatype_identifier{datatype};
-
-    if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
-        // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
-        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+    Literal Literal::make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
+                                                Node::NodeStorage &node_storage) {
+        const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+        const auto ln = una::norm::to_nfc_utf8(lexical_form);
+        return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
     }
+
+    Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
+        using namespace datatypes::registry;
+
+        DatatypeIDView const datatype_identifier{datatype};
+
+        if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
+            // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
+            throw std::invalid_argument{
+                    "cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        }
 
     if (datatype_identifier == datatypes::xsd::String::datatype_id) {
-        return Literal::make_simple(lexical_form, node_storage, normalize);
+        return Literal::make_simple(lexical_form, node_storage);
     }
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
@@ -397,9 +401,9 @@ Literal::operator std::string() const noexcept {
                     break;
                 }
                 [[likely]] default : {
-                        out << character;
-                        break;
-                    }
+                    out << character;
+                    break;
+                }
             }
         }
         out << "\"";
@@ -1414,7 +1418,8 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     if (!r)
         return Literal::make_simple_unchecked("", node_storage);
 
-    auto substr = static_cast<std::string_view>(s.view()).substr(r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
+    auto substr = s.view().substr(
+            r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1600,10 +1605,6 @@ Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storag
 
     auto const s = this->lexical_form();
 
-    if (start > this->strlen()) {
-        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
-    }
-
     auto substr = s.view() | una::ranges::views::utf8 | una::views::drop(start) | una::views::take(len) | una::ranges::to_utf8<std::string>();
 
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
@@ -1689,9 +1690,9 @@ Literal Literal::sha512(NodeStorage &node_storage) const {
     return this->hash_with("SHA2-512", node_storage);
 }
 
-std::string Literal::normalize_unicode(std::string_view utf8) {
-    return una::norm::to_nfc_utf8(utf8);
-}
+    std::string normalize_unicode(std::string_view utf8) {
+        return una::norm::to_nfc_utf8(utf8);
+    }
 
 bool lang_matches(std::string_view const lang_tag, std::string_view const lang_range) noexcept {
     if (lang_range.empty()) {
