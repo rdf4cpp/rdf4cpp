@@ -1,8 +1,9 @@
 #ifndef RDF4CPP_BIGDECIMAL_H
 #define RDF4CPP_BIGDECIMAL_H
 
-#include <string>
+#include <functional>
 #include <sstream>
+#include <string>
 #include <string_view>
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -19,7 +20,7 @@ template<typename UnscaledValue_t = boost::multiprecision::cpp_int, typename Exp
 class BigDecimal {
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
-    bool sign;
+    bool sign = false;
 
     static_assert(!std::is_integral_v<boost::multiprecision::cpp_int>);
 
@@ -27,7 +28,7 @@ class BigDecimal {
 
     static constexpr UnscaledValue_t shift_pow(UnscaledValue_t v, Exponent_t ex) {
         for (Exponent_t i = 0; i < ex; ++i)
-            v *= base;
+            v = save_mul(v, UnscaledValue_t{base}, "shift_pow precision overflow");
         return v;
     }
 
@@ -66,7 +67,48 @@ class BigDecimal {
     }
 
 public:
-    constexpr BigDecimal(UnscaledValue_t unscaled_value, Exponent_t exponent, bool sign = false) : unscaled_value(unscaled_value), exponent(exponent), sign(sign) {
+    constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, bool sign = false) : unscaled_value(unscaled_value), exponent(exponent), sign(sign) {
+    }
+
+    constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
+        bool begin = true;
+        bool decimal = false;
+        for (const char c : value) {
+            if (begin) {
+                begin = false;
+                if (c == '-') {
+                    sign = true;
+                    continue;
+                } else if (c == '+')
+                    continue;
+            }
+            if (c == '.') {
+                if (decimal)
+                    throw std::invalid_argument{"more than one . found"};
+                decimal = true;
+                continue;
+            }
+            if (c < '0' || c > '9')
+                throw std::invalid_argument{"non-numeric char found"};
+            Exponent_t n = c - '0';
+            unscaled_value = shift_pow(unscaled_value, 1) + n;
+            if (decimal)
+                exponent = save_add(exponent, 1u, "ctor exponent overflow");
+        }
+    }
+
+    constexpr explicit BigDecimal(int value) : BigDecimal(value, 0) {}
+
+    constexpr explicit BigDecimal(const UnscaledValue_t &value) : BigDecimal(value, 0) {}
+
+    constexpr explicit BigDecimal(float value) : BigDecimal(static_cast<double>(value)) {}
+
+    explicit BigDecimal(double value) : unscaled_value(0), exponent(0) {
+        if (std::isinf(value) || std::isnan(value))
+            throw std::invalid_argument{"value is NaN or infinity"};
+        std::stringstream s{};
+        s << value;
+        *this = BigDecimal{s.view()};
     }
 
     constexpr void normalize() noexcept {
@@ -82,6 +124,10 @@ public:
 
     constexpr BigDecimal operator-() const {
         return BigDecimal(this->unscaled_value, this->exponent, !this->sign);
+    }
+
+    constexpr BigDecimal operator+() const noexcept {
+        return *this;
     }
 
     constexpr BigDecimal operator+(const BigDecimal &other) const {
@@ -137,7 +183,7 @@ private:
     }
 
 public:
-    constexpr BigDecimal divide(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::ThrowInstead) const {
+    [[nodiscard]] constexpr BigDecimal divide(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::ThrowInstead) const {
         if (other.unscaled_value == 0)
             throw std::invalid_argument{"division by 0"};
         if (this->unscaled_value == 0)
@@ -178,15 +224,35 @@ public:
         return this->divide(other, 1000);
     }
 
+    [[nodiscard]] constexpr BigDecimal round(RoundingMode mode) const {
+        if (exponent == 0)
+            return *this;
+        UnscaledValue_t v = unscaled_value / shift_pow(1, exponent);
+        UnscaledValue_t rem = unscaled_value / shift_pow(1, exponent - 1) - v * base;
+        return handle_rounding(v, 0, rem, sign, mode);
+    }
+
+    [[nodiscard]] constexpr BigDecimal abs() const noexcept {
+        return BigDecimal{unscaled_value, exponent};
+    }
+
     constexpr std::strong_ordering operator<=>(const BigDecimal &other) const noexcept {
         if (this->sign != other.sign)
             return this->sign == true ? std::strong_ordering::less : std::strong_ordering::greater;
         UnscaledValue_t t = this->unscaled_value;
         UnscaledValue_t o = other.unscaled_value;
         if (this->exponent > other.exponent) {
-            o = shift_pow(o, this->exponent - other.exponent);
+            try {
+                o = shift_pow(o, this->exponent - other.exponent);
+            } catch (const std::overflow_error &) {
+                return std::strong_ordering::less;  // t does fit into the same precision, while o does not
+            }
         } else if (this->exponent < other.exponent) {
-            t = shift_pow(t, other.exponent - this->exponent);
+            try {
+                t = shift_pow(t, other.exponent - this->exponent);
+            } catch (const std::overflow_error &) {
+                return std::strong_ordering::greater;  // o does fit into the same precision, while t does not
+            }
         }
         if (t < o)
             return std::strong_ordering::less;
@@ -198,10 +264,27 @@ public:
     constexpr bool operator==(const BigDecimal &other) const noexcept {
         return *this <=> other == std::strong_ordering::equivalent;
     }
+    friend bool operator==(const BigDecimal &t, int other) noexcept {
+        return t == BigDecimal{other, 0};
+    }
+    friend bool operator==(int t, const BigDecimal &other) noexcept {
+        return other == t;
+    }
 
     constexpr explicit operator double() const noexcept {
         double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
         return sign ? -v : v;
+    }
+
+    constexpr explicit operator float() const noexcept {
+        double v = static_cast<float>(unscaled_value) * std::pow(static_cast<float>(base), -static_cast<float>(exponent));
+        return sign ? -v : v;
+    }
+
+    constexpr explicit operator UnscaledValue_t() const noexcept {
+        if (exponent == 0)
+            return unscaled_value;
+        return unscaled_value / shift_pow(1, exponent);
     }
 
     explicit operator std::string() const noexcept {
@@ -238,7 +321,73 @@ public:
         str << s;
         return str;
     }
+
+    [[nodiscard]] size_t hash() const {
+        return std::hash<bool>{}(sign) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
+    }
 };
 }  // namespace rdf4cpp::rdf::util
+template<>
+struct std::hash<rdf4cpp::rdf::util::BigDecimal<>> {
+    size_t operator()(const rdf4cpp::rdf::util::BigDecimal<> &r) const {
+        return r.hash();
+    }
+};
+template<class UnscaledValue_t, class Exponent_t>
+class std::numeric_limits<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
+public:
+    using BigDecimal = rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>;
+
+    static constexpr bool is_specialized = true;
+    static constexpr bool is_signed = true;
+    static constexpr bool is_integer = false;
+    static constexpr bool is_exact = true;
+    static constexpr bool has_infinity = false;
+    static constexpr bool has_quiet_NaN = false;
+    static constexpr bool has_signaling_NaN = false;
+    static constexpr std::float_denorm_style has_denorm = std::denorm_absent;
+    static constexpr bool has_denorm_loss = false;
+    static constexpr std::float_round_style round_style = std::round_toward_zero;
+    static constexpr bool is_iec559 = false;
+    static constexpr bool is_bounded = true;
+    static constexpr bool is_modulo = false;
+    static constexpr int digits = numeric_limits<UnscaledValue_t>::digits;
+    static constexpr int digits10 = numeric_limits<UnscaledValue_t>::digits10;
+    static constexpr int max_digits10 = numeric_limits<UnscaledValue_t>::max_digits10;
+    static constexpr int radix = 2;
+    static constexpr int min_exponent = 0;
+    static constexpr int min_exponent10 = 0;
+    static constexpr int max_exponent = 0;
+    static constexpr int max_exponent10 = 0;
+    static constexpr bool traps = false;
+    static constexpr bool tinyness_before = false;
+    static constexpr BigDecimal max() noexcept {
+        return BigDecimal{numeric_limits<UnscaledValue_t>::max(), 0};
+    }
+    static constexpr BigDecimal min() noexcept {
+        return BigDecimal{numeric_limits<UnscaledValue_t>::max(), 0, true};
+    }
+    static constexpr BigDecimal lowest() noexcept {
+        return min();
+    }
+    static constexpr BigDecimal epsilon() noexcept {
+        return BigDecimal{1, numeric_limits<Exponent_t>::max()};
+    }
+    static constexpr BigDecimal round_error() noexcept {
+        return BigDecimal{0};
+    }
+    static constexpr BigDecimal infinity() noexcept {
+        return 0;
+    }
+    static constexpr BigDecimal quiet_NaN() noexcept {
+        return 0;
+    }
+    static constexpr BigDecimal signaling_NaN() noexcept {
+        return 0;
+    }
+    static constexpr BigDecimal denorm_min() noexcept {
+        return 0;
+    }
+};
 
 #endif  //RDF4CPP_BIGDECIMAL_H

@@ -5,7 +5,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
-//#include <rdf4cpp/rdf/util/BigDecimal.hpp>
+#include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
@@ -15,7 +15,7 @@ template<>
 struct DatatypeMapping<xsd_decimal> {
     // needs at least 18 decimal digits of precision
     // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
-    using cpp_datatype = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<18, int16_t>>;
+    using cpp_datatype = rdf4cpp::rdf::util::BigDecimal<>;
 };
 
 template<>

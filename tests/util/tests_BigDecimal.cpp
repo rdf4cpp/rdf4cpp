@@ -77,10 +77,25 @@ TEST_CASE("arithmetic") {
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
     }
+    SUBCASE("round") {
+        CHECK(Dec{51, 1}.round(RoundingMode::Floor) == Dec{5, 0});
+        CHECK(Dec{56, 1}.round(RoundingMode::Floor) == Dec{5, 0});
+        CHECK(Dec{41, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
+        CHECK(Dec{47, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
+        CHECK(Dec{51, 1}.round(RoundingMode::Round) == Dec{5, 0});
+        CHECK(Dec{48, 1}.round(RoundingMode::Round) == Dec{5, 0});
+        CHECK(Dec{549, 2}.round(RoundingMode::Round) == Dec{5, 0});
+        CHECK(Dec{450, 2}.round(RoundingMode::Round) == Dec{5, 0});
+        CHECK(Dec{5, 0}.round(RoundingMode::Round) == Dec{5, 0});
+    }
+    SUBCASE("abs") {
+        CHECK(Dec{51, 1}.abs() == Dec{51, 1});
+        CHECK(Dec{51, 1, true}.abs() == Dec{51, 1});
+    }
 }
 
 TEST_CASE("conversion") {
-    SUBCASE("std::string") {
+    SUBCASE("to std::string") {
         CHECK(static_cast<std::string>(Dec{51, 1}) == "5.1");
         CHECK(static_cast<std::string>(Dec{9514, 2, true}) == "-95.14");
         CHECK(static_cast<std::string>(Dec{9514, 0, true}) == "-9514.0");
@@ -93,8 +108,43 @@ TEST_CASE("conversion") {
         CHECK(str.view() == "5.0");
         // uses string conversion, so no more tests here
     }
-    SUBCASE("double") {
+    SUBCASE("from double") {
+        CHECK(Dec{50.0} == Dec{50, 0});
+        CHECK(Dec{-50.5} == Dec{505, 1, true});
+    }
+    SUBCASE("to double") {
         CHECK(static_cast<double>(Dec{50, 0}) == 50.0);
         CHECK(static_cast<double>(Dec{500, 1}) == 50.0);
+    }
+    SUBCASE("to float") {
+        CHECK(static_cast<float>(Dec{50, 0}) == 50.0f);
+        CHECK(static_cast<float>(Dec{500, 1}) == 50.0f);
+    }
+    SUBCASE("from string") {
+        CHECK(Dec{"5"} == Dec{5, 0});
+        CHECK(Dec{"5."} == Dec{5, 0});
+        CHECK(Dec{"5.1"} == Dec{51, 1});
+        CHECK(Dec{"54.32"} == Dec{5432, 2});
+        CHECK(Dec{".54"} == Dec{54, 2});
+        CHECK(Dec{"0005.000"} == Dec{5000, 3});
+        CHECK(Dec{"0005.000"}.get_exponent() == 3);
+        CHECK(Dec{"-5"} == Dec{5, 0, true});
+        CHECK(Dec{"-5."} == Dec{5, 0, true});
+        CHECK(Dec{"-5.1"} == Dec{51, 1, true});
+        CHECK(Dec{"-54.32"} == Dec{5432, 2, true});
+        CHECK(Dec{"-.54"} == Dec{54, 2, true});
+        CHECK(Dec{"-0005.000"} == Dec{5000, 3, true});
+        CHECK(Dec{"-0005.000"}.get_exponent() == 3);
+        CHECK_THROWS_AS(Dec{"5.5.5"}, std::invalid_argument);
+        CHECK_THROWS_AS(Dec{"5.5-5"}, std::invalid_argument);
+        CHECK_THROWS_AS(Dec{"5.5+5"}, std::invalid_argument);
+        // no e notation allowed by rdf (xml) standard
+    }
+    SUBCASE("from cpp_int") {
+        CHECK(Dec{boost::multiprecision::cpp_int{5}} == Dec{5, 0});
+    }
+    SUBCASE("to cpp_int") {
+        CHECK(static_cast<boost::multiprecision::cpp_int>(Dec{5, 0}) == boost::multiprecision::cpp_int{5});
+        CHECK(static_cast<boost::multiprecision::cpp_int>(Dec{59, 1}) == boost::multiprecision::cpp_int{5});
     }
 }

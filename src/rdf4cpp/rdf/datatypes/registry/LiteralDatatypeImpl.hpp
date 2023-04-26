@@ -190,11 +190,11 @@ struct Numeric {
     using ceil_result_cpp_type = typename detail::SelectOpResult<ceil_result, cpp_type>::type;
 
     inline static cpp_type zero_value() noexcept {
-        return 0;
+        return cpp_type{0};
     }
 
     inline static cpp_type one_value() noexcept {
-        return 1;
+        return cpp_type{1};
     }
 
     // https://www.w3.org/TR/xpath-functions/#func-numeric-add
