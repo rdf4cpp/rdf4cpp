@@ -90,9 +90,17 @@ class BigDecimal {
         }
     }
 
+    static constexpr Sign init_sign(const UnscaledValue_t &unscaled_value, Sign s) {
+        if (unscaled_value == 0)
+            return Sign::Positive;
+        if (unscaled_value < 0)
+            return !s;
+        return s;
+    }
+
 public:
     constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, Sign sign = Sign::Positive)
-        : unscaled_value(abs(unscaled_value)), exponent(exponent), sign(unscaled_value < 0 ? !sign : sign) {}
+        : unscaled_value(abs(unscaled_value)), exponent(exponent), sign(init_sign(unscaled_value, sign)) {}
 
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
         bool begin = true;
@@ -119,6 +127,8 @@ public:
             if (decimal)
                 exponent = save_add(exponent, 1u, "ctor exponent overflow");
         }
+        if (unscaled_value == 0)
+            sign = Sign::Positive;
     }
 
     constexpr explicit BigDecimal(uint32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
@@ -328,6 +338,8 @@ public:
     }
 
     explicit operator std::string() const noexcept {
+        if (unscaled_value == 0)
+            return "0.0";
         std::stringstream s{};
         UnscaledValue_t v = unscaled_value;
         Exponent_t ex = exponent;
@@ -342,7 +354,8 @@ public:
                 --ex;
             }
             auto c = static_cast<uint32_t>(v % base);
-            s << c;
+            if (!(!hasDot && c == 0 && s.view().empty()))  // skip trailing 0s
+                s << c;
             v /= base;
         }
         if (!hasDot) {

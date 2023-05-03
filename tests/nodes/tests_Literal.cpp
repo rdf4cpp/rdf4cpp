@@ -205,10 +205,10 @@ TEST_CASE("Literal - casting") {
     SUBCASE("any -> str") {
         SUBCASE("decimal") {
             SUBCASE("integral") {
-                auto const lit1 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{"1005.0"});
+                auto const lit1 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{"001005.000"});
                 auto const lit2 = lit1.cast<String>();
 
-                CHECK(lit2.value<String>() == "1005");
+                CHECK(lit2.value<String>() == "1005.0");
             }
 
             SUBCASE("non-integral") {

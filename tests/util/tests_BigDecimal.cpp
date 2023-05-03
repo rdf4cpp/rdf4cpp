@@ -24,6 +24,7 @@ TEST_CASE("basics") {
         CHECK(Dec{60, 0} > d);
         CHECK(d != Dec{60, 1});
         CHECK(d == Dec{-500, 1, Sign::Negative});
+        CHECK(Dec{0, 0, Sign::Negative} == Dec{0, 0, Sign::Positive});
     }
     SUBCASE("normalize") {
         Dec d{500, 1};
@@ -113,6 +114,10 @@ TEST_CASE("conversion") {
         CHECK(static_cast<std::string>(Dec{9514, 0, Sign::Negative}) == "-9514.0");
         CHECK(static_cast<std::string>(Dec{9514, 4, Sign::Negative}) == "-0.9514");
         CHECK(static_cast<std::string>(Dec{9514, 6, Sign::Negative}) == "-0.009514");
+        CHECK(static_cast<std::string>(Dec{500, 2}) == "5.0");
+        CHECK(static_cast<std::string>(Dec{0, 5}) == "0.0");
+        CHECK(static_cast<std::string>(Dec{100, 5}) == "0.001");
+        CHECK(static_cast<std::string>(Dec{100, 0}) == "100.0");
     }
     SUBCASE("writing") {
         std::stringstream str{};
@@ -147,6 +152,7 @@ TEST_CASE("conversion") {
         CHECK(Dec{"-.54"} == Dec{54, 2, Sign::Negative});
         CHECK(Dec{"-0005.000"} == Dec{5000, 3, Sign::Negative});
         CHECK(Dec{"-0005.000"}.get_exponent() == 3);
+        CHECK(Dec{"0.0"} == Dec{"-0.0"});
         CHECK_THROWS_AS(Dec{"5.5.5"}, std::invalid_argument);
         CHECK_THROWS_AS(Dec{"5.5-5"}, std::invalid_argument);
         CHECK_THROWS_AS(Dec{"5.5+5"}, std::invalid_argument);
