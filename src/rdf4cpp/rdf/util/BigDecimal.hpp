@@ -16,7 +16,10 @@ enum class RoundingMode {
     Round,
 };
 
-template<typename UnscaledValue_t = boost::multiprecision::cpp_int, typename Exponent_t = uint32_t>
+template<typename T>
+concept BigDecimalBaseType = (std::unsigned_integral<T> && sizeof(T) >= sizeof(int32_t)) || std::same_as<T, boost::multiprecision::cpp_int>;
+
+template<BigDecimalBaseType UnscaledValue_t = boost::multiprecision::cpp_int, BigDecimalBaseType Exponent_t = uint32_t>
 class BigDecimal {
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
@@ -66,9 +69,17 @@ class BigDecimal {
         }
     }
 
-public:
-    constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, bool sign = false) : unscaled_value(unscaled_value), exponent(exponent), sign(sign) {
+    static constexpr UnscaledValue_t abs(const UnscaledValue_t &value) {
+        if constexpr (std::is_integral_v<UnscaledValue_t>) {
+            return std::abs(value);
+        } else {
+            return value < 0 ? -value : value;
+        }
     }
+
+public:
+    constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, bool sign = false)
+        : unscaled_value(abs(unscaled_value)), exponent(exponent), sign(unscaled_value < 0 ? !sign : sign) {}
 
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
         bool begin = true;
@@ -97,7 +108,13 @@ public:
         }
     }
 
-    constexpr explicit BigDecimal(int value) : BigDecimal(value, 0) {}
+    constexpr explicit BigDecimal(uint32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+
+    constexpr explicit BigDecimal(uint64_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+
+    constexpr explicit BigDecimal(int32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+
+    constexpr explicit BigDecimal(int64_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
 
     constexpr explicit BigDecimal(const UnscaledValue_t &value) : BigDecimal(value, 0) {}
 
@@ -224,6 +241,16 @@ public:
         return this->divide(other, 1000);
     }
 
+    constexpr BigDecimal pow(unsigned int n) const {
+        BigDecimal r{1};
+        for (unsigned int i = 0; i < n; ++i)
+            r = r * *this;
+        return r;
+    }
+    constexpr BigDecimal pow(const BigDecimal &) const {
+        return *this;  // TODO implement
+    }
+
     [[nodiscard]] constexpr BigDecimal round(RoundingMode mode) const {
         if (exponent == 0)
             return *this;
@@ -326,10 +353,24 @@ public:
         return std::hash<bool>{}(sign) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
     }
 };
+
+template<class UnscaledValue_t, class Exponent_t>
+std::string to_string(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return static_cast<std::string>(r);
+}
+
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, unsigned int n) {
+    return r.pow(n);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, const BigDecimal<UnscaledValue_t, Exponent_t> &n) {
+    return r.pow(n);
+}
 }  // namespace rdf4cpp::rdf::util
-template<>
-struct std::hash<rdf4cpp::rdf::util::BigDecimal<>> {
-    size_t operator()(const rdf4cpp::rdf::util::BigDecimal<> &r) const {
+template<class UnscaledValue_t, class Exponent_t>
+struct std::hash<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
+    size_t operator()(const rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t> &r) const {
         return r.hash();
     }
 };

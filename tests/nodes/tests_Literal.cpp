@@ -212,7 +212,7 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("non-integral") {
-                auto const lit1 = Literal::make_typed_from_value<Decimal>(1.5);
+                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.5));
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK(lit2.template value<String>() == "1.5");
@@ -325,7 +325,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> flt") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(1.0);
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK(lit2.datatype() == IRI{Float::identifier});
@@ -333,7 +333,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> dbl") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(1.0);
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK(lit2.datatype() == IRI{Double::identifier});
@@ -341,7 +341,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> int") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(1.2);
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.2));
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK(lit2.datatype() == IRI{Int::identifier});

@@ -8,6 +8,11 @@ using RoundingMode = rdf4cpp::rdf::util::RoundingMode;
 
 TEST_CASE("basics") {
     SUBCASE("ctor and compare") {
+        static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<uint32_t>);
+        static_assert(!rdf4cpp::rdf::util::BigDecimalBaseType<uint8_t>);
+        static_assert(!rdf4cpp::rdf::util::BigDecimalBaseType<int32_t>);
+        static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<uint64_t>);
+        static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<boost::multiprecision::cpp_int>);
         Dec d{500, 1};
         CHECK(d > Dec{500, 1, true});
         CHECK(Dec{500, 1, true} < d);
@@ -17,6 +22,7 @@ TEST_CASE("basics") {
         CHECK(Dec{40, 0} < d);
         CHECK(Dec{60, 0} > d);
         CHECK(d != Dec{60, 1});
+        CHECK(d == Dec{-500, 1, true});
     }
     SUBCASE("normalize") {
         Dec d{500, 1};
