@@ -128,6 +128,9 @@ TEST_CASE("conversion") {
     SUBCASE("from double") {
         CHECK(Dec{50.0} == Dec{50, 0});
         CHECK(Dec{-50.5} == Dec{505, 1, Sign::Negative});
+        CHECK(Dec{500000.0} == Dec{500000, 0});
+        CHECK(Dec{0.0009765625} == Dec{"0.0009765625"});
+        CHECK(Dec{1.0} == Dec{1, 0});
     }
     SUBCASE("to double") {
         CHECK(static_cast<double>(Dec{50, 0}) == 50.0);

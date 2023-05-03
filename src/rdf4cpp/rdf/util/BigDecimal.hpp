@@ -146,9 +146,30 @@ public:
     explicit BigDecimal(double value) : unscaled_value(0), exponent(0) {
         if (std::isinf(value) || std::isnan(value))
             throw std::invalid_argument{"value is NaN or infinity"};
-        std::stringstream s{};
-        s << value;
-        *this = BigDecimal{s.view()};
+        // this might fail on anything that is not x86-32/64
+        uint64_t v = *reinterpret_cast<uint64_t *>(&value);
+        sign = (v >> 63) == 0 ? Sign::Positive : Sign::Negative;
+        auto ex = static_cast<int>((v >> 52) & 0x7ffL);
+        uint64_t significand = ex == 0
+                                       ? (v & ((1L << 52) - 1)) << 1
+                                       : (v & ((1L << 52) - 1)) | (1L << 52);
+        ex -= 1075;
+        if (significand == 0) {
+            sign = Sign::Positive;
+            return;
+        }
+        while (significand & 1) {
+            significand >>= 1;
+            ++ex;
+        }
+        if (ex == 0) {
+            unscaled_value = UnscaledValue_t{significand};
+        } else if (ex < 0) {
+            exponent = static_cast<Exponent_t>(-ex);
+            unscaled_value = boost::multiprecision::pow(UnscaledValue_t{5}, exponent) * significand;
+        } else {
+            unscaled_value = boost::multiprecision::pow(UnscaledValue_t{2}, ex) * significand;
+        }
     }
 
     constexpr void normalize() noexcept {

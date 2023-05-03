@@ -135,9 +135,8 @@ TEST_CASE("precision") {
 
     static_assert(std::numeric_limits<cpp_type>::digits10 >= 18);
 
-    cpp_type const i = pow(cpp_type{10}, cpp_type{18}) - cpp_type{1};
-    cpp_type const n = cpp_type{18};
-    cpp_type const x = i * pow(cpp_type{10}, -n);
+    cpp_type const i = pow(cpp_type{10}, 18) - cpp_type{1};
+    cpp_type const x = i * (cpp_type{1} / pow(cpp_type{10}, 18));
 
     Literal const lit = Literal::make_typed_from_value<datatypes::xsd::Decimal>(x);
     CHECK(lit.lexical_form() == "0.999999999999999999");
