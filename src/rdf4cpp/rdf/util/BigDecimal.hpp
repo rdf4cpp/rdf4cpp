@@ -16,6 +16,19 @@ enum class RoundingMode {
     Round,
 };
 
+enum class Sign {
+    Positive = 0,
+    Negative = 1,
+};
+constexpr Sign operator^(Sign a, Sign b) {
+    using T = std::underlying_type_t<Sign>;
+    return static_cast<Sign>(static_cast<T>(static_cast<T>(a) ^ static_cast<T>(b)));
+}
+constexpr Sign operator!(Sign a) {
+    using T = std::underlying_type_t<Sign>;
+    return static_cast<Sign>(static_cast<T>(!static_cast<T>(a)));
+}
+
 template<typename T>
 concept BigDecimalBaseType = (std::unsigned_integral<T> && sizeof(T) >= sizeof(int32_t)) || std::same_as<T, boost::multiprecision::cpp_int>;
 
@@ -23,7 +36,7 @@ template<BigDecimalBaseType UnscaledValue_t = boost::multiprecision::cpp_int, Bi
 class BigDecimal {
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
-    bool sign = false;
+    Sign sign = Sign::Positive;
 
     static_assert(!std::is_integral_v<boost::multiprecision::cpp_int>);
 
@@ -78,7 +91,7 @@ class BigDecimal {
     }
 
 public:
-    constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, bool sign = false)
+    constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, Sign sign = Sign::Positive)
         : unscaled_value(abs(unscaled_value)), exponent(exponent), sign(unscaled_value < 0 ? !sign : sign) {}
 
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
@@ -88,7 +101,7 @@ public:
             if (begin) {
                 begin = false;
                 if (c == '-') {
-                    sign = true;
+                    sign = Sign::Negative;
                     continue;
                 } else if (c == '+')
                     continue;
@@ -157,7 +170,7 @@ public:
             o = shift_pow(o, new_exp - other.exponent);
         }
         UnscaledValue_t res = 0;
-        bool s = false;
+        Sign s = Sign::Positive;
         if (this->sign == other.sign) {
             res = save_add(t, o, "BigDecimal::operator+ unscaled overflow");
             s = this->sign;
@@ -177,11 +190,11 @@ public:
 
     constexpr BigDecimal operator*(const BigDecimal &other) const {
         return BigDecimal{save_mul(this->unscaled_value, other.unscaled_value, "BigDecimal::operator* unscaled overflow"),
-                          save_add(this->exponent, other.exponent, "BigDecimal::operator* exponent overflow"), static_cast<bool>(this->sign ^ other.sign)};
+                          save_add(this->exponent, other.exponent, "BigDecimal::operator* exponent overflow"), this->sign ^ other.sign};
     }
 
 private:
-    constexpr static BigDecimal handle_rounding(UnscaledValue_t v, Exponent_t e, UnscaledValue_t rem, bool sign, RoundingMode m) {
+    constexpr static BigDecimal handle_rounding(UnscaledValue_t v, Exponent_t e, UnscaledValue_t rem, Sign sign, RoundingMode m) {
         switch (m) {
             case RoundingMode::ThrowInstead:
                 throw std::overflow_error{"division precision overflow"};
@@ -216,7 +229,7 @@ public:
         }
         UnscaledValue_t res = t / div;
         UnscaledValue_t rem = t % div;
-        bool s = static_cast<bool>(this->sign ^ other.sign);
+        Sign s = this->sign ^ other.sign;
         while (rem != 0) {
             if (max_scale_increase == 0) {
                 rem = shift_pow(rem, 1);
@@ -265,7 +278,7 @@ public:
 
     constexpr std::strong_ordering operator<=>(const BigDecimal &other) const noexcept {
         if (this->sign != other.sign)
-            return this->sign == true ? std::strong_ordering::less : std::strong_ordering::greater;
+            return this->sign == Sign::Negative ? std::strong_ordering::less : std::strong_ordering::greater;
         UnscaledValue_t t = this->unscaled_value;
         UnscaledValue_t o = other.unscaled_value;
         if (this->exponent > other.exponent) {
@@ -300,12 +313,12 @@ public:
 
     constexpr explicit operator double() const noexcept {
         double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
-        return sign ? -v : v;
+        return sign == Sign::Negative ? -v : v;
     }
 
     constexpr explicit operator float() const noexcept {
         double v = static_cast<float>(unscaled_value) * std::pow(static_cast<float>(base), -static_cast<float>(exponent));
-        return sign ? -v : v;
+        return sign == Sign::Negative ? -v : v;
     }
 
     constexpr explicit operator UnscaledValue_t() const noexcept {
@@ -337,7 +350,7 @@ public:
                 s << '0';
             s << ".0";
         }
-        if (sign)
+        if (sign == Sign::Negative)
             s << '-';
         std::string_view sv = s.view();
         return std::string{sv.rbegin(), sv.rend()};
@@ -350,7 +363,7 @@ public:
     }
 
     [[nodiscard]] size_t hash() const {
-        return std::hash<bool>{}(sign) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
+        return (sign == Sign::Negative ? 1 : 0) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
     }
 };
 
@@ -406,7 +419,7 @@ public:
         return BigDecimal{numeric_limits<UnscaledValue_t>::max(), 0};
     }
     static constexpr BigDecimal min() noexcept {
-        return BigDecimal{numeric_limits<UnscaledValue_t>::max(), 0, true};
+        return BigDecimal{numeric_limits<UnscaledValue_t>::max(), 0, rdf4cpp::rdf::util::Sign::Negative};
     }
     static constexpr BigDecimal lowest() noexcept {
         return min();

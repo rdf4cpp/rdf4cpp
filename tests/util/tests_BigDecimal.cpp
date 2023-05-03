@@ -5,6 +5,7 @@
 
 using Dec = rdf4cpp::rdf::util::BigDecimal<>;
 using RoundingMode = rdf4cpp::rdf::util::RoundingMode;
+using Sign = rdf4cpp::rdf::util::Sign;
 
 TEST_CASE("basics") {
     SUBCASE("ctor and compare") {
@@ -14,15 +15,15 @@ TEST_CASE("basics") {
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<uint64_t>);
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<boost::multiprecision::cpp_int>);
         Dec d{500, 1};
-        CHECK(d > Dec{500, 1, true});
-        CHECK(Dec{500, 1, true} < d);
+        CHECK(d > Dec{500, 1, Sign::Negative});
+        CHECK(Dec{500, 1, Sign::Negative} < d);
         CHECK(Dec{50, 0} == d);
         CHECK(d > Dec{40, 0});
         CHECK(d < Dec{60, 0});
         CHECK(Dec{40, 0} < d);
         CHECK(Dec{60, 0} > d);
         CHECK(d != Dec{60, 1});
-        CHECK(d == Dec{-500, 1, true});
+        CHECK(d == Dec{-500, 1, Sign::Negative});
     }
     SUBCASE("normalize") {
         Dec d{500, 1};
@@ -38,25 +39,25 @@ TEST_CASE("basics") {
 
 TEST_CASE("arithmetic") {
     SUBCASE("unary -") {
-        CHECK(-Dec{1, 0} == Dec{1, 0, true});
-        CHECK(-Dec{1, 5} == Dec{1, 5, true});
-        CHECK(-Dec{1, 0, true} == Dec{1, 0});
-        CHECK(-Dec{1, 5, true} == Dec{1, 5});
+        CHECK(-Dec{1, 0} == Dec{1, 0, Sign::Negative});
+        CHECK(-Dec{1, 5} == Dec{1, 5, Sign::Negative});
+        CHECK(-Dec{1, 0, Sign::Negative} == Dec{1, 0});
+        CHECK(-Dec{1, 5, Sign::Negative} == Dec{1, 5});
     }
     SUBCASE("+") {
         CHECK((Dec{1, 0} + Dec{2, 0}) == Dec{3, 0});
         CHECK((Dec{100, 1} + Dec{200, 1}) == Dec{300, 1});
         CHECK((Dec{1, 0} + Dec{200, 2}) == Dec{300, 2});
         CHECK((Dec{1, 2} + Dec{2, 0}) == Dec{201, 2});
-        CHECK((Dec{1, 0} + Dec{2, 0, true}) == Dec{1, 0, true});
-        CHECK((Dec{1, 0} + Dec{1, 0, true}) == Dec{0, 0});
-        CHECK((Dec{1, 0, true} + Dec{2, 0, true}) == Dec{3, 0, true});
-        CHECK((Dec{2, 0} + Dec{1, 0, true}) == Dec{1, 0});
-        CHECK((Dec{1, 0, true} + Dec{2, 0}) == Dec{1, 0});
-        CHECK((Dec{2, 0, true} + Dec{1, 0}) == Dec{1, 0, true});
+        CHECK((Dec{1, 0} + Dec{2, 0, Sign::Negative}) == Dec{1, 0, Sign::Negative});
+        CHECK((Dec{1, 0} + Dec{1, 0, Sign::Negative}) == Dec{0, 0});
+        CHECK((Dec{1, 0, Sign::Negative} + Dec{2, 0, Sign::Negative}) == Dec{3, 0, Sign::Negative});
+        CHECK((Dec{2, 0} + Dec{1, 0, Sign::Negative}) == Dec{1, 0});
+        CHECK((Dec{1, 0, Sign::Negative} + Dec{2, 0}) == Dec{1, 0});
+        CHECK((Dec{2, 0, Sign::Negative} + Dec{1, 0}) == Dec{1, 0, Sign::Negative});
     }
     SUBCASE("-") {
-        CHECK((Dec{1, 0} - Dec{2, 0}) == Dec{1, 0, true});  // implemented via + and unary -
+        CHECK((Dec{1, 0} - Dec{2, 0}) == Dec{1, 0, Sign::Negative});  // implemented via + and unary -
     }
     SUBCASE("*") {
         CHECK((Dec{2, 0} * Dec{2, 0}) == Dec{4, 0});
@@ -64,21 +65,21 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{2, 1} * Dec{2, 0}) == Dec{4, 1});
         CHECK((Dec{2, 1} * Dec{2, 1}) == Dec{4, 2});
         CHECK_THROWS_AS((Dec{2, std::numeric_limits<uint32_t>::max()} * Dec{2, std::numeric_limits<uint32_t>::max()}), std::overflow_error);
-        CHECK((Dec{2, 1, true} * Dec{2, 1}) == Dec{4, 2, true});
-        CHECK((Dec{2, 1} * Dec{2, 1, true}) == Dec{4, 2, true});
-        CHECK((Dec{2, 1, true} * Dec{2, 1, true}) == Dec{4, 2, false});
+        CHECK((Dec{2, 1, Sign::Negative} * Dec{2, 1}) == Dec{4, 2, Sign::Negative});
+        CHECK((Dec{2, 1} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Negative});
+        CHECK((Dec{2, 1, Sign::Negative} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Positive});
     }
     SUBCASE("/") {
         CHECK((Dec{2, 0} / Dec{2, 0}) == Dec{1, 0});
-        CHECK((Dec{2, 0, true} / Dec{2, 0}) == Dec{1, 0, true});
-        CHECK((Dec{2, 0} / Dec{2, 0, true}) == Dec{1, 0, true});
-        CHECK((Dec{2, 0, true} / Dec{2, 0, true}) == Dec{1, 0});
+        CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0}) == Dec{1, 0, Sign::Negative});
+        CHECK((Dec{2, 0} / Dec{2, 0, Sign::Negative}) == Dec{1, 0, Sign::Negative});
+        CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0, Sign::Negative}) == Dec{1, 0});
         CHECK_THROWS_AS((Dec{1, 0} / Dec{3, 0}), std::overflow_error);
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Floor)) == Dec{33, 2});
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Ceil)) == Dec{34, 2});
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{33, 2});
         CHECK((Dec{2, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
-        CHECK((Dec{1, 0}.divide(Dec{3, 0, true}, 2, RoundingMode::Floor)) == Dec{33, 2, true});
+        CHECK((Dec{1, 0}.divide(Dec{3, 0, Sign::Negative}, 2, RoundingMode::Floor)) == Dec{33, 2, Sign::Negative});
     }
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
@@ -96,17 +97,22 @@ TEST_CASE("arithmetic") {
     }
     SUBCASE("abs") {
         CHECK(Dec{51, 1}.abs() == Dec{51, 1});
-        CHECK(Dec{51, 1, true}.abs() == Dec{51, 1});
+        CHECK(Dec{51, 1, Sign::Negative}.abs() == Dec{51, 1});
+    }
+    SUBCASE("pow") {
+        CHECK(Dec{5, 0}.pow(5) == Dec{3125});
+        CHECK(Dec{5, 1}.pow(5) == Dec{"0.03125"});
+        CHECK(pow(Dec{5, 1}, 0) == Dec{1});
     }
 }
 
 TEST_CASE("conversion") {
     SUBCASE("to std::string") {
         CHECK(static_cast<std::string>(Dec{51, 1}) == "5.1");
-        CHECK(static_cast<std::string>(Dec{9514, 2, true}) == "-95.14");
-        CHECK(static_cast<std::string>(Dec{9514, 0, true}) == "-9514.0");
-        CHECK(static_cast<std::string>(Dec{9514, 4, true}) == "-0.9514");
-        CHECK(static_cast<std::string>(Dec{9514, 6, true}) == "-0.009514");
+        CHECK(static_cast<std::string>(Dec{9514, 2, Sign::Negative}) == "-95.14");
+        CHECK(static_cast<std::string>(Dec{9514, 0, Sign::Negative}) == "-9514.0");
+        CHECK(static_cast<std::string>(Dec{9514, 4, Sign::Negative}) == "-0.9514");
+        CHECK(static_cast<std::string>(Dec{9514, 6, Sign::Negative}) == "-0.009514");
     }
     SUBCASE("writing") {
         std::stringstream str{};
@@ -116,7 +122,7 @@ TEST_CASE("conversion") {
     }
     SUBCASE("from double") {
         CHECK(Dec{50.0} == Dec{50, 0});
-        CHECK(Dec{-50.5} == Dec{505, 1, true});
+        CHECK(Dec{-50.5} == Dec{505, 1, Sign::Negative});
     }
     SUBCASE("to double") {
         CHECK(static_cast<double>(Dec{50, 0}) == 50.0);
@@ -134,12 +140,12 @@ TEST_CASE("conversion") {
         CHECK(Dec{".54"} == Dec{54, 2});
         CHECK(Dec{"0005.000"} == Dec{5000, 3});
         CHECK(Dec{"0005.000"}.get_exponent() == 3);
-        CHECK(Dec{"-5"} == Dec{5, 0, true});
-        CHECK(Dec{"-5."} == Dec{5, 0, true});
-        CHECK(Dec{"-5.1"} == Dec{51, 1, true});
-        CHECK(Dec{"-54.32"} == Dec{5432, 2, true});
-        CHECK(Dec{"-.54"} == Dec{54, 2, true});
-        CHECK(Dec{"-0005.000"} == Dec{5000, 3, true});
+        CHECK(Dec{"-5"} == Dec{5, 0, Sign::Negative});
+        CHECK(Dec{"-5."} == Dec{5, 0, Sign::Negative});
+        CHECK(Dec{"-5.1"} == Dec{51, 1, Sign::Negative});
+        CHECK(Dec{"-54.32"} == Dec{5432, 2, Sign::Negative});
+        CHECK(Dec{"-.54"} == Dec{54, 2, Sign::Negative});
+        CHECK(Dec{"-0005.000"} == Dec{5000, 3, Sign::Negative});
         CHECK(Dec{"-0005.000"}.get_exponent() == 3);
         CHECK_THROWS_AS(Dec{"5.5.5"}, std::invalid_argument);
         CHECK_THROWS_AS(Dec{"5.5-5"}, std::invalid_argument);
