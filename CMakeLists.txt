@@ -108,11 +108,11 @@ set(serd_source_files
 )
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/75dc8ce14cfa99943bb8d8124e0d6925b463427f/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()
-file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/75dc8ce14cfa99943bb8d8124e0d6925b463427f/COPYING"
+file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/COPYING"
         "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
         TLS_VERIFY ON)
 

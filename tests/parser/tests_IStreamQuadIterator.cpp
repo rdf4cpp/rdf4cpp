@@ -1,9 +1,10 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
-#include <ranges>
 #include <iostream>
 
 using namespace rdf4cpp::rdf;
@@ -334,7 +335,8 @@ TEST_CASE("N-Triple") {
 
 TEST_CASE("N-Quads") {
     SUBCASE("simple") {
-        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> ."};
+        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> .\n"
+                              "<http://example/s> <http://example/p> <http://example/o>."};
 
         IStreamQuadIterator it{str, ParsingFlag::NQuads};
 
@@ -342,6 +344,13 @@ TEST_CASE("N-Quads") {
         CHECK(it->has_value());
         CHECK(it->value() == Quad{IRI{"http://example/g"},
                                   IRI{"http://example/s"},
+                                  IRI{"http://example/p"},
+                                  IRI{"http://example/o"}});
+
+        ++it;
+        CHECK(it != IStreamQuadIterator{});
+        CHECK(it->has_value());
+        CHECK(it->value() == Quad{IRI{"http://example/s"},
                                   IRI{"http://example/p"},
                                   IRI{"http://example/o"}});
 
@@ -366,19 +375,6 @@ TEST_CASE("TriG") {
         ++it;
         CHECK(it == IStreamQuadIterator{});
     }
-    SUBCASE("simple NQuad") {
-        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> ."};
-
-        IStreamQuadIterator it{str, ParsingFlag::TriG};
-
-        CHECK(it != IStreamQuadIterator{});
-        CHECK(it->has_value());
-        CHECK(it->value() == Quad{IRI{"http://example/g"},
-                                  IRI{"http://example/s"},
-                                  IRI{"http://example/p"},
-                                  IRI{"http://example/o"}});
-
-        ++it;
-        CHECK(it == IStreamQuadIterator{});
-    }
 }
+
+#pragma clang diagnostic pop
