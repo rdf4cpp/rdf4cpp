@@ -131,8 +131,10 @@ TEST_CASE("conversion") {
         CHECK(Dec{500000.0} == Dec{500000, 0});
         CHECK(Dec{0.0009765625} == Dec{"0.0009765625"});
         CHECK(Dec{1.0} == Dec{1, 0});
+        CHECK(static_cast<float>(Dec{1.0}) == 1.0f);
     }
     SUBCASE("to double") {
+        // todo conversion of a decimal that does not fit into a double
         CHECK(static_cast<double>(Dec{50, 0}) == 50.0);
         CHECK(static_cast<double>(Dec{500, 1}) == 50.0);
     }

@@ -170,6 +170,7 @@ public:
         } else {
             unscaled_value = boost::multiprecision::pow(UnscaledValue_t{2}, ex) * significand;
         }
+        normalize();
     }
 
     constexpr void normalize() noexcept {
