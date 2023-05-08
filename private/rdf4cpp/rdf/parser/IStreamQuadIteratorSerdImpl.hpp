@@ -58,15 +58,16 @@ private:
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
 
     static constexpr SerdSyntax extract_syntax_from_flags(ParsingFlags flags) noexcept {
-        if (flags.contains(ParsingFlag::Turtle))
-            return SerdSyntax::SERD_TURTLE;
-        if (flags.contains(ParsingFlag::NTriples))
-            return SerdSyntax::SERD_NTRIPLES;
-        if (flags.contains(ParsingFlag::NQuads))
-            return SerdSyntax::SERD_NQUADS;
-        if (flags.contains(ParsingFlag::TriG))
-            return SerdSyntax::SERD_TRIG;
-        return SerdSyntax::SERD_TURTLE;
+        switch (flags.get_syntax()) {
+            case ParsingFlag::TriG:
+                return SerdSyntax::SERD_TRIG;
+            case ParsingFlag::NTriples:
+                return SerdSyntax::SERD_NTRIPLES;
+            case ParsingFlag::NQuads:
+                return SerdSyntax::SERD_NQUADS;
+            default:
+                return SerdSyntax::SERD_TURTLE;
+        }
     }
 
 public:
