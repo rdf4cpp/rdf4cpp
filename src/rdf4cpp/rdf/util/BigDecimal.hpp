@@ -49,6 +49,18 @@ class BigDecimal {
     }
 
     template<class T>
+    static constexpr auto save_pow(const T &a, unsigned int b, const char *exc) {
+        if constexpr (std::is_integral_v<T> && std::is_unsigned_v<T>) {
+            T r = 1;
+            for (unsigned int i = 0; i < b; ++i)
+                r = save_mul(r, a, exc);
+            return r;
+        } else {
+            return boost::multiprecision::pow(a, b);
+        }
+    }
+
+    template<class T>
     static constexpr auto save_add(const T &a, const T &b, const char *exc) {
         if constexpr (std::is_integral_v<T>) {
             T result;
@@ -162,15 +174,18 @@ public:
             significand >>= 1;
             ++ex;
         }
+        static constexpr const char *exc = "double to BigDecimal overflow";
         if (ex == 0) {
             unscaled_value = UnscaledValue_t{significand};
         } else if (ex < 0) {
             exponent = static_cast<Exponent_t>(-ex);
-            unscaled_value = boost::multiprecision::pow(UnscaledValue_t{5}, exponent) * significand;
+            UnscaledValue_t e = save_pow(UnscaledValue_t{5}, -ex, exc);
+            unscaled_value = save_mul(UnscaledValue_t{significand}, e, exc);
         } else {
-            unscaled_value = boost::multiprecision::pow(UnscaledValue_t{2}, ex) * significand;
+            UnscaledValue_t e = save_pow(UnscaledValue_t{2}, ex, exc);
+            unscaled_value = save_mul(UnscaledValue_t{significand}, e, exc);
         }
-        normalize();
+        //normalize();
     }
 
     constexpr void normalize() noexcept {
@@ -286,14 +301,16 @@ public:
         return this->divide(other, 1000);
     }
 
-    constexpr BigDecimal pow(unsigned int n) const {
+    constexpr BigDecimal pow(int n) const {
         BigDecimal r{1};
-        for (unsigned int i = 0; i < n; ++i)
-            r = r * *this;
+        if (n < 0) {
+            for (int i = 0; i > n; --i)
+                r = r / *this;
+        } else {
+            for (int i = 0; i < n; ++i)
+                r = r * *this;
+        }
         return r;
-    }
-    constexpr BigDecimal pow(const BigDecimal &) const {
-        return *this;  // TODO implement
     }
 
     [[nodiscard]] constexpr BigDecimal round(RoundingMode mode) const {
@@ -345,12 +362,16 @@ public:
 
     constexpr explicit operator double() const noexcept {
         double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
-        return sign == Sign::Negative ? -v : v;
+        v = sign == Sign::Negative ? -v : v;
+        if (!std::isnan(v) && !std::isinf(v))
+            return v;
+        // even Javas BigDecimal has no better solution
+        auto s = static_cast<std::string>(*this);
+        return std::stod(s, nullptr);
     }
 
     constexpr explicit operator float() const noexcept {
-        double v = static_cast<float>(unscaled_value) * std::pow(static_cast<float>(base), -static_cast<float>(exponent));
-        return sign == Sign::Negative ? -v : v;
+        return static_cast<float>(static_cast<double>(*this));
     }
 
     constexpr explicit operator UnscaledValue_t() const noexcept {
@@ -408,11 +429,7 @@ std::string to_string(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept
 }
 
 template<class UnscaledValue_t, class Exponent_t>
-BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, unsigned int n) {
-    return r.pow(n);
-}
-template<class UnscaledValue_t, class Exponent_t>
-BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, const BigDecimal<UnscaledValue_t, Exponent_t> &n) {
+BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, int n) {
     return r.pow(n);
 }
 }  // namespace rdf4cpp::rdf::util

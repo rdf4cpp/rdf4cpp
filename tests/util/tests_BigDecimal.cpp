@@ -104,6 +104,8 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{5, 0}.pow(5) == Dec{3125});
         CHECK(Dec{5, 1}.pow(5) == Dec{"0.03125"});
         CHECK(pow(Dec{5, 1}, 0) == Dec{1});
+        CHECK(pow(Dec{5, 0}, -2) == Dec{4, 2});
+        CHECK(pow(Dec{1, 1}, -2) == Dec{100, 0});
     }
 }
 
@@ -134,9 +136,9 @@ TEST_CASE("conversion") {
         CHECK(static_cast<float>(Dec{1.0}) == 1.0f);
     }
     SUBCASE("to double") {
-        // todo conversion of a decimal that does not fit into a double
         CHECK(static_cast<double>(Dec{50, 0}) == 50.0);
         CHECK(static_cast<double>(Dec{500, 1}) == 50.0);
+        CHECK(static_cast<double>(Dec{static_cast<boost::multiprecision::cpp_int>(std::numeric_limits<double>::max()) * 100, 2}) == std::numeric_limits<double>::max());
     }
     SUBCASE("to float") {
         CHECK(static_cast<float>(Dec{50, 0}) == 50.0f);
