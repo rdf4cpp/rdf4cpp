@@ -42,6 +42,9 @@ class BigDecimal {
 
     static constexpr uint32_t base = 10;
 
+    /**
+     * pow(base, ex) * v
+     */
     static constexpr UnscaledValue_t shift_pow(UnscaledValue_t v, Exponent_t ex) {
         for (Exponent_t i = 0; i < ex; ++i)
             v = save_mul(v, UnscaledValue_t{base}, "shift_pow precision overflow");
@@ -102,18 +105,35 @@ class BigDecimal {
         }
     }
 
+    /**
+     * sign logic for ctor
+     */
     static constexpr Sign init_sign(const UnscaledValue_t &unscaled_value, Sign s) {
         if (unscaled_value == 0)
             return Sign::Positive;
-        if (unscaled_value < 0)
+        if (!std::is_integral_v<UnscaledValue_t> && unscaled_value < 0)  // only possible with cpp_int
             return !s;
         return s;
     }
 
 public:
+    /**
+     * creates a BigDecimal from its components.
+     * it has the value of sign * unscaled_value * pow(10, -exponent).
+     * @param unscaled_value
+     * @param exponent
+     * @param sign
+     */
     constexpr BigDecimal(const UnscaledValue_t &unscaled_value, Exponent_t exponent, Sign sign = Sign::Positive)
         : unscaled_value(abs(unscaled_value)), exponent(exponent), sign(init_sign(unscaled_value, sign)) {}
 
+    /**
+     * parses a BigDecimal from a string_view.
+     * may include a leading sign and one decimal point ., everything else needs to be numeric.
+     * @param value
+     * @throw std::invalid_argument if a invalid char is found
+     * @throw std::overflow_error on exceeding the types numeric limits
+     */
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
         bool begin = true;
         bool decimal = false;
@@ -143,18 +163,52 @@ public:
             sign = Sign::Positive;
     }
 
+    /**
+     * converts a uint32_t to a BigDecimal
+     * @param value
+     */
     constexpr explicit BigDecimal(uint32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
 
+    /**
+     * converts a uint64_t to a BigDecimal
+     * @param value
+     */
     constexpr explicit BigDecimal(uint64_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
 
-    constexpr explicit BigDecimal(int32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+    /**
+     * converts a int32_t to a BigDecimal
+     * @param value
+     */
+    constexpr explicit BigDecimal(int32_t value) : BigDecimal(UnscaledValue_t{std::abs(value)}, 0, value < 0 ? Sign::Negative : Sign::Positive) {}
 
-    constexpr explicit BigDecimal(int64_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+    /**
+     * converts a int64_t to a BigDecimal
+     * @param value
+     */
+    constexpr explicit BigDecimal(int64_t value) : BigDecimal(UnscaledValue_t{std::abs(value)}, 0, value < 0 ? Sign::Negative : Sign::Positive) {}
 
+    /**
+     * converts a UnscaledValue_t to a BigDecimal
+     * @param value
+     */
     constexpr explicit BigDecimal(const UnscaledValue_t &value) : BigDecimal(value, 0) {}
 
+    /**
+     * converts a float to a BigDecimal.
+     * this conversion might not be exact, due to the built in limitations of floats.
+     * if you have the possibility, use one of the other constructors.
+     * @param value
+     * @throw std::overflow_error on exceeding the types numeric limits
+     */
     constexpr explicit BigDecimal(float value) : BigDecimal(static_cast<double>(value)) {}
 
+    /**
+     * converts a double to a BigDecimal.
+     * this conversion might not be exact, due to the built in limitations of doubles.
+     * if you have the possibility, use one of the other constructors.
+     * @param value
+     * @throw std::overflow_error on exceeding the types numeric limits
+     */
     explicit BigDecimal(double value) : unscaled_value(0), exponent(0) {
         if (std::isinf(value) || std::isnan(value))
             throw std::invalid_argument{"value is NaN or infinity"};
@@ -185,9 +239,12 @@ public:
             UnscaledValue_t e = save_pow(UnscaledValue_t{2}, ex, exc);
             unscaled_value = save_mul(UnscaledValue_t{significand}, e, exc);
         }
-        //normalize();
+        normalize();
     }
 
+    /**
+     * converts this BigDecimal to its smallest internal representation.
+     */
     constexpr void normalize() noexcept {
         while (exponent > 0 && unscaled_value % base == 0) {
             unscaled_value /= base;
@@ -199,14 +256,28 @@ public:
         return exponent;
     }
 
+    /**
+     * unary minus of this BigDecimal.
+     * @return
+     */
     constexpr BigDecimal operator-() const {
         return BigDecimal(this->unscaled_value, this->exponent, !this->sign);
     }
 
+    /**
+     * unary plus (nop) of this BigDecimal.
+     * @return
+     */
     constexpr BigDecimal operator+() const noexcept {
         return *this;
     }
 
+    /**
+     * addition of two BigDecimals.
+     * @param other
+     * @return
+     * @throw std::overflow_error on over/underflow
+     */
     constexpr BigDecimal operator+(const BigDecimal &other) const {
         UnscaledValue_t t = this->unscaled_value;
         UnscaledValue_t o = other.unscaled_value;
@@ -231,10 +302,22 @@ public:
         return BigDecimal{res, new_exp, s};
     }
 
+    /**
+     * subtraction of two BigDecimals.
+     * @param other
+     * @return
+     * @throw std::overflow_error on over/underflow
+     */
     constexpr BigDecimal operator-(const BigDecimal &other) const {
         return *this + (-other);
     }
 
+    /**
+     * multiplication of two BigDecimals.
+     * @param other
+     * @return
+     * @throw std::overflow_error on over/underflow
+     */
     constexpr BigDecimal operator*(const BigDecimal &other) const {
         return BigDecimal{save_mul(this->unscaled_value, other.unscaled_value, "BigDecimal::operator* unscaled overflow"),
                           save_add(this->exponent, other.exponent, "BigDecimal::operator* exponent overflow"), this->sign ^ other.sign};
@@ -260,6 +343,15 @@ private:
     }
 
 public:
+    /**
+     * division of two BigDecimals.
+     * @param other
+     * @param max_scale_increase after this many decimal places have been added, stop dividing and round
+     * @param mode rounding mode to use
+     * @return
+     * @throw std::overflow_error on over/underflow, or on break to round with RoundingMode::ThrowInstead
+     * @throw std::invalid_argument on trying to divide by zero
+     */
     [[nodiscard]] constexpr BigDecimal divide(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::ThrowInstead) const {
         if (other.unscaled_value == 0)
             throw std::invalid_argument{"division by 0"};
@@ -297,10 +389,23 @@ public:
         }
         return BigDecimal{res, ex, s};
     }
+    /**
+     * division of two BigDecimals.
+     * @param other
+     * @return
+     * @throw std::overflow_error on over/underflow, or on hitting 1000 additional decimal places
+     * @throw std::invalid_argument on trying to divide by zero
+     */
     constexpr BigDecimal operator/(const BigDecimal &other) const {
         return this->divide(other, 1000);
     }
 
+    /**
+     * raises a BigDecimal to the power of a int.
+     * @param n
+     * @return
+     * @throw std::overflow_error on over/underflow
+     */
     constexpr BigDecimal pow(int n) const {
         BigDecimal r{1};
         if (n < 0) {
@@ -313,6 +418,12 @@ public:
         return r;
     }
 
+    /**
+     * rounds a BigDecimal with a specified RoundingMode.
+     * @param mode
+     * @return
+     * @throw std::overflow_error on over/underflow or RoundingMode::ThrowInstead
+     */
     [[nodiscard]] constexpr BigDecimal round(RoundingMode mode) const {
         if (exponent == 0)
             return *this;
@@ -321,10 +432,19 @@ public:
         return handle_rounding(v, 0, rem, sign, mode);
     }
 
+    /**
+     * the absolute value of a BigDecimal.
+     * @return
+     */
     [[nodiscard]] constexpr BigDecimal abs() const noexcept {
         return BigDecimal{unscaled_value, exponent};
     }
 
+    /**
+     * comparison between BigDecimals.
+     * @param other
+     * @return
+     */
     constexpr std::strong_ordering operator<=>(const BigDecimal &other) const noexcept {
         if (this->sign != other.sign)
             return this->sign == Sign::Negative ? std::strong_ordering::less : std::strong_ordering::greater;
@@ -350,16 +470,37 @@ public:
         else
             return std::strong_ordering::equivalent;
     };
+    /**
+     * equality between BigDecimals.
+     * @param other
+     * @return
+     */
     constexpr bool operator==(const BigDecimal &other) const noexcept {
         return *this <=> other == std::strong_ordering::equivalent;
     }
+    /**
+     * equality between a BigDecimal and a int (mainly for constants)
+     * @param t
+     * @param other
+     * @return
+     */
     friend bool operator==(const BigDecimal &t, int other) noexcept {
         return t == BigDecimal{other, 0};
     }
+    /**
+     * equality between a BigDecimal and a int (mainly for constants)
+     * @param t
+     * @param other
+     * @return
+     */
     friend bool operator==(int t, const BigDecimal &other) noexcept {
         return other == t;
     }
 
+    /**
+     * conversion to a double
+     * @return
+     */
     constexpr explicit operator double() const noexcept {
         double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
         v = sign == Sign::Negative ? -v : v;
@@ -370,16 +511,28 @@ public:
         return std::stod(s, nullptr);
     }
 
+    /**
+     * conversion to a float
+     * @return
+     */
     constexpr explicit operator float() const noexcept {
         return static_cast<float>(static_cast<double>(*this));
     }
 
+    /**
+     * conversion to a UnscaledValue_t
+     * @return
+     */
     constexpr explicit operator UnscaledValue_t() const noexcept {
         if (exponent == 0)
             return unscaled_value;
         return unscaled_value / shift_pow(1, exponent);
     }
 
+    /**
+     * conversion to a string
+     * @return
+     */
     explicit operator std::string() const noexcept {
         if (unscaled_value == 0)
             return "0.0";
@@ -412,12 +565,22 @@ public:
         return std::string{sv.rbegin(), sv.rend()};
     }
 
+    /**
+     * writing a BigDecimal into a stream.
+     * @param str
+     * @param bn
+     * @return
+     */
     friend std::ostream &operator<<(std::ostream &str, const BigDecimal &bn) {
         auto s = static_cast<std::string>(bn);
         str << s;
         return str;
     }
 
+    /**
+     * combined hash of a BigDecimals components hashes.
+     * @return
+     */
     [[nodiscard]] size_t hash() const {
         return (sign == Sign::Negative ? 1 : 0) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
     }
