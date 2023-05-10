@@ -26,6 +26,11 @@ TEST_CASE("basics") {
         CHECK(d != Dec{60, 1});
         CHECK(d == Dec{-500, 1, Sign::Negative});
         CHECK(Dec{0, 0, Sign::Negative} == Dec{0, 0, Sign::Positive});
+
+        uint32_t m = std::numeric_limits<uint32_t>::max();
+        CHECK(DecI{m, 5} < DecI{m, 0});
+        CHECK(DecI{m, 5} > DecI{0, 0});
+        CHECK(DecI{m, 5} > DecI{m, 10});
     }
     SUBCASE("normalize") {
         Dec d{500, 1};
@@ -78,12 +83,12 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0}) == Dec{1, 0, Sign::Negative});
         CHECK((Dec{2, 0} / Dec{2, 0, Sign::Negative}) == Dec{1, 0, Sign::Negative});
         CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0, Sign::Negative}) == Dec{1, 0});
-        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Floor)) == Dec{33, 2});
-        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Ceil)) == Dec{34, 2});
-        CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{33, 2});
-        CHECK((Dec{2, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
-        CHECK((Dec{1, 0}.divide(Dec{3, 0, Sign::Negative}, 2, RoundingMode::Floor)) == Dec{33, 2, Sign::Negative});
-        CHECK(!DecI{1, 0}.divide_checked(DecI{3, 0}, 1000, RoundingMode::Floor).has_value());
+        CHECK((Dec{1, 0}.div(Dec{3, 0}, 2, RoundingMode::Floor)) == Dec{33, 2});
+        CHECK((Dec{1, 0}.div(Dec{3, 0}, 2, RoundingMode::Ceil)) == Dec{34, 2});
+        CHECK((Dec{1, 0}.div(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{33, 2});
+        CHECK((Dec{2, 0}.div(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
+        CHECK((Dec{1, 0}.div(Dec{3, 0, Sign::Negative}, 2, RoundingMode::Floor)) == Dec{33, 2, Sign::Negative});
+        CHECK(!DecI{1, 0}.div_checked(DecI{3, 0}, 1000, RoundingMode::Floor).has_value());
     }
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});

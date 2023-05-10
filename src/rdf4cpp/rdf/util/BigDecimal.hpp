@@ -20,11 +20,11 @@ enum class Sign {
     Positive = 0,
     Negative = 1,
 };
-constexpr Sign operator^(Sign a, Sign b) noexcept {
+[[nodiscard]] constexpr Sign operator^(Sign a, Sign b) noexcept {
     using T = std::underlying_type_t<Sign>;
     return static_cast<Sign>(static_cast<T>(static_cast<T>(a) ^ static_cast<T>(b)));
 }
-constexpr Sign operator!(Sign a) noexcept {
+[[nodiscard]] constexpr Sign operator!(Sign a) noexcept {
     using T = std::underlying_type_t<Sign>;
     return static_cast<Sign>(static_cast<T>(!static_cast<T>(a)));
 }
@@ -50,16 +50,6 @@ class BigDecimal {
         Checked,
         UndefinedBehavior,
     };
-
-    /**
-     * pow(base, ex) * v
-     */
-    static constexpr UnscaledValue_t shift_pow(UnscaledValue_t v, Exponent_t ex) {
-        for (Exponent_t i = 0; i < ex; ++i)
-            v = save_mul(v, UnscaledValue_t{base}, "shift_pow precision overflow");
-        return v;
-    }
-
 
     template<OverflowMode m, class T>
     static constexpr bool add_checked(const T &a, const T &b, T &result) noexcept {
@@ -103,18 +93,6 @@ class BigDecimal {
         } else {
             result = boost::multiprecision::pow(a, b);
             return false;
-        }
-    }
-
-    template<class T>
-    static constexpr auto save_mul(const T &a, const T &b, const char *exc) {
-        if constexpr (std::is_integral_v<T>) {
-            T result;
-            if (__builtin_mul_overflow(a, b, &result))
-                throw std::overflow_error{exc};
-            return result;
-        } else {
-            return a * b;
         }
     }
 
@@ -427,7 +405,7 @@ public:
      * unary minus of this BigDecimal.
      * @return
      */
-    constexpr BigDecimal operator-() const noexcept {
+    [[nodiscard]] constexpr BigDecimal operator-() const noexcept {
         return BigDecimal(this->unscaled_value, this->exponent, !this->sign);
     }
 
@@ -435,7 +413,7 @@ public:
      * unary plus (nop) of this BigDecimal.
      * @return
      */
-    constexpr BigDecimal operator+() const noexcept {
+    [[nodiscard]] constexpr BigDecimal operator+() const noexcept {
         return *this;
     }
 
@@ -445,7 +423,7 @@ public:
      * @param other
      * @return
      */
-    constexpr BigDecimal operator+(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr BigDecimal operator+(const BigDecimal &other) const noexcept {
         BigDecimal res{0};
         add<OverflowMode::UndefinedBehavior>(other, res);
         return res;
@@ -456,7 +434,7 @@ public:
      * @param other
      * @return
      */
-    constexpr nonstd::expected<BigDecimal, DecimalError> add_checked(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> add_checked(const BigDecimal &other) const noexcept {
         BigDecimal res{0};
         if (add<OverflowMode::Checked>(other, res))
             return nonstd::make_unexpected(DecimalError::Overflow);
@@ -470,7 +448,7 @@ public:
      * @return
      * @throw std::overflow_error on over/underflow
      */
-    constexpr BigDecimal operator-(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr BigDecimal operator-(const BigDecimal &other) const noexcept {
         return *this + (-other);
     }
 
@@ -481,7 +459,7 @@ public:
      * @return
      * @throw std::overflow_error on over/underflow
      */
-    constexpr nonstd::expected<BigDecimal, DecimalError> sub_checked(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> sub_checked(const BigDecimal &other) const noexcept {
         return this->add_checked(-other);
     }
 
@@ -491,7 +469,7 @@ public:
      * @param other
      * @return
      */
-    constexpr BigDecimal operator*(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr BigDecimal operator*(const BigDecimal &other) const noexcept {
         BigDecimal res{0};
         mul<OverflowMode::UndefinedBehavior>(other, res);
         return res;
@@ -503,7 +481,7 @@ public:
      * @param other
      * @return
      */
-    constexpr nonstd::expected<BigDecimal, DecimalError> mul_checked(const BigDecimal &other) const noexcept {
+    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> mul_checked(const BigDecimal &other) const noexcept {
         BigDecimal res{0};
         if (mul<OverflowMode::Checked>(other, res))
             return nonstd::make_unexpected(DecimalError::Overflow);
@@ -516,8 +494,8 @@ public:
      * @param other
      * @return
      */
-    constexpr BigDecimal operator/(const BigDecimal &other) const noexcept {
-        return divide(other, 1000);
+    [[nodiscard]] constexpr BigDecimal operator/(const BigDecimal &other) const noexcept {
+        return div(other, 1000);
     }
 
     /**
@@ -528,7 +506,7 @@ public:
      * @param mode rounding mode to use
      * @return
      */
-    [[nodiscard]] constexpr BigDecimal divide(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::Floor) const noexcept {
+    [[nodiscard]] constexpr BigDecimal div(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::Floor) const noexcept {
         if (other.unscaled_value == 0)
             return BigDecimal{0, 0};  // undefined behavior (cpp_int throws)
         BigDecimal res{0};
@@ -544,7 +522,7 @@ public:
      * @param mode rounding mode to use
      * @return
      */
-    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> divide_checked(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::Floor) const noexcept {
+    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> div_checked(const BigDecimal &other, Exponent_t max_scale_increase, RoundingMode mode = RoundingMode::Floor) const noexcept {
         if (other.unscaled_value == 0)
             return nonstd::make_unexpected(DecimalError::NotDefined);
         BigDecimal res{0};
@@ -614,17 +592,17 @@ public:
         UnscaledValue_t t = this->unscaled_value;
         UnscaledValue_t o = other.unscaled_value;
         if (this->exponent > other.exponent) {
-            try {
-                o = shift_pow(o, this->exponent - other.exponent);
-            } catch (const std::overflow_error &) {
+            UnscaledValue_t b{base};
+            if (pow_checked<OverflowMode::Checked>(b, this->exponent - other.exponent, b))
                 return std::strong_ordering::less;  // t does fit into the same precision, while o does not
-            }
+            if (mul_checked<OverflowMode::Checked>(o, b, o))
+                return std::strong_ordering::less;  // t does fit into the same precision, while o does not
         } else if (this->exponent < other.exponent) {
-            try {
-                t = shift_pow(t, other.exponent - this->exponent);
-            } catch (const std::overflow_error &) {
+            UnscaledValue_t b{base};
+            if (pow_checked<OverflowMode::Checked>(b, other.exponent - this->exponent, b))
                 return std::strong_ordering::greater;  // o does fit into the same precision, while t does not
-            }
+            if (mul_checked<OverflowMode::Checked>(t, b, t))
+                return std::strong_ordering::greater;  // o does fit into the same precision, while t does not
         }
         if (t < o)
             return std::strong_ordering::less;
@@ -664,7 +642,7 @@ public:
      * conversion to a double
      * @return
      */
-    constexpr explicit operator double() const noexcept {
+    [[nodiscard]] constexpr explicit operator double() const noexcept {
         double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
         v = sign == Sign::Negative ? -v : v;
         if (!std::isnan(v) && !std::isinf(v))
@@ -678,7 +656,7 @@ public:
      * conversion to a float
      * @return
      */
-    constexpr explicit operator float() const noexcept {
+    [[nodiscard]] constexpr explicit operator float() const noexcept {
         return static_cast<float>(static_cast<double>(*this));
     }
 
@@ -686,17 +664,17 @@ public:
      * conversion to a UnscaledValue_t
      * @return
      */
-    constexpr explicit operator UnscaledValue_t() const noexcept {
+    [[nodiscard]] constexpr explicit operator UnscaledValue_t() const noexcept {
         if (exponent == 0)
             return unscaled_value;
-        return unscaled_value / shift_pow(1, exponent);
+        return round(RoundingMode::Floor).unscaled_value;
     }
 
     /**
      * conversion to a string
      * @return
      */
-    explicit operator std::string() const noexcept {
+    [[nodiscard]] explicit operator std::string() const noexcept {
         if (unscaled_value == 0)
             return "0.0";
         std::stringstream s{};

@@ -65,11 +65,11 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, Dynami
         return nonstd::make_unexpected(DynamicError::DivideByZero);
     }
 
-    try {
-        return lhs / rhs;
-    } catch (const std::overflow_error &) {
+    auto r = lhs.div_checked(rhs, 1000);
+    if (r.has_value())
+        return r.value();
+    else
         return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
-    }
 }
 
 template<>
