@@ -37,12 +37,11 @@ template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::add_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::add(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     // https://www.w3.org/TR/xpath-functions/#op.numeric
     // decimal needs overflow protection
-
-    try {
-        return lhs + rhs;
-    } catch (const std::overflow_error &) {
+    auto r = lhs.add_checked(rhs);
+    if (r.has_value())
+        return r.value();
+    else
         return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
-    }
 }
 
 template<>
@@ -50,11 +49,11 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::sub_result_cpp_type, Dynami
     // https://www.w3.org/TR/xpath-functions/#op.numeric
     // decimal needs overflow protection
 
-    try {
-        return lhs - rhs;
-    } catch (const std::overflow_error &) {
+    auto r = lhs.sub_checked(rhs);
+    if (r.has_value())
+        return r.value();
+    else
         return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
-    }
 }
 
 template<>
@@ -78,11 +77,11 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, Dynami
     // https://www.w3.org/TR/xpath-functions/#op.numeric
     // decimal needs overflow protection
 
-    try {
-        return lhs * rhs;
-    } catch (const std::overflow_error &) {
+    auto r = lhs.mul_checked(rhs);
+    if (r.has_value())
+        return r.value();
+    else
         return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
-    }
 }
 
 template<>

@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
 using Dec = rdf4cpp::rdf::util::BigDecimal<>;
+using DecI = rdf4cpp::rdf::util::BigDecimal<uint32_t, uint32_t>;
 using RoundingMode = rdf4cpp::rdf::util::RoundingMode;
 using Sign = rdf4cpp::rdf::util::Sign;
 
@@ -39,6 +40,7 @@ TEST_CASE("basics") {
 }
 
 TEST_CASE("arithmetic") {
+    uint32_t m = std::numeric_limits<uint32_t>::max();
     SUBCASE("unary -") {
         CHECK(-Dec{1, 0} == Dec{1, 0, Sign::Negative});
         CHECK(-Dec{1, 5} == Dec{1, 5, Sign::Negative});
@@ -56,6 +58,7 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{2, 0} + Dec{1, 0, Sign::Negative}) == Dec{1, 0});
         CHECK((Dec{1, 0, Sign::Negative} + Dec{2, 0}) == Dec{1, 0});
         CHECK((Dec{2, 0, Sign::Negative} + Dec{1, 0}) == Dec{1, 0, Sign::Negative});
+        CHECK(!DecI{m, 0}.mul_checked(DecI{m, 0}).has_value());
     }
     SUBCASE("-") {
         CHECK((Dec{1, 0} - Dec{2, 0}) == Dec{1, 0, Sign::Negative});  // implemented via + and unary -
@@ -65,22 +68,22 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{20, 0} * Dec{20, 0}) == Dec{400, 0});
         CHECK((Dec{2, 1} * Dec{2, 0}) == Dec{4, 1});
         CHECK((Dec{2, 1} * Dec{2, 1}) == Dec{4, 2});
-        CHECK_THROWS_AS((Dec{2, std::numeric_limits<uint32_t>::max()} * Dec{2, std::numeric_limits<uint32_t>::max()}), std::overflow_error);
         CHECK((Dec{2, 1, Sign::Negative} * Dec{2, 1}) == Dec{4, 2, Sign::Negative});
         CHECK((Dec{2, 1} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Negative});
         CHECK((Dec{2, 1, Sign::Negative} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Positive});
+        CHECK(!DecI{m, 100}.mul_checked(DecI{m, 0}).has_value());
     }
     SUBCASE("/") {
         CHECK((Dec{2, 0} / Dec{2, 0}) == Dec{1, 0});
         CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0}) == Dec{1, 0, Sign::Negative});
         CHECK((Dec{2, 0} / Dec{2, 0, Sign::Negative}) == Dec{1, 0, Sign::Negative});
         CHECK((Dec{2, 0, Sign::Negative} / Dec{2, 0, Sign::Negative}) == Dec{1, 0});
-        CHECK_THROWS_AS((Dec{1, 0} / Dec{3, 0}), std::overflow_error);
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Floor)) == Dec{33, 2});
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Ceil)) == Dec{34, 2});
         CHECK((Dec{1, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{33, 2});
         CHECK((Dec{2, 0}.divide(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
         CHECK((Dec{1, 0}.divide(Dec{3, 0, Sign::Negative}, 2, RoundingMode::Floor)) == Dec{33, 2, Sign::Negative});
+        CHECK(!DecI{1, 0}.divide_checked(DecI{3, 0}, 1000, RoundingMode::Floor).has_value());
     }
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
@@ -104,8 +107,7 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{5, 0}.pow(5) == Dec{3125});
         CHECK(Dec{5, 1}.pow(5) == Dec{"0.03125"});
         CHECK(pow(Dec{5, 1}, 0) == Dec{1});
-        CHECK(pow(Dec{5, 0}, -2) == Dec{4, 2});
-        CHECK(pow(Dec{1, 1}, -2) == Dec{100, 0});
+        CHECK(!DecI{500, 0}.pow_checked(m).has_value());
     }
 }
 
