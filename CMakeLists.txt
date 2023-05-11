@@ -89,17 +89,18 @@ set(serd_source_files
         src/string_utils.h
         src/system.c
         src/system.h
+        src/try.h
         src/uri.c
         src/uri_utils.h
         src/writer.c
 )
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/95f5929c06a85495513fceee568a08c3cafaae83/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()
-file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e0793b13aa37b1a3d7e67854c4807/COPYING"
+file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/COPYING"
         "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
         TLS_VERIFY ON)
 

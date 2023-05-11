@@ -304,7 +304,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
 IStreamQuadIterator::Impl::Impl(std::istream &istream, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept
     : istream{std::ref(istream)},
       node_storage{std::move(node_storage)},
-      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
+      reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       prefixes{std::move(prefixes)},
       no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)} {
 
