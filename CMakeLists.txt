@@ -15,7 +15,6 @@ find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
-find_package(utf8cpp QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 
@@ -54,17 +53,6 @@ if (NOT re2_FOUND)
     set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
     FetchContent_MakeAvailable(fetchre2)
     message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
-endif ()
-
-if (NOT utf8cpp_FOUND)
-    FetchContent_Declare(
-            fetchutfcpp
-            GIT_REPOSITORY https://github.com/nemtrif/utfcpp
-            GIT_TAG 79835a5fa57271f07a90ed36123e30ae9741178e # v3.2.3
-    )
-
-    FetchContent_MakeAvailable(fetchutfcpp)
-    message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
 endif ()
 
 if (NOT uni-algo_FOUND)
@@ -218,7 +206,6 @@ target_link_libraries(rdf4cpp
         PRIVATE
         fmt::fmt-header-only
         re2::re2
-        utf8cpp
         OpenSSL::Crypto
         uni-algo::uni-algo
         )
