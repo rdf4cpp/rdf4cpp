@@ -15,7 +15,6 @@ find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
 find_package(expected-lite 0.6 QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
-find_package(utf8cpp QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 
@@ -56,17 +55,6 @@ if (NOT re2_FOUND)
     message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
 endif ()
 
-if (NOT utf8cpp_FOUND)
-    FetchContent_Declare(
-            fetchutfcpp
-            GIT_REPOSITORY https://github.com/nemtrif/utfcpp
-            GIT_TAG 79835a5fa57271f07a90ed36123e30ae9741178e # v3.2.3
-    )
-
-    FetchContent_MakeAvailable(fetchutfcpp)
-    message(DEBUG "No CMake package for utfcpp found. utfcpp was retrieved via FetchContent.")
-endif ()
-
 if (NOT uni-algo_FOUND)
     set(UNI_ALGO_INSTALL On)
     FetchContent_Declare(
@@ -101,17 +89,18 @@ set(serd_source_files
         src/string_utils.h
         src/system.c
         src/system.h
+        src/try.h
         src/uri.c
         src/uri_utils.h
         src/writer.c
 )
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/95f5929c06a85495513fceee568a08c3cafaae83/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()
-file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/36cd3b34bd7e0793b13aa37b1a3d7e67854c4807/COPYING"
+file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/2297edc325cdd954ec1352f614577ea1cc7be3b1/COPYING"
         "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
         TLS_VERIFY ON)
 
@@ -218,7 +207,6 @@ target_link_libraries(rdf4cpp
         PRIVATE
         fmt::fmt-header-only
         re2::re2
-        utf8cpp
         OpenSSL::Crypto
         uni-algo::uni-algo
         )
