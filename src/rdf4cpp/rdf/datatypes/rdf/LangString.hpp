@@ -1,12 +1,16 @@
 #ifndef RDF4CPP_RDF_LANGSTRING_HPP
 #define RDF4CPP_RDF_LANGSTRING_HPP
 
+#include <bit>
+#include <optional>
+#include <string_view>
+#include <vector>
+
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
-
 struct LangStringRepr {
     std::string_view lexical_form;
     std::string_view language_tag;
@@ -33,6 +37,21 @@ inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(c
     __builtin_unreachable();
 }
 
+
+template<>
+inline std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<rdf_lang_string>::try_into_inlined(cpp_type const &) noexcept {
+    // dummy implementation, actual implementation in Literal
+    assert(false);
+    __builtin_unreachable();
+}
+
+template<>
+inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlineable<rdf_lang_string>::from_inlined(storage::node::identifier::LiteralID) noexcept {
+    // dummy implementation, actual implementation in Literal
+    assert(false);
+    __builtin_unreachable();
+}
+
 extern template struct LiteralDatatypeImpl<rdf_lang_string,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
@@ -44,7 +63,8 @@ namespace rdf4cpp::rdf::datatypes::rdf {
 
 struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
                                                   registry::capabilities::Comparable,
-                                                  registry::capabilities::FixedId> {};
+                                                  registry::capabilities::FixedId,
+                                                  registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 

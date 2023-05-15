@@ -112,7 +112,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -135,6 +135,14 @@ private:
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates a normal accessible Literal from a lang tagged string.
+     * Do not leak this, this would make lang tag inlining useless.
+     * note: no safety checks here, make sure this is actually a inlined language tagged string before calling!
+     * @return de inlined lang tagged literal
+     */
+    [[nodiscard]] Literal lang_tagged_get_de_inlined() const noexcept;
 
     /**
      * Checks if the dynamic datatype of this is equal to datatype
@@ -437,13 +445,13 @@ public:
     [[nodiscard]] IRI datatype() const noexcept;
 
     /**
-     * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
+     * Returns the language tag of this Literal. If the string is empty this has no language tag.
      * @return language tag
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
     /**
-     * @return the language tag of this Literal as xsd:string. If the string is empty this has no lanugage tag.
+     * @return the language tag of this Literal as xsd:string. If the string is empty this has no language tag.
      */
     [[nodiscard]] Literal as_language_tag(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
@@ -499,7 +507,11 @@ public:
 
         if constexpr (datatypes::IsInlineable<T>) {
             if (this->is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
+                if (this->datatype_eq<datatypes::rdf::LangString>()) {
+                    return this->lang_tagged_get_de_inlined().value<T>();
+                }
+
+                auto const inlined_value = this->handle_.node_id().literal_id();
                 return T::from_inlined(inlined_value);
             }
         }

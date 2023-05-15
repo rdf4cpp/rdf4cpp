@@ -6,4 +6,4 @@ template struct LiteralDatatypeImpl<rdf_lang_string,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::rdf::datatypes::registry

@@ -54,21 +54,32 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
-    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-                                             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                             .lexical_form = lexical_form,
-                                             .language_tag = lang}),
+    auto node_id = node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
+            .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+            .lexical_form = lexical_form,
+            .language_tag = lang});
+
+    bool inlined = false;
+    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);                                        // check if the lang_tag can be inlined
+    if (lang_tag_i.has_value()) {
+        auto inlined_id = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
+        if (inlined_id.has_value()) {
+            node_id = NodeID{inlined_id.value(), node_id.literal_type()};
+            inlined = true;
+        }
+    }
+
+    return Literal{NodeBackendHandle{node_id,
                                      storage::node::identifier::RDFNodeType::Literal,
-                                     node_storage.id()}};
+                                     node_storage.id(), inlined}};
 }
 
-Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
     using namespace storage::node::identifier;
 
-    assert(inlined_value >> LiteralID::width == 0);
     assert(fixed_id != LiteralType::other());
 
-    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
+    return Literal{NodeBackendHandle{NodeID{inlined_value, fixed_id},
                                      RDFNodeType::Literal,
                                      node_storage.id(),
                                      true}};
@@ -99,6 +110,13 @@ Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal co
 
     assert(lang_tag_src.datatype_eq<datatypes::xsd::String>());
     return Literal::make_simple_unchecked(str, node_storage);
+}
+
+Literal Literal::lang_tagged_get_de_inlined() const noexcept {
+    auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
+    return Literal{NodeBackendHandle{NodeID{id, this->handle_.node_id().literal_type()},
+                                     handle_.type(),
+                                     handle_.node_storage_id()}};
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
@@ -190,6 +208,11 @@ Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept
         return *this;
     }
 
+    if (this->is_inlined() && this->datatype_eq<datatypes::rdf::LangString>()) {
+        auto data = this->value<datatypes::rdf::LangString>();
+        return make_lang_tagged_unchecked(data.lexical_form, data.language_tag, node_storage);
+    }
+
     auto literal_view = handle_.literal_backend();
     auto const node_id = literal_view.visit(
             [&](storage::node::view::LexicalFormLiteralBackendView &lexical) noexcept {
@@ -269,11 +292,15 @@ IRI Literal::datatype() const noexcept {
 
 util::CowString Literal::lexical_form() const noexcept {
     if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            return this->lang_tagged_get_de_inlined().lexical_form();
+        }
+
         auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
         assert(entry != nullptr);
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
@@ -304,9 +331,13 @@ util::CowString Literal::simplified_lexical_form() const noexcept {
     }
 
     if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            return this->lang_tagged_get_de_inlined().simplified_lexical_form();
+        }
+
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = handle_.node_id().literal_id().value;
+        auto const inlined_value = handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
@@ -330,6 +361,10 @@ Literal Literal::as_simplified_lexical_form(NodeStorage &node_storage) const noe
 
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
+        if (this->is_inlined()) {
+            auto [tag, _] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(this->handle_.node_id().literal_id());
+            return rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::inlined_to_tag(tag);
+        }
         return handle_.literal_backend().get_lexical().language_tag;
     }
 
@@ -413,7 +448,12 @@ Literal::operator std::string() const noexcept {
 
     if (this->null()) {
         oss << "null";
-    } else if (this->is_inlined()) {
+    }
+    else if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            return static_cast<std::string>(this->lang_tagged_get_de_inlined());
+        }
+
         quoted_lexical_into_stream(oss, this->lexical_form());
 
         // rdf:langString is not inlined, therefore can only have datatype not lang tag
@@ -474,10 +514,14 @@ std::any Literal::value() const noexcept {
     auto const datatype = this->datatype_id();
 
     if (this->is_inlined()) {
+        if (datatype == rdf::LangString::datatype_id) {
+            return this->lang_tagged_get_de_inlined().value();
+        }
+
         auto const ops = registry::DatatypeRegistry::get_inlining_ops(datatype);
         assert(ops != nullptr);
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return ops->from_inlined_fptr(inlined_value);
     }
 

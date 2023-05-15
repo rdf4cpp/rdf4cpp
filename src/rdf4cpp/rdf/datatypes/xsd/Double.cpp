@@ -46,23 +46,23 @@ nonstd::expected<capabilities::Numeric<xsd_double>::ceil_result_cpp_type, Dynami
 }
 
 template<>
-std::optional<uint64_t> capabilities::Inlineable<xsd_double>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_double>::try_into_inlined(cpp_type const &value) noexcept {
     static constexpr uint64_t drop_width = 64 - storage::node::identifier::LiteralID::width;
 
     auto const packed = util::pack<uint64_t>(value);
-    auto const shortened = packed >> drop_width; // drop right bits of mantissa (see https://en.wikipedia.org/wiki/Double-precision_floating-point_format)
+    auto const shortened = packed >> drop_width;  // drop right bits of mantissa (see https://en.wikipedia.org/wiki/Double-precision_floating-point_format)
 
     if (shortened << drop_width != packed) {
         // dropped part contained information
         return std::nullopt;
     }
 
-    return shortened;
+    return storage::node::identifier::LiteralID{shortened};
 }
 
 template<>
-capabilities::Inlineable<xsd_double>::cpp_type capabilities::Inlineable<xsd_double>::from_inlined(uint64_t inlined) noexcept {
-    return util::unpack<double>(inlined << (64 - storage::node::identifier::LiteralID::width));
+capabilities::Inlineable<xsd_double>::cpp_type capabilities::Inlineable<xsd_double>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    return util::unpack<cpp_type>(inlined.value << (64 - storage::node::identifier::LiteralID::width));
 }
 
 template struct LiteralDatatypeImpl<xsd_double,
