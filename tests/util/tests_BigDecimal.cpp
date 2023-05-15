@@ -64,9 +64,15 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{1, 0, Sign::Negative} + Dec{2, 0}) == Dec{1, 0});
         CHECK((Dec{2, 0, Sign::Negative} + Dec{1, 0}) == Dec{1, 0, Sign::Negative});
         CHECK(!DecI{m, 0}.mul_checked(DecI{m, 0}).has_value());
+        Dec d{5, 0};
+        d += Dec{5, 1};
+        CHECK(d == Dec{55, 1});
     }
     SUBCASE("-") {
         CHECK((Dec{1, 0} - Dec{2, 0}) == Dec{1, 0, Sign::Negative});  // implemented via + and unary -
+        Dec d{5, 0};
+        d -= Dec{5, 1};
+        CHECK(d == Dec{45, 1});
     }
     SUBCASE("*") {
         CHECK((Dec{2, 0} * Dec{2, 0}) == Dec{4, 0});
@@ -77,6 +83,9 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{2, 1} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Negative});
         CHECK((Dec{2, 1, Sign::Negative} * Dec{2, 1, Sign::Negative}) == Dec{4, 2, Sign::Positive});
         CHECK(!DecI{m, 100}.mul_checked(DecI{m, 0}).has_value());
+        Dec d{5, 0};
+        d *= Dec{5, 1};
+        CHECK(d == Dec{25, 1});
     }
     SUBCASE("/") {
         CHECK((Dec{2, 0} / Dec{2, 0}) == Dec{1, 0});
@@ -89,6 +98,9 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{2, 0}.div(Dec{3, 0}, 2, RoundingMode::Round)) == Dec{67, 2});
         CHECK((Dec{1, 0}.div(Dec{3, 0, Sign::Negative}, 2, RoundingMode::Floor)) == Dec{33, 2, Sign::Negative});
         CHECK(!DecI{1, 0}.div_checked(DecI{3, 0}, 1000, RoundingMode::Floor).has_value());
+        Dec d{5, 0};
+        d /= Dec{2, 0};
+        CHECK(d == Dec{25, 1});
     }
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
@@ -103,10 +115,12 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{549, 2}.round(RoundingMode::Round) == Dec{5, 0});
         CHECK(Dec{450, 2}.round(RoundingMode::Round) == Dec{5, 0});
         CHECK(Dec{5, 0}.round(RoundingMode::Round) == Dec{5, 0});
+        CHECK(round(Dec{450, 2}) == Dec{5, 0});
     }
     SUBCASE("abs") {
         CHECK(Dec{51, 1}.abs() == Dec{51, 1});
         CHECK(Dec{51, 1, Sign::Negative}.abs() == Dec{51, 1});
+        CHECK(abs(Dec{51, 1, Sign::Negative}) == Dec{51, 1});
     }
     SUBCASE("pow") {
         CHECK(Dec{5, 0}.pow(5) == Dec{3125});

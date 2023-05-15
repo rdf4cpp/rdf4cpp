@@ -31,7 +31,6 @@ enum class Sign {
 
 enum class DecimalError {
     Overflow,
-    Underflow,
     NotDefined,  // aka NotANumber
 };
 
@@ -173,31 +172,33 @@ public:
      * converts a uint32_t to a BigDecimal
      * @param value
      */
-    constexpr explicit BigDecimal(uint32_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+    constexpr explicit BigDecimal(uint32_t value) noexcept : BigDecimal(UnscaledValue_t{value}, 0) {}
 
     /**
      * converts a uint64_t to a BigDecimal
      * @param value
      */
-    constexpr explicit BigDecimal(uint64_t value) : BigDecimal(UnscaledValue_t{value}, 0) {}
+    constexpr explicit BigDecimal(uint64_t value) noexcept : BigDecimal(UnscaledValue_t{value}, 0) {}
 
     /**
      * converts a int32_t to a BigDecimal
      * @param value
      */
-    constexpr explicit BigDecimal(int32_t value) : BigDecimal(static_cast<UnscaledValue_t>(std::abs(value)), 0, value < 0 ? Sign::Negative : Sign::Positive) {}
+    constexpr explicit BigDecimal(int32_t value) noexcept : BigDecimal(static_cast<UnscaledValue_t>(std::abs(value)), 0, value < 0 ? Sign::Negative : Sign::Positive) {}
 
     /**
      * converts a int64_t to a BigDecimal
      * @param value
      */
-    constexpr explicit BigDecimal(int64_t value) : BigDecimal(static_cast<UnscaledValue_t>(std::abs(value)), 0, value < 0 ? Sign::Negative : Sign::Positive) {}
+    constexpr explicit BigDecimal(int64_t value) noexcept : BigDecimal(static_cast<UnscaledValue_t>(std::abs(value)), 0, value < 0 ? Sign::Negative : Sign::Positive) {}
 
     /**
      * converts a UnscaledValue_t to a BigDecimal
      * @param value
      */
-    constexpr explicit BigDecimal(const UnscaledValue_t &value) : BigDecimal(value, 0) {}
+    constexpr explicit BigDecimal(const UnscaledValue_t &value) noexcept
+        requires(!std::is_same_v<UnscaledValue_t, uint32_t> && !std::is_same_v<UnscaledValue_t, uint64_t>)
+        : BigDecimal(value, 0) {}
 
     /**
      * converts a float to a BigDecimal.
@@ -442,11 +443,21 @@ public:
     }
 
     /**
+     * addition of two BigDecimals.
+     * may overflow.
+     * @param other
+     * @return
+     */
+    constexpr BigDecimal &operator+=(const BigDecimal &other) noexcept {
+        *this = *this + other;
+        return *this;
+    }
+
+    /**
      * subtraction of two BigDecimals.
      * may overflow.
      * @param other
      * @return
-     * @throw std::overflow_error on over/underflow
      */
     [[nodiscard]] constexpr BigDecimal operator-(const BigDecimal &other) const noexcept {
         return *this + (-other);
@@ -457,10 +468,20 @@ public:
      * checks overflow.
      * @param other
      * @return
-     * @throw std::overflow_error on over/underflow
      */
     [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> sub_checked(const BigDecimal &other) const noexcept {
         return this->add_checked(-other);
+    }
+
+    /**
+     * subtraction of two BigDecimals.
+     * may overflow.
+     * @param other
+     * @return
+     */
+    constexpr BigDecimal operator-=(const BigDecimal &other) noexcept {
+        *this = *this - other;
+        return *this;
     }
 
     /**
@@ -489,8 +510,21 @@ public:
     }
 
     /**
+     * multiplication of two BigDecimals.
+     * may overflow.
+     * @param other
+     * @return
+     */
+    constexpr BigDecimal &operator*=(const BigDecimal &other) noexcept {
+        *this = *this * other;
+        return *this;
+    }
+
+    /**
      * division of two BigDecimals.
      * may overflow.
+     * after 1000 decimal places have been added, stops dividing and floor.
+     * dividing by 0 is undefined behavior.
      * @param other
      * @return
      */
@@ -501,6 +535,7 @@ public:
     /**
      * division of two BigDecimals.
      * may overflow.
+     * dividing by 0 is undefined behavior.
      * @param other
      * @param max_scale_increase after this many decimal places have been added, stop dividing and round
      * @param mode rounding mode to use
@@ -516,7 +551,7 @@ public:
 
     /**
      * division of two BigDecimals.
-     * checks overflow.
+     * checks overflow and division by 0.
      * @param other
      * @param max_scale_increase after this many decimal places have been added, stop dividing and round
      * @param mode rounding mode to use
@@ -532,12 +567,25 @@ public:
     }
 
     /**
+     * division of two BigDecimals.
+     * may overflow.
+     * after 1000 decimal places have been added, stops dividing and floor.
+     * dividing by 0 is undefined behavior.
+     * @param other
+     * @return
+     */
+    constexpr BigDecimal &operator/=(const BigDecimal &other) noexcept {
+        *this = *this / other;
+        return *this;
+    }
+
+    /**
      * raises a BigDecimal to the power of a int.
      * may overflow.
      * @param n
      * @return
      */
-    [[nodiscard]] constexpr BigDecimal pow(int n) const noexcept {
+    [[nodiscard]] constexpr BigDecimal pow(unsigned int n) const noexcept {
         BigDecimal r{0};
         pow<OverflowMode::UndefinedBehavior>(n, r);
         return r;
@@ -549,7 +597,7 @@ public:
      * @param n
      * @return
      */
-    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> pow_checked(int n) const noexcept {
+    [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> pow_checked(unsigned int n) const noexcept {
         BigDecimal r{0};
         if (pow<OverflowMode::Checked>(n, r))
             return nonstd::make_unexpected(DecimalError::Overflow);
@@ -735,6 +783,14 @@ std::string to_string(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept
 template<class UnscaledValue_t, class Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, unsigned int n) noexcept {
     return r.pow(n);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> round(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return r.round(RoundingMode::Round);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> abs(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return r.abs();
 }
 }  // namespace rdf4cpp::rdf::util
 template<class UnscaledValue_t, class Exponent_t>
