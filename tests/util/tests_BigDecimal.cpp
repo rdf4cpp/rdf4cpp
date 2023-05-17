@@ -11,7 +11,6 @@ using Sign = rdf4cpp::rdf::util::Sign;
 TEST_CASE("basics") {
     SUBCASE("ctor and compare") {
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<uint32_t>);
-        static_assert(!rdf4cpp::rdf::util::BigDecimalBaseType<uint8_t>);
         static_assert(!rdf4cpp::rdf::util::BigDecimalBaseType<int32_t>);
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<uint64_t>);
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<boost::multiprecision::cpp_int>);
@@ -127,6 +126,12 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{5, 1}.pow(5) == Dec{"0.03125"});
         CHECK(pow(Dec{5, 1}, 0) == Dec{1});
         CHECK(!DecI{500, 0}.pow_checked(m).has_value());
+    }
+    SUBCASE("hash") {
+        CHECK(Dec{1, 0}.hash() == Dec{1, 0}.hash());
+        CHECK(Dec{1, 0}.hash() != Dec{2, 0}.hash());
+        CHECK(Dec{1, 0}.hash() != Dec{1, 1}.hash());
+        CHECK(Dec{1, 0}.hash() != Dec{1, 0, Sign::Negative}.hash());
     }
 }
 

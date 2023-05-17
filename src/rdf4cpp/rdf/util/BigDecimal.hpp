@@ -8,6 +8,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::util {
 enum class RoundingMode {
@@ -35,10 +36,12 @@ enum class DecimalError {
 };
 
 template<typename T>
-concept BigDecimalBaseType = (std::unsigned_integral<T> && sizeof(T) >= sizeof(int32_t)) || std::same_as<T, boost::multiprecision::cpp_int>;
+concept BigDecimalBaseType = std::numeric_limits<T>::is_specialized && !std::floating_point<T> && !std::signed_integral<T>;
 
 template<BigDecimalBaseType UnscaledValue_t = boost::multiprecision::cpp_int, BigDecimalBaseType Exponent_t = uint32_t>
 class BigDecimal {
+    // the entire class is loosely based on OpenJDKs BigDecimal: https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/master/src/java.base/share/classes/java/math/BigDecimal.java
+    
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
     Sign sign = Sign::Positive;
@@ -217,10 +220,17 @@ public:
      * @throw std::overflow_error on exceeding the types numeric limits
      */
     explicit BigDecimal(double value) : unscaled_value(0), exponent(0) {
+        // most of the algorithm is from OpenJDK: https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/19fb8f93c59dfd791f62d41f332db9e306bc1422/src/java.base/share/classes/java/math/BigDecimal.java#L915
         if (std::isinf(value) || std::isnan(value))
             throw std::invalid_argument{"value is NaN or infinity"};
         // this might fail on anything that is not x86-32/64
-        uint64_t v = *reinterpret_cast<uint64_t *>(&value);
+        static_assert(std::endian::native == std::endian::little, "BigDecimal{double} is only tested on x86-32/64 and might not work on other systems");
+        // double is an IEEE 754 64-bit floating point value
+        // memory layout:
+        // sign | exponent  | fraction
+        // 63   | 62 ... 52 | 51 ... 0
+        // see https://en.wikipedia.org/wiki/Double-precision_floating-point_format for more info (and a better graphic)
+        auto v = std::bit_cast<uint64_t>(value);
         sign = (v >> 63) == 0 ? Sign::Positive : Sign::Negative;
         auto ex = static_cast<int>((v >> 52) & 0x7ffL);
         uint64_t significand = ex == 0
@@ -378,7 +388,7 @@ private:
             }
             ++ex;
             if (mul_checked<m>(res, UnscaledValue_t{base}, res))
-                return true;  // TODO check if we can round here instead
+                return true;
             if (mul_checked<m>(rem, UnscaledValue_t{base}, rem))
                 return true;
             res += rem / div;
@@ -739,7 +749,7 @@ public:
                 --ex;
             }
             auto c = static_cast<uint32_t>(v % base);
-            if (!(!hasDot && c == 0 && s.view().empty()))  // skip trailing 0s
+            if (hasDot || c != 0 || !s.view().empty())  // skip trailing 0s
                 s << c;
             v /= base;
         }
@@ -771,7 +781,11 @@ public:
      * @return
      */
     [[nodiscard]] size_t hash() const {
-        return (sign == Sign::Negative ? 1 : 0) ^ std::hash<UnscaledValue_t>{}(unscaled_value) ^ std::hash<Exponent_t>{}(exponent);
+        using namespace storage::util;
+        return robin_hood::hash<std::array<size_t, 3>>{}(std::array<size_t, 3>{
+                robin_hood::hash<Sign>{}(sign),
+                robin_hood::hash<UnscaledValue_t>{}(unscaled_value),
+                robin_hood::hash<Exponent_t>{}(exponent)});
     }
 };
 
