@@ -6,9 +6,18 @@
 
 namespace rdf4cpp::rdf::parser {
 
+/**
+ * Note that the syntax flags are mutually exclusive.
+ * If none is used, Turtle is the default.
+ * If more than one is used accidentally at the same time, TriG is likely the result (even if it does never get specified).
+ */
 enum struct ParsingFlag : uint8_t {
     Strict = 1 << 0,
     NoParsePrefix = 1 << 1,
+    Turtle = 0,
+    NTriples = 1 << 2,
+    NQuads = 2 << 2,
+    TriG = 3 << 2,
 };
 
 struct ParsingFlags {
@@ -49,6 +58,13 @@ public:
     constexpr ParsingFlags operator|(ParsingFlag const flag) const noexcept {
         auto cpy = *this;
         return (cpy |= flag);
+    }
+
+    /**
+     * @return the syntax ParsingFlag contained in this ParsingFlags. (Turtle if not specified)
+     */
+    [[nodiscard]] constexpr ParsingFlag get_syntax() const noexcept {
+        return static_cast<ParsingFlag>(flags & static_cast<flag_u_type>(ParsingFlag::TriG));  // TriG is 11, so it can double as a mask
     }
 };
 

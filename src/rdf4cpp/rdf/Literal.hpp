@@ -165,33 +165,53 @@ public:
      * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode
      */
     [[nodiscard]] static Literal make_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
+     * normalizes lexical_form to UTF-8 NFC.
+     * @param lexical_form the lexical form
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_simple_normalize(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode
      */
     [[nodiscard]] static Literal make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
                                                   NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
+     * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
+     * normalizes lexical_form to UTF-8 NFC.
+     * @param lexical_form the lexical form
+     * @param lang the language tag
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
+                                                            NodeStorage &node_storage = NodeStorage::default_instance());
+    /**
      * Constructs a Literal from a lexical form and a datatype.
      * @param lexical_form the lexical form
      * @param datatype the datatype
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
                                             NodeStorage &node_storage = NodeStorage::default_instance());
-
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
      * @tparam lexical_form the lexical form
      * @param T the datatype
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
@@ -201,7 +221,7 @@ public:
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
         } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(lexical_form, node_storage);
+            return Literal::make_simple(lexical_form, node_storage);
         }
 
         auto value = T::from_string(lexical_form);
@@ -231,6 +251,7 @@ public:
      * @tparam T the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype T>
@@ -238,13 +259,13 @@ public:
                                                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
-                                                       compatible_value.language_tag,
-                                                       node_storage);
+            return Literal::make_lang_tagged(compatible_value.lexical_form,
+                                             compatible_value.language_tag,
+                                             node_storage);
         }
 
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(compatible_value, node_storage);
+            return Literal::make_simple(compatible_value, node_storage);
         }
 
         if constexpr (datatypes::IsInlineable<T>) {
@@ -964,7 +985,6 @@ public:
      */
     [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
-
     /**
      * @return the effective boolean value of this
      */
@@ -987,6 +1007,13 @@ public:
 
     friend class Node;
 };
+
+/**
+ * normalizes a UTF-8 string to NFC
+ * @param utf8
+ * @return normalized string
+ */
+[[nodiscard]] std::string normalize_unicode(std::string_view utf8);
 
 /**
  * @return whether lang_tag matches the basic language range lang_range
