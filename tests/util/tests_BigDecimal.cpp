@@ -132,6 +132,7 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{1, 0}.hash() != Dec{2, 0}.hash());
         CHECK(Dec{1, 0}.hash() != Dec{1, 1}.hash());
         CHECK(Dec{1, 0}.hash() != Dec{1, 0, Sign::Negative}.hash());
+        CHECK(Dec{1, 0}.hash() == Dec{10, 1}.hash());
     }
 }
 

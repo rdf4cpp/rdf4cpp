@@ -782,10 +782,12 @@ public:
      */
     [[nodiscard]] size_t hash() const {
         using namespace storage::util;
+        BigDecimal n = *this;
+        n.normalize();
         return robin_hood::hash<std::array<size_t, 3>>{}(std::array<size_t, 3>{
-                robin_hood::hash<Sign>{}(sign),
-                robin_hood::hash<UnscaledValue_t>{}(unscaled_value),
-                robin_hood::hash<Exponent_t>{}(exponent)});
+                robin_hood::hash<Sign>{}(n.sign),
+                robin_hood::hash<UnscaledValue_t>{}(n.unscaled_value),
+                robin_hood::hash<Exponent_t>{}(n.exponent)});
     }
 };
 
