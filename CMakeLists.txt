@@ -17,6 +17,7 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
+find_package(date QUIET)
 
 include(FetchContent)
 
@@ -143,6 +144,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/year.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/month.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/day.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
@@ -204,6 +208,7 @@ target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
+        date::date
         PRIVATE
         fmt::fmt-header-only
         re2::re2

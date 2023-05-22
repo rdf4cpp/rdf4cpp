@@ -319,6 +319,14 @@ target_link_libraries(tests_NodeStorage_specialization
 set_property(TARGET tests_NodeStorage_specialization PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_NodeStorage_specialization COMMAND tests_NodeStorage_specialization)
 
+add_executable(tests_time_types datatype/tests_time_types.cpp)
+target_link_libraries(tests_time_types
+        doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_time_types PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_time_types COMMAND tests_time_types)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

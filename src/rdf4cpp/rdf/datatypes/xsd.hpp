@@ -16,14 +16,18 @@
 #include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.hpp>
 
-#include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.hpp>
 
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.hpp>
+
+#include <rdf4cpp/rdf/datatypes/xsd/time/day.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/month.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/year.hpp>
 
 /**
  * Namespace where datatypes from XSD are implemented.

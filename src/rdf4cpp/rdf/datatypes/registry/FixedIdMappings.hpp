@@ -39,6 +39,10 @@ inline constexpr util::ConstexprString xsd_positive_integer{"http://www.w3.org/2
 inline constexpr util::ConstexprString xsd_non_positive_integer{"http://www.w3.org/2001/XMLSchema#nonPositiveInteger"};
 inline constexpr util::ConstexprString xsd_negative_integer{"http://www.w3.org/2001/XMLSchema#negativeInteger"};
 
+inline constexpr util::ConstexprString xsd_gYear{"http://www.w3.org/2001/XMLSchema#gYear"};
+inline constexpr util::ConstexprString xsd_gMonth{"http://www.w3.org/2001/XMLSchema#gMonth"};
+inline constexpr util::ConstexprString xsd_gDay{"http://www.w3.org/2001/XMLSchema#gDay"};
+
 using ReservedDatatypeIdEntry = std::pair<std::string_view, LiteralType>;
 
 /**
@@ -53,6 +57,10 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
         ReservedDatatypeIdEntry{xsd_boolean,       LiteralType::from_parts(false, 4)},
         ReservedDatatypeIdEntry{xsd_base64_binary, LiteralType::from_parts(false, 5)},
         ReservedDatatypeIdEntry{xsd_hex_binary,    LiteralType::from_parts(false, 6)},
+
+        ReservedDatatypeIdEntry{xsd_gYear,  LiteralType::from_parts(false, 7)},
+        ReservedDatatypeIdEntry{xsd_gMonth, LiteralType::from_parts(false, 8)},
+        ReservedDatatypeIdEntry{xsd_gDay,   LiteralType::from_parts(false, 9)},
 
         ReservedDatatypeIdEntry{xsd_float,   LiteralType::from_parts(true, 0)},
         ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},
