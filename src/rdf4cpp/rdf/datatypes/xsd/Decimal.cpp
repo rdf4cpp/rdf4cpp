@@ -85,8 +85,21 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, Dynami
 }
 
 template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::neg(cpp_type const &operand) noexcept {
+    auto r = operand.unary_minus_checked();
+    if (r.has_value())
+        return r.value();
+    else
+        return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
+}
+
+template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::abs(cpp_type const &operand) noexcept {
-    return operand.abs();
+    auto r = operand.abs_checked();
+    if (r.has_value())
+        return r.value();
+    else
+        return nonstd::make_unexpected(DynamicError::OverOrUnderFlow);
 }
 
 template<>
