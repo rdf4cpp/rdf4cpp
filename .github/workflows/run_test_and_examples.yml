@@ -29,7 +29,7 @@ jobs:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
-      with-coverage: false
+      with-coverage: ${{ matrix.cppenv.compiler == 'gcc-12' }}
       with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-14' }}
     secrets:
       coverall-token: ${{ secrets.COVERALLS_TOKEN }}
