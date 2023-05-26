@@ -85,9 +85,8 @@ jobs:
         env:
           COVERALLS_REPO_TOKEN: ${{ secrets.coverall-token }}
         if: inputs.with-coverage
-        working-directory: build_dir
         run: |
-          gcovr --gcov-executable gcov-12 --coveralls -o coverage.json -r ../src ./
+          gcovr --gcov-executable gcov-12 --coveralls --filter 'src/' -o coverage.json -r ./
           curl -F "json_file=@coverage.json" https://coveralls.io/api/v1/jobs
 
       - name: Run examples
