@@ -1,5 +1,5 @@
 name: Run unit tests and examples
-on: [ 'pull_request' ]
+on: [ 'push' ]
 
 
 jobs:
@@ -12,12 +12,13 @@ jobs:
         } ]
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
-    uses: ./.github/workflows/reusable_run_test_and_examples.yml
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
       with-coverage: true
       with-sanitizer: false
+      build-shared-libs: true
     secrets:
       coverall-token: ${{ secrets.COVERALLS_TOKEN }}
