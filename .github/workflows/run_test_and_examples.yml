@@ -9,6 +9,7 @@ jobs:
         cppenv: [ {
           os: ubuntu-22.04,
           compiler: "gcc-12",
+        }
 #        }, {
 #          os: ubuntu-22.04,
 #          compiler: "gcc-12",
