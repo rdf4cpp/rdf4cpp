@@ -8,22 +8,20 @@ jobs:
       matrix:
         cppenv: [ {
           os: ubuntu-22.04,
+          compiler: "gcc-11",
+        }, {
+          os: ubuntu-22.04,
           compiler: "gcc-12",
-        }
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "gcc-12",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-12",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-13",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-14",
-#        } ]
-        ]
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-12",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-13",
+        }, {
+          os: ubuntu-22.04,
+          compiler: "clang-14",
+        } ]
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
     uses: ./.github/workflows/reusable_run_test_and_examples.yml
