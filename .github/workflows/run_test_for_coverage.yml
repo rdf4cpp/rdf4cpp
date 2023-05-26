@@ -9,21 +9,7 @@ jobs:
         cppenv: [ {
           os: ubuntu-22.04,
           compiler: "gcc-12",
-        }
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "gcc-12",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-12",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-13",
-#        }, {
-#          os: ubuntu-22.04,
-#          compiler: "clang-14",
-#        } ]
-        ]
+        } ]
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
     uses: ./.github/workflows/reusable_run_test_and_examples.yml
@@ -31,5 +17,7 @@ jobs:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
-      with-coverage: false
-      with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-14' }}
+      with-coverage: true
+      with-sanitizer: false
+    secrets:
+      coverall-token: ${{ secrets.COVERALLS_TOKEN }}
