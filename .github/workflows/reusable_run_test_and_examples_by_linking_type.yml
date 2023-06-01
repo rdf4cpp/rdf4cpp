@@ -70,13 +70,13 @@ jobs:
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
-          CXXFLAGS: >
-            -Wno-unused-command-line-argument -fuse-ld=mold
-            ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }}
+          CXXFLAGS: |
+            -Wno-unused-command-line-argument -fuse-ld=mold \
+            ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }} \
             ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
-        run: >
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }} \
           -G Ninja -B build_dir
 
       - name: Build Tests & Examples
