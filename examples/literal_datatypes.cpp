@@ -21,10 +21,10 @@ void lexical_access() {
 
     Literal lang_string = Literal::make_lang_tagged("Hello", "en-US");
     assert(lang_string.lexical_form() == "Hello");
-    assert(lang_string.language_tag() == "en-US");
+    assert(lang_string.language_tag() == "en-us");
     assert(lang_string.language_tag_matches_range("*"));
     assert(lang_string.language_tag_matches_range("en"));
-    assert(std::string{lang_string} == R"#("Hello"@en-US)#");
+    assert(std::string{lang_string} == R"#("Hello"@en-us)#");
 }
 
 void direct_value_access() {
