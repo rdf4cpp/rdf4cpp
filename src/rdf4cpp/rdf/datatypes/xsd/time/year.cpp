@@ -5,7 +5,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
-    return date::year{util::from_chars<int>(s)};
+    return std::chrono::year{util::from_chars<int>(s)};
 }
 
 template<>

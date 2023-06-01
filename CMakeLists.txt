@@ -17,7 +17,6 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
-find_package(date QUIET)
 
 include(FetchContent)
 
@@ -219,7 +218,6 @@ target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
-        date::date
         PRIVATE
         fmt::fmt-header-only
         re2::re2

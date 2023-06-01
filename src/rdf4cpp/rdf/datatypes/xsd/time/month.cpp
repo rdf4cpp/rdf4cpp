@@ -5,7 +5,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::from_string(std::string_view s) {
-    return date::month{util::from_chars<unsigned int>(s)};
+    return std::chrono::month{util::from_chars<unsigned int>(s)};
 }
 
 template<>

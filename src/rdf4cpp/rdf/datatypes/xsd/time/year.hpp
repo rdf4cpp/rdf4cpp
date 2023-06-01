@@ -1,17 +1,17 @@
 #ifndef RDF4CPP_YEAR_HPP
 #define RDF4CPP_YEAR_HPP
 
+#include <chrono>
+
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
-
-#include <date/date.h>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_gYear> {
-    using cpp_datatype = date::year;
+    using cpp_datatype = std::chrono::year;
 };
 
 
