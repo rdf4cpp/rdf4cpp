@@ -70,14 +70,10 @@ jobs:
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
-          CXXFLAGS: |
-            -Wno-unused-command-line-argument -fuse-ld=mold \
-            ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }} \
-            ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
-        run: |
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }} \
-          -G Ninja -B build_dir
+          CXXFLAGS: -Wno-unused-command-line-argument -fuse-ld=mold ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
+        run: >
+          cmake -G Ninja -B build_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
 
       - name: Build Tests & Examples
         working-directory: build_dir
@@ -85,8 +81,7 @@ jobs:
 
       - name: Run tests
         working-directory: build_dir
-        run: |
-          ctest --parallel 2 --verbose
+        run: ctest --parallel 2 --verbose
 
       - name: Report coverage
         env:
