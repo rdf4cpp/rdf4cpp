@@ -66,7 +66,7 @@ jobs:
       - name: Check out sources
         uses: actions/checkout@v3
 
-      - name: Build Tests & Examples
+      - name: Configure CMake
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
@@ -74,10 +74,14 @@ jobs:
             -Wno-unused-command-line-argument -fuse-ld=mold
             ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }}
             ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
-        run: |
-          cmake -G Ninja -B build_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
+        run: >
+          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON
           ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
-          cmake --build build_dir --parallel 2
+          -G Ninja -B build_dir
+
+      - name: Build Tests & Examples
+        working-directory: build_dir
+        run: cmake --build . --parallel 2
 
       - name: Run tests
         working-directory: build_dir
