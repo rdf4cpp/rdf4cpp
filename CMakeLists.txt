@@ -66,17 +66,6 @@ if (NOT uni-algo_FOUND)
     FetchContent_MakeAvailable(fetchuni-algo)
 endif ()
 
-if (NOT date_FOUND)
-    set(DATE_INSTALL On)
-    FetchContent_Declare(
-            fetchdate
-            GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-            GIT_SHALLOW ON
-            GIT_TAG 6e921e1b1d21e84a5c82416ba7ecd98e33a436d0 # v3.0.1
-    )
-    FetchContent_MakeAvailable(fetchdate)
-endif ()
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
 
 set(serd_source_files
