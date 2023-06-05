@@ -319,6 +319,15 @@ target_link_libraries(tests_NodeStorage_specialization
 set_property(TARGET tests_NodeStorage_specialization PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_NodeStorage_specialization COMMAND tests_NodeStorage_specialization)
 
+add_executable(tests_BigDecimal util/tests_BigDecimal.cpp)
+target_link_libraries(tests_BigDecimal
+        doctest
+        rdf4cpp
+        fmt::fmt-header-only
+        )
+set_property(TARGET tests_BigDecimal PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BigDecimal COMMAND tests_BigDecimal)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

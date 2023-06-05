@@ -33,20 +33,26 @@ TEST_SUITE("numeric op results") {
 
             // "If the number of digits in the mathematical result exceeds the number of digits
             // that the implementation retains for that operation, the result is truncated or rounded in an ·implementation-defined· manner."
-            CHECK(Decimal::add(max, one) == max);
-            CHECK(Decimal::sub(max, -one) == max);
+            if (max != 0) {  // if max == 0 -> unlimited
+                CHECK(Decimal::add(max, one) == max);
+                CHECK(Decimal::sub(max, -one) == max);
+            }
 
             // "For xs:decimal operations, overflow behavior must raise a dynamic error [err:FOAR0002]."
-            CHECK(Decimal::add(max, max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
-            CHECK(Decimal::sub(max, -max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
-            CHECK(Decimal::mul(max, big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
-            CHECK(Decimal::div(max, one/big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+            if (max != 0) {  // if max == 0 -> unlimited
+                CHECK(Decimal::add(max, max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+                CHECK(Decimal::sub(max, -max) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+                CHECK(Decimal::mul(max, big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+                CHECK(Decimal::div(max, one / big_number) == nonstd::make_unexpected(DynamicError::OverOrUnderFlow));
+            }
 
             // "On underflow, 0.0 must be returned."
-            CHECK(Decimal::sub(min, min) == zero);
-            CHECK(Decimal::div(min, two) == zero);
-            CHECK(Decimal::div(min, big_number) == zero);
-            CHECK(Decimal::mul(min, one/two) == zero);
+            if (min != 0) {  // if min == 0 -> unlimited
+                CHECK(Decimal::sub(min, min) == zero);
+                CHECK(Decimal::div(min, two) == zero);
+                CHECK(Decimal::div(min, big_number) == zero);
+                CHECK(Decimal::mul(min, one / two) == zero);
+            }
 
             // https://www.w3.org/TR/xpath-functions/#func-numeric-divide
             // "A dynamic error is raised [err:FOAR0001] for xs:decimal and xs:integer operands, if the divisor is (positive or negative) zero."
