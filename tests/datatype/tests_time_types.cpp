@@ -36,4 +36,15 @@ TEST_CASE("datatype gDay") {
     CHECK(Literal::make_typed_from_value<datatypes::xsd::GDay>(std::chrono::day{5}).lexical_form() == "5");
 }
 
+TEST_CASE("datatype gYearMonth") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::GYearMonth::identifier) == "http://www.w3.org/2001/XMLSchema#gYearMonth");
+
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") == Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/5));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/6));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2043}/1));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/5).lexical_form() == "2042-5");
+}
+
 #pragma clang diagnostic pop

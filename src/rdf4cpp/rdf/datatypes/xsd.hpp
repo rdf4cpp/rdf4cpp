@@ -28,6 +28,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/day.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/month.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/year.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
+
 
 /**
  * Namespace where datatypes from XSD are implemented.

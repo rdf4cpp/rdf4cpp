@@ -146,6 +146,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/year.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/month.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/day.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/YearMonth.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
