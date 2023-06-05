@@ -25,7 +25,7 @@ class Recipe(ConanFile):
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
     requires = (("fmt/9.0.0", "private"),  # format must only be used within cpp files
                 "expected-lite/0.6.2",
-                "boost/1.79.0",
+                "boost/1.81.0",
                 "re2/20221201",
                 "openssl/3.0.8",
                 "zlib/1.2.12",  # force override version from openssl and boost
