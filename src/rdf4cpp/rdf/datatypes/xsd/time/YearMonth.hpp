@@ -6,12 +6,13 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_gYearMonth> {
-    using cpp_datatype = std::chrono::year_month;
+    using cpp_datatype = std::pair<std::chrono::year_month, OptionalTimezone>;
 };
 
 

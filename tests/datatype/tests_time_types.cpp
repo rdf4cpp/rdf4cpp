@@ -5,6 +5,12 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+TEST_CASE("timezone") {
+    using namespace rdf4cpp::rdf::datatypes::registry;
+    Timezone tz{};
+    tz.offset = std::chrono::minutes{60};
+    auto t = std::chrono::day{1}/1/2042;
+}
 
 TEST_CASE("datatype gYear") {
     using namespace rdf4cpp::rdf;
@@ -41,10 +47,11 @@ TEST_CASE("datatype gYearMonth") {
 
     CHECK(std::string(datatypes::xsd::GYearMonth::identifier) == "http://www.w3.org/2001/XMLSchema#gYearMonth");
 
-    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") == Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/5));
-    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/6));
-    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2043}/1));
-    CHECK(Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::chrono::year{2042}/5).lexical_form() == "2042-5");
+    rdf4cpp::rdf::datatypes::registry::OptionalTimezone tz = std::nullopt;
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") == Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, tz)));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 6, tz)));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5") < Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2043} / 1, tz)));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, tz)).lexical_form() == "2042-05");
 }
 
 #pragma clang diagnostic pop
