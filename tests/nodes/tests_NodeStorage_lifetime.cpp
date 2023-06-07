@@ -279,4 +279,10 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
             run.store(true, std::memory_order_release);
         }
     }
+
+    TEST_CASE("no default instance overwrite") {
+        auto inst = NodeStorage::new_instance();
+        NodeStorage::set_default_instance(inst);
+        CHECK(NodeStorage::default_instance().id() == inst.id());
+    }
 }
