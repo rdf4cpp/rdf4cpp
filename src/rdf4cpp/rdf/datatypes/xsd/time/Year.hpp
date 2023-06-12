@@ -1,32 +1,33 @@
-#ifndef RDF4CPP_MONTH_HPP
-#define RDF4CPP_MONTH_HPP
+#ifndef RDF4CPP_YEAR_HPP
+#define RDF4CPP_YEAR_HPP
 
 #include <chrono>
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
-struct DatatypeMapping<xsd_gMonth> {
-    using cpp_datatype = std::chrono::month;
+struct DatatypeMapping<xsd_gYear> {
+    using cpp_datatype = std::pair<std::chrono::year, OptionalTimezone>;
 };
 
 
 template<>
-capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::from_string(std::string_view s);
+capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_gMonth>::to_canonical_string(const cpp_type &value) noexcept;
+std::string capabilities::Default<xsd_gYear>::to_canonical_string(const cpp_type &value) noexcept;
 
 
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
-extern template struct LiteralDatatypeImpl<xsd_gMonth,
+extern template struct LiteralDatatypeImpl<xsd_gYear,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
@@ -34,7 +35,7 @@ extern template struct LiteralDatatypeImpl<xsd_gMonth,
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 
-struct GMonth : registry::LiteralDatatypeImpl<registry::xsd_gMonth,
+struct GYear : registry::LiteralDatatypeImpl<registry::xsd_gYear,
                                                registry::capabilities::Comparable,
                                                registry::capabilities::FixedId> {};
 
@@ -43,8 +44,8 @@ struct GMonth : registry::LiteralDatatypeImpl<registry::xsd_gMonth,
 
 namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
-[[maybe_unused]] inline xsd::GMonth const xsd_gMonth_instance;
+[[maybe_unused]] inline xsd::GYear const xsd_gYear_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
-#endif  //RDF4CPP_MONTH_HPP
+#endif  //RDF4CPP_YEAR_HPP

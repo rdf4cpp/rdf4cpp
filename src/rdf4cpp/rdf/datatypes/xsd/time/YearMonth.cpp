@@ -1,7 +1,5 @@
-#include <fmt/format.h>
-#include <fmt/chrono.h>
-
 #include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
+
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {

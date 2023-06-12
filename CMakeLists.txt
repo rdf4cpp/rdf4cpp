@@ -143,9 +143,9 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/year.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/month.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/day.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Year.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Month.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Day.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/YearMonth.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp

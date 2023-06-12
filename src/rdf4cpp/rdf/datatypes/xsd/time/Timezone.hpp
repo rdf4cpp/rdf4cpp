@@ -20,6 +20,12 @@ public:
         : offset(std::chrono::duration_cast<std::chrono::minutes>(tz->get_info(n).offset)) {
     }
 
+    constexpr explicit Timezone(std::chrono::hours h)
+        : offset(h) {}
+
+    constexpr explicit Timezone(std::chrono::minutes h)
+        : offset(h) {}
+
     static constexpr Timezone parse(std::string_view v) {
         Timezone tz{};
         if (v == "Z")
@@ -42,11 +48,11 @@ public:
     }
 
     static constexpr std::pair<std::optional<Timezone>, std::string_view> try_parse(std::string_view s) {
-        auto p = s.find(begin_tokens);
+        auto p = s.find_first_of(begin_tokens);
         if (p == 0 || p == std::string::npos)
             return std::pair<std::optional<Timezone>, std::string_view>{std::nullopt, s};
         auto pre = s.substr(0, p);
-        auto tz = parse(s.substr(p + 1));
+        auto tz = parse(s.substr(p));
         return std::pair<std::optional<Timezone>, std::string_view>{tz, pre};
     }
 
@@ -54,7 +60,7 @@ public:
         if (offset.count() == 0)
             return "Z";
         auto c = offset.count();
-        return std::format("{:+2}:{:+2}", c / 60, c % 60);
+        return std::format("{:+}:{:02}", c / 60, std::abs(c) % 60);
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {

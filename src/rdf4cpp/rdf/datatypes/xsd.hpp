@@ -25,9 +25,9 @@
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.hpp>
 
-#include <rdf4cpp/rdf/datatypes/xsd/time/day.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/month.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/year.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Day.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Month.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Year.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
 
 
