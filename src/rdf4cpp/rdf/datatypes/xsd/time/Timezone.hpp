@@ -67,8 +67,23 @@ public:
     }
 
     template<class Duration>
-    std::chrono::sys_time<std::common_type_t<Duration, std::chrono::seconds>> to_sys(const std::chrono::local_time<Duration> &tp) const {
-        return tp.time_since_epoch() - std::chrono::seconds{offset};
+    auto to_sys(const std::chrono::local_time<Duration> &tp) const {
+        return std::chrono::sys_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp - offset).time_since_epoch()};
+    }
+
+    template<class Duration>
+    auto to_local(const std::chrono::sys_time<Duration> &tp) const {
+        return std::chrono::local_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp + offset).time_since_epoch()};
+    }
+
+    template<class Duration>
+    std::chrono::sys_info get_info(const std::chrono::sys_time<Duration> &) const {
+        return std::chrono::sys_info{
+                std::chrono::sys_seconds{std::chrono::seconds{0l}},
+                std::chrono::sys_seconds{std::chrono::seconds{std::numeric_limits<int64_t>::max()}},
+                offset,
+                std::chrono::minutes{0},
+                to_canonical_string()};
     }
 };
 

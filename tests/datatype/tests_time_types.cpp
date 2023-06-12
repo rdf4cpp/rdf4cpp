@@ -3,13 +3,18 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
+#include <format>
 #include <rdf4cpp/rdf.hpp>
 
 TEST_CASE("timezone") {
     using namespace rdf4cpp::rdf::datatypes::registry;
     Timezone tz{};
     tz.offset = std::chrono::minutes{60};
-    auto t = std::chrono::day{1}/1/2042;
+    Timezone zero_tz{};
+    auto d = std::chrono::sys_days{std::chrono::day{1} / 2 / 2042} + std::chrono::hours{5} + std::chrono::minutes{30} + std::chrono::seconds{15};
+    std::chrono::zoned_time d_in0{&zero_tz, d};
+    std::chrono::zoned_time d_in60{&tz, d_in0};
+    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%z}", d_in60) == "2042-02-01-06-30-15-+0100");
 }
 
 TEST_CASE("datatype gYear") {
