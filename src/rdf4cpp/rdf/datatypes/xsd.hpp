@@ -29,6 +29,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/Month.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Year.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Time.hpp>
 
 
 /**

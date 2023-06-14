@@ -7,17 +7,17 @@
 #include <rdf4cpp/rdf.hpp>
 
 template<class Datatype>
-void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res) {
+void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
     using namespace rdf4cpp::rdf;
     // better output on failure than CHECK(a <=> b == res)
     if (res == std::partial_ordering::equivalent) {
-        auto lit_a = Literal::make_typed_from_value<Datatype>(a);
-        auto lit_b = Literal::make_typed<Datatype>(b);
-        CHECK(lit_a.lexical_form() == b);
+        const auto lit_a = Literal::make_typed_from_value<Datatype>(a);
+        const auto lit_b = Literal::make_typed<Datatype>(b);
+        if (!skip_string_comp)
+            CHECK(lit_a.lexical_form() == b);
         CHECK(lit_a == lit_b);
         CHECK(a == lit_b.template value<Datatype>());
-    }
-    else if (res == std::partial_ordering::less) {
+    } else if (res == std::partial_ordering::less) {
         CHECK(Literal::make_typed_from_value<Datatype>(a) < Literal::make_typed<Datatype>(b));
     }
     else if (res == std::partial_ordering::greater) {
@@ -83,6 +83,34 @@ TEST_CASE("datatype gYearMonth") {
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2041} / 6, tz), "2042-05", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-1:05", std::partial_ordering::equivalent);
+}
+
+TEST_CASE("datatype date") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::Date::identifier) == "http://www.w3.org/2001/XMLSchema#date");
+
+    rdf4cpp::rdf::datatypes::registry::OptionalTimezone tz = std::nullopt;
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 5 / 1, tz), "2042-05-01", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 4 / 1, tz), "2042-05-01", std::partial_ordering::less);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2041} / 6 / 1, tz), "2042-05-01", std::partial_ordering::less);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 5 / 1, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01+1:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 5 / 1, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01-1:05", std::partial_ordering::equivalent);
+}
+
+TEST_CASE("datatype time") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::Time::identifier) == "http://www.w3.org/2001/XMLSchema#time");
+
+    rdf4cpp::rdf::datatypes::registry::OptionalTimezone tz = std::nullopt;
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50}, tz), "00:50:00.000", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::hours{12} + std::chrono::minutes{34} + std::chrono::seconds{56} + std::chrono::milliseconds{789}, tz), "12:34:56.789", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50} + std::chrono::milliseconds{100}, tz), "00:50:00.1", std::partial_ordering::equivalent, true);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50} + std::chrono::milliseconds{123}, tz), "00:50:00.12345", std::partial_ordering::equivalent, true);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{42}, tz), "00:50:00.000", std::partial_ordering::less);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50}, datatypes::registry::Timezone{std::chrono::hours{1}}), "00:50:00.000+1:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "00:50:00.000-1:05", std::partial_ordering::equivalent);
 }
 
 #pragma clang diagnostic pop
