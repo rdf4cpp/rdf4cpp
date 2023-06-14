@@ -96,8 +96,14 @@ void NodeBackendHandle::set_free_tagging_bits(uint8_t new_value) {
 NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
     return unsafe_cast<NodeBackendHandleImpl>(*this).storage_id();
 }
+NodeBackendHandle::NodeBackendHandle(uint64_t raw) noexcept
+    : raw_{raw} {}
 NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
     : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, inlined, tagging_bits})) {}
+
+NodeBackendHandle NodeBackendHandle::from_raw(uint64_t raw) noexcept {
+    return NodeBackendHandle{raw};
+}
 
 NodeBackendHandle NodeBackendHandle::datatype_iri_handle_for_fixed_lit_handle(NodeBackendHandle lit_handle) noexcept {
     assert(lit_handle.is_literal());

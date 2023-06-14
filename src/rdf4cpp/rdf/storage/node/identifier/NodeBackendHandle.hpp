@@ -22,6 +22,8 @@ class NodeBackendHandle {
 private:
     uint64_t raw_;
 
+    explicit NodeBackendHandle(uint64_t raw) noexcept;
+
 public:
     NodeBackendHandle() noexcept = default;
 
@@ -33,6 +35,13 @@ public:
      * @param tagging_bits tagging bits (must be all zero for usage with the backend)
      */
     explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined = false, uint8_t tagging_bits = {}) noexcept;
+
+    /**
+     * Constructs a NodeBackendHandle from it's raw bit representation.
+     * @param raw bit repr
+     * @return NodeBackendHandle
+     */
+    static NodeBackendHandle from_raw(uint64_t raw) noexcept;
 
     /**
      * Constructor to create an IRI handle for the datatype of a Literal with fixed id datatype
