@@ -33,7 +33,7 @@ std::string capabilities::Default<xsd_decimal>::to_simplified_string(cpp_type co
     cpp_type v = value;
     v.normalize();
     if (v.get_exponent() == 0) {
-        return to_string(static_cast<boost::multiprecision::cpp_int>(v));
+        return boost::multiprecision::to_string(static_cast<boost::multiprecision::cpp_int>(v));
     } else {
         return static_cast<std::string>(v);
     }
