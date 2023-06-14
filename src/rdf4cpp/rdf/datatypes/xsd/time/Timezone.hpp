@@ -26,6 +26,8 @@ public:
     constexpr explicit Timezone(std::chrono::minutes h)
         : offset(h) {}
 
+    constexpr auto operator<=>(const Timezone&) const noexcept = default;
+
     static constexpr Timezone parse(std::string_view v) {
         Timezone tz{};
         if (v == "Z")
