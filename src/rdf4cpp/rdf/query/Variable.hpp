@@ -18,7 +18,8 @@ public:
     [[nodiscard]] static Variable make_named(std::string_view name, NodeStorage &node_storage = NodeStorage::default_instance());
     [[nodiscard]] static Variable make_anonymous(std::string_view name, NodeStorage &node_storage = NodeStorage::default_instance());
 
-    [[nodiscard]] query::Variable to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Variable to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] Variable try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     [[nodiscard]] bool is_anonymous() const;
 

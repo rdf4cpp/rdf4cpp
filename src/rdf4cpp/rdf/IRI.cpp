@@ -44,12 +44,25 @@ IRI IRI::make_uuid(Node::NodeStorage &node_storage) {
     return IRI{stream.view(), node_storage};
 }
 
-IRI IRI::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+IRI IRI::to_node_storage(NodeStorage &node_storage) const noexcept {
     if (handle_.node_storage_id() == node_storage.id()) {
         return *this;
     }
 
     auto const node_id = node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(handle_));
+    return IRI{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
+}
+
+IRI IRI::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_id(NodeStorage::find_iri_backend_view(handle_));
+    if (node_id == NodeID{}) {
+        return IRI{};
+    }
+
     return IRI{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
 }
 

@@ -33,7 +33,8 @@ public:
      */
     [[nodiscard]] static BlankNode make(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
 
-    [[nodiscard]] BlankNode to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    BlankNode to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] BlankNode try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
