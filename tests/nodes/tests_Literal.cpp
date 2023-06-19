@@ -873,7 +873,7 @@ TEST_CASE("to_node_storage") {
     }
 }
 
-TEST_CASE("to_node_storage") {
+TEST_CASE("try_get_in_node_storage") {
     auto ns2 = storage::node::NodeStorage::new_instance();
 
     SUBCASE("no non-inline storage available") {
