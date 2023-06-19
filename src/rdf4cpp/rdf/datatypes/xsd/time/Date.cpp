@@ -6,24 +6,15 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
-    auto p = s.find('-');
-    if (p == std::string::npos)
-        throw std::invalid_argument("missing -");
-    auto year_s = s.substr(0, p);
-    auto month_day_tz = s.substr(p + 1);
-    p = month_day_tz.find('-');
-    if (p == std::string::npos)
-        throw std::invalid_argument("missing -");
-    auto month_s = month_day_tz.substr(0, p);
-    auto day_tz = month_day_tz.substr(p + 1);
-    auto tz = Timezone::try_parse(day_tz);
-    std::chrono::year y{util::from_chars<int>(year_s)};
-    std::chrono::month m{util::from_chars<unsigned int>(month_s)};
-    std::chrono::day d{util::from_chars<unsigned int>(tz.second)};
-    auto r = y / m / d;
-    if (!r.ok())
+    auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
+    auto tz = Timezone::try_parse(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(tz.second);
+    auto date = year / month / day;
+    if (!date.ok())
         throw std::invalid_argument("invalid date");
-    return std::make_pair(r, tz.first);
+
+    return std::make_pair(date, tz.first);
 }
 
 template<>

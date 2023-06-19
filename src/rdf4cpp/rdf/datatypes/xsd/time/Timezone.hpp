@@ -96,6 +96,41 @@ public:
 };
 
 using OptionalTimezone = std::optional<Timezone>;
+
+struct DateTime {
+    std::chrono::year_month_day date;
+    std::chrono::milliseconds time_of_day;
+
+    constexpr auto operator<=>(const DateTime&) const noexcept = default;
+};
+
+template<class ResultType, class ParsingType, char Separator>
+ResultType parse_date_time_fragment(std::string_view& s) {
+    std::string_view res_s = s;
+    if constexpr (Separator != '\0') {
+        auto p = s.find(Separator);
+        if (p == std::string::npos)
+            throw std::invalid_argument(std::format("missing {}", Separator));
+        res_s = s.substr(0, p);
+        s = s.substr(p+1);
+    }
+    return ResultType{util::from_chars<ParsingType>(res_s)};
+}
+
+inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
+    auto p = s.find('.');
+    std::chrono::milliseconds ms{};
+    if (p != std::string::npos) {
+        auto milli_s = s.substr(p + 1, 3);
+        ms = std::chrono::milliseconds{util::from_chars<unsigned int>(milli_s)};
+        for (size_t i = milli_s.length(); i < 3; ++i) {
+            ms *= 10;
+        }
+        s = s.substr(0, p);
+    }
+    std::chrono::seconds sec{util::from_chars<unsigned int>(s)};
+    return sec + ms;
+}
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 #endif  //RDF4CPP_TIMEZONE_HPP

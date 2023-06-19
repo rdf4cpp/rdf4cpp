@@ -7,7 +7,11 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s) {
     auto tz = Timezone::try_parse(s);
-    return std::make_pair(std::chrono::day{util::from_chars<unsigned int>(tz.second)}, tz.first);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(tz.second);
+    if (!day.ok())
+        throw std::invalid_argument("invalid day");
+
+    return std::make_pair(day, tz.first);
 }
 
 template<>

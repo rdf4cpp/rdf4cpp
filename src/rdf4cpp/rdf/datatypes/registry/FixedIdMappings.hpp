@@ -45,6 +45,7 @@ inline constexpr util::ConstexprString xsd_gDay{"http://www.w3.org/2001/XMLSchem
 inline constexpr util::ConstexprString xsd_gYearMonth{"http://www.w3.org/2001/XMLSchema#gYearMonth"};
 inline constexpr util::ConstexprString xsd_date{"http://www.w3.org/2001/XMLSchema#date"};
 inline constexpr util::ConstexprString xsd_time{"http://www.w3.org/2001/XMLSchema#time"};
+inline constexpr util::ConstexprString xsd_dateTime{"http://www.w3.org/2001/XMLSchema#dateTime"};
 
 using ReservedDatatypeIdEntry = std::pair<std::string_view, LiteralType>;
 
@@ -67,6 +68,7 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
         ReservedDatatypeIdEntry{xsd_gYearMonth, LiteralType::from_parts(false, 10)},
         ReservedDatatypeIdEntry{xsd_date,       LiteralType::from_parts(false, 11)},
         ReservedDatatypeIdEntry{xsd_time,       LiteralType::from_parts(false, 12)},
+        ReservedDatatypeIdEntry{xsd_dateTime,   LiteralType::from_parts(false, 13)},
 
         ReservedDatatypeIdEntry{xsd_float,   LiteralType::from_parts(true, 0)},
         ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},

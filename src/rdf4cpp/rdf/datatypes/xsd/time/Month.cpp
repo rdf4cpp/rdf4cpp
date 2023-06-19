@@ -7,7 +7,11 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::from_string(std::string_view s) {
     auto tz = Timezone::try_parse(s);
-    return std::make_pair(std::chrono::month{util::from_chars<unsigned int>(tz.second)}, tz.first);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0'>(tz.second);
+    if (!month.ok())
+        throw std::invalid_argument("invalid month");
+
+    return std::make_pair(month, tz.first);
 }
 
 template<>
