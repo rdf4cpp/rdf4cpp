@@ -85,6 +85,19 @@ TEST_CASE("datatype gYearMonth") {
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-1:05", std::partial_ordering::equivalent);
 }
 
+TEST_CASE("datatype gMonthDay") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::GMonthDay::identifier) == "http://www.w3.org/2001/XMLSchema#gMonthDay");
+
+    rdf4cpp::rdf::datatypes::registry::OptionalTimezone tz = std::nullopt;
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 5, tz), "05-05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 4, tz), "05-05", std::partial_ordering::less);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{3} / 6, tz), "04-05", std::partial_ordering::less);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 5, datatypes::registry::Timezone{std::chrono::hours{1}}), "05-05+1:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 5, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "05-05-1:05", std::partial_ordering::equivalent);
+}
+
 TEST_CASE("datatype date") {
     using namespace rdf4cpp::rdf;
 
@@ -126,6 +139,21 @@ TEST_CASE("datatype dateTime") {
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{42}}, tz), "2042-05-01T00:50:00.000", std::partial_ordering::less);
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01T00:50:00.000+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01T00:50:00.000-1:05", std::partial_ordering::equivalent);
+}
+
+TEST_CASE("datatype dateTimeStamp") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::DateTimeStamp::identifier) == "http://www.w3.org/2001/XMLSchema#dateTimeStamp");
+
+    datatypes::registry::Timezone tz{std::chrono::hours{0}};
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, tz), "2042-05-01T00:50:00.000Z", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::hours{12} + std::chrono::minutes{34} + std::chrono::seconds{56} + std::chrono::milliseconds{789}}, tz), "2042-05-01T12:34:56.789Z", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50} + std::chrono::milliseconds{100}}, tz), "2042-05-01T00:50:00.1Z", std::partial_ordering::equivalent, true);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50} + std::chrono::milliseconds{123}}, tz), "2042-05-01T00:50:00.12345Z", std::partial_ordering::equivalent, true);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{42}}, tz), "2042-05-01T00:50:00.000Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01T00:50:00.000+1:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01T00:50:00.000-1:05", std::partial_ordering::equivalent);
 }
 
 #pragma clang diagnostic pop
