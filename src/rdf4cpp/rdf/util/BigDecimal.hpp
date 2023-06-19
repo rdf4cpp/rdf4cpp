@@ -718,20 +718,20 @@ public:
      * conversion to a double
      * @return
      */
-    [[nodiscard]] constexpr explicit operator double() const noexcept {
-        double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
+    [[nodiscard]] explicit operator double() const noexcept {
+        double const v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
         if (!std::isnan(v) && !std::isinf(v))
             return v;
         // even Javas BigDecimal has no better solution
-        auto s = static_cast<std::string>(*this);
-        return std::stod(s, nullptr);
+        auto const s = static_cast<std::string>(*this);
+        return std::stod(s);
     }
 
     /**
      * conversion to a float
      * @return
      */
-    [[nodiscard]] constexpr explicit operator float() const noexcept {
+    [[nodiscard]] explicit operator float() const noexcept {
         return static_cast<float>(static_cast<double>(*this));
     }
 
