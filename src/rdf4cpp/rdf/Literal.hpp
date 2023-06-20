@@ -112,7 +112,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage const &node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -320,7 +320,8 @@ public:
      */
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
 
-    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype

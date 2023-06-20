@@ -795,4 +795,182 @@ TEST_CASE("UUID") {
     CHECK(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}) == util::TriBool::True);
 }
 
+TEST_CASE("to_node_storage") {
+    auto ns2 = storage::node::NodeStorage::new_instance();
+
+    SUBCASE("no non-inline storage available") {
+        auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+        assert(lit.is_inlined());
+
+        auto lit2 = lit.to_node_storage(ns2);
+        CHECK(lit2.is_inlined());
+        CHECK(lit.value<datatypes::xsd::Int>() == lit2.value<datatypes::xsd::Int>());
+        CHECK(lit.backend_handle().node_id().literal_id() == lit2.backend_handle().node_id().literal_id());
+        CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+        CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+    }
+
+    SUBCASE("specialized storage") {
+        SUBCASE("inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(10);
+            assert(lit.is_inlined());
+
+            auto lit2 = lit.to_node_storage(ns2);
+            CHECK(lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::Long>() == lit2.value<datatypes::xsd::Long>());
+            CHECK(lit.backend_handle().node_id().literal_id() == lit2.backend_handle().node_id().literal_id());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+
+        SUBCASE("not inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max());
+            assert(!lit.is_inlined());
+
+            auto lit2 = lit.to_node_storage(ns2);
+            CHECK(!lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::Long>() == lit2.value<datatypes::xsd::Long>());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+    }
+
+    SUBCASE("lexical storage") {
+        SUBCASE("rdf:langString") {
+            SUBCASE("tag inlined") {
+                auto lit = Literal::make_lang_tagged("test", "en");
+                assert(lit.is_inlined());
+
+                auto lit2 = lit.to_node_storage(ns2);
+                CHECK(lit2.is_inlined());
+                CHECK(lit.value<datatypes::rdf::LangString>() == lit2.value<datatypes::rdf::LangString>());
+                CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+                CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+            }
+
+            SUBCASE("tag not inlined") {
+                auto lit = Literal::make_lang_tagged("test", "spherical");
+                assert(!lit.is_inlined());
+
+                auto lit2 = lit.to_node_storage(ns2);
+                CHECK(!lit2.is_inlined());
+                CHECK(lit.value<datatypes::rdf::LangString>() == lit2.value<datatypes::rdf::LangString>());
+                CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+                CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+            }
+        }
+
+        SUBCASE("xsd:string") {
+            auto lit = Literal::make_simple("test");
+            assert(!lit.is_inlined());
+
+            auto lit2 = lit.to_node_storage(ns2);
+            CHECK(!lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::String>() == lit2.value<datatypes::xsd::String>());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+    }
+}
+
+TEST_CASE("try_get_in_node_storage") {
+    auto ns2 = storage::node::NodeStorage::new_instance();
+
+    SUBCASE("no non-inline storage available") {
+        auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+        assert(lit.is_inlined());
+
+        auto lit2 = lit.try_get_in_node_storage(ns2);
+        CHECK(!lit2.null());
+        CHECK(lit2.is_inlined());
+        CHECK(lit.value<datatypes::xsd::Int>() == lit2.value<datatypes::xsd::Int>());
+        CHECK(lit.backend_handle().node_id().literal_id() == lit2.backend_handle().node_id().literal_id());
+        CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+        CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+    }
+
+    SUBCASE("specialized storage") {
+        SUBCASE("inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(10);
+            assert(lit.is_inlined());
+
+            auto lit2 = lit.try_get_in_node_storage(ns2);
+            CHECK(!lit2.null());
+            CHECK(lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::Long>() == lit2.value<datatypes::xsd::Long>());
+            CHECK(lit.backend_handle().node_id().literal_id() == lit2.backend_handle().node_id().literal_id());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+
+        SUBCASE("not inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max());
+            assert(!lit.is_inlined());
+
+            auto lit2 = lit.try_get_in_node_storage(ns2);
+            CHECK(lit2.null());
+            lit.to_node_storage(ns2);
+
+            lit2 = lit.try_get_in_node_storage(ns2);
+            CHECK(!lit2.null());
+            CHECK(!lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::Long>() == lit2.value<datatypes::xsd::Long>());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+    }
+
+    SUBCASE("lexical storage") {
+        SUBCASE("rdf:langString") {
+            SUBCASE("tag inlined") {
+                auto lit = Literal::make_lang_tagged("test", "en");
+                assert(lit.is_inlined());
+
+                auto lit2 = lit.try_get_in_node_storage(ns2);
+                CHECK(lit2.null());
+                lit.to_node_storage(ns2);
+
+                lit2 = lit.try_get_in_node_storage(ns2);
+                CHECK(!lit2.null());
+                CHECK(lit2.is_inlined());
+                CHECK(lit.value<datatypes::rdf::LangString>() == lit2.value<datatypes::rdf::LangString>());
+                CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+                CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+            }
+
+            SUBCASE("tag not inlined") {
+                auto lit = Literal::make_lang_tagged("test", "spherical");
+                assert(!lit.is_inlined());
+
+                auto lit2 = lit.try_get_in_node_storage(ns2);
+                CHECK(lit2.null());
+                lit.to_node_storage(ns2);
+
+                lit2 = lit.try_get_in_node_storage(ns2);
+                CHECK(!lit2.null());
+                CHECK(!lit2.is_inlined());
+                CHECK(lit.value<datatypes::rdf::LangString>() == lit2.value<datatypes::rdf::LangString>());
+                CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+                CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+            }
+        }
+
+        SUBCASE("xsd:string") {
+            auto lit = Literal::make_simple("test");
+            assert(!lit.is_inlined());
+
+            auto lit2 = lit.try_get_in_node_storage(ns2);
+            CHECK(lit2.null());
+            lit.to_node_storage(ns2);
+
+            lit2 = lit.try_get_in_node_storage(ns2);
+            CHECK(!lit2.null());
+            CHECK(!lit2.is_inlined());
+            CHECK(lit.value<datatypes::xsd::String>() == lit2.value<datatypes::xsd::String>());
+            CHECK(lit.backend_handle().node_id().literal_type() == lit2.backend_handle().node_id().literal_type());
+            CHECK(lit.backend_handle().node_storage_id() != lit2.backend_handle().node_storage_id());
+        }
+    }
+}
+
 #pragma clang diagnostic pop

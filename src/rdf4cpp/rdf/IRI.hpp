@@ -57,7 +57,8 @@ public:
      */
     [[nodiscard]] static IRI make_uuid(NodeStorage &node_storage = NodeStorage::default_instance());
 
-    [[nodiscard]] IRI to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    IRI to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] IRI try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
      * Get the IRI string of this.
