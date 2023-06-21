@@ -35,7 +35,7 @@ std::string capabilities::Default<xsd_dateTimeStamp>::to_canonical_string(const 
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTimeStamp>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return lhs.first <=> rhs.first;
+    return TimeComparer::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTimeStamp,

@@ -9,10 +9,12 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 class Timezone {
+    // heavily inspired by https://howardhinnant.github.io/date/tz.html#Examples
 public:
     std::chrono::minutes offset = std::chrono::minutes{0};
 
     static constexpr const char *begin_tokens = "Z+-";
+    static constexpr std::chrono::hours max_value = std::chrono::hours{14};
 
     constexpr Timezone() = default;
 
@@ -131,6 +133,81 @@ inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
     std::chrono::seconds sec{util::from_chars<unsigned int>(s)};
     return sec + ms;
 }
+
+class TimeComparer {
+public:
+    // system_clock does not use leap seconds, as required by rdf (xsd)
+    using Timepoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>;
+
+    inline static Timepoint construct(const DateTime&t) {
+        auto sd = static_cast<std::chrono::sys_days>(t.date);
+        auto ms = static_cast<Timepoint>(sd);
+        ms += t.time_of_day;
+        return ms;
+    }
+
+    inline static Timepoint apply_timezone(Timepoint t, Timezone tz) {
+        return t - tz.offset;
+    }
+
+    inline static auto deconstruct(Timepoint a) {
+        auto days = std::chrono::time_point_cast<std::chrono::days>(a);
+        return std::make_pair(std::chrono::year_month_day{days}, std::chrono::hh_mm_ss{a - days});
+    }
+
+    inline static std::partial_ordering piecewise_compare(Timepoint a, Timepoint b) {
+        auto av = deconstruct(a);
+        auto bv = deconstruct(b);
+        std::partial_ordering cmp = av.first.year() <=> bv.first.year();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        cmp = av.first.month() <=> bv.first.month();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        cmp = av.first.day() <=> bv.first.day();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        cmp = av.second.hours() <=> bv.second.hours();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        cmp = av.second.minutes() <=> bv.second.minutes();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        cmp = av.second.seconds() <=> bv.second.seconds();
+        if (cmp != std::partial_ordering::equivalent)
+            return cmp;
+        return av.second.subseconds() <=> bv.second.subseconds();
+    }
+
+    inline static std::partial_ordering compare(const DateTime &a, std::optional<Timezone> atz, const DateTime &b, std::optional<Timezone> btz) {
+        auto av = construct(a);
+        auto bv = construct(b);
+        if (atz.has_value()) {
+            av = apply_timezone(av, *atz);
+            if (btz.has_value()) {
+                return piecewise_compare(av, apply_timezone(bv, *btz));
+            } else {
+                auto p14 = piecewise_compare(av, bv + Timezone::max_value);
+                auto m14 = piecewise_compare(av, bv - Timezone::max_value);
+                if (p14 != m14)
+                    return std::partial_ordering::unordered;
+                return p14;
+            }
+        } else {
+            if (btz.has_value()) {
+                bv = apply_timezone(bv, *btz);
+                auto p14 = piecewise_compare(av + Timezone::max_value, bv);
+                auto m14 = piecewise_compare(av - Timezone::max_value, bv);
+                if (p14 != m14)
+                    return std::partial_ordering::unordered;
+                return p14;
+            } else {
+                return piecewise_compare(av, bv);
+            }
+        }
+    }
+};
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 #endif  //RDF4CPP_TIMEZONE_HPP

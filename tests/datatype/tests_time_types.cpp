@@ -23,6 +23,27 @@ void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_
     else if (res == std::partial_ordering::greater) {
         CHECK(Literal::make_typed_from_value<Datatype>(a) > Literal::make_typed<Datatype>(b));
     }
+    else if (res == std::partial_ordering::unordered) {
+        CHECK(Literal::make_typed_from_value<Datatype>(a) <=> Literal::make_typed<Datatype>(b) == res);
+    }
+}
+template<class Datatype>
+void basic_test(std::string_view a, std::string_view b, std::partial_ordering res) {
+    using namespace rdf4cpp::rdf;
+    // better output on failure than CHECK(a <=> b == res)
+    if (res == std::partial_ordering::equivalent) {
+        const auto lit_a = Literal::make_typed<Datatype>(a);
+        const auto lit_b = Literal::make_typed<Datatype>(b);
+        CHECK(lit_a == lit_b);
+    } else if (res == std::partial_ordering::less) {
+        CHECK(Literal::make_typed<Datatype>(a) < Literal::make_typed<Datatype>(b));
+    }
+    else if (res == std::partial_ordering::greater) {
+        CHECK(Literal::make_typed<Datatype>(a) > Literal::make_typed<Datatype>(b));
+    }
+    else if (res == std::partial_ordering::unordered) {
+        CHECK(Literal::make_typed<Datatype>(a) <=> Literal::make_typed<Datatype>(b) == res);
+    }
 }
 
 TEST_CASE("timezone") {
@@ -34,6 +55,12 @@ TEST_CASE("timezone") {
     std::chrono::zoned_time d_in0{&zero_tz, d};
     std::chrono::zoned_time d_in60{&tz, d_in0};
     CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%z}", d_in60) == "2042-02-01-06-30-15-+0100");
+}
+
+TEST_CASE("precision") {
+    std::chrono::microseconds ms{std::numeric_limits<int64_t>::max()};
+    auto ys = std::chrono::floor<std::chrono::years>(ms);
+    CHECK(ys > std::chrono::years{10000});
 }
 
 TEST_CASE("datatype gYear") {
@@ -139,6 +166,28 @@ TEST_CASE("datatype dateTime") {
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{42}}, tz), "2042-05-01T00:50:00.000", std::partial_ordering::less);
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01T00:50:00.000+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01T00:50:00.000-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-05-05T13:40:08", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>("2041-05-05T13:40:08", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2041-05-05T13:40:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-04-05T13:40:08", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-04-05T13:40:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-04T13:40:08", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-05-04T13:40:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T12:40:08", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-05-05T12:40:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:39:08", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-05-05T13:39:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:07", "2042-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2042-05-05T13:40:07", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08.005", "2042-05-05T13:40:08.006", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08.006", "2042-05-05T13:40:08.005", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2042-05-05T14:40:08+01:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2042-05-05T12:30:08-01:10", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2042-05-05T13:40:08", std::partial_ordering::unordered);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2043-05-05T13:40:08", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2041-05-05T13:40:08", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2043-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2041-05-05T13:40:08Z", std::partial_ordering::greater);
 }
 
 TEST_CASE("datatype dateTimeStamp") {
@@ -154,6 +203,23 @@ TEST_CASE("datatype dateTimeStamp") {
     basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{42}}, tz), "2042-05-01T00:50:00.000Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01T00:50:00.000+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DateTimeStamp>(std::make_pair(datatypes::registry::DateTime{std::chrono::year{2042} / 5 / 1, std::chrono::minutes{50}}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01T00:50:00.000-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>("2041-05-05T13:40:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2041-05-05T13:40:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-04-05T13:40:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-04-05T13:40:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-04T13:40:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-04T13:40:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T12:40:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T12:40:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:39:08Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T13:39:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:07Z", "2042-05-05T13:40:08Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T13:40:07Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08.005Z", "2042-05-05T13:40:08.006Z", std::partial_ordering::less);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08.006Z", "2042-05-05T13:40:08.005Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T14:40:08+01:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTimeStamp>("2042-05-05T13:40:08Z", "2042-05-05T12:30:08-01:10", std::partial_ordering::equivalent);
 }
 
 #pragma clang diagnostic pop
