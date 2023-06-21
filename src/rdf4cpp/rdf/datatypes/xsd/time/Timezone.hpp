@@ -139,10 +139,10 @@ public:
     // system_clock does not use leap seconds, as required by rdf (xsd)
     using Timepoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>;
 
-    inline static Timepoint construct(const DateTime&t) {
-        auto sd = static_cast<std::chrono::sys_days>(t.date);
+    inline static Timepoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) {
+        auto sd = static_cast<std::chrono::sys_days>(date);
         auto ms = static_cast<Timepoint>(sd);
-        ms += t.time_of_day;
+        ms += time_of_day;
         return ms;
     }
 
@@ -179,30 +179,28 @@ public:
         return av.second.subseconds() <=> bv.second.subseconds();
     }
 
-    inline static std::partial_ordering compare(const DateTime &a, std::optional<Timezone> atz, const DateTime &b, std::optional<Timezone> btz) {
-        auto av = construct(a);
-        auto bv = construct(b);
+    inline static std::partial_ordering compare(Timepoint a, std::optional<Timezone> atz, Timepoint b, std::optional<Timezone> btz) {
         if (atz.has_value()) {
-            av = apply_timezone(av, *atz);
+            a = apply_timezone(a, *atz);
             if (btz.has_value()) {
-                return piecewise_compare(av, apply_timezone(bv, *btz));
+                return piecewise_compare(a, apply_timezone(b, *btz));
             } else {
-                auto p14 = piecewise_compare(av, bv + Timezone::max_value);
-                auto m14 = piecewise_compare(av, bv - Timezone::max_value);
+                auto p14 = piecewise_compare(a, b + Timezone::max_value);
+                auto m14 = piecewise_compare(a, b - Timezone::max_value);
                 if (p14 != m14)
                     return std::partial_ordering::unordered;
                 return p14;
             }
         } else {
             if (btz.has_value()) {
-                bv = apply_timezone(bv, *btz);
-                auto p14 = piecewise_compare(av + Timezone::max_value, bv);
-                auto m14 = piecewise_compare(av - Timezone::max_value, bv);
+                b = apply_timezone(b, *btz);
+                auto p14 = piecewise_compare(a + Timezone::max_value, b);
+                auto m14 = piecewise_compare(a - Timezone::max_value, b);
                 if (p14 != m14)
                     return std::partial_ordering::unordered;
                 return p14;
             } else {
-                return piecewise_compare(av, bv);
+                return piecewise_compare(a, b);
             }
         }
     }

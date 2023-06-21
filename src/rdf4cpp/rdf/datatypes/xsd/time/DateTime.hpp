@@ -12,7 +12,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_dateTime> {
-    using cpp_datatype = std::pair<DateTime, OptionalTimezone>;
+    using cpp_datatype = std::pair<TimeComparer::Timepoint, OptionalTimezone>;
 };
 
 

@@ -23,12 +23,12 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     if (time > std::chrono::hours{24})
         throw std::invalid_argument{"invalid time of day"};
 
-    return std::make_pair(DateTime{date, time}, tz);
+    return std::make_pair(TimeComparer::construct(date, time), tz);
 }
 
 template<>
 std::string capabilities::Default<xsd_dateTimeStamp>::to_canonical_string(const cpp_type &value) noexcept {
-    auto str = std::format("{:%Y-%m-%d}T{:%H:%M:%S}", value.first.date, value.first.time_of_day);
+    auto str = std::format("{:%Y-%m-%dT%H:%M:%S}", value.first);
     str += value.second.to_canonical_string();
     return str;
 }
