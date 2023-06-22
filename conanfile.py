@@ -28,6 +28,7 @@ class Recipe(ConanFile):
 
     def requirements(self):
         self.requires("boost/1.81.0")
+        self.options["boost"].header_only = True
         self.requires("expected-lite/0.6.2")
         self.requires("re2/20221201", "private")
         self.requires("openssl/3.0.8", "private")
