@@ -68,6 +68,7 @@ jobs:
           conan profile new --detect default
           conan profile update env.CC="${CC}" default
           conan profile update env.CXX="${CXX}" default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config init
           
           # Add gcc-13 to valid versions in conan settings

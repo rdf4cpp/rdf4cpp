@@ -53,6 +53,7 @@ sudo apt install python3-pip
 pip3 install --user conan
 conan user
 conan profile new --detect default
+conan profile update settings.compiler.libcxx=libstdc++11 default
 ```
 
 
