@@ -7,30 +7,23 @@ boilerplate_init()
 OPTION(USE_CONAN "If available, use conan to retrieve dependencies." ON)
 if (IS_TOP_LEVEL AND USE_CONAN)
     include(cmake/conan_cmake.cmake)
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "")
+    if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+        set(CONAN_HYPERTRIE_WITH_TEST_DEPS "True")
+    else()
+        set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
+    endif()
+    set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS}")
 endif ()
 
 # find packages
-find_package(fmt 9 COMPONENTS fmt-header-only QUIET)
-find_package(expected-lite 0.6 QUIET)
+find_package(expected-lite QUIET)
 find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 
 include(FetchContent)
-
-# retrieve missing libraries
-if (NOT fmt_FOUND)
-    FetchContent_Declare(
-            fetchfmt
-            GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-            GIT_TAG c4ee726532178e556d923372f29163bd206d7732 # v9.0.0
-    )
-
-    FetchContent_MakeAvailable(fetchfmt)
-    message(DEBUG "No CMake package for fmt found. fmt was retrieved via FetchContent.")
-endif ()
 
 if (NOT expected-lite_FOUND)
     FetchContent_Declare(
@@ -205,7 +198,6 @@ target_link_libraries(rdf4cpp
         nonstd::expected-lite
         Boost::headers
         PRIVATE
-        fmt::fmt-header-only
         re2::re2
         OpenSSL::Crypto
         uni-algo::uni-algo
