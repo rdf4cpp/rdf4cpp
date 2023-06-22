@@ -8,7 +8,7 @@ IRI ClosedNamespace::operator+(std::string_view suffix) const {
         return IRI{found->second};
     } else {
         std::ostringstream oss;
-        oss << "Resource " << suffix << "does not exist within the vocabulary" << namespace_iri_ << '.';
+        oss << "Resource " << suffix << " does not exist within the vocabulary " << namespace_iri_ << '.';
         throw std::runtime_error{oss.str()};
     }
 }
