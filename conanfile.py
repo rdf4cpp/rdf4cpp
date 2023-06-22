@@ -30,9 +30,9 @@ class Recipe(ConanFile):
         self.requires("boost/1.81.0")
         self.options["boost"].header_only = True
         self.requires("expected-lite/0.6.2")
-        self.requires("re2/20221201", "private")
-        self.requires("openssl/3.0.8", "private")
-        self.requires("uni-algo/0.7.1", "private")
+        self.requires("re2/20221201")
+        self.requires("openssl/3.0.8")
+        self.requires("uni-algo/0.7.1")
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")
