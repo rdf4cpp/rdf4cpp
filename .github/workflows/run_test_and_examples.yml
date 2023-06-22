@@ -1,7 +1,5 @@
 name: Run unit tests and examples
 on: [ 'pull_request' ]
-
-
 jobs:
   tests_and_example_matrix:
     strategy:

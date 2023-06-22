@@ -1,7 +1,5 @@
 name: Packaging and deployment tests
 on: [ 'pull_request' ]
-
-
 jobs:
   packaging-and-deployment-tests-clang:
     name: Packaging and deployment tests clang-16

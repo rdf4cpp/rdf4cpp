@@ -14,7 +14,6 @@ on:
         required: true
         type: boolean
 
-
 jobs:
   test-cmake-fetch-content:
     name: Test cmake FetchContent (${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }})
@@ -49,12 +48,14 @@ jobs:
 
       - name: use mold as default linker
         uses: rui314/setup-mold@v1
+
       - name: Install systemlib boost for FetchContent
         run: |
           # FetchContent does not handle transitive dependencies and doesn't run conan.
           sudo apt-get install libboost-math-dev
+
       - name: Check out sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3q
 
       - name: Test cmake FetchContent
         env:
@@ -62,9 +63,7 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         working-directory: test_FetchContent
         run: |
-          cmake -G Ninja -B build_fetch_content -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }} \
-          ${{ fromJSON('["", "-DCMAKE_CXX_FLAGS=--coverage"]')[inputs.with-coverage] }}  
+          cmake -G Ninja -B build_fetch_content -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }}
           cmake --build build_fetch_content
 
       - name: Run test executable
