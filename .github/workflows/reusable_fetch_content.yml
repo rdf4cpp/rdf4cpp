@@ -55,7 +55,7 @@ jobs:
           sudo apt-get install libboost-math-dev
 
       - name: Check out sources
-        uses: actions/checkout@v3q
+        uses: actions/checkout@v3
 
       - name: Test cmake FetchContent
         env:
