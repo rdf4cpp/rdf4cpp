@@ -48,13 +48,19 @@ void basic_test(std::string_view a, std::string_view b, std::partial_ordering re
 
 TEST_CASE("timezone") {
     using namespace rdf4cpp::rdf::datatypes::registry;
-    Timezone tz{};
-    tz.offset = std::chrono::minutes{60};
-    Timezone zero_tz{};
+    Timezone tz_60{std::chrono::minutes{60}};
+    Timezone tz_0{};
     auto d = std::chrono::sys_days{std::chrono::day{1} / 2 / 2042} + std::chrono::hours{5} + std::chrono::minutes{30} + std::chrono::seconds{15};
-    std::chrono::zoned_time d_in0{&zero_tz, d};
-    std::chrono::zoned_time d_in60{&tz, d_in0};
-    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%z}", d_in60) == "2042-02-01-06-30-15-+0100");
+    std::chrono::zoned_time d_in0{tz_0, d};
+    std::chrono::zoned_time d_in60{tz_60, d_in0};
+    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%Z}", d_in60) == "2042-02-01-06-30-15-+1:00");
+    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%Z}", d_in0) == "2042-02-01-05-30-15-Z");
+
+    auto l = std::chrono::local_days{std::chrono::day{1} / 2 / 2042} + std::chrono::hours{5} + std::chrono::minutes{30} + std::chrono::seconds{15};
+    d_in60 = std::chrono::zoned_time(tz_60, l);
+    d_in0 = std::chrono::zoned_time(tz_0, d_in60);
+    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%Z}", d_in60) == "2042-02-01-05-30-15-+1:00");
+    CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%Z}", d_in0) == "2042-02-01-04-30-15-Z");
 }
 
 TEST_CASE("precision") {
