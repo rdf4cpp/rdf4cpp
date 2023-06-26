@@ -60,14 +60,9 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           pip3 install "conan==1.60.1" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
           conan profile new --detect default
-          conan profile update env.CC="${CC}" default
-          conan profile update env.CXX="${CXX}" default
           conan profile update settings.compiler.libcxx=libstdc++11 default
 
       - name: Cache conan data
