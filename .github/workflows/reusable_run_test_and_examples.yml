@@ -14,6 +14,8 @@ on:
         type: boolean
       with-sanitizer:
         type: boolean
+      with-Werror:
+        type: boolean
     secrets:
       coverall-token:
         description: 'Access token for coverall. Required if inputs.with-coverage'
@@ -37,5 +39,6 @@ jobs:
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: true
       with-coverage: ${{ inputs.with-coverage }}
+      with-Werror: ${{ inputs.with-Werror }}
     secrets:
       coverall-token: ${{ inputs.coverall-token }}

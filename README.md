@@ -43,11 +43,11 @@ Beware: Conan will not be used for dependency retrieval if you include rdf4cpp v
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{10,11}, clang-{12,13,14} with libstdc++-11 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{11,12,13}, clang-{14,15,16} with libstdc++-11 on ubuntu 22.04. 
 
 ### Dependencies
 
-It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 20.04+:
+It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
 ```shell
 sudo apt install python3-pip
 pip3 install --user conan

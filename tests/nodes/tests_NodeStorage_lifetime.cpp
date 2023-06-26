@@ -69,11 +69,17 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
             NodeStorage ns_copy2 = ns;
             CHECK(ns.ref_count() == 3);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wself-move"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+#endif
             ns_copy = ns_copy;  // expecting noop
             CHECK(ns.ref_count() == 3);
 
             ns_copy = std::move(ns_copy);  // expecting noop
             CHECK(ns.ref_count() == 3);
+#pragma GCC diagnostic pop
 
             ns_copy = ns_copy2;
             CHECK(ns.ref_count() == 3);
