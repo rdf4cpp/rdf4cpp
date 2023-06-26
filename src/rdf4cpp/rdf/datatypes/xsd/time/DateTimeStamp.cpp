@@ -23,19 +23,18 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     if (time > std::chrono::hours{24})
         throw std::invalid_argument{"invalid time of day"};
 
-    return std::make_pair(TimeComparer::construct(date, time), tz);
+    return ZonedTime{tz, construct(date, time)};
 }
 
 template<>
 std::string capabilities::Default<xsd_dateTimeStamp>::to_canonical_string(const cpp_type &value) noexcept {
-    auto str = std::format("{:%Y-%m-%dT%H:%M:%S}", value.first);
-    str += value.second.to_canonical_string();
+    auto str = std::format("{:%Y-%m-%dT%H:%M:%S%Z}", value);
     return str;
 }
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTimeStamp>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return lhs.get_sys_time() <=> rhs.get_sys_time();
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTimeStamp,

@@ -23,7 +23,6 @@ template<>
 std::string capabilities::Default<xsd_gYearMonth>::to_canonical_string(const cpp_type &value) noexcept;
 
 
-
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
@@ -31,7 +30,10 @@ extern template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
-}
+template<>
+TimePoint to_timePoint<std::chrono::year_month>(std::chrono::year_month t);
+
+}  // namespace rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::xsd {
 

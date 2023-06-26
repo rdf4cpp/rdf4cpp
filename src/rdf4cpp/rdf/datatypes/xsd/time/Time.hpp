@@ -30,6 +30,9 @@ extern template struct LiteralDatatypeImpl<xsd_time,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
+template<>
+TimePoint to_timePoint<std::chrono::milliseconds>(std::chrono::milliseconds t);
+
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
 namespace rdf4cpp::rdf::datatypes::xsd {

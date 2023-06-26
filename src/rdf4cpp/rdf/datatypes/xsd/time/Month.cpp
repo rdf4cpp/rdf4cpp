@@ -23,11 +23,16 @@ std::string capabilities::Default<xsd_gMonth>::to_canonical_string(const cpp_typ
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept{
-    return lhs.first <=> rhs.first;
+std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    return TimeComparer<std::chrono::month>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_gMonth,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
+
+template<>
+TimePoint to_timePoint<std::chrono::month>(std::chrono::month t) {
+    return construct(TimePointReplacementDate.year() / t / std::chrono::last, TimePointReplacementTimeOfDay);
 }
+}  // namespace rdf4cpp::rdf::datatypes::registry

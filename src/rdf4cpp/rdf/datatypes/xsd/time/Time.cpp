@@ -27,7 +27,12 @@ std::string capabilities::Default<xsd_time>::to_canonical_string(const cpp_type 
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_time>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return lhs.first <=> rhs.first;
+    return TimeComparer<std::chrono::milliseconds>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+}
+
+template<>
+TimePoint to_timePoint<std::chrono::milliseconds>(std::chrono::milliseconds t) {
+    return construct(TimePointReplacementDate, t);
 }
 
 template struct LiteralDatatypeImpl<xsd_time,

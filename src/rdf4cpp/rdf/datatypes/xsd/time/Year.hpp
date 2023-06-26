@@ -31,6 +31,9 @@ extern template struct LiteralDatatypeImpl<xsd_gYear,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
+template<>
+TimePoint to_timePoint<std::chrono::year>(std::chrono::year t);
+
 }
 
 namespace rdf4cpp::rdf::datatypes::xsd {

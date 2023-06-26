@@ -20,7 +20,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     if (time > std::chrono::hours{24})
         throw std::invalid_argument{"invalid time of day"};
 
-    return std::make_pair(TimeComparer::construct(date, time), tz.first);
+    return std::make_pair(construct(date, time), tz.first);
 }
 
 template<>
@@ -33,7 +33,7 @@ std::string capabilities::Default<xsd_dateTime>::to_canonical_string(const cpp_t
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return TimeComparer<TimePoint>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTime,

@@ -20,11 +20,17 @@ std::string capabilities::Default<xsd_gYear>::to_canonical_string(const cpp_type
 }
 
 template<>
-std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept{
-    return lhs.first <=> rhs.first;
+std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    return TimeComparer<std::chrono::year>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_gYear,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
+
+
+template<>
+TimePoint to_timePoint<std::chrono::year>(std::chrono::year t) {
+    return construct(t / TimePointReplacementDate.month() / TimePointReplacementDate.day(), TimePointReplacementTimeOfDay);
+}
 }
