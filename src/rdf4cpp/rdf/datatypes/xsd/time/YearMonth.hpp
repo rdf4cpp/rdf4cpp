@@ -31,7 +31,7 @@ extern template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                            capabilities::FixedId>;
 
 template<>
-TimePoint to_timePoint<std::chrono::year_month>(std::chrono::year_month t);
+TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t);
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 

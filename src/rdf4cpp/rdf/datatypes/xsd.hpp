@@ -34,6 +34,7 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/Time.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Duration.hpp>
 
 
 /**

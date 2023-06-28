@@ -30,7 +30,7 @@ std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type
 }
 
 template<>
-TimePoint to_timePoint<std::chrono::year_month>(std::chrono::year_month t) {
+TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t) {
     return construct(t / std::chrono::last, TimePointReplacementTimeOfDay);
 }
 

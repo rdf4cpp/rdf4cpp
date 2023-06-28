@@ -127,6 +127,19 @@ ResultType parse_date_time_fragment(std::string_view &s) {
     return ResultType{util::from_chars<ParsingType>(res_s)};
 }
 
+template<class ResultType, class ParsingType, char Separator>
+std::optional<ResultType> parse_duration_fragment(std::string_view &s) {
+    if (s.empty() || s[0] == 'T')
+        return std::nullopt;
+    std::string_view res_s = s;
+    auto p = s.find(Separator);
+    if (p == std::string::npos)
+        return std::nullopt;
+    res_s = s.substr(0, p);
+    s = s.substr(p + 1);
+    return ResultType{util::from_chars<ParsingType>(res_s)};
+}
+
 inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
     auto p = s.find('.');
     std::chrono::milliseconds ms{};
@@ -145,17 +158,26 @@ inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
 constexpr std::chrono::year_month_day TimePointReplacementDate = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
 constexpr std::chrono::milliseconds TimePointReplacementTimeOfDay{0};
 template<class T>
-TimePoint to_timePoint(T t) {
+TimePoint to_point_on_timeline(T t) {
     return static_cast<TimePoint>(t);
 }
 
-inline TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) {
+constexpr TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) {
     auto sd = static_cast<std::chrono::local_days>(date);
     auto ms = static_cast<TimePoint>(sd);
     ms += time_of_day;
     return ms;
 }
 
+inline TimePoint add_duration_to_date_time(TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) {
+    auto days = std::chrono::floor<std::chrono::days>(tp);
+    auto time = tp - days;
+    std::chrono::year_month_day ymd{days};
+    ymd += d.first;
+    if (!ymd.ok())
+        ymd = ymd.year() / ymd.month() / std::chrono::last;
+    return construct(ymd, time + d.second);
+}
 
 template<class T>
 class TimeComparer {
@@ -165,8 +187,8 @@ class TimeComparer {
 
 public:
     static std::partial_ordering compare(T a, std::optional<Timezone> atz, T b, std::optional<Timezone> btz) {
-        TimePoint a_tp = to_timePoint(a);
-        TimePoint b_tp = to_timePoint(b);
+        TimePoint a_tp = to_point_on_timeline(a);
+        TimePoint b_tp = to_point_on_timeline(b);
         if (atz.has_value()) {
             TimePointSys a_sys = apply_timezone(a_tp, *atz);
             if (btz.has_value()) {

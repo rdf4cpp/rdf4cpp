@@ -32,7 +32,7 @@ template struct LiteralDatatypeImpl<xsd_gMonth,
                                     capabilities::FixedId>;
 
 template<>
-TimePoint to_timePoint<std::chrono::month>(std::chrono::month t) {
+TimePoint to_point_on_timeline<std::chrono::month>(std::chrono::month t) {
     return construct(TimePointReplacementDate.year() / t / std::chrono::last, TimePointReplacementTimeOfDay);
 }
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -152,6 +152,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/Time.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/DateTime.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Duration.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp

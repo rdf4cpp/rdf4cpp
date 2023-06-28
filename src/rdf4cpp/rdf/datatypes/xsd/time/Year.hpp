@@ -32,7 +32,7 @@ extern template struct LiteralDatatypeImpl<xsd_gYear,
                                            capabilities::FixedId>;
 
 template<>
-TimePoint to_timePoint<std::chrono::year>(std::chrono::year t);
+TimePoint to_point_on_timeline<std::chrono::year>(std::chrono::year t);
 
 }
 

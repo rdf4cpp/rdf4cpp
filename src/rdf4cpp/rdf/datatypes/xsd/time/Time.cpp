@@ -31,7 +31,7 @@ std::partial_ordering capabilities::Comparable<xsd_time>::compare(cpp_type const
 }
 
 template<>
-TimePoint to_timePoint<std::chrono::milliseconds>(std::chrono::milliseconds t) {
+TimePoint to_point_on_timeline<std::chrono::milliseconds>(std::chrono::milliseconds t) {
     return construct(TimePointReplacementDate, t);
 }
 
