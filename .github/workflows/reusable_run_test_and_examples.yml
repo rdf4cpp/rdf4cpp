@@ -41,4 +41,4 @@ jobs:
       with-coverage: ${{ inputs.with-coverage }}
       with-Werror: ${{ inputs.with-Werror }}
     secrets:
-      coverall-token: ${{ inputs.coverall-token }}
+      coverall-token: ${{ secrets.coverall-token }}
