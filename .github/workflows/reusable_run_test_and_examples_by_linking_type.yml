@@ -17,11 +17,12 @@ on:
         type: boolean
       with-sanitizer:
         type: boolean
+      with-Werror:
+        type: boolean
     secrets:
       coverall-token:
         description: 'Access token for coverall. Required if inputs.with-coverage'
         required: false
-
 
 jobs:
   tests-and-examples:
@@ -32,6 +33,18 @@ jobs:
         shell: bash
 
     steps:
+      - name: Add Repos for for gcc-13 and clang-16
+        run: |
+          # gcc-13
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+          
+          # clang-16
+          source /etc/os-release
+          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
+          curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm-16.gpg > /dev/null
+          
+          sudo apt-get update -y
+
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
@@ -47,12 +60,8 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install "conan==1.59" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
-          conan user
+          pip3 install "conan==1.60.1" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
 
@@ -66,20 +75,22 @@ jobs:
       - name: Check out sources
         uses: actions/checkout@v3
 
-      - name: Build Tests & Examples
-        run: |
-          cmake -G Ninja -B build_dir -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
-          cmake --build build_dir
+      - name: Configure CMake
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
           CXX: ${{ steps.install_cc.outputs.cxx }}
-          CXXFLAGS: ${{ fromJSON('["", "-fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -Wno-unused-command-line-argument -fuse-ld=lld"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }}
+          CXXFLAGS: -Wno-unused-command-line-argument -fuse-ld=mold ${{ fromJSON('["", "-fsanitize=undefined -fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls"]')[inputs.with-sanitizer] }} ${{ fromJSON('["", "--coverage"]')[inputs.with-coverage] }} ${{ fromJSON('["", "-Werror"]')[inputs.with-Werror] }}
+        run: >
+          cmake -G Ninja -B build_dir -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON
+          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"]')[inputs.build-shared-libs] }}
+
+      - name: Build Tests & Examples
+        working-directory: build_dir
+        run: cmake --build . --parallel 2
 
       - name: Run tests
         working-directory: build_dir
-        run: |
-          ctest --parallel 2 --verbose
+        run: ctest --parallel 2 --verbose
 
       - name: Report coverage
         env:
@@ -92,8 +103,7 @@ jobs:
       - name: Run examples
         working-directory: build_dir
         run: |
-          for example in examples/*_example 
-          do 
-          echo "executing ${example}"
-          ./${example}
+          for example in examples/*_example; do 
+            echo "executing ${example}"
+            ./${example}
           done

@@ -28,7 +28,7 @@ Literal Literal::make_null() noexcept {
     return Literal{};
 }
 
-Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
                                              .lexical_form = lexical_form,
@@ -37,7 +37,7 @@ Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::Node
                                      node_storage.id()}};
 }
 
-Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                              .lexical_form = lexical_form,
@@ -46,23 +46,23 @@ Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, 
                                      node_storage.id()}};
 }
 
-Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
                                              .datatype = fixed_id,
                                              .value = std::move(value)}),
                               storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
-Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept {
     auto node_id = node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
             .lexical_form = lexical_form,
             .language_tag = lang});
 
     bool inlined = false;
-    auto lang_tag_i = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);                                        // check if the lang_tag can be inlined
+    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang); // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
-        auto inlined_id = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
+        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value()); // check if we have enough space
         if (inlined_id.has_value()) {
             node_id = NodeID{inlined_id.value(), node_id.literal_type()};
             inlined = true;
@@ -74,7 +74,7 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::
                                      node_storage.id(), inlined}};
 }
 
-Literal Literal::make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage const &node_storage) noexcept {
     using namespace storage::node::identifier;
 
     assert(fixed_id != LiteralType::other());
@@ -203,46 +203,176 @@ Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
     return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
 }
 
-Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
+    using datatypes::registry::DatatypeRegistry;
+
     if (handle_.node_storage_id() == node_storage.id()) {
         return *this;
     }
 
-    if (this->is_inlined() && this->datatype_eq<datatypes::rdf::LangString>()) {
-        auto data = this->value<datatypes::rdf::LangString>();
-        return make_lang_tagged_unchecked(data.lexical_form, data.language_tag, node_storage);
+    if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            auto const data = this->value<datatypes::rdf::LangString>();
+            return Literal::make_lang_tagged_unchecked(data.lexical_form,
+                                                       data.language_tag,
+                                                       node_storage);
+        }
+
+        auto const node_id = this->handle_.node_id();
+        return Literal::make_inlined_typed_unchecked(node_id.literal_id(),
+                                                     node_id.literal_type(),
+                                                     node_storage);
     }
 
     auto literal_view = handle_.literal_backend();
-    auto const node_id = literal_view.visit(
-            [&](storage::node::view::LexicalFormLiteralBackendView &lexical) noexcept {
+    auto node_id = literal_view.visit(
+            [&](storage::node::view::LexicalFormLiteralBackendView &lexical_backend) noexcept {
+                if (auto const dt_id = storage::node::identifier::iri_node_id_to_literal_type(lexical_backend.datatype_id);
+                    dt_id.is_fixed() && node_storage.has_specialized_storage_for(dt_id)) {
+
+                    // This node storage doesn't have specialized storage for the given type but the target node storage does.
+                    // Need to send value over.
+                    // This doesn't work for rdf:langString, but it shouldn't have a specialized storage anyway.
+                    assert(!this->datatype_eq<datatypes::rdf::LangString>());
+
+                    auto const from_string = DatatypeRegistry::get_factory(dt_id);
+                    auto value = from_string(lexical_backend.lexical_form);
+
+                    return node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
+                                                                                                     .value = std::move(value)});
+
+                }
+
                 // send over IRI corresponding to this datatype
-                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical.datatype_id,
+                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  handle_.node_storage_id()});
-                lexical.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+                lexical_backend.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
 
                 // find or make the requested node
                 return node_storage.find_or_make_id(literal_view);
             },
-            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                // no need to send over IRI, as it (a fixed datatype) must already be present
+            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                // no need to send over datatype IRI, as this having a specialized storage requires
+                // that the datatype is fixed, so it must already be present
 
-                if (node_storage.has_specialized_storage_for(any.datatype)) {
-                    // target node storage is also specialized for this datatype, directly send it over
-                    return node_storage.find_or_make_id(literal_view);
+                if (!node_storage.has_specialized_storage_for(value_backend.datatype)) {
+                    // target node storage is not specialized for this datatype, need to convert to lexical form
+                    auto const to_string = DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{value_backend.datatype});
+                    assert(to_string != nullptr);
+                    std::string const str = to_string(value_backend.value);
+
+                    return node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
+                            .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
+                            .lexical_form = str,
+                            .language_tag = ""});
                 }
 
-                // target node storage is not specialized for this datatype, need to convert to lexical form
-                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{any.datatype});
-                assert(to_string != nullptr);
-                std::string const str = to_string(any.value);
-
-                return node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-                        .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(any.datatype),
-                        .lexical_form = str,
-                        .language_tag = ""});
+                // target node storage is also specialized for this datatype, directly send it over
+                return node_storage.find_or_make_id(literal_view);
             });
+
+    return Literal{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
+Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+    using datatypes::registry::DatatypeRegistry;
+
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            // special case for rdf:langString because part of it is in the backend
+            auto const literal_view = this->lang_tagged_get_de_inlined().handle_.literal_backend();
+
+            auto const tmp_id = node_storage.find_id(literal_view);
+            if (tmp_id == NodeID{}) {
+                return Literal{};
+            }
+
+            auto const [node_id, inlined] = [tmp_id, &literal_view]() noexcept {
+                if (auto const lang_tag_i = DatatypeRegistry::LangTagInlines::try_tag_to_inlined(literal_view.get_lexical().language_tag);
+                    lang_tag_i.has_value()) {
+
+                    if (auto const inlined_id = DatatypeRegistry::LangTagInlines::try_into_inlined(tmp_id.literal_id(), *lang_tag_i);
+                        inlined_id.has_value()) {
+
+                        return std::make_pair(NodeID{*inlined_id, tmp_id.literal_type()}, true);
+                    }
+                }
+
+                return std::make_pair(tmp_id, false);
+            }();
+
+            return Literal{NodeBackendHandle{node_id,
+                                             storage::node::identifier::RDFNodeType::Literal,
+                                             node_storage.id(),
+                                             inlined}};
+        }
+
+        auto const node_id = this->handle_.node_id();
+        return Literal::make_inlined_typed_unchecked(node_id.literal_id(),
+                                                     node_id.literal_type(),
+                                                     node_storage);
+    }
+
+    auto literal_view = handle_.literal_backend();
+    auto const node_id = literal_view.visit(
+            [&](storage::node::view::LexicalFormLiteralBackendView &lexical_backend) noexcept {
+                if (auto const dt_id = storage::node::identifier::iri_node_id_to_literal_type(lexical_backend.datatype_id);
+                    dt_id.is_fixed() && node_storage.has_specialized_storage_for(dt_id)) {
+
+                    // This node storage doesn't have specialized storage for the given type but the target node storage does.
+                    // Need to send value over.
+                    // This doesn't work for rdf:langString, but it shouldn't have a specialized storage anyway.
+                    assert(!this->datatype_eq<datatypes::rdf::LangString>());
+
+                    auto const from_string = DatatypeRegistry::get_factory(dt_id);
+                    auto value = from_string(lexical_backend.lexical_form);
+
+                    return node_storage.find_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
+                                                                                             .value = std::move(value)});
+
+                }
+
+                // Default case.
+                // This node storage doesn't have specialized storage for the value and the new one also doesn't
+                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
+                                                                                                 storage::node::identifier::RDFNodeType::IRI,
+                                                                                                 handle_.node_storage_id()});
+                lexical_backend.datatype_id = node_storage.find_id(dtype_iri_view);
+                if (lexical_backend.datatype_id == NodeID{}) {
+                    // datatype IRI not present, therefore literal cannot be present
+                    return NodeID{};
+                }
+
+                return node_storage.find_id(literal_view);
+            },
+            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                // no need to send over datatype IRI, as this having a specialized storage requires
+                // that the datatype is fixed, so it must already be present
+
+                if (!node_storage.has_specialized_storage_for(value_backend.datatype)) {
+                    // target node storage is not specialized for this datatype, need to convert to lexical form
+                    auto const to_string = DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{value_backend.datatype});
+                    assert(to_string != nullptr);
+                    std::string const str = to_string(value_backend.value);
+
+                    return node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                            .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
+                            .lexical_form = str,
+                            .language_tag = ""});
+                }
+
+                // target node storage is also specialized for this datatype, directly try to get it
+                return node_storage.find_id(literal_view);
+            });
+
+    if (node_id == NodeID{}) {
+        return Literal{};
+    }
 
     return Literal{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
@@ -305,14 +435,14 @@ util::CowString Literal::lexical_form() const noexcept {
     }
 
     return handle_.literal_backend().visit(
-            [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                return util::CowString{util::ownership_tag::borrowed, lexical.lexical_form};
+            [](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                return util::CowString{util::ownership_tag::borrowed, lexical_backend.lexical_form};
             },
-            [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(any.datatype);
+            [](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(value_backend.datatype);
                 assert(to_string != nullptr);
 
-                return util::CowString{util::ownership_tag::owned, to_string(any.value)};
+                return util::CowString{util::ownership_tag::owned, to_string(value_backend.value)};
             });
 }
 
@@ -342,12 +472,12 @@ util::CowString Literal::simplified_lexical_form() const noexcept {
     }
 
     return handle_.literal_backend().visit(
-            [entry](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                auto const value = entry->factory_fptr(lexical.lexical_form);
+            [entry](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                auto const value = entry->factory_fptr(lexical_backend.lexical_form);
                 return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(value)};
             },
-            [entry](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(any.value)};
+            [entry](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(value_backend.value)};
             });
 }
 
@@ -467,21 +597,21 @@ Literal::operator std::string() const noexcept {
         oss << '@' << value.language_tag;
     } else {
         handle_.literal_backend().visit(
-                [&](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical.datatype_id,
+                [&](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  handle_.node_storage_id()});
-                    quoted_lexical_into_stream(oss, lexical.lexical_form);
+                    quoted_lexical_into_stream(oss, lexical_backend.lexical_form);
                     oss << "^^" << dtype_iri.n_string();
                 },
-                [&](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
                     auto const &dtype_iri = NodeStorage::find_iri_backend_view(
                             storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
 
                     auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(this->datatype_id());
                     assert(to_string != nullptr);
 
-                    quoted_lexical_into_stream(oss, to_string(any.value));
+                    quoted_lexical_into_stream(oss, to_string(value_backend.value));
                     oss << "^^" << dtype_iri.n_string();
                 });
     }
@@ -541,18 +671,18 @@ std::any Literal::value() const noexcept {
     }
 
     return backend.visit(
-            [&datatype](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+            [&datatype](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                 if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
-                    return factory(lexical.lexical_form);
+                    return factory(lexical_backend.lexical_form);
                 }
 
                 return std::any{};
             },
-            [&datatype](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                assert(any.datatype == datatype);
+            [&datatype](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                assert(value_backend.datatype == datatype);
                 (void)datatype;
 
-                return any.value;
+                return value_backend.value;
             });
 }
 

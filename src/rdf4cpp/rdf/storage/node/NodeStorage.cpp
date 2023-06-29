@@ -55,6 +55,7 @@ NodeStorage &NodeStorage::default_instance() {
 }
 
 void NodeStorage::set_default_instance(NodeStorage const &node_context) {
+    std::call_once(default_init_once_flag, []() {});
     default_instance_ = node_context;
 }
 

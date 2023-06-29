@@ -9,7 +9,6 @@ namespace rdf4cpp::rdf {
  * A ClosedNamespace can not be extended to more IRIs after construction.
  */
 class ClosedNamespace : public Namespace {
-
 public:
     /**
      * Constructs the ClosedNamespace with the fixed set of possible suffixes.
@@ -23,7 +22,7 @@ public:
     ClosedNamespace(std::string_view namespace_iri, Suffixes all_suffixes, NodeStorage &node_storage)
         : Namespace(namespace_iri, node_storage) {
         for (auto const &suffix : all_suffixes)
-            this->cache_.template emplace(suffix, IRI{namespace_iri_ + std::string{suffix}, node_storage}.backend_handle());
+            this->cache_.emplace(suffix, IRI{namespace_iri_ + std::string{suffix}, node_storage}.backend_handle());
     }
 
     /**

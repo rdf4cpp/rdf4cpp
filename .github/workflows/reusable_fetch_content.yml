@@ -14,7 +14,6 @@ on:
         required: true
         type: boolean
 
-
 jobs:
   test-cmake-fetch-content:
     name: Test cmake FetchContent (${{ fromJSON('["static", "shared"]')[inputs.build-shared-libs] }})
@@ -24,6 +23,18 @@ jobs:
         shell: bash
 
     steps:
+      - name: Add Repos for for gcc-13 and clang-16
+        run: |
+          # gcc-13
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+
+          # clang-16
+          source /etc/os-release
+          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
+          curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm-16.gpg > /dev/null
+
+          sudo apt-get update -y
+
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
@@ -37,10 +48,12 @@ jobs:
 
       - name: use mold as default linker
         uses: rui314/setup-mold@v1
+
       - name: Install systemlib boost for FetchContent
         run: |
           # FetchContent does not handle transitive dependencies and doesn't run conan.
           sudo apt-get install libboost-math-dev
+
       - name: Check out sources
         uses: actions/checkout@v3
 
@@ -50,9 +63,7 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         working-directory: test_FetchContent
         run: |
-          cmake -G Ninja -B build_fetch_content -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON \
-          ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }} \
-          ${{ fromJSON('["", "-DCMAKE_CXX_FLAGS=--coverage"]')[inputs.with-coverage] }}  
+          cmake -G Ninja -B build_fetch_content -DBUILD_TESTING=ON -DBUILD_EXAMPLES=ON ${{ fromJSON('["", "-DBUILD_SHARED_LIBS=ON"]')[inputs.build-shared-libs] }}
           cmake --build build_fetch_content
 
       - name: Run test executable

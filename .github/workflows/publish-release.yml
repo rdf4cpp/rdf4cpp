@@ -1,5 +1,4 @@
 name: Publish Release
-
 on:
   create:
 
