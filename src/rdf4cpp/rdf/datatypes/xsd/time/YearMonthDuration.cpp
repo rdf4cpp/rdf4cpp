@@ -22,6 +22,8 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
         m += *years;
     if (months.has_value())
         m += *months;
+    if (!s.empty())
+        throw std::invalid_argument{"expected end of string"};
     if (!years.has_value() && !months.has_value()) {
         throw std::invalid_argument{"duration without any fields"};
     }

@@ -42,6 +42,9 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
     auto seconds = parse_duration_fragment<std::chrono::seconds, uint64_t, 'S'>(s);
     if (!s.empty())
         throw std::invalid_argument{"expected end of string"};
+    if (!days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
+        throw std::invalid_argument{"duration without any fields"};
+    }
     if (hours.has_value())
         ms += *hours;
     if (minutes.has_value())

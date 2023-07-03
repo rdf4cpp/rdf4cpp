@@ -282,6 +282,15 @@ TEST_CASE("datatype dayTimeDuration") {
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::hours{1}, "PT1H", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{1}, "P1D", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{-1}, "-P1D", std::partial_ordering::equivalent);
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>(""), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT5M24H"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5DABC"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P10Y"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5M"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
     basic_test<datatypes::xsd::DayTimeDuration>("PT1M", "PT30S", std::partial_ordering::greater);
     basic_test<datatypes::xsd::DayTimeDuration>("PT1M", "PT2M", std::partial_ordering::less);
@@ -296,6 +305,15 @@ TEST_CASE("datatype yearMonthDuration") {
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1}, "P1Y", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1} + std::chrono::months{1}, "P1Y1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{-1} + std::chrono::months{-1}, "-P1Y1M", std::partial_ordering::equivalent);
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>(""), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5M24Y"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5YABC"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT10H"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5D"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
     basic_test<datatypes::xsd::YearMonthDuration>("P1M", "P2M", std::partial_ordering::less);
     basic_test<datatypes::xsd::YearMonthDuration>("P1Y", "P1M", std::partial_ordering::greater);
