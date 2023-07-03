@@ -257,9 +257,48 @@ TEST_CASE("datatype duration") {
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::years{1}, std::chrono::minutes{0}), "P1Y", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{1}, std::chrono::minutes{1}), "P1MT1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{-1}, std::chrono::minutes{-1}), "-P1MT1M", std::partial_ordering::equivalent);
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>(""), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P5M24Y"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P5YABC"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
     basic_test<datatypes::xsd::Duration>("P1M", "P30D", std::partial_ordering::unordered);
     basic_test<datatypes::xsd::Duration>("P1M", "P2M", std::partial_ordering::less);
+    basic_test<datatypes::xsd::Duration>("PT1M", "PT30S", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::Duration>("PT1M", "PT2M", std::partial_ordering::less);
+}
+
+TEST_CASE("datatype dayTimeDuration") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::DayTimeDuration::identifier) == "http://www.w3.org/2001/XMLSchema#dayTimeDuration");
+
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::minutes{0}, "PT0S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::minutes{1}, "PT1M", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::seconds{1}, "PT1S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::hours{1}, "PT1H", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{1}, "P1D", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{-1}, "-P1D", std::partial_ordering::equivalent);
+
+    basic_test<datatypes::xsd::DayTimeDuration>("PT1M", "PT30S", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DayTimeDuration>("PT1M", "PT2M", std::partial_ordering::less);
+}
+
+TEST_CASE("datatype yearMonthDuration") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(std::string(datatypes::xsd::YearMonthDuration::identifier) == "http://www.w3.org/2001/XMLSchema#yearMonthDuration");
+
+    basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::months{0}, "P0M", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1}, "P1Y", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1} + std::chrono::months{1}, "P1Y1M", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{-1} + std::chrono::months{-1}, "-P1Y1M", std::partial_ordering::equivalent);
+
+    basic_test<datatypes::xsd::YearMonthDuration>("P1M", "P2M", std::partial_ordering::less);
+    basic_test<datatypes::xsd::YearMonthDuration>("P1Y", "P1M", std::partial_ordering::greater);
 }
 
 #pragma clang diagnostic pop

@@ -35,6 +35,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Duration.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.hpp>
 
 
 /**
