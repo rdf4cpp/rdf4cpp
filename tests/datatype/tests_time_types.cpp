@@ -80,8 +80,16 @@ TEST_CASE("datatype gYear") {
     basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year{500}, tz), "0501", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year{500}, datatypes::registry::Timezone{std::chrono::hours{1}}), "0500+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year{500}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "0500-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year{500}, datatypes::registry::Timezone{std::chrono::hours{-14}}), "0500-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year{500}, datatypes::registry::Timezone{std::chrono::hours{14}}), "0500+14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year::min(), datatypes::registry::Timezone{std::chrono::hours{-14}}), "-32767-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(std::chrono::year::max(), datatypes::registry::Timezone{std::chrono::hours{14}}), "32767+14:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYear>("0500-1:00", "0500Z", std::partial_ordering::greater);
     basic_test<datatypes::xsd::GYear>("0500+1:00", "0500Z", std::partial_ordering::less);
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("05").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("12").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("12+14:00").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("12-14:00").is_inlined());
 }
 
 TEST_CASE("datatype gMonth") {
@@ -94,8 +102,20 @@ TEST_CASE("datatype gMonth") {
     basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::April, tz), "05", std::partial_ordering::less);
     basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::May, datatypes::registry::Timezone{std::chrono::hours{1}}), "05+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::May, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "05-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::May, datatypes::registry::Timezone{std::chrono::hours{-14}}), "05-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::May, datatypes::registry::Timezone{std::chrono::hours{14}}), "05+14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::January, datatypes::registry::Timezone{std::chrono::hours{-14}}), "01-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonth>(std::make_pair(std::chrono::December, datatypes::registry::Timezone{std::chrono::hours{14}}), "12+14:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GMonth>("05+1:00", "05Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::GMonth>("05-1:00", "05Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("05").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("12").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("12+14:00").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("12-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("13"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype gDay") {
@@ -108,8 +128,18 @@ TEST_CASE("datatype gDay") {
     basic_test<datatypes::xsd::GDay>(std::make_pair(std::chrono::day{4}, tz), "05", std::partial_ordering::less);
     basic_test<datatypes::xsd::GDay>(std::make_pair(std::chrono::day{5}, datatypes::registry::Timezone{std::chrono::hours{1}}), "05+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GDay>(std::make_pair(std::chrono::day{5}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "05-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GDay>(std::make_pair(std::chrono::day{1}, datatypes::registry::Timezone{std::chrono::hours{-14}}), "01-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GDay>(std::make_pair(std::chrono::day{31}, datatypes::registry::Timezone{std::chrono::hours{14}}), "31+14:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GDay>("05+1:00", "05Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::GDay>("05-1:00", "05Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("05").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("31").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("31+14:00").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("31-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("32"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype gYearMonth") {
@@ -123,8 +153,22 @@ TEST_CASE("datatype gYearMonth") {
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2041} / 6, tz), "2042-05", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::hours{-14}}), "2042-05-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year{2042} / 5, datatypes::registry::Timezone{std::chrono::hours{14}}), "2042-05+14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year::max() / 12, tz), "32767-12", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYearMonth>(std::make_pair(std::chrono::year::min() / 1, tz), "-32767-01", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYearMonth>("2042-05+1:00", "2042-05Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYearMonth>("2042-05-1:00", "2042-05Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-05").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("32767-12").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("01-00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("-32768-01"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32767-32"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32768-30"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype gMonthDay") {
@@ -138,8 +182,21 @@ TEST_CASE("datatype gMonthDay") {
     basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{3} / 6, tz), "04-05", std::partial_ordering::less);
     basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 5, datatypes::registry::Timezone{std::chrono::hours{1}}), "05-05+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{5} / 5, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "05-05-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{1} / 1, datatypes::registry::Timezone{std::chrono::hours{-14}}), "01-01-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GMonthDay>(std::make_pair(std::chrono::month{12} / 31, datatypes::registry::Timezone{std::chrono::hours{14}}), "12-31+14:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GMonthDay>("05-05+1:00", "05-05Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::GMonthDay>("05-05-1:00", "05-05Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("05-1").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("12-31").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("12-31+14:00").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("12-31-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("01-00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("00-01"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("12-32"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("13-30"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("02-30"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype date") {

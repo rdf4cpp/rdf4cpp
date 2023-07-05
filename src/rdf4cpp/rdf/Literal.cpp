@@ -1734,6 +1734,22 @@ Literal Literal::sha512(NodeStorage &node_storage) const {
     return this->hash_with("SHA2-512", node_storage);
 }
 
+Literal Literal::now(NodeStorage &node_storage) {
+    auto n = std::chrono::floor<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    datatypes::registry::Timezone tz{};
+    datatypes::registry::TimePoint t = tz.to_local(n);
+    datatypes::registry::OptionalTimezone opt = std::nullopt;
+    return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
+}
+
+Literal Literal::year() const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(
+                std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTime>().first)}.year()));
+    }
+    return Literal{};
+}
+
 std::string normalize_unicode(std::string_view utf8) {
     return una::norm::to_nfc_utf8(utf8);
 }

@@ -998,6 +998,19 @@ public:
     [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
+     * returns the current time.
+     * Note: will need to be buffered for each query, because each query has only one now.
+     * @return std::chrono::system_clock::now() as xsd:dateTime
+     */
+    [[nodiscard]] static Literal now(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * returns the year part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal year() const;
+
+    /**
      * @return the effective boolean value of this
      */
     [[nodiscard]] util::TriBool ebv() const noexcept;

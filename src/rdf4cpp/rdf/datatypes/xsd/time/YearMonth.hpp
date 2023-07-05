@@ -22,13 +22,19 @@ capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearM
 template<>
 std::string capabilities::Default<xsd_gYearMonth>::to_canonical_string(const cpp_type &value) noexcept;
 
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gYearMonth>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_gYearMonth>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 template<>
 TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t);
@@ -38,8 +44,9 @@ TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month 
 namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct GYearMonth : registry::LiteralDatatypeImpl<registry::xsd_gYearMonth,
-                                               registry::capabilities::Comparable,
-                                               registry::capabilities::FixedId> {};
+                                                  registry::capabilities::Comparable,
+                                                  registry::capabilities::FixedId,
+                                                  registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

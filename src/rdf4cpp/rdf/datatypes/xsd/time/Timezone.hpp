@@ -51,7 +51,7 @@ public:
     }
 
     static constexpr std::pair<std::optional<Timezone>, std::string_view> try_parse(std::string_view s) {
-        auto p = s.find_first_of(begin_tokens);
+        auto p = s.find_first_of(begin_tokens, 1);
         if (p == 0 || p == std::string::npos)
             return std::pair<std::optional<Timezone>, std::string_view>{std::nullopt, s};
         auto pre = s.substr(0, p);
@@ -118,7 +118,7 @@ template<class ResultType, class ParsingType, char Separator>
 ResultType parse_date_time_fragment(std::string_view &s) {
     std::string_view res_s = s;
     if constexpr (Separator != '\0') {
-        auto p = s.find(Separator);
+        auto p = s.find(Separator, 1);
         if (p == std::string::npos)
             throw std::invalid_argument(std::format("missing {}", Separator));
         res_s = s.substr(0, p);
@@ -212,6 +212,60 @@ public:
                 return a_tp <=> b_tp;
             }
         }
+    }
+};
+template<std::unsigned_integral T>
+constexpr T numberOfBits(T x) {
+    return x < 2 ? x : 1 + numberOfBits(x >> 1);
+}
+template<class TimeType>
+    requires(sizeof(TimeType) <= 2)
+struct InliningHelper {
+    uint16_t tz_offset;
+    TimeType time_value;
+
+    static constexpr int tz_shift = Timezone::max_value().offset.count() + 1;
+    static_assert(numberOfBits(static_cast<unsigned int>(Timezone::max_value().offset.count() + tz_shift)) == 11);
+
+    static constexpr uint16_t encode_tz(OptionalTimezone tz) noexcept {
+        if (tz.has_value())
+            return static_cast<uint16_t>(tz->offset.count() + tz_shift);
+        else
+            return 0;
+    }
+
+    constexpr InliningHelper(TimeType t, OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
+    }
+
+    [[nodiscard]] constexpr OptionalTimezone decode_tz() const noexcept {
+        if (tz_offset == 0)
+            return std::nullopt;
+        else
+            return Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
+    }
+};
+struct __attribute__((__packed__)) InliningHelperPacked {
+    uint16_t tz_offset:11;
+    uint32_t time_value:storage::node::identifier::LiteralID::width-11;
+
+    static constexpr int tz_shift = Timezone::max_value().offset.count() + 1;
+    static_assert(numberOfBits(static_cast<unsigned int>(Timezone::max_value().offset.count() + tz_shift)) == 11);
+
+    static constexpr uint16_t encode_tz(OptionalTimezone tz) noexcept {
+        if (tz.has_value())
+            return static_cast<uint16_t>(tz->offset.count() + tz_shift);
+        else
+            return 0;
+    }
+
+    constexpr InliningHelperPacked(uint32_t t, OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
+    }
+
+    [[nodiscard]] OptionalTimezone decode_tz() const noexcept {
+        if (tz_offset == 0)
+            return std::nullopt;
+        else
+            return Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
     }
 };
 

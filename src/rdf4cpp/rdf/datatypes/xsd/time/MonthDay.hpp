@@ -26,9 +26,17 @@ std::string capabilities::Default<xsd_gMonthDay>::to_canonical_string(const cpp_
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gMonthDay>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_gMonthDay>::cpp_type capabilities::Inlineable<xsd_gMonthDay>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
+
+
 extern template struct LiteralDatatypeImpl<xsd_gMonthDay,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 template<>
 TimePoint to_point_on_timeline<std::chrono::month_day>(std::chrono::month_day t);
@@ -38,8 +46,9 @@ TimePoint to_point_on_timeline<std::chrono::month_day>(std::chrono::month_day t)
 namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct GMonthDay : registry::LiteralDatatypeImpl<registry::xsd_gMonthDay,
-                                            registry::capabilities::Comparable,
-                                            registry::capabilities::FixedId> {};
+                                                 registry::capabilities::Comparable,
+                                                 registry::capabilities::FixedId,
+                                                 registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
