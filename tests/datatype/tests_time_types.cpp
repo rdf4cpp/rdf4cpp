@@ -437,4 +437,10 @@ TEST_CASE("datatype yearMonthDuration") {
     basic_test<datatypes::xsd::YearMonthDuration>("P1Y", "P1M", std::partial_ordering::greater);
 }
 
+TEST_CASE("cross compare") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-5") < Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+}
+
 #pragma clang diagnostic pop
