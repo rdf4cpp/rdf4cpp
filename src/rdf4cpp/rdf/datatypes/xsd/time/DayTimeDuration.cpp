@@ -8,39 +8,30 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_dayTimeDuration>::from_string(std::string_view s) {
     bool negative = false;
-    if (s[0] == '-') {
+    if (!s.empty() && s[0] == '-') {
         negative = true;
         s = s.substr(1);
     }
-    if (s[0] != 'P')
+    if (s.empty() || s[0] != 'P')
         throw std::invalid_argument{"duration missing P"};
     s = s.substr(1);
-    auto years = parse_duration_fragment<std::chrono::years, uint64_t, 'Y'>(s);
-    auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M'>(s);
-    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D'>(s);
-    if (years.has_value())
-        throw std::invalid_argument{"DayTimeDuration with years"};
-    if (months.has_value())
-        throw std::invalid_argument{"DayTimeDuration with months"};
+    auto p = s.find('T');
+    auto date = s.substr(0, p);
+    auto time = p == std::string::npos ? std::string_view{""} : s.substr(p);
+    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D'>(date);
+    if (!time.empty()) {
+        if (time[0] != 'T')
+            throw std::invalid_argument{"duration missing T"};
+        time = time.substr(1);
+    }
+    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H'>(time);
+    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M'>(time);
+    auto seconds = parse_duration_milliseconds(time);
+
     std::chrono::milliseconds ms{};
     if (days.has_value())
         ms += *days;
-    if (s.empty()) {
-        if (!days.has_value()) {
-            throw std::invalid_argument{"duration without any fields"};
-        }
-        if (negative) {
-            ms = -ms;
-        }
-        return ms;
-    }
-    if (s[0] != 'T')
-        throw std::invalid_argument{"duration missing T"};
-    s = s.substr(1);
-    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H'>(s);
-    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M'>(s);
-    auto seconds = parse_duration_fragment<std::chrono::seconds, uint64_t, 'S'>(s);
-    if (!s.empty())
+    if (!date.empty() || !time.empty())
         throw std::invalid_argument{"expected end of string"};
     if (!days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
         throw std::invalid_argument{"duration without any fields"};
@@ -60,7 +51,7 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
 template<>
 std::string capabilities::Default<xsd_dayTimeDuration>::to_canonical_string(const cpp_type &value) noexcept {
     if (value.count() == 0)
-        return "PT0S";
+        return "PT0.000S";
     std::stringstream str{};
     std::chrono::milliseconds ms_rem = value;
     if (ms_rem.count() < 0) {
@@ -82,12 +73,22 @@ std::string capabilities::Default<xsd_dayTimeDuration>::to_canonical_string(cons
         if (minutes.count() != 0)
             str << minutes.count() << 'M';
         ms_rem -= minutes;
-        auto seconds = std::chrono::floor<std::chrono::seconds>(ms_rem);
-        if (seconds.count() != 0)
-            str << seconds.count() << 'S';
+        if (ms_rem.count() != 0)
+            str << std::format("{:%S}S", ms_rem);
     }
 
     return str.str();
+}
+
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dayTimeDuration>::try_into_inlined(cpp_type const &value) noexcept {
+    int64_t v = value.count();
+    return util::try_pack_integral<storage::node::identifier::LiteralID>(v);
+}
+
+template<>
+capabilities::Inlineable<xsd_dayTimeDuration>::cpp_type capabilities::Inlineable<xsd_dayTimeDuration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    return std::chrono::milliseconds{util::unpack_integral<int64_t>(inlined)};
 }
 
 template<>
@@ -97,5 +98,6 @@ std::partial_ordering capabilities::Comparable<xsd_dayTimeDuration>::compare(cpp
 
 template struct LiteralDatatypeImpl<xsd_dayTimeDuration,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -55,11 +55,23 @@ std::string capabilities::Default<xsd_yearMonthDuration>::to_canonical_string(co
 }
 
 template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_yearMonthDuration>::try_into_inlined(cpp_type const &value) noexcept {
+    int64_t v = value.count();
+    return util::try_pack_integral<storage::node::identifier::LiteralID>(v);
+}
+
+template<>
+capabilities::Inlineable<xsd_yearMonthDuration>::cpp_type capabilities::Inlineable<xsd_yearMonthDuration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    return std::chrono::months{util::unpack_integral<int64_t>(inlined)};
+}
+
+template<>
 std::partial_ordering capabilities::Comparable<xsd_yearMonthDuration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return lhs <=> rhs;
 }
 
 template struct LiteralDatatypeImpl<xsd_yearMonthDuration,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

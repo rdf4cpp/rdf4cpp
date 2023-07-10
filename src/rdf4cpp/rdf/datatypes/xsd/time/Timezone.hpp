@@ -129,7 +129,7 @@ ResultType parse_date_time_fragment(std::string_view &s) {
 
 template<class ResultType, class ParsingType, char Separator>
 std::optional<ResultType> parse_duration_fragment(std::string_view &s) {
-    if (s.empty() || s[0] == 'T')
+    if (s.empty())
         return std::nullopt;
     std::string_view res_s = s;
     auto p = s.find(Separator);
@@ -153,6 +153,17 @@ inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
     }
     std::chrono::seconds sec{util::from_chars<unsigned int>(s)};
     return sec + ms;
+}
+inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std::string_view &s) {
+    if (s.empty())
+        return std::nullopt;
+    std::string_view res_s = s;
+    auto p = s.find('S');
+    if (p == std::string::npos)
+        return std::nullopt;
+    res_s = s.substr(0, p);
+    s = s.substr(p + 1);
+    return parse_milliseconds(res_s);
 }
 
 constexpr std::chrono::year_month_day TimePointReplacementDate = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
@@ -245,8 +256,12 @@ struct InliningHelper {
     }
 };
 struct __attribute__((__packed__)) InliningHelperPacked {
+    static constexpr std::size_t tv_width = storage::node::identifier::LiteralID::width-11;
+    static constexpr std::size_t width = tv_width+11;
+
     uint16_t tz_offset:11;
-    uint32_t time_value:storage::node::identifier::LiteralID::width-11;
+    uint32_t time_value:tv_width;
+    uint32_t padding:64-width = 0;
 
     static constexpr int tz_shift = Timezone::max_value().offset.count() + 1;
     static_assert(numberOfBits(static_cast<unsigned int>(Timezone::max_value().offset.count() + tz_shift)) == 11);

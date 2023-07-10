@@ -8,16 +8,28 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration>::from_string(std::string_view s) {
     bool negative = false;
-    if (s[0] == '-') {
+    if (!s.empty() && s[0] == '-') {
         negative = true;
         s = s.substr(1);
     }
-    if (s[0] != 'P')
+    if (s.empty() || s[0] != 'P')
         throw std::invalid_argument{"duration missing P"};
     s = s.substr(1);
-    auto years = parse_duration_fragment<std::chrono::years, uint64_t, 'Y'>(s);
-    auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M'>(s);
-    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D'>(s);
+    auto p = s.find('T');
+    auto date = s.substr(0, p);
+    auto time = p == std::string::npos ? std::string_view{""} : s.substr(p);
+    auto years = parse_duration_fragment<std::chrono::years, uint64_t, 'Y'>(date);
+    auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M'>(date);
+    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D'>(date);
+    if (!time.empty()) {
+        if (time[0] != 'T')
+            throw std::invalid_argument{"duration missing T"};
+        time = time.substr(1);
+    }
+    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H'>(time);
+    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M'>(time);
+    auto seconds = parse_duration_milliseconds(time);
+
     std::chrono::months m{};
     if (years.has_value())
         m += *years;
@@ -26,23 +38,7 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
     std::chrono::milliseconds ms{};
     if (days.has_value())
         ms += *days;
-    if (s.empty()) {
-        if (!years.has_value() && !months.has_value() && !days.has_value()) {
-            throw std::invalid_argument{"duration without any fields"};
-        }
-        if (negative) {
-            m = -m;
-            ms = -ms;
-        }
-        return std::make_pair(m, ms);
-    }
-    if (s[0] != 'T')
-        throw std::invalid_argument{"duration missing T"};
-    s = s.substr(1);
-    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H'>(s);
-    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M'>(s);
-    auto seconds = parse_duration_fragment<std::chrono::seconds, uint64_t, 'S'>(s);
-    if (!s.empty())
+    if (!date.empty() || !time.empty())
         throw std::invalid_argument{"expected end of string"};
     if (!years.has_value() && !months.has_value() && !days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
         throw std::invalid_argument{"duration without any fields"};
@@ -63,7 +59,7 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
 template<>
 std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_type &value) noexcept {
     if (value.first.count() == 0 && value.second.count() == 0)
-        return "PT0S";
+        return "PT0.000S";
     std::stringstream str{};
     std::chrono::months m_rem = value.first;
     std::chrono::milliseconds ms_rem = value.second;
@@ -93,9 +89,8 @@ std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_t
         if (minutes.count() != 0)
             str << minutes.count() << 'M';
         ms_rem -= minutes;
-        auto seconds = std::chrono::floor<std::chrono::seconds>(ms_rem);
-        if (seconds.count() != 0)
-            str << seconds.count() << 'S';
+        if (ms_rem.count() != 0)
+            str << std::format("{:%S}S", ms_rem);
     }
 
     return str.str();

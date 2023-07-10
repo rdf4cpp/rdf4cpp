@@ -210,8 +210,23 @@ TEST_CASE("datatype date") {
     basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2041} / 6 / 1, tz), "2042-05-01", std::partial_ordering::less);
     basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 5 / 1, datatypes::registry::Timezone{std::chrono::hours{1}}), "2042-05-01+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year{2042} / 5 / 1, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "2042-05-01-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year::min() / 1 / 1, datatypes::registry::Timezone{std::chrono::hours{-14}}), "-32767-01-01-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year::max() / 12 / 31, datatypes::registry::Timezone{std::chrono::hours{14}}), "32767-12-31+14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year::min() / 1 / 1, tz), "-32767-01-01", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Date>(std::make_pair(std::chrono::year::max() / 12 / 31, tz), "32767-12-31", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Date>("2042-05-01+1:00", "2042-05-01Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::Date>("2042-05-01-1:00", "2042-05-01Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-05-1").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-12-31").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::Date>("2042-12-31+14:00").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::Date>("2042-12-31-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-01-00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-00-01"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-12-32"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-13-30"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-02-30"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype time") {
@@ -227,8 +242,23 @@ TEST_CASE("datatype time") {
     basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{42}, tz), "00:50:00.000", std::partial_ordering::less);
     basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50}, datatypes::registry::Timezone{std::chrono::hours{1}}), "00:50:00.000+1:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::minutes{50}, datatypes::registry::Timezone{std::chrono::minutes{-65}}), "00:50:00.000-1:05", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::hours{0}, datatypes::registry::Timezone{std::chrono::hours{-14}}), "00:00:00.000-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Time>(std::make_pair(std::chrono::hours{24}, datatypes::registry::Timezone{std::chrono::hours{14}}), "24:00:00.000+14:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Time>("00:50:00+1:00", "00:50:00Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::Time>("00:50:00-1:00", "00:50:00Z", std::partial_ordering::greater);
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("00:00:00.000").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("24:00:00.000").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("24:00:00.000+14:00").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("00:00:00.000-14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("-10:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("25:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:-1:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:70:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:-1.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:70.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:5.-100"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
 TEST_CASE("datatype dateTime") {
@@ -266,6 +296,31 @@ TEST_CASE("datatype dateTime") {
     basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08Z", "2041-05-05T13:40:08", std::partial_ordering::greater);
     basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2043-05-05T13:40:08Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::DateTime>("2042-05-05T13:40:08", "2041-05-05T13:40:08Z", std::partial_ordering::greater);
+    basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::construct(std::chrono::year::min() / 1 / 1, std::chrono::hours{0}), datatypes::registry::Timezone{std::chrono::hours{-14}}), "-32767-01-01T00:00:00.000-14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::construct( std::chrono::year::max() / 12 / 31,std::chrono::hours{24} - std::chrono::milliseconds{1}), datatypes::registry::Timezone{std::chrono::hours{14}}), "32767-12-31T23:59:59.999+14:00", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::construct(std::chrono::year::min() / 1 / 1, std::chrono::hours{0}), tz), "-32767-01-01T00:00:00.000", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::construct( std::chrono::year::max() / 12 / 31,std::chrono::hours{24} - std::chrono::milliseconds{1}), tz), "32767-12-31T23:59:59.999", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DateTime>(std::make_pair(datatypes::registry::construct( std::chrono::year::max() / 12 / 31,std::chrono::hours{24} - std::chrono::seconds{1}), tz), "32767-12-31T23:59:59.000", std::partial_ordering::equivalent);
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("-32767-01-01T00:00:00.000").is_inlined());
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("32767-12-31T23:59:59.000").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::DateTime>("-32767-01-01T00:00:00.000-14:00").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::DateTime>("32767-12-31T23:59:59.999+14:00").is_inlined());
+    Literal a{};
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T-10:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T25:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:-1:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:70:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:-1.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:70.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:5.-100"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-01-00T00:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-00-01T00:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-12-32T00:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-13-30T00:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-02-30T00:00:00.000"), std::invalid_argument);
+    CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-05-06T00:00:00.000") == Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T24:00:00.000"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T24:00:00.000").lexical_form() == "2042-05-06T00:00:00.000");
 }
 
 TEST_CASE("datatype dateTimeStamp") {
@@ -305,15 +360,16 @@ TEST_CASE("datatype duration") {
 
     CHECK(std::string(datatypes::xsd::Duration::identifier) == "http://www.w3.org/2001/XMLSchema#duration");
 
-    basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::minutes{0}), "PT0S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::minutes{0}), "PT0.000S", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::minutes{1}), "PT1M", std::partial_ordering::equivalent);
-    basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::seconds{1}), "PT1S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::seconds{1}), "PT01.000S", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::hours{1}), "PT1H", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{0}, std::chrono::days{1}), "P1D", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{1}, std::chrono::minutes{0}), "P1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::years{1}, std::chrono::minutes{0}), "P1Y", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{1}, std::chrono::minutes{1}), "P1MT1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{-1}, std::chrono::minutes{-1}), "-P1MT1M", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::Duration>(std::make_pair(std::chrono::months{14}, std::chrono::days{3}+std::chrono::hours{4}+std::chrono::minutes{5}+std::chrono::seconds{6}), "P1Y2M3DT4H5M06.000S", std::partial_ordering::equivalent);
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>(""), std::invalid_argument);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P"), std::invalid_argument);
@@ -333,12 +389,15 @@ TEST_CASE("datatype dayTimeDuration") {
 
     CHECK(std::string(datatypes::xsd::DayTimeDuration::identifier) == "http://www.w3.org/2001/XMLSchema#dayTimeDuration");
 
-    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::minutes{0}, "PT0S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::minutes{0}, "PT0.000S", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::minutes{1}, "PT1M", std::partial_ordering::equivalent);
-    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::seconds{1}, "PT1S", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::seconds{1}, "PT01.000S", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::hours{1}, "PT1H", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{1}, "P1D", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{1}+std::chrono::hours{2}+std::chrono::minutes{3}+std::chrono::seconds{4}, "P1DT2H3M04.000S", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{-1}, "-P1D", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds::max(), "P106751991167DT7H12M55.807S", std::partial_ordering::equivalent);
+    CHECK(Literal::make_typed<datatypes::xsd::DayTimeDuration>("P500DT42M").is_inlined());
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>(""), std::invalid_argument);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P"), std::invalid_argument);
@@ -362,6 +421,8 @@ TEST_CASE("datatype yearMonthDuration") {
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1}, "P1Y", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{1} + std::chrono::months{1}, "P1Y1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{-1} + std::chrono::months{-1}, "-P1Y1M", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::months::max(), "P768614336404564650Y7M", std::partial_ordering::equivalent);
+    CHECK(Literal::make_typed<datatypes::xsd::YearMonthDuration>("P500Y30M").is_inlined());
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>(""), std::invalid_argument);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P"), std::invalid_argument);

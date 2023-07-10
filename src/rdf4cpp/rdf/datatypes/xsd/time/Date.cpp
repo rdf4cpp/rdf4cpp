@@ -30,6 +30,21 @@ std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const
     return TimeComparer<std::chrono::year_month_day>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
+static_assert(sizeof(std::chrono::year_month_day) * 8 <= storage::node::identifier::LiteralID::width);
+
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_date>::try_into_inlined(cpp_type const &value) noexcept {
+    if (value.second.has_value())
+        return std::nullopt;
+    return util::pack<storage::node::identifier::LiteralID>(value.first);
+}
+
+template<>
+capabilities::Inlineable<xsd_date>::cpp_type capabilities::Inlineable<xsd_date>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    auto i = util::unpack<std::chrono::year_month_day>(inlined);
+    return std::make_pair(i, std::nullopt);
+}
+
 template<>
 TimePoint to_point_on_timeline<std::chrono::year_month_day>(std::chrono::year_month_day t) {
     return construct(t, TimePointReplacementTimeOfDay);
@@ -37,5 +52,6 @@ TimePoint to_point_on_timeline<std::chrono::year_month_day>(std::chrono::year_mo
 
 template struct LiteralDatatypeImpl<xsd_date,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

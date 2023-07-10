@@ -22,13 +22,19 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
 template<>
 std::string capabilities::Default<xsd_yearMonthDuration>::to_canonical_string(const cpp_type &value) noexcept;
 
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_yearMonthDuration>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_yearMonthDuration>::cpp_type capabilities::Inlineable<xsd_yearMonthDuration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_yearMonthDuration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_yearMonthDuration,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -36,7 +42,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct YearMonthDuration : registry::LiteralDatatypeImpl<registry::xsd_yearMonthDuration,
                                                          registry::capabilities::Comparable,
-                                                         registry::capabilities::FixedId> {};
+                                                         registry::capabilities::FixedId,
+                                                         registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
