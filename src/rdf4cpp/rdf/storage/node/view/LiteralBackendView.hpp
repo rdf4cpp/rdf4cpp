@@ -15,6 +15,8 @@ struct LexicalFormLiteralBackendView {
     identifier::NodeID datatype_id;
     std::string_view lexical_form;
     std::string_view language_tag;
+    // works as a cache. it will be assigned a boolean value, only if the to_string() function is called
+    mutable std::optional<bool> to_be_escaped = std::nullopt;
 
     bool operator==(LexicalFormLiteralBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;

@@ -3,6 +3,7 @@
 #include <random>
 #include <ranges>
 #include <sstream>
+#include <execution>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -543,9 +544,21 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
 
 Literal::operator std::string() const noexcept {
     // TODO: escape non-standard chars correctly
-    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) noexcept {
+    auto const escaped_quoted_lexical_into_stream = [this](std::ostream &out, std::string_view const lexical) noexcept {
+        // at the moment, this function is called only for literals with a LexicalFormLiteralBackendView
+        auto &to_be_escaped = this->handle_.literal_backend().get_lexical().to_be_escaped;
         // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
-
+        if (not to_be_escaped.has_value()) {
+            if (std::find_if(std::execution::unseq, lexical.begin(), lexical.end(), [](char c) { return c == '\\' or c == '\n' or c == '\r' or c == '"'; }) == lexical.end()) {
+                to_be_escaped = false;
+            } else {
+                to_be_escaped = true;
+            }
+        }
+        if (not to_be_escaped.value()) {
+            out << "\"" << lexical << "\"";
+            return;
+        }
         out << "\"";
         for (auto const character : lexical) {
             switch (character) {
@@ -565,10 +578,10 @@ Literal::operator std::string() const noexcept {
                     out << R"(\")";
                     break;
                 }
-                [[likely]] default : {
-                    out << character;
-                    break;
-                }
+                    [[likely]] default : {
+                        out << character;
+                        break;
+                    }
             }
         }
         out << "\"";
@@ -584,7 +597,9 @@ Literal::operator std::string() const noexcept {
             return static_cast<std::string>(this->lang_tagged_get_de_inlined());
         }
 
-        quoted_lexical_into_stream(oss, this->lexical_form());
+        // Currently, inlined literals do not have to undergo the escaping process
+        // The dedicated to_string() functions of the datatype should be responsible for escaping characters, if necessary
+        oss << "\"" << this->lexical_form() << "\"";
 
         // rdf:langString is not inlined, therefore can only have datatype not lang tag
         auto const &dtype_iri = NodeStorage::find_iri_backend_view(storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
@@ -593,7 +608,7 @@ Literal::operator std::string() const noexcept {
     } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->value<datatypes::rdf::LangString>();
 
-        quoted_lexical_into_stream(oss, value.lexical_form);
+        escaped_quoted_lexical_into_stream(oss, value.lexical_form);
         oss << '@' << value.language_tag;
     } else {
         handle_.literal_backend().visit(
@@ -601,7 +616,7 @@ Literal::operator std::string() const noexcept {
                     auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  handle_.node_storage_id()});
-                    quoted_lexical_into_stream(oss, lexical_backend.lexical_form);
+                    escaped_quoted_lexical_into_stream(oss, lexical_backend.lexical_form);
                     oss << "^^" << dtype_iri.n_string();
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
@@ -611,7 +626,9 @@ Literal::operator std::string() const noexcept {
                     auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(this->datatype_id());
                     assert(to_string != nullptr);
 
-                    quoted_lexical_into_stream(oss, to_string(value_backend.value));
+                    // Currently, literals with a ValueLiteralBackendView do not have to undergo the escaping process
+                    // The dedicated to_string() functions of the datatype should be responsible for escaping characters, if necessary
+                    oss << "\"" << to_string(value_backend.value) << "\"";
                     oss << "^^" << dtype_iri.n_string();
                 });
     }
