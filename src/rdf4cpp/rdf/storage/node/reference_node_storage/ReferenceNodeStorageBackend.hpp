@@ -79,10 +79,10 @@ public:
     [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept override;
     [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept override;
 
-    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const noexcept override;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const noexcept override;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const noexcept override;
+    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const noexcept override;
 
     bool erase_iri(identifier::NodeID id) noexcept override;
     bool erase_literal(identifier::NodeID id) noexcept override;

@@ -248,16 +248,18 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(view::VariableBackendVie
 }
 
 template<typename NodeTypeStorage>
-static typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) {
+static typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) noexcept {
     std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
-    return static_cast<typename NodeTypeStorage::BackendView>(*storage.id2data.at(id));
+    auto found = storage.id2data.find(id);
+    assert(found != storage.id2data.end());
+    return static_cast<typename NodeTypeStorage::BackendView>(*(found->second));
 }
 
-view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const {
+view::IRIBackendView ReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const noexcept {
     return find_backend_view(iri_storage_, id);
 }
 
-view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID const id) const {
+view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID const id) const noexcept {
     if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
         return visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) {
             return find_backend_view(storage, id);
@@ -267,11 +269,11 @@ view::LiteralBackendView ReferenceNodeStorageBackend::find_literal_backend_view(
     return find_backend_view(fallback_literal_storage_, id);
 }
 
-view::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID const id) const {
+view::BNodeBackendView ReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID const id) const noexcept {
     return find_backend_view(bnode_storage_, id);
 }
 
-view::VariableBackendView ReferenceNodeStorageBackend::find_variable_backend_view(identifier::NodeID const id) const {
+view::VariableBackendView ReferenceNodeStorageBackend::find_variable_backend_view(identifier::NodeID const id) const noexcept {
     return find_backend_view(variable_storage_, id);
 }
 

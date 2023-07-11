@@ -291,28 +291,28 @@ public:
      * @param id NodeID of the requested resource
      * @return view::IRIBackendView describing the requested resource.
      */
-    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const noexcept;
 
     /**
      * Lookup the view::LiteralBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::LiteralBackendView describing the requested resource.
      */
-    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const noexcept;
 
     /**
      * Lookup the view::BNodeBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::BNodeBackendView describing the requested resource.
      */
-    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const noexcept;
 
     /**
      * Lookup the view::VariableBackendView for the given identifier::NodeID. If it doesn't exist, the method will throw.
      * @param id NodeID of the requested resource
      * @return view::VariableBackendView describing the requested resource.
      */
-    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const noexcept;
 
     /**
      * Lookup the view::IRIBackendView for the given identifier::NodeBackendHandle.
@@ -325,7 +325,7 @@ public:
      * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
      *      it is undefined from which node storage the node will actually be fetched, if any.
      */
-    [[nodiscard]] static view::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::IRIBackendView find_iri_backend_view(identifier::NodeBackendHandle handle) noexcept;
 
     /**
      * Lookup the view::LiteralBackendView for the given identifier::NodeBackendHandle. If it doesn't exist or view.node_storage_id() doesn't exist, the method will throw.
@@ -336,7 +336,7 @@ public:
      * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
      *      it is undefined from which node storage the node will actually be fetched, if any.
      */
-    [[nodiscard]] static view::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::LiteralBackendView find_literal_backend_view(identifier::NodeBackendHandle handle) noexcept;
 
     /**
      * Lookup the view::BNodeBackendView for the given identifier::NodeBackendHandle.
@@ -349,7 +349,7 @@ public:
      * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
      *      it is undefined from which node storage the node will actually be fetched, if any.
      */
-    [[nodiscard]] static view::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::BNodeBackendView find_bnode_backend_view(identifier::NodeBackendHandle handle) noexcept;
 
     /**
      * Lookup the view::VariableBackendView for the given identifier::NodeBackendHandle.
@@ -362,7 +362,7 @@ public:
      * @safety If there is currently no NodeStorage keeping the backend at handle.node_backend_id() alive
      *      it is undefined from which node storage the node will actually be fetched, if any.
      */
-    [[nodiscard]] static view::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle);
+    [[nodiscard]] static view::VariableBackendView find_variable_backend_view(identifier::NodeBackendHandle handle) noexcept;
 
     /**
      * Erases the iri backend for the given identifier::NodeID.

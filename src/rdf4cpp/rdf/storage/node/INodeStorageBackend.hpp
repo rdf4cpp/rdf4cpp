@@ -93,25 +93,25 @@ public:
      * @param id identifier of the requested Node
      * @return view::IRIBackendView describing the requested Node
      */
-    [[nodiscard]] virtual view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const noexcept = 0;
     /**
      * Backend for NodeStorage::find_literal_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::LiteralBackendView describing the requested Node
      */
-    [[nodiscard]] virtual view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const noexcept = 0;
     /**
      * Backend for NodeStorage::find_bnode_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::BNodeBackendView describing the requested Node
      */
-    [[nodiscard]] virtual view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const noexcept = 0;
     /**
      * Backend for NodeStorage::find_variable_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::VariableBackendView describing the requested Node
      */
-    [[nodiscard]] virtual view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const = 0;
+    [[nodiscard]] virtual view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const noexcept = 0;
 
     /**
      * Backend for NodeStorage::erase_iri(identifier::NodeID id) const. Must throw if not implemented.

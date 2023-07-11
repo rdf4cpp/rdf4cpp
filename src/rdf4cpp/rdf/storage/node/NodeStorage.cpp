@@ -270,31 +270,31 @@ identifier::NodeID NodeStorage::find_id(const view::LiteralBackendView &view) co
 identifier::NodeID NodeStorage::find_id(const view::VariableBackendView &view) const noexcept {
     return this->cached_backend_ptr->find_id(view);
 }
-view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeID id) const {
+view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeID id) const noexcept {
     return this->cached_backend_ptr->find_iri_backend_view(id);
 }
-view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeID id) const {
+view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeID id) const noexcept {
     return this->cached_backend_ptr->find_literal_backend_view(id);
 }
-view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeID id) const {
+view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeID id) const noexcept {
     return this->cached_backend_ptr->find_bnode_backend_view(id);
 }
-view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeID id) const {
+view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeID id) const noexcept {
     return this->cached_backend_ptr->find_variable_backend_view(id);
 }
-view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeBackendHandle handle) {
+view::IRIBackendView NodeStorage::find_iri_backend_view(identifier::NodeBackendHandle handle) noexcept {
     auto ns = lookup_instance(handle.node_storage_id());
     return ns.value().find_iri_backend_view(handle.node_id());
 }
-view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeBackendHandle handle) {
+view::LiteralBackendView NodeStorage::find_literal_backend_view(identifier::NodeBackendHandle handle) noexcept {
     auto ns = lookup_instance(handle.node_storage_id());
     return ns.value().find_literal_backend_view(handle.node_id());
 }
-view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeBackendHandle handle) {
+view::BNodeBackendView NodeStorage::find_bnode_backend_view(identifier::NodeBackendHandle handle) noexcept {
     auto ns = lookup_instance(handle.node_storage_id());
     return ns.value().find_bnode_backend_view(handle.node_id());
 }
-view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeBackendHandle handle) {
+view::VariableBackendView NodeStorage::find_variable_backend_view(identifier::NodeBackendHandle handle) noexcept {
     auto ns = lookup_instance(handle.node_storage_id());
     return ns.value().find_variable_backend_view(handle.node_id());
 }
