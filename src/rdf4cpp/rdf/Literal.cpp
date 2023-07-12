@@ -415,8 +415,7 @@ IRI Literal::datatype() const noexcept {
         return IRI{storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_)};
     }
 
-    auto const lexical = handle_.literal_backend().get_lexical();
-    return IRI{NodeBackendHandle{lexical.datatype_id,
+    return IRI{NodeBackendHandle{handle_.literal_backend().get_lexical().datatype_id,
                                  storage::node::identifier::RDFNodeType::IRI,
                                  handle_.node_storage_id()}};
 }
