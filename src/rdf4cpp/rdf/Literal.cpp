@@ -1742,12 +1742,144 @@ Literal Literal::now(NodeStorage &node_storage) {
     return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
 }
 
-Literal Literal::year() const {
+Literal Literal::year(NodeStorage &node_storage) const {
     if (this->datatype_eq<datatypes::xsd::DateTime>()) {
         return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(
-                std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTime>().first)}.year()));
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTime>().first)}.year()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTimeStamp>().get_local_time())}.year()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Date>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(this->value<datatypes::xsd::Date>().first.year()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GYearMonth>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(this->value<datatypes::xsd::GYearMonth>().first.year()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GYear>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(this->value<datatypes::xsd::GYear>().first), node_storage);
     }
     return Literal{};
+}
+
+Literal Literal::month(NodeStorage &node_storage) const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTime>().first)}.month()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTimeStamp>().get_local_time())}.month()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Date>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::Date>().first.month()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GYearMonth>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::GYearMonth>().first.month()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GMonthDay>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::GMonthDay>().first.month()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GMonth>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::GMonth>().first), node_storage);
+    }
+    return Literal{};
+}
+
+Literal Literal::day(NodeStorage &node_storage) const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTime>().first)}.day()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(
+                                                                               std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(this->value<datatypes::xsd::DateTimeStamp>().get_local_time())}.day()),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Date>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::Date>().first.day()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GMonthDay>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::GMonthDay>().first.day()), node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::GDay>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(this->value<datatypes::xsd::GDay>().first), node_storage);
+    }
+    return Literal{};
+}
+
+Literal Literal::hours(NodeStorage &node_storage) const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        auto data = this->value<datatypes::xsd::DateTime>().first;
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{time}.hours().count(),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        auto data = this->value<datatypes::xsd::DateTimeStamp>().get_local_time();
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{time}.hours().count(),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Time>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{this->value<datatypes::xsd::Time>().first}.hours().count(), node_storage);
+    }
+    return Literal{};
+}
+
+Literal Literal::minutes(NodeStorage &node_storage) const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        auto data = this->value<datatypes::xsd::DateTime>().first;
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{time}.minutes().count(),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        auto data = this->value<datatypes::xsd::DateTimeStamp>().get_local_time();
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{time}.minutes().count(),
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Time>()) {
+        return Literal::make_typed_from_value<datatypes::xsd::Integer>(std::chrono::hh_mm_ss{this->value<datatypes::xsd::Time>().first}.minutes().count(), node_storage);
+    }
+    return Literal{};
+}
+
+Literal Literal::seconds(NodeStorage &node_storage) const {
+    if (this->datatype_eq<datatypes::xsd::DateTime>()) {
+        auto data = this->value<datatypes::xsd::DateTime>().first;
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        auto hms = std::chrono::hh_mm_ss{time};
+        return Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{(hms.seconds() + hms.subseconds()).count(), 3},
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::DateTimeStamp>()) {
+        auto data = this->value<datatypes::xsd::DateTimeStamp>().get_local_time();
+        auto day = std::chrono::floor<std::chrono::days>(data);
+        auto time = (data - day);
+        auto hms = std::chrono::hh_mm_ss{time};
+        return Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{(hms.seconds() + hms.subseconds()).count(), 3},
+                                                                       node_storage);
+    } else if (this->datatype_eq<datatypes::xsd::Time>()) {
+        auto time = this->value<datatypes::xsd::Time>().first;
+        auto hms = std::chrono::hh_mm_ss{time};
+        return Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type{(hms.seconds() + hms.subseconds()).count(), 3}, node_storage);
+    }
+    return Literal{};
+}
+
+Literal Literal::timezone(NodeStorage &node_storage) const {
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return Literal{};
+    auto tz = casted->second;
+    if (tz.has_value())
+        return Literal::make_typed_from_value<datatypes::xsd::DayTimeDuration>(tz->offset, node_storage);
+    return Literal{};
+}
+
+Literal Literal::tz(NodeStorage &node_storage) const {
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return Literal{};
+    auto tz = casted->second;
+    if (tz.has_value())
+        return Literal::make_simple_unchecked(tz->to_canonical_string(), node_storage);
+    return Literal::make_simple_unchecked("", node_storage);
 }
 
 std::string normalize_unicode(std::string_view utf8) {

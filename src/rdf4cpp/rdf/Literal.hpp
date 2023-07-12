@@ -412,6 +412,105 @@ public:
     }
 
     /**
+     * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+     *
+     * @return conversion result
+     */
+    template<datatypes::LiteralDatatype T>
+    requires (!std::same_as<T, datatypes::xsd::String>)
+    std::optional<typename T::cpp_type> cast_to_value() const noexcept {
+        using namespace datatypes::registry;
+        using namespace datatypes::xsd;
+
+        if (this->null()) {
+            return std::nullopt;
+        }
+
+        auto const this_dtid = this->datatype_id();
+        DatatypeIDView const target_dtid = T::datatype_id;
+
+        if (this_dtid == target_dtid) {
+            return this->value<T>();
+        }
+
+        if (this_dtid == String::datatype_id) {
+            // string -> any
+            try {
+                return T::from_string(this->lexical_form());
+            } catch (std::runtime_error const &) {
+                return std::nullopt;
+            }
+        }
+
+        if constexpr (std::same_as<T, Boolean>) {
+            // any -> bool
+            rdf::util::TriBool t = this->ebv();
+            if (t == rdf::util::TriBool::Err)
+                return std::nullopt;
+            else if (t == rdf::util::TriBool::True)
+                return true;
+            else
+                return false;
+        }
+
+        auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+        if (target_e == nullptr) {
+            // target not registered
+            return std::nullopt;
+        }
+
+        if (this_dtid == Boolean::datatype_id && target_e->numeric_ops.has_value()) {
+            // bool -> numeric
+            if (target_e->numeric_ops->is_impl()) {
+                auto value = this->template value<Boolean>() ? target_e->numeric_ops->get_impl().one_value_fptr()
+                                                             : target_e->numeric_ops->get_impl().zero_value_fptr();
+
+                return std::any_cast<typename T::cpp_type>(value);
+            } else {
+                auto const &impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
+                auto const *target_num_impl = DatatypeRegistry::get_numerical_ops(impl_converter.target_type_id);
+                assert(target_num_impl != nullptr);
+
+                // perform conversion as impl numeric type
+                auto const value = this->template value<Boolean>() ? target_num_impl->get_impl().one_value_fptr()
+                                                                   : target_num_impl->get_impl().zero_value_fptr();
+
+                // downcast to target
+                auto target_value = impl_converter.inverted_convert(value);
+
+                if (!target_value.has_value()) {
+                    // not representable as target type
+                    return std::nullopt;
+                }
+
+                return std::any_cast<typename T::cpp_type>(*target_value);
+            }
+        }
+
+        auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+        if (this_e == nullptr) {
+            // this datatype not registered
+            return std::nullopt;
+        }
+
+        if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+            // general cast
+            // TODO: if performance is bad split into separate cases for up-, down- and cross-casting to avoid one set of std::any wrapping and unwrapping for the former 2
+
+            auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
+            auto target_value = common_conversion->inverted_convert_rhs(common_type_value); // downcast to target
+            if (!target_value.has_value()) {
+                // downcast failed
+                return std::nullopt;
+            }
+            return std::any_cast<typename T::cpp_type>(*target_value);
+        }
+
+        // no conversion found
+        return std::nullopt;
+    }
+
+    /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
@@ -1008,7 +1107,49 @@ public:
      * returns the year part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal year() const;
+    [[nodiscard]] Literal year(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the month part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal month(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the day part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal day(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the hours part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal hours(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the minutes part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return xsd::Decimal or null literal
+     */
+    [[nodiscard]] Literal seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return xsd::DayTimeDuration or null literal
+     */
+    [[nodiscard]] Literal timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return simple literal or null literal
+     */
+    [[nodiscard]] Literal tz(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * @return the effective boolean value of this
