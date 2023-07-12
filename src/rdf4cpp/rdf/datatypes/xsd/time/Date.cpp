@@ -59,7 +59,7 @@ capabilities::Subtype<xsd_date>::super_cpp_type<0> capabilities::Subtype<xsd_dat
 template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_date>::cpp_type, DynamicError> capabilities::Subtype<xsd_date>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
-    return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+    return std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(value.first)}, value.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_date,

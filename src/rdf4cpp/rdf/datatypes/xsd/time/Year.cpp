@@ -40,10 +40,23 @@ capabilities::Inlineable<xsd_gYear>::cpp_type capabilities::Inlineable<xsd_gYear
     return std::make_pair(i.time_value, i.decode_tz());
 }
 
+template<>
+template<>
+capabilities::Subtype<xsd_gYear>::super_cpp_type<0> capabilities::Subtype<xsd_gYear>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(value.first / TimePointReplacementDate.month() / TimePointReplacementDate.day(), value.second);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_gYear>::cpp_type, DynamicError> capabilities::Subtype<xsd_gYear>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    return std::make_pair(value.first.year(), value.second);
+}
+
 template struct LiteralDatatypeImpl<xsd_gYear,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 
 
 template<>

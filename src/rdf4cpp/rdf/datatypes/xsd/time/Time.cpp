@@ -57,6 +57,18 @@ std::partial_ordering capabilities::Comparable<xsd_time>::compare(cpp_type const
 }
 
 template<>
+template<>
+capabilities::Subtype<xsd_time>::super_cpp_type<0> capabilities::Subtype<xsd_time>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(construct(TimePointReplacementDate, value.first), value.second);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_time>::cpp_type, DynamicError> capabilities::Subtype<xsd_time>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    return std::make_pair(value.first - std::chrono::floor<std::chrono::days>(value.first), value.second);
+}
+
+template<>
 TimePoint to_point_on_timeline<std::chrono::milliseconds>(std::chrono::milliseconds t) {
     return construct(TimePointReplacementDate, t);
 }
@@ -64,5 +76,6 @@ TimePoint to_point_on_timeline<std::chrono::milliseconds>(std::chrono::milliseco
 template struct LiteralDatatypeImpl<xsd_time,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

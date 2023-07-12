@@ -45,6 +45,18 @@ std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type
 }
 
 template<>
+template<>
+capabilities::Subtype<xsd_gYearMonth>::super_cpp_type<0> capabilities::Subtype<xsd_gYearMonth>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(value.first / std::chrono::last, value.second);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_gYearMonth>::cpp_type, DynamicError> capabilities::Subtype<xsd_gYearMonth>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    return std::make_pair(value.first.year() / value.first.month(), value.second);
+}
+
+template<>
 TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t) {
     return construct(t / std::chrono::last, TimePointReplacementTimeOfDay);
 }
@@ -52,5 +64,6 @@ TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month 
 template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

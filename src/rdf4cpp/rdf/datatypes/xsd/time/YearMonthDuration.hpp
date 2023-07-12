@@ -7,12 +7,17 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/time/Duration.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_yearMonthDuration> {
     using cpp_datatype = std::chrono::months;
+};
+template<>
+struct DatatypeSupertypeMapping<xsd_yearMonthDuration> {
+    using supertype = xsd::Duration;
 };
 
 
@@ -31,10 +36,19 @@ capabilities::Inlineable<xsd_yearMonthDuration>::cpp_type capabilities::Inlineab
 template<>
 std::partial_ordering capabilities::Comparable<xsd_yearMonthDuration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
+template<>
+template<>
+capabilities::Subtype<xsd_yearMonthDuration>::super_cpp_type<0> capabilities::Subtype<xsd_yearMonthDuration>::into_supertype<0>(cpp_type const &value) noexcept;
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_yearMonthDuration>::cpp_type, DynamicError> capabilities::Subtype<xsd_yearMonthDuration>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+
 extern template struct LiteralDatatypeImpl<xsd_yearMonthDuration,
                                            capabilities::Comparable,
                                            capabilities::FixedId,
-                                           capabilities::Inlineable>;
+                                           capabilities::Inlineable,
+                                           capabilities::Subtype>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -43,7 +57,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 struct YearMonthDuration : registry::LiteralDatatypeImpl<registry::xsd_yearMonthDuration,
                                                          registry::capabilities::Comparable,
                                                          registry::capabilities::FixedId,
-                                                         registry::capabilities::Inlineable> {};
+                                                         registry::capabilities::Inlineable,
+                                                         registry::capabilities::Subtype> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

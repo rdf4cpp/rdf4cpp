@@ -44,10 +44,23 @@ capabilities::Inlineable<xsd_gMonth>::cpp_type capabilities::Inlineable<xsd_gMon
     return std::make_pair(i.time_value, i.decode_tz());
 }
 
+template<>
+template<>
+capabilities::Subtype<xsd_gMonth>::super_cpp_type<0> capabilities::Subtype<xsd_gMonth>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(TimePointReplacementDate.year() / value.first / std::chrono::last, value.second);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_gMonth>::cpp_type, DynamicError> capabilities::Subtype<xsd_gMonth>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    return std::make_pair(value.first.month(), value.second);
+}
+
 template struct LiteralDatatypeImpl<xsd_gMonth,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 
 template<>
 TimePoint to_point_on_timeline<std::chrono::month>(std::chrono::month t) {

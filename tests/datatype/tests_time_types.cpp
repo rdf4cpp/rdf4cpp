@@ -441,6 +441,17 @@ TEST_CASE("cross compare") {
     using namespace rdf4cpp::rdf;
 
     CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-5") < Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-5") > Literal::make_typed<datatypes::xsd::GDay>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("5") < Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5") < Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("2043") > Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2043-5") > Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("5-5") < Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("12:0:0") > Literal::make_typed<datatypes::xsd::DateTime>("1972-12-31T10:0:0"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("1972-12-31T12:0:0Z") > Literal::make_typed<datatypes::xsd::DateTime>("1972-12-31T10:0:0Z"));
+
+    CHECK(Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y") < Literal::make_typed<datatypes::xsd::Duration>("P1YT1H"));
+    CHECK(Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1H") < Literal::make_typed<datatypes::xsd::Duration>("P1YT1H"));
 }
 
 #pragma clang diagnostic pop

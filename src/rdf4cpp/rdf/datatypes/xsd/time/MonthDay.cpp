@@ -45,10 +45,23 @@ std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type 
     return TimeComparer<std::chrono::month_day>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
+template<>
+template<>
+capabilities::Subtype<xsd_gMonthDay>::super_cpp_type<0> capabilities::Subtype<xsd_gMonthDay>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(TimePointReplacementDate.year() / value.first, value.second);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_gMonthDay>::cpp_type, DynamicError> capabilities::Subtype<xsd_gMonthDay>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    return std::make_pair(value.first.month() / value.first.day(), value.second);
+}
+
 template struct LiteralDatatypeImpl<xsd_gMonthDay,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 
 template<>
 TimePoint to_point_on_timeline<std::chrono::month_day>(std::chrono::month_day t) {

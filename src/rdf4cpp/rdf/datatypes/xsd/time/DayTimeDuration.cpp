@@ -96,8 +96,25 @@ std::partial_ordering capabilities::Comparable<xsd_dayTimeDuration>::compare(cpp
     return lhs <=> rhs;
 }
 
+template<>
+template<>
+capabilities::Subtype<xsd_dayTimeDuration>::super_cpp_type<0> capabilities::Subtype<xsd_dayTimeDuration>::into_supertype<0>(cpp_type const &value) noexcept {
+    return std::make_pair(std::chrono::months{0}, value);
+}
+
+template<>
+template<>
+nonstd::expected<capabilities::Subtype<xsd_dayTimeDuration>::cpp_type, DynamicError> capabilities::Subtype<xsd_dayTimeDuration>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
+    if (value.first.count() == 0 && value.second.count() == 0)
+        return value.second;
+    if (value.second.count() != 0)
+        return value.second;
+    return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+}
+
 template struct LiteralDatatypeImpl<xsd_dayTimeDuration,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Inlineable>;
+                                    capabilities::Inlineable,
+                                    capabilities::Subtype>;
 }  // namespace rdf4cpp::rdf::datatypes::registry
