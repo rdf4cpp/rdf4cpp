@@ -1,6 +1,6 @@
 #include "VariableBackendView.hpp"
 
-#include "rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp"
+#include <dice/hash.hpp>
 
 #include <array>
 
@@ -17,9 +17,8 @@ size_t VariableBackendView::hash() const noexcept {
 }  // namespace rdf4cpp::rdf::storage::node::view
 
 size_t std::hash<rdf4cpp::rdf::storage::node::view::VariableBackendView>::operator()(const rdf4cpp::rdf::storage::node::view::VariableBackendView &x) const noexcept {
-    using namespace rdf4cpp::rdf::storage::util;
-    return robin_hood::hash<std::array<size_t, 2>>()(
+    return dice::hash::DiceHashwyhash<std::array<size_t, 2>>()(
             std::array<size_t, 2>{
                     x.is_anonymous,
-                    robin_hood::hash<std::string_view>()(x.name)});
+                    dice::hash::DiceHashwyhash<std::string_view>()(x.name)});
 }

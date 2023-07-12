@@ -33,6 +33,7 @@ class Recipe(ConanFile):
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
         self.requires("uni-algo/0.7.1")
+        self.requires("dice-hash/0.4.3")
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")

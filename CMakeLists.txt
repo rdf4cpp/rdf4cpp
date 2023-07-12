@@ -22,6 +22,7 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
+find_package(dice-hash REQUIRED)
 
 include(FetchContent)
 
@@ -201,6 +202,7 @@ target_link_libraries(rdf4cpp
         re2::re2
         OpenSSL::Crypto
         uni-algo::uni-algo
+        dice-hash::dice-hash
         )
 
 set_target_properties(rdf4cpp PROPERTIES
