@@ -7,33 +7,18 @@
 namespace rdf4cpp::rdf::storage::node::identifier {
 
 struct __attribute__((__packed__)) NodeBackendHandleImpl {
-    union __attribute__((__packed__)) {
-        uint64_t raw_{};
-        struct __attribute__((__packed__)) {
-            NodeID node_id_;
-            RDFNodeType type_ : 2;
-            NodeStorageID::underlying_type storage_id_ : NodeStorageID::width;
-            uint8_t inlined : 1;
-            uint8_t free_tagging_bits : 3;
-        } fields_;
-    };
-
-    constexpr explicit NodeBackendHandleImpl(size_t raw) noexcept : raw_{raw} {
-    }
-
-    constexpr NodeBackendHandleImpl(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept : fields_{.node_id_ = node_id,
-                                                                                                                                                                 .type_ = node_type,
-                                                                                                                                                                 .storage_id_ = node_storage_id.value,
-                                                                                                                                                                 .inlined = inlined,
-                                                                                                                                                                 .free_tagging_bits = tagging_bits} {
-    }
+    NodeID node_id_;
+    RDFNodeType type_ : 2;
+    NodeStorageID::underlying_type storage_id_ : NodeStorageID::width;
+    uint8_t inlined : 1;
+    uint8_t free_tagging_bits : 3;
 };
 
 static_assert(sizeof(NodeBackendHandleImpl) == 8);
 static_assert(sizeof(NodeBackendHandle) == 8);
 
 RDFNodeType NodeBackendHandle::type() const noexcept {
-    return std::bit_cast<NodeBackendHandleImpl>(*this).fields_.type_;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).type_;
 }
 bool NodeBackendHandle::is_iri() const noexcept {
     return type() == RDFNodeType::IRI;
@@ -48,7 +33,7 @@ bool NodeBackendHandle::is_variable() const noexcept {
     return type() == RDFNodeType::Variable;
 }
 bool NodeBackendHandle::null() const noexcept {
-    return std::bit_cast<NodeBackendHandleImpl>(*this).fields_.node_id_.null();
+    return std::bit_cast<NodeBackendHandleImpl>(*this).node_id_.null();
 }
 
 view::IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
@@ -65,30 +50,32 @@ view::VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
 }
 
 NodeID NodeBackendHandle::node_id() const noexcept {
-    return std::bit_cast<NodeBackendHandleImpl>(*this).fields_.node_id_;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).node_id_;
 }
 
 bool NodeBackendHandle::is_inlined() const noexcept {
-    return std::bit_cast<NodeBackendHandleImpl>(*this).fields_.inlined;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).inlined;
 }
 
 uint8_t NodeBackendHandle::free_tagging_bits() const noexcept {
-    return std::bit_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).free_tagging_bits;
 }
 void NodeBackendHandle::set_free_tagging_bits(uint8_t new_value) {
     assert(new_value < (1 << 3));
-    reinterpret_cast<NodeBackendHandleImpl *>(this)->fields_.free_tagging_bits = new_value;
+    auto tmp = std::bit_cast<NodeBackendHandleImpl>(*this);
+    tmp.free_tagging_bits = new_value;
+    raw_ = std::bit_cast<uint64_t>(tmp);
 }
 
 NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
-    return NodeStorageID{std::bit_cast<NodeBackendHandleImpl>(*this).fields_.storage_id_};
+    return NodeStorageID{std::bit_cast<NodeBackendHandleImpl>(*this).storage_id_};
 }
 
 NodeBackendHandle::NodeBackendHandle(uint64_t raw) noexcept
     : raw_{raw} {
 }
 NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
-    : raw_(std::bit_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, inlined, tagging_bits})) {
+    : raw_{std::bit_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id.value, inlined, tagging_bits})} {
 }
 
 NodeBackendHandle NodeBackendHandle::from_raw(uint64_t raw) noexcept {

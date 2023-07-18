@@ -192,7 +192,7 @@ Literal Literal::make_simple_normalize(std::string_view lexical_form, Node::Node
 
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
                                   Node::NodeStorage &node_storage) {
-    if (una::is_valid_utf8(lexical_form)) [[unlikely]] {
+    if (!una::is_valid_utf8(lexical_form)) [[unlikely]] {
         throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
     }
 
@@ -655,7 +655,9 @@ Literal::operator std::string() const noexcept {
         if (value.needs_escape) [[unlikely]] {
             append_quoted_lexical(buf, value.lexical_form);
         } else {
+            buf.push_back('"');
             buf.append(value.lexical_form);
+            buf.push_back('"');
         }
 
         buf.push_back('@');
@@ -675,7 +677,7 @@ Literal::operator std::string() const noexcept {
         auto const &datatype_iri = entry->datatype_iri;
 
         buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
-        buf.push_back('\"');
+        buf.push_back('"');
         buf.append(lexical_form);
         buf.append("\"^^<");
         buf.append(datatype_iri);
@@ -695,7 +697,9 @@ Literal::operator std::string() const noexcept {
                     if (lexical_backend.needs_escape) [[unlikely]] {
                         append_quoted_lexical(buf, lexical_backend.lexical_form);
                     } else {
+                        buf.push_back('"');
                         buf.append(lexical_backend.lexical_form);
+                        buf.push_back('"');
                     }
 
                     buf.append("^^<");
@@ -714,7 +718,7 @@ Literal::operator std::string() const noexcept {
                     auto const &datatype_iri = entry->datatype_iri;
 
                     buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
-                    buf.push_back('\"');
+                    buf.push_back('"');
                     buf.append(lexical_form);
                     buf.append("\"^^<");
                     buf.append(datatype_iri);
