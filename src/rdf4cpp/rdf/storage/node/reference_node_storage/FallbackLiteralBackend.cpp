@@ -11,16 +11,15 @@ FallbackLiteralBackend::FallbackLiteralBackend(identifier::NodeID const datatype
 }
 
 FallbackLiteralBackend::FallbackLiteralBackend(View const &view) noexcept : hash_{view.hash()},
-                                                            datatype_id{view.datatype_id},
-                                                            lexical_form{view.lexical_form},
-                                                            language_tag{view.language_tag} {
+                                                                            datatype_id{view.datatype_id},
+                                                                            lexical_form{view.lexical_form},
+                                                                            language_tag{view.language_tag} {
 }
 
 FallbackLiteralBackend::operator View() const noexcept {
-    return view::LexicalFormLiteralBackendView{
-            .datatype_id = this->datatype_id,
-            .lexical_form = this->lexical_form,
-            .language_tag = this->language_tag};
+    return View{.datatype_id = this->datatype_id,
+                .lexical_form = this->lexical_form,
+                .language_tag = this->language_tag};
 }
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

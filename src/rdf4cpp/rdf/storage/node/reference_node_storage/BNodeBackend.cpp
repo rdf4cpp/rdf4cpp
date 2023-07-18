@@ -11,7 +11,7 @@ BNodeBackend::BNodeBackend(view::BNodeBackendView view) noexcept
 std::string_view BNodeBackend::identifier() const noexcept {
     return identifier_;
 }
-BNodeBackend::operator view::BNodeBackendView() const noexcept {
-    return {.identifier = identifier()};
+BNodeBackend::operator View() const noexcept {
+    return View{.identifier = identifier()};
 }
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

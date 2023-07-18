@@ -5,6 +5,8 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
+#include <dice/hash.hpp>
+
 #include <cstddef>
 #include <vector>
 
@@ -88,9 +90,18 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
+    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) noexcept {
+        return Policy::hash_bytes(reinterpret_cast<char const *>(x.bytes.data()), x.bytes.size());
+    }
+};
+
 template<>
 struct std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept;
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept {
+        return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(x);
+    }
 };
 
 #endif //RDF4CPP_XSD_BASE64BINARY_HPP

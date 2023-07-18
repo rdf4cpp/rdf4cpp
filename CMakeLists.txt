@@ -22,6 +22,8 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
+find_package(dice-hash QUIET)
+find_package(dice-sparse-map QUIET)
 
 include(FetchContent)
 
@@ -58,6 +60,27 @@ if (NOT uni-algo_FOUND)
     )
     FetchContent_MakeAvailable(fetchuni-algo)
 endif ()
+
+if (NOT dice-hash_FOUND)
+    FetchContent_Declare(
+            fetchdice-hash
+            GIT_REPOSITORY https://github.com/dice-group/dice-hash.git
+            GIT_TAG v0.4.3
+            GIT_SHALLOW TRUE)
+
+    FetchContent_MakeAvailable(fetchdice-hash)
+endif ()
+
+if (NOT dice-sparse-map_FOUND)
+    FetchContent_Declare(
+            fetchdice-sparse-map
+            GIT_REPOSITORY https://github.com/dice-group/dice-sparse-map.git
+            GIT_TAG v0.2.4
+            GIT_SHALLOW TRUE)
+
+    FetchContent_MakeAvailable(fetchdice-sparse-map)
+endif ()
+
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
 
@@ -197,6 +220,8 @@ target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
+        dice-hash::dice-hash
+        dice-sparse-map::dice-sparse-map
         PRIVATE
         re2::re2
         OpenSSL::Crypto

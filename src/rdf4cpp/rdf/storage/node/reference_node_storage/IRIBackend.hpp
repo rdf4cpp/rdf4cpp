@@ -23,7 +23,7 @@ public:
 
     [[nodiscard]] std::string_view identifier() const noexcept;
 
-    explicit operator view::IRIBackendView() const noexcept;
+    explicit operator View() const noexcept;
 
     [[nodiscard]] size_t hash() const noexcept { return hash_; }
 };

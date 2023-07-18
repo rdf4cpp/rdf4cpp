@@ -542,81 +542,112 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
 }
 
 Literal::operator std::string() const noexcept {
-    // TODO: escape non-standard chars correctly
-    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) noexcept {
-        // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
+    if (this->null()) {
+        return "null";
+    }
 
-        out << "\"";
-        for (auto const character : lexical) {
-            switch (character) {
+    auto const escaped_size = [](size_t size) noexcept {
+        return static_cast<size_t>(static_cast<double>(size) * 1.2);
+    };
+
+    // TODO: escape non-standard chars correctly
+    auto const append_quoted_lexical = [](std::string &out, std::string_view const lexical) noexcept {
+        // TODO: escape everything that needs to be escaped in N-Triples/N-Quads
+
+        out.append("\"");
+        for (char const ch : lexical) {
+            switch (ch) {
                 case '\\': {
-                    out << R"(\\)";
+                    out.append(R"(\\)");
                     break;
                 }
                 case '\n': {
-                    out << R"(\n)";
+                    out.append(R"(\n)");
                     break;
                 }
                 case '\r': {
-                    out << R"(\r)";
+                    out.append(R"(\r)");
                     break;
                 }
                 case '"': {
-                    out << R"(\")";
+                    out.append(R"(\")");
                     break;
                 }
                 [[likely]] default : {
-                    out << character;
+                    out.push_back(ch);
                     break;
                 }
             }
         }
-        out << "\"";
+        out.append("\"");
     };
 
-    std::ostringstream oss;
+    std::string buf;
 
-    if (this->null()) {
-        oss << "null";
-    }
-    else if (this->is_inlined()) {
-        if (this->datatype_eq<datatypes::rdf::LangString>()) {
-            return static_cast<std::string>(this->lang_tagged_get_de_inlined());
-        }
-
-        quoted_lexical_into_stream(oss, this->lexical_form());
-
-        // rdf:langString is not inlined, therefore can only have datatype not lang tag
-        auto const &dtype_iri = NodeStorage::find_iri_backend_view(storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
-
-        oss << "^^" << dtype_iri.n_string();
-    } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
+    if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->value<datatypes::rdf::LangString>();
+        buf.reserve(escaped_size(value.lexical_form.size()) + value.language_tag.size() + 1);
 
-        quoted_lexical_into_stream(oss, value.lexical_form);
-        oss << '@' << value.language_tag;
+        append_quoted_lexical(buf, value.lexical_form);
+        buf.push_back('@');
+        buf.append(value.language_tag);
+    } else if (this->is_inlined()) {
+        assert(!this->datatype_eq<datatypes::rdf::LangString>());
+        // Notes:
+        // 1. inlined values are assumed to not require escaping
+        // 2. This is a known datatype because it is inlined => the registry contains the datatype IRI
+
+        auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+        assert(entry != nullptr);
+        assert(entry->inlining_ops.has_value());
+
+        auto const inlined_value = this->backend_handle().node_id().literal_id();
+        auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
+        auto const &datatype_iri = entry->datatype_iri;
+
+        buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
+        buf.push_back('\"');
+        buf.append(lexical_form);
+        buf.append("\"^^<");
+        buf.append(datatype_iri);
+        buf.push_back('>');
     } else {
-        handle_.literal_backend().visit(
+        using storage::node::NodeStorage;
+        using storage::node::identifier::NodeBackendHandle;
+
+        this->backend_handle().literal_backend().visit(
                 [&](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                     auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
-                                                                                                 handle_.node_storage_id()});
-                    quoted_lexical_into_stream(oss, lexical_backend.lexical_form);
-                    oss << "^^" << dtype_iri.n_string();
+                                                                                                 this->backend_handle().node_storage_id()});
+
+                    buf.reserve(escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
+                    append_quoted_lexical(buf, lexical_backend.lexical_form);
+                    buf.append("^^<");
+                    buf.append(dtype_iri.identifier);
+                    buf.push_back('>');
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
-                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(
-                            storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
+                    // Notes:
+                    // 1. non-string storage values are assumed to not require escaping
+                    // 2. This is a known datatype because it is stored in a value backend => the registry contains the datatype IRI
 
-                    auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(this->datatype_id());
-                    assert(to_string != nullptr);
+                    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+                    assert(entry != nullptr);
 
-                    quoted_lexical_into_stream(oss, to_string(value_backend.value));
-                    oss << "^^" << dtype_iri.n_string();
+                    auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
+                    auto const &datatype_iri = entry->datatype_iri;
+
+                    buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
+                    buf.push_back('\"');
+                    buf.append(lexical_form);
+                    buf.append("\"^^<");
+                    buf.append(datatype_iri);
+                    buf.push_back('>');
                 });
     }
 
-    return oss.str();
+    return buf;
 }
 bool Literal::is_literal() const noexcept { return true; }
 bool Literal::is_variable() const noexcept { return false; }
@@ -1719,16 +1750,21 @@ Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) c
         return Literal{};
     }
 
-    std::ostringstream combined;
-    combined << this->lexical_form() << other.lexical_form();
+    auto const this_lex = this->lexical_form();
+    auto const other_lex = other.lexical_form();
+
+    std::string combined;
+    combined.reserve(this_lex.size() + other_lex.size());
+    combined.append(this_lex);
+    combined.append(other_lex);
 
     if (this->datatype_eq<datatypes::rdf::LangString>() && other.datatype_eq<datatypes::rdf::LangString>()) {
         if (auto const lang = this->language_tag(); lang == other.language_tag()) {
-            return Literal::make_lang_tagged_unchecked(combined.view(), lang, node_storage);
+            return Literal::make_lang_tagged_unchecked(combined, lang, node_storage);
         }
     }
 
-    return Literal::make_simple_unchecked(combined.view(), node_storage);
+    return Literal::make_simple_unchecked(combined, node_storage);
 }
 
 Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_storage) {

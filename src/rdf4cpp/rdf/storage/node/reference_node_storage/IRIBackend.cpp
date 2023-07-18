@@ -11,7 +11,7 @@ IRIBackend::IRIBackend(view::IRIBackendView view) noexcept
 std::string_view IRIBackend::identifier() const noexcept {
     return iri;
 }
-IRIBackend::operator view::IRIBackendView() const noexcept {
-    return {.identifier = identifier()};
+IRIBackend::operator View() const noexcept {
+    return View{.identifier = identifier()};
 }
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

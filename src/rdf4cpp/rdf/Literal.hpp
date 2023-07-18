@@ -486,7 +486,6 @@ public:
 
 
     [[nodiscard]] explicit operator std::string() const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
     /**
@@ -506,40 +505,41 @@ public:
             throw std::runtime_error{"Literal::value error: incompatible type"};
         }
 
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
+
+            return lit.lexical_form;
+        }
+
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            auto const handle = this->is_inlined()
+                    ? this->lang_tagged_get_de_inlined().backend_handle()
+                    : this->backend_handle();
+
+            auto const view = handle.literal_backend();
+            auto const &lit = view.get_lexical();
+
+            return datatypes::registry::LangStringRepr{.lexical_form = lit.lexical_form,
+                                                       .language_tag = lit.language_tag};
+        }
+
         if constexpr (datatypes::IsInlineable<T>) {
             if (this->is_inlined()) {
-                if (this->datatype_eq<datatypes::rdf::LangString>()) {
-                    return this->lang_tagged_get_de_inlined().value<T>();
-                }
-
                 auto const inlined_value = this->handle_.node_id().literal_id();
                 return T::from_inlined(inlined_value);
             }
         }
 
-        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const view = this->handle_.literal_backend();
-            auto const &lit = view.get_lexical();
-
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            auto const view = this->handle_.literal_backend();
-            auto const &lit = view.get_lexical();
-
-            return lit.lexical_form;
-        } else {
-            auto const backend = handle_.literal_backend();
-            return backend.visit(
-                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                        return T::from_string(lexical.lexical_form);
-                    },
-                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                        assert(any.datatype == T::datatype_id);
-                        return std::any_cast<typename T::cpp_type>(any.value);
-                    });
-        }
+        auto const backend = handle_.literal_backend();
+        return backend.visit(
+                [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                    return T::from_string(lexical.lexical_form);
+                },
+                [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                    assert(any.datatype == T::datatype_id);
+                    return std::any_cast<typename T::cpp_type>(any.value);
+                });
     }
 
     [[nodiscard]] bool is_literal() const noexcept;

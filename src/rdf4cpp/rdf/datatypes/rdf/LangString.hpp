@@ -6,9 +6,10 @@
 #include <string_view>
 #include <vector>
 
+#include <dice/hash.hpp>
+
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 struct LangStringRepr {
@@ -68,22 +69,24 @@ struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
 
 }  // namespace rdf4cpp::rdf::datatypes::rdf
 
-template<>
-struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) const noexcept {
-        return rdf4cpp::rdf::storage::util::robin_hood::hash<std::array<size_t, 2>>{}(
-                std::array<size_t, 2>{
-                        rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>{}(x.lexical_form),
-                        rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>{}(x.language_tag)});
-    }
-};
-
-
 namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline rdf::LangString const rdf_lang_string_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
+    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(x.lexical_form, x.language_tag));
+    }
+};
+
+template<>
+struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
+    size_t operator()(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) const noexcept {
+        return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x);
+    }
+};
 
 #endif  //RDF4CPP_RDF_LANGSTRING_HPP

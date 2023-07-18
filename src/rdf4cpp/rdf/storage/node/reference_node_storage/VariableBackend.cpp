@@ -2,22 +2,17 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-VariableBackend::VariableBackend(std::string_view name, bool anonymous) noexcept
-    : name_(name),
-      anonymous_(anonymous),
-      hash_(View(*this).hash()) {}
-VariableBackend::VariableBackend(view::VariableBackendView view) noexcept
-    : name_(view.name),
-      anonymous_(view.is_anonymous),
-      hash_(View(*this).hash()) {}
-bool VariableBackend::is_anonymous() const noexcept {
-    return anonymous_;
+VariableBackend::VariableBackend(std::string_view name, bool anonymous) noexcept : VariableBackend{View{name, anonymous}} {
 }
-std::string_view VariableBackend::name() const noexcept {
-    return name_;
+
+VariableBackend::VariableBackend(view::VariableBackendView view) noexcept : name_{view.name},
+                                                                            is_anonymous_{view.is_anonymous},
+                                                                            hash_{view.hash()} {
 }
-VariableBackend::operator view::VariableBackendView() const noexcept {
-    return {.name = name(),
-            .is_anonymous = is_anonymous()};
+
+VariableBackend::operator View() const noexcept {
+    return View{.name = name_,
+                .is_anonymous = is_anonymous_};
 }
+
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

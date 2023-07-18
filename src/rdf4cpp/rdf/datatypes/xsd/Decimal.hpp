@@ -7,6 +7,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
 #include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
+#include <dice/hash.hpp>
+
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {

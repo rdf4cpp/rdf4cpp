@@ -24,7 +24,7 @@ public:
 
     [[nodiscard]] size_t hash() const noexcept { return hash_; }
 
-    explicit operator view::BNodeBackendView() const noexcept;
+    explicit operator View() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 

@@ -238,6 +238,8 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(view::LiteralBackendView
             [this](view::ValueLiteralBackendView const &any) {
                 return visit_specialized(specialized_literal_storage_, any.datatype, [this, &any](auto const &storage) {
                     assert(this->has_specialized_storage_for(any.datatype));
+                    (void) this;
+
                     return lookup_or_insert_impl<false>(any, storage);
                 });
             });

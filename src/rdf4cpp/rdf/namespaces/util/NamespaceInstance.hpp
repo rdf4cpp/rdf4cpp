@@ -2,7 +2,8 @@
 #define RDF4CPP_NAMESPACEINSTANCE_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
+#include <dice/sparse-map/sparse_map.hpp>
 
 #include <cinttypes>
 #include <mutex>
@@ -13,7 +14,7 @@ template<typename NamespaceClass>
 struct NamespaceInstance {
     static NamespaceClass &instance(storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) {
         static std::mutex instances_mutex;
-        static storage::util::tsl::sparse_map<uint16_t, NamespaceClass> instances;
+        static dice::sparse_map::sparse_map<uint16_t, NamespaceClass> instances;
 
         uint16_t const node_storage_id = node_storage.id().value;
         std::unique_lock lock{instances_mutex};

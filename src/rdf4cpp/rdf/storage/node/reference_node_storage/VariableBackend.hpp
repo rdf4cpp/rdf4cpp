@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 class VariableBackend {
     std::string name_;
-    bool anonymous_;
+    bool is_anonymous_;
     size_t hash_;
 
 public:
@@ -21,13 +21,11 @@ public:
     explicit VariableBackend(std::string_view name, bool anonymous = false) noexcept;
     explicit VariableBackend(view::VariableBackendView view) noexcept;
 
-    [[nodiscard]] bool is_anonymous() const noexcept;
-
-    [[nodiscard]] std::string_view name() const noexcept;
-
+    [[nodiscard]] bool is_anonymous() const noexcept { return is_anonymous_; }
+    [[nodiscard]] std::string_view name() const noexcept { return name_; }
     [[nodiscard]] size_t hash() const noexcept { return hash_; }
 
-    explicit operator view::VariableBackendView() const noexcept;
+    explicit operator View() const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

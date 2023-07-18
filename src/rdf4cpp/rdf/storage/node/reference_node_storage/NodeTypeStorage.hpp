@@ -1,9 +1,9 @@
 #ifndef RDF4CPP_NODETYPESTORAGE_HPP
 #define RDF4CPP_NODETYPESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
-
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
+#include <dice/hash.hpp>
+#include <dice/sparse-map/sparse_map.hpp>
 
 #include <memory>
 #include <shared_mutex>
@@ -72,13 +72,13 @@ public:
 
     struct NodeIDHash {
         [[nodiscard]] size_t operator()(identifier::NodeID const &x) const noexcept {
-            return x.value();
+            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x.value());
         }
     };
 
     std::shared_mutex mutable mutex;
-    util::tsl::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
-    util::tsl::sparse_map<Backend *, identifier::NodeID, BackendTypeHash, BackendTypeEqual> data2id;
+    dice::sparse_map::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
+    dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendTypeHash, BackendTypeEqual> data2id;
 };
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
