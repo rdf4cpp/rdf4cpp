@@ -1,10 +1,10 @@
 #ifndef RDF4CPP_LITERALTYPE_HPP
 #define RDF4CPP_LITERALTYPE_HPP
 
-#include <cstdint>
-#include <cstddef>
 #include <cassert>
 #include <compare>
+#include <cstddef>
+#include <cstdint>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 

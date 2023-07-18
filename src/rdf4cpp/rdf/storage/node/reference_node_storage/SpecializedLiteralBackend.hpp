@@ -11,20 +11,13 @@ struct SpecializedLiteralBackend {
     using View = view::ValueLiteralBackendView;
     using Type = T;
 
-private:
-    size_t hash_;
-
-public:
+    size_t hash;
     static constexpr identifier::LiteralType datatype = T::fixed_id;
     typename T::cpp_type value;
 
-    explicit SpecializedLiteralBackend(View const &view) noexcept : hash_{view.hash<Type>()},
+    explicit SpecializedLiteralBackend(View const &view) noexcept : hash{view.hash<Type>()},
                                                                     value{std::any_cast<typename T::cpp_type>(view.value)} {
         assert(view.datatype == SpecializedLiteralBackend::datatype);
-    }
-
-    [[nodiscard]] size_t hash() const noexcept {
-        return hash_;
     }
 
     explicit operator View() const noexcept {
@@ -55,7 +48,7 @@ public:
         using is_transparent = void;
 
         [[nodiscard]] size_t operator()(SpecializedLiteralBackend const *x) const noexcept {
-            return x->hash();
+            return x->hash;
         }
 
         [[nodiscard]] size_t operator()(View const &x) const noexcept {

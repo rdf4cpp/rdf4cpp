@@ -7,9 +7,7 @@
 #include <dice/hash.hpp>
 
 #include <any>
-#include <string>
 #include <string_view>
-
 
 namespace rdf4cpp::rdf::storage::node::view {
 
@@ -17,6 +15,7 @@ struct LexicalFormLiteralBackendView {
     identifier::NodeID datatype_id;
     std::string_view lexical_form;
     std::string_view language_tag;
+    bool needs_escape;
 
     bool operator==(LexicalFormLiteralBackendView const &other) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;

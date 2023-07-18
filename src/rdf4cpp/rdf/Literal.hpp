@@ -29,6 +29,8 @@ namespace rdf4cpp::rdf {
  */
 class Literal : public Node {
 private:
+    [[nodiscard]] static bool lexical_form_needs_escape(std::string_view lexical_form) noexcept;
+
     /**
      * the implementation for all numeric, binary operations
      *
@@ -97,12 +99,12 @@ private:
     /**
      * Creates a simple Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
     [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
@@ -122,7 +124,7 @@ private:
     /**
      * Creates a language-tagged Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a string like type with contents of str.
@@ -134,6 +136,7 @@ private:
      * @param lang_tag_src source for the language tag of the newly created string
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
+     // TODO needs escape flag
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
 
     /**
@@ -246,7 +249,10 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
+        auto const lex = T::to_canonical_string(value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::identifier, node_storage},
                                                         node_storage);
     }
@@ -291,7 +297,11 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(compatible_value),
+        auto const lex = T::to_canonical_string(compatible_value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }

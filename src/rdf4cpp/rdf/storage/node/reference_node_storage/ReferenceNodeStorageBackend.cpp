@@ -88,7 +88,7 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() noexcept {
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
         auto const id = literal_type.to_underlying();
 
-        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(iri));
+        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(view::IRIBackendView{.identifier = iri}));
         assert(inserted);
         iri_storage_.data2id.emplace(it->second.get(), id);
     }

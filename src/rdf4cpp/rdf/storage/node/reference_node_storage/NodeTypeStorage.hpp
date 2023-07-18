@@ -49,7 +49,7 @@ private:
 
     struct DefaultBackendTypeHash {
         [[nodiscard]] size_t operator()(Backend const *x) const noexcept {
-            return x->hash();
+            return x->hash;
         }
         [[nodiscard]] size_t operator()(BackendView const &x) const noexcept {
             return x.hash();

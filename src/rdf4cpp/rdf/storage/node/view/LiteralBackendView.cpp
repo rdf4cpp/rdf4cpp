@@ -2,14 +2,12 @@
 
 #include <dice/hash.hpp>
 
-#include <array>
-
 namespace rdf4cpp::rdf::storage::node::view {
 
 size_t LexicalFormLiteralBackendView::hash() const noexcept {
-    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::make_tuple(datatype_id.value(),
-                                                                                                    lexical_form,
-                                                                                                    language_tag));
+    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::tie(datatype_id,
+                                                                                             lexical_form,
+                                                                                             language_tag));
 }
 
 LiteralBackendView::LiteralBackendView(ValueLiteralBackendView const &any) : inner{any} {}

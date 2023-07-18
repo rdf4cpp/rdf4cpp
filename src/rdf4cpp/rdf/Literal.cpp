@@ -1,5 +1,7 @@
 #include "Literal.hpp"
 
+#include <algorithm>
+#include <execution>
 #include <random>
 #include <ranges>
 #include <sstream>
@@ -16,6 +18,49 @@
 
 #include <openssl/evp.h>
 
+#ifdef __AVX2__
+#include <immintrin.h>
+
+namespace rdf4cpp::rdf {
+static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_form) noexcept {
+    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+    auto const it = std::find_if(std::execution::unseq, lexical_form.begin(), lexical_form.end(), [](char const ch) noexcept {
+        return ch == '"' || ch == '\\' || ch == '\n' || ch == '\r';
+    });
+
+    return it != lexical_form.end();
+}
+
+bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+    std::array<__m256i, 4> const masks{_mm256_set1_epi8('"'),
+                                       _mm256_set1_epi8('\\'),
+                                       _mm256_set1_epi8('\n'),
+                                       _mm256_set1_epi8('\r')};
+
+    for (size_t bix = 0; bix < lexical_form.size() / 32; ++bix) {
+        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data() + (bix * 32)));
+        for (auto const &mask : masks) {
+            auto const eq = _mm256_cmpeq_epi8(mask, chars);
+
+            if (_mm256_movemask_epi8(eq) > 0) {
+                return true;
+            }
+        }
+    }
+
+    auto const rest = lexical_form.size() % 32;
+    return lexical_form_needs_escape_non_simd(lexical_form.substr(lexical_form.size() - rest));
+}
+} // rdf4cpp::rdf
+#else
+namespace rdf4cpp::rdf {
+bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+    return lexical_form_needs_escape_non_simd(lexical_form);
+}
+} // namespace rdf4cpp::rdf
+#endif
+
 namespace rdf4cpp::rdf {
 
 Literal::Literal(Node::NodeBackendHandle handle) noexcept
@@ -28,20 +73,22 @@ Literal Literal::make_null() noexcept {
     return Literal{};
 }
 
-Literal Literal::make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept {
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
                                              .lexical_form = lexical_form,
-                                             .language_tag = ""}),
+                                             .language_tag = "",
+                                             .needs_escape = needs_escape}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
 }
 
-Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                              .lexical_form = lexical_form,
-                                             .language_tag = ""}),
+                                             .language_tag = "",
+                                             .needs_escape = needs_escape}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
 }
@@ -53,11 +100,12 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
                               storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
-Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept {
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept {
     auto node_id = node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
             .lexical_form = lexical_form,
-            .language_tag = lang});
+            .language_tag = lang,
+            .needs_escape = needs_escape});
 
     bool inlined = false;
     auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang); // check if the lang_tag can be inlined
@@ -99,17 +147,20 @@ Literal Literal::make_typed_unchecked(std::any &&value, datatypes::registry::Dat
     }
 
     return Literal::make_noninlined_typed_unchecked(entry.to_canonical_string_fptr(value),
+                                                    false,
                                                     IRI{datatype, node_storage},
                                                     node_storage);
 }
 
 Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto const needs_escape = lexical_form_needs_escape(str);
+
     if (lang_tag_src.datatype_eq<datatypes::rdf::LangString>()) {
-        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+        return Literal::make_lang_tagged_unchecked(str, needs_escape, lang_tag_src.language_tag(), node_storage);
     }
 
     assert(lang_tag_src.datatype_eq<datatypes::xsd::String>());
-    return Literal::make_simple_unchecked(str, node_storage);
+    return Literal::make_simple_unchecked(str, needs_escape, node_storage);
 }
 
 Literal Literal::lang_tagged_get_de_inlined() const noexcept {
@@ -125,31 +176,37 @@ bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept
 }
 
 Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
-    if (una::is_valid_utf8(lexical_form))
-        return Literal::make_simple_unchecked(lexical_form, node_storage);
-    else
-        throw std::runtime_error{"invalid UTF-8"};
+    if (!una::is_valid_utf8(lexical_form)) {
+        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+    }
+
+    auto const needs_escape = lexical_form_needs_escape(lexical_form);
+    return Literal::make_simple_unchecked(lexical_form, needs_escape, node_storage);
 }
 
 Literal Literal::make_simple_normalize(std::string_view lexical_form, Node::NodeStorage &node_storage) {
-    const auto ln = una::norm::to_nfc_utf8(lexical_form);
-    return Literal::make_simple_unchecked(ln, node_storage);
+    auto const lex = una::norm::to_nfc_utf8(lexical_form);
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
 }
 
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
                                   Node::NodeStorage &node_storage) {
-    const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
-    if (una::is_valid_utf8(lexical_form))
-        return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
-    else
-        throw std::runtime_error{"invalid UTF-8"};
+    if (una::is_valid_utf8(lexical_form)) [[unlikely]] {
+        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+    }
+
+    auto const lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+    auto const needs_escape = lexical_form_needs_escape(lexical_form);
+    return Literal::make_lang_tagged_unchecked(lexical_form, needs_escape, lowercase_lang_tag, node_storage);
 }
 
 Literal Literal::make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
                                             Node::NodeStorage &node_storage) {
-    const std::string lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
-    const auto ln = una::norm::to_nfc_utf8(lexical_form);
-    return Literal::make_lang_tagged_unchecked(ln, lowercase_lang_tag, node_storage);
+    auto const lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+    auto const lex = una::norm::to_nfc_utf8(lexical_form);
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_lang_tagged_unchecked(lex, needs_escape, lowercase_lang_tag, node_storage);
 }
 
 Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
@@ -174,7 +231,8 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
         return Literal::make_typed_unchecked(std::move(cpp_value), datatype_identifier, *entry, node_storage);
     } else {
         // doesn't exist in the registry no way to canonicalize
-        return Literal::make_noninlined_typed_unchecked(lexical_form, datatype, node_storage);
+        auto const needs_escape = lexical_form_needs_escape(lexical_form);
+        return Literal::make_noninlined_typed_unchecked(lexical_form, needs_escape, datatype, node_storage);
     }
 }
 
@@ -212,8 +270,9 @@ Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
 
     if (this->is_inlined()) {
         if (this->datatype_eq<datatypes::rdf::LangString>()) {
-            auto const data = this->value<datatypes::rdf::LangString>();
+            auto const data = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
             return Literal::make_lang_tagged_unchecked(data.lexical_form,
+                                                       data.needs_escape,
                                                        data.language_tag,
                                                        node_storage);
         }
@@ -265,7 +324,8 @@ Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
                     return node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                             .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
                             .lexical_form = str,
-                            .language_tag = ""});
+                            .language_tag = "",
+                            .needs_escape = false});
                 }
 
                 // target node storage is also specialized for this datatype, directly send it over
@@ -363,7 +423,8 @@ Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const 
                     return node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
                             .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
                             .lexical_form = str,
-                            .language_tag = ""});
+                            .language_tag = "",
+                            .needs_escape = false});
                 }
 
                 // target node storage is also specialized for this datatype, directly try to get it
@@ -451,7 +512,9 @@ Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->lexical_form(), node_storage);
+    auto const lex = this->lexical_form();
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
 }
 
 util::CowString Literal::simplified_lexical_form() const noexcept {
@@ -486,7 +549,9 @@ Literal Literal::as_simplified_lexical_form(NodeStorage &node_storage) const noe
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->simplified_lexical_form(), node_storage);
+    auto const lex = this->simplified_lexical_form();
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
 }
 
 std::string_view Literal::language_tag() const noexcept {
@@ -506,7 +571,7 @@ Literal Literal::as_language_tag(Node::NodeStorage &node_storage) const noexcept
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->language_tag(), node_storage);
+    return Literal::make_simple_unchecked(this->language_tag(), false, node_storage);
 }
 
 util::TriBool Literal::language_tag_eq(std::string_view const lang_tag) const noexcept {
@@ -550,13 +615,16 @@ Literal::operator std::string() const noexcept {
         return static_cast<size_t>(static_cast<double>(size) * 1.2);
     };
 
-    // TODO: escape non-standard chars correctly
     auto const append_quoted_lexical = [](std::string &out, std::string_view const lexical) noexcept {
-        // TODO: escape everything that needs to be escaped in N-Triples/N-Quads
+        // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
 
         out.append("\"");
         for (char const ch : lexical) {
             switch (ch) {
+                case '"': {
+                    out.append(R"(\")");
+                    break;
+                }
                 case '\\': {
                     out.append(R"(\\)");
                     break;
@@ -569,11 +637,7 @@ Literal::operator std::string() const noexcept {
                     out.append(R"(\r)");
                     break;
                 }
-                case '"': {
-                    out.append(R"(\")");
-                    break;
-                }
-                [[likely]] default : {
+                [[likely]] default: {
                     out.push_back(ch);
                     break;
                 }
@@ -585,10 +649,15 @@ Literal::operator std::string() const noexcept {
     std::string buf;
 
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
-        auto const value = this->value<datatypes::rdf::LangString>();
+        auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
         buf.reserve(escaped_size(value.lexical_form.size()) + value.language_tag.size() + 1);
 
-        append_quoted_lexical(buf, value.lexical_form);
+        if (value.needs_escape) [[unlikely]] {
+            append_quoted_lexical(buf, value.lexical_form);
+        } else {
+            buf.append(value.lexical_form);
+        }
+
         buf.push_back('@');
         buf.append(value.language_tag);
     } else if (this->is_inlined()) {
@@ -622,7 +691,13 @@ Literal::operator std::string() const noexcept {
                                                                                                  this->backend_handle().node_storage_id()});
 
                     buf.reserve(escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
-                    append_quoted_lexical(buf, lexical_backend.lexical_form);
+
+                    if (lexical_backend.needs_escape) [[unlikely]] {
+                        append_quoted_lexical(buf, lexical_backend.lexical_form);
+                    } else {
+                        buf.append(lexical_backend.lexical_form);
+                    }
+
                     buf.append("^^<");
                     buf.append(dtype_iri.identifier);
                     buf.push_back('>');
@@ -1589,7 +1664,7 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     const auto r = una::casesens::search_utf8(s.view(), needle);
 
     if (!r)
-        return Literal::make_simple_unchecked("", node_storage);
+        return Literal::make_simple_unchecked("", false, node_storage);
 
     auto substr = static_cast<std::string_view>(s.view()).substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
@@ -1621,7 +1696,7 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     const auto r = una::casesens::search_utf8(s.view(), needle);
 
     if (!r)
-        return Literal::make_simple_unchecked("", node_storage);
+        return Literal::make_simple_unchecked("", false, node_storage);
 
     auto substr = s.view().substr(
             r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
@@ -1758,13 +1833,15 @@ Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) c
     combined.append(this_lex);
     combined.append(other_lex);
 
+    auto const needs_escape = lexical_form_needs_escape(combined); // TODO not optimal
+
     if (this->datatype_eq<datatypes::rdf::LangString>() && other.datatype_eq<datatypes::rdf::LangString>()) {
         if (auto const lang = this->language_tag(); lang == other.language_tag()) {
-            return Literal::make_lang_tagged_unchecked(combined, lang, node_storage);
+            return Literal::make_lang_tagged_unchecked(combined, needs_escape, lang, node_storage);
         }
     }
 
-    return Literal::make_simple_unchecked(combined, node_storage);
+    return Literal::make_simple_unchecked(combined, needs_escape, node_storage);
 }
 
 Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_storage) {
@@ -1798,7 +1875,7 @@ Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_stora
             }
         }
     }
-    return make_simple_unchecked(stream.view(), node_storage);
+    return make_simple_unchecked(stream.view(), false, node_storage); // TODO check
 }
 
 Literal Literal::encode_for_uri(NodeStorage &node_storage) const {

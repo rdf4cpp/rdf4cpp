@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_IRIBACKENDHANDLE_HPP
 #define RDF4CPP_IRIBACKENDHANDLE_HPP
 
-#include <compare>
 #include <string>
 #include <string_view>
 
@@ -17,7 +16,6 @@ struct IRIBackendView {
     [[nodiscard]] std::string n_string() const noexcept;
 
     auto operator<=>(IRIBackendView const &) const noexcept = default;
-
     [[nodiscard]] size_t hash() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::storage::node::view

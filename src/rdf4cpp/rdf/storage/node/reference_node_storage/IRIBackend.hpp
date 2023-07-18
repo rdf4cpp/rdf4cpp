@@ -1,32 +1,27 @@
 #ifndef RDF4CPP_IRIBACKEND_HPP
 #define RDF4CPP_IRIBACKEND_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 
-#include <compare>
-#include <memory>
 #include <string>
-#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-
-class IRIBackend {
-    std::string iri;
-    size_t hash_;
-
-public:
+struct IRIBackend {
     using View = view::IRIBackendView;
-    explicit IRIBackend(std::string_view iri) noexcept;
-    explicit IRIBackend(view::IRIBackendView view) noexcept;
 
-    [[nodiscard]] std::string_view identifier() const noexcept;
+    size_t hash;
+    std::string identifier;
 
-    explicit operator View() const noexcept;
+    explicit IRIBackend(View const &view) noexcept : hash{view.hash()},
+                                                     identifier{view.identifier} {
+    }
 
-    [[nodiscard]] size_t hash() const noexcept { return hash_; }
+    explicit operator View() const noexcept {
+        return View{.identifier = identifier};
+    }
 };
+
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
 #endif  //RDF4CPP_IRIBACKEND_HPP
