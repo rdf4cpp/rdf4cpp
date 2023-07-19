@@ -18,9 +18,6 @@
 
 #include <openssl/evp.h>
 
-#ifdef __AVX2__
-#include <immintrin.h>
-
 namespace rdf4cpp::rdf {
 static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
@@ -30,7 +27,12 @@ static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_fo
 
     return it != lexical_form.end();
 }
+} // namespace rdf4cpp::rdf
 
+#ifdef __AVX2__
+#include <immintrin.h>
+
+namespace rdf4cpp::rdf {
 bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     std::array<__m256i, 4> const masks{_mm256_set1_epi8('"'),
