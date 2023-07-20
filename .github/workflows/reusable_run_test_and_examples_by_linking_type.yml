@@ -61,6 +61,9 @@ jobs:
       - name: use mold as default linker
         uses: rui314/setup-mold@v1
 
+      # Checks if the compiler on the CI
+      # has the instruction sets enabled we expect to be enabled for testing
+      # I.e. inputs.with-AVX <-> compiler has avx
       - name: Check AVX
         env:
           CC: ${{ steps.install_cc.outputs.cc }}
