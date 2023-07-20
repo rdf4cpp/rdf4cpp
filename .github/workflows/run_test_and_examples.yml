@@ -29,4 +29,4 @@ jobs:
       with-coverage: false
       with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-16' }}
       with-Werror: ${{ matrix.cppenv.compiler == 'clang-16' || matrix.cppenv.compiler == 'gcc-13' }}
-      with-AVX: ${{ }}
+      with-AVX: ${{ matrix.cppenv.compiler == 'clang-16' }}
