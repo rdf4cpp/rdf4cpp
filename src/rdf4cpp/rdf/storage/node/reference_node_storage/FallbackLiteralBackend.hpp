@@ -5,26 +5,31 @@
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 
 #include <string>
-#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 struct FallbackLiteralBackend {
     using View = view::LexicalFormLiteralBackendView;
-private:
-    size_t hash_;
 
-public:
+    size_t hash;
     identifier::NodeID datatype_id;
     std::string lexical_form;
     std::string language_tag;
+    bool needs_escape;
 
-    FallbackLiteralBackend(identifier::NodeID datatype_id, std::string_view lexical_form, std::string_view language_tag = "") noexcept;
-    explicit FallbackLiteralBackend(View const &view) noexcept;
+    explicit FallbackLiteralBackend(View const &view) noexcept : hash{view.hash()},
+                                                                 datatype_id{view.datatype_id},
+                                                                 lexical_form{view.lexical_form},
+                                                                 language_tag{view.language_tag},
+                                                                 needs_escape{view.needs_escape} {
+    }
 
-    [[nodiscard]] inline size_t hash() const noexcept { return hash_; }
-
-    explicit operator View() const noexcept;
+    explicit operator View() const noexcept {
+        return View{.datatype_id = datatype_id,
+                    .lexical_form = lexical_form,
+                    .language_tag = language_tag,
+                    .needs_escape = needs_escape};
+    }
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::view

@@ -9,8 +9,9 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
+#include <dice/hash.hpp>
+#include <dice/sparse-map/sparse_map.hpp>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -43,11 +44,10 @@ struct IStreamQuadIterator {
     using iterator_category = std::input_iterator_tag;
     using istream_type = std::istream;
 
-    using prefix_storage_type = rdf4cpp::rdf::storage::util::tsl::sparse_map<
-            std::string,
-            std::string,
-            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
-            std::equal_to<>>;
+    using prefix_storage_type = dice::sparse_map::sparse_map<std::string,
+                                                             std::string,
+                                                             dice::hash::DiceHashwyhash<std::string_view>,
+                                                             std::equal_to<>>;
 
 private:
     struct Impl;

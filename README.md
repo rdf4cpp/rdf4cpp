@@ -54,6 +54,7 @@ pip3 install --user conan
 conan user
 conan profile new --detect default
 conan profile update settings.compiler.libcxx=libstdc++11 default
+conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 ```
 
 

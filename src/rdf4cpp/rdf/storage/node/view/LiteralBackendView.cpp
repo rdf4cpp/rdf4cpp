@@ -1,17 +1,13 @@
 #include "LiteralBackendView.hpp"
 
-#include "rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp"
-
-#include <array>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::storage::node::view {
 
 size_t LexicalFormLiteralBackendView::hash() const noexcept {
-    return util::robin_hood::hash<std::array<size_t, 3>>{}(
-                std::array<size_t, 3>{
-                        this->datatype_id.value(),
-                        util::robin_hood::hash<std::string_view>{}(this->lexical_form),
-                        util::robin_hood::hash<std::string_view>{}(this->language_tag)});
+    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::tie(datatype_id,
+                                                                                             lexical_form,
+                                                                                             language_tag));
 }
 
 LiteralBackendView::LiteralBackendView(ValueLiteralBackendView const &any) : inner{any} {}

@@ -9,9 +9,8 @@
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
-
 #include <compare>
-#include <cstddef>
+#include <cstdint>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
