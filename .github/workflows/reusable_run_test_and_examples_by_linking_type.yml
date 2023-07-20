@@ -67,14 +67,13 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           echo 'int main() { return __AVX2__; }' > /tmp/rdf4cpp-avx-test.cpp
-          AVX_RET=$(${CXX} ${{ fromJSON('["", "-march=native"]')[inputs.with-AVX] }} -o /dev/null /tmp/rdf4cpp-avx-test.cpp > /dev/null 2>&1; echo $?)
+          
+          AVX_EXISTS=$(${CXX} ${{ fromJSON('["", "-march=native"]')[inputs.with-AVX] }} -o /dev/null /tmp/rdf4cpp-avx-test.cpp > /dev/null 2>&1; test $? -eq 0; echo $?)
+          AVX_SHOULD_EXIST=${{ fromJSON('["1", "0"]')[inputs.with-AVX] }}
           
           # Shell: true=zero-exit, false=non-zero-exit
-          AVX_EXISTS=$(test $AVX_RET -eq 0)
-          echo "AVX exists: $AVX_EXISTS" > &2
-          
-          AVX_SHOULD_EXIST=${{ fromJSON('["1", "0"]')[inputs.with-AVX] }}
-          echo "AVX should exist: $AVX_SHOULD_EXIST" > &2
+          echo "AVX exists: $AVX_EXISTS"
+          echo "AVX should exist: $AVX_SHOULD_EXIST"
           
           test $AVX_EXISTS -eq $AVX_SHOULD_EXIST
 
