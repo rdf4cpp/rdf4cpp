@@ -35,10 +35,10 @@ static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_fo
 namespace rdf4cpp::rdf {
 bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-    std::array<__m256i, 4> const masks{_mm256_set1_epi8('"'),
-                                       _mm256_set1_epi8('\\'),
-                                       _mm256_set1_epi8('\n'),
-                                       _mm256_set1_epi8('\r')};
+    __m256i const masks[4]{_mm256_set1_epi8('"'),
+                           _mm256_set1_epi8('\\'),
+                           _mm256_set1_epi8('\n'),
+                           _mm256_set1_epi8('\r')};
 
     for (size_t bix = 0; bix < lexical_form.size() / 32; ++bix) {
         __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data() + (bix * 32)));
@@ -613,8 +613,8 @@ Literal::operator std::string() const noexcept {
         return "null";
     }
 
-    auto const escaped_size = [](size_t size) noexcept {
-        return static_cast<size_t>(static_cast<double>(size) * 1.2);
+    auto const estimated_escaped_size = [](size_t size) noexcept {
+        return static_cast<size_t>(static_cast<double>(size) * 1.2); // TODO tweak factor
     };
 
     auto const append_quoted_lexical = [](std::string &out, std::string_view const lexical) noexcept {
@@ -652,11 +652,12 @@ Literal::operator std::string() const noexcept {
 
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
-        buf.reserve(escaped_size(value.lexical_form.size()) + value.language_tag.size() + 1);
 
         if (value.needs_escape) [[unlikely]] {
+            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + value.language_tag.size() + 3);
             append_quoted_lexical(buf, value.lexical_form);
         } else {
+            buf.reserve(value.lexical_form.size() + value.language_tag.size() + 3);
             buf.push_back('"');
             buf.append(value.lexical_form);
             buf.push_back('"');
@@ -694,11 +695,11 @@ Literal::operator std::string() const noexcept {
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  this->backend_handle().node_storage_id()});
 
-                    buf.reserve(escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
-
                     if (lexical_backend.needs_escape) [[unlikely]] {
+                        buf.reserve(estimated_escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
                         append_quoted_lexical(buf, lexical_backend.lexical_form);
                     } else {
+                        buf.reserve(lexical_backend.lexical_form.size() + dtype_iri.identifier.size() + 4);
                         buf.push_back('"');
                         buf.append(lexical_backend.lexical_form);
                         buf.push_back('"');
@@ -1881,7 +1882,7 @@ Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_stora
             }
         }
     }
-    return make_simple_unchecked(stream.view(), false, node_storage); // TODO check
+    return make_simple_unchecked(stream.view(), false, node_storage);
 }
 
 Literal Literal::encode_for_uri(NodeStorage &node_storage) const {

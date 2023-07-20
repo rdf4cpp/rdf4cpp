@@ -25,7 +25,6 @@ struct SpecializedLiteralBackend {
                     .value = value};
     }
 
-public:
     struct Equal {
         using is_transparent = void;
 

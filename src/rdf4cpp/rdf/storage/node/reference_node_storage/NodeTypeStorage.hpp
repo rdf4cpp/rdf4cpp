@@ -11,8 +11,6 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-
-
 /**
  * Storage for one of the Node Backend types. Includes a shared mutex to synchronize access and bidirectional mappings between the Backend type and identifier::NodeID.
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
@@ -48,6 +46,8 @@ private:
     };
 
     struct DefaultBackendTypeHash {
+        using is_transparent = void;
+
         [[nodiscard]] size_t operator()(Backend const *x) const noexcept {
             return x->hash;
         }
@@ -67,8 +67,8 @@ private:
     };
 
 public:
-    using BackendTypeEqual = typename SelectBackendTypeEqual<BackendType_t>::type;
-    using BackendTypeHash = typename SelectBackendTypeHash<BackendType_t>::type;
+    using BackendEqual = typename SelectBackendTypeEqual<Backend>::type;
+    using BackendHash = typename SelectBackendTypeHash<Backend>::type;
 
     struct NodeIDHash {
         [[nodiscard]] size_t operator()(identifier::NodeID const &x) const noexcept {
@@ -78,8 +78,9 @@ public:
 
     std::shared_mutex mutable mutex;
     dice::sparse_map::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
-    dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendTypeHash, BackendTypeEqual> data2id;
+    dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendHash, BackendEqual> data2id;
 };
+
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
 #endif  //RDF4CPP_NODETYPESTORAGE_HPP

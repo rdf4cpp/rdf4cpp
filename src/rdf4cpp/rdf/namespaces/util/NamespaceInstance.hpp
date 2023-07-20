@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
+#include <dice/hash.hpp>
 
 #include <cinttypes>
 #include <mutex>
@@ -14,7 +15,7 @@ template<typename NamespaceClass>
 struct NamespaceInstance {
     static NamespaceClass &instance(storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) {
         static std::mutex instances_mutex;
-        static dice::sparse_map::sparse_map<uint16_t, NamespaceClass> instances;
+        static dice::sparse_map::sparse_map<uint16_t, NamespaceClass, dice::hash::DiceHashwyhash<uint16_t>> instances;
 
         uint16_t const node_storage_id = node_storage.id().value;
         std::unique_lock lock{instances_mutex};

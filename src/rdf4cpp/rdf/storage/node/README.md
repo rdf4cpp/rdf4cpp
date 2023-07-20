@@ -19,6 +19,9 @@
     required to accurately report which `Literal` types can be stored as
     values via `INodeStorageBackend::has_specialized_storage_for`. **Inaccurate
     reporting will result in undefined behaviour.**
+  - Warning: `Literals` that have value storage are assumed to never need escaping when converting them to their 
+    n-triples string representation. I.e. the output of their corresponding `to_string` function will be used
+    without escaping it.
   - see [reference_node_storage](./reference_node_storage) for details
 - Some `IRIs` are reserved by default (see [reserved_datatype_ids](../../datatypes/registry/FixedIdMappings.hpp))
   these `IRIs` _must always_ be present in the `NodeStorage` 
