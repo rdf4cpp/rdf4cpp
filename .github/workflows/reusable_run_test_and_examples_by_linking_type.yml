@@ -71,10 +71,10 @@ jobs:
           
           # Shell: true=zero-exit, false=non-zero-exit
           AVX_EXISTS=$(test $AVX_RET -eq 0)
-          echo "AVX exists: $AVX_EXISTS" >> "$GITHUB_OUTPUT"
+          echo "AVX exists: $AVX_EXISTS" > &2
           
           AVX_SHOULD_EXIST=${{ fromJSON('["1", "0"]')[inputs.with-AVX] }}
-          echo "AVX should exist: $AVX_SHOULD_EXIST" >> "$GITHUB_OUTPUT"
+          echo "AVX should exist: $AVX_SHOULD_EXIST" > &2
           
           test $AVX_EXISTS -eq $AVX_SHOULD_EXIST
 
