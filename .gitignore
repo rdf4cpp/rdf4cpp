@@ -2,8 +2,7 @@ src/rdf4cpp/rdf/version.hpp
 
 docu
 
-# Created by https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
-# Edit at https://www.toptal.com/developers/gitignore?templates=c++,conan,ninja,cmake,clion+all
+# Based on https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
 
 ### C++ ###
 # Prerequisites
