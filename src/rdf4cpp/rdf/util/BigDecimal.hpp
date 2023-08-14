@@ -8,7 +8,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <nonstd/expected.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::util {
 enum class RoundingMode {
@@ -718,20 +718,20 @@ public:
      * conversion to a double
      * @return
      */
-    [[nodiscard]] constexpr explicit operator double() const noexcept {
-        double v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
+    [[nodiscard]] explicit operator double() const noexcept {
+        double const v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
         if (!std::isnan(v) && !std::isinf(v))
             return v;
         // even Javas BigDecimal has no better solution
-        auto s = static_cast<std::string>(*this);
-        return std::stod(s, nullptr);
+        auto const s = static_cast<std::string>(*this);
+        return std::stod(s);
     }
 
     /**
      * conversion to a float
      * @return
      */
-    [[nodiscard]] constexpr explicit operator float() const noexcept {
+    [[nodiscard]] explicit operator float() const noexcept {
         return static_cast<float>(static_cast<double>(*this));
     }
 
@@ -798,13 +798,12 @@ public:
      * combined hash of a BigDecimals components hashes.
      * @return
      */
+    template<dice::hash::Policies::HashPolicy Policy = dice::hash::Policies::wyhash>
     [[nodiscard]] size_t hash() const {
-        using namespace storage::util;
         BigDecimal n = *this;
         n.normalize();
-        return robin_hood::hash<std::array<size_t, 2>>{}(std::array<size_t, 2>{
-                robin_hood::hash<UnscaledValue_t>{}(n.unscaled_value),
-                robin_hood::hash<Exponent_t>{}(n.exponent)});
+
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(n.unscaled_value, n.exponent));
     }
 };
 
@@ -832,6 +831,21 @@ struct std::hash<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
         return r.hash();
     }
 };
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, ::boost::multiprecision::cpp_int> {
+    static size_t dice_hash(::boost::multiprecision::cpp_int const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::hash<::boost::multiprecision::cpp_int>{}(x));
+    }
+};
+
+template<typename Policy, typename U, typename E>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::BigDecimal<U, E>> {
+    static size_t dice_hash(rdf4cpp::rdf::util::BigDecimal<U, E> const &x) noexcept {
+        return x.template hash<Policy>();
+    }
+};
+
 template<class UnscaledValue_t, class Exponent_t>
 class std::numeric_limits<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
 public:

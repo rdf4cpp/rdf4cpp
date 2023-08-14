@@ -30,7 +30,13 @@ std::string capabilities::Default<xsd_decimal>::to_canonical_string(cpp_type con
 
 template<>
 std::string capabilities::Default<xsd_decimal>::to_simplified_string(cpp_type const &value) noexcept {
-    return static_cast<std::string>(value);
+    cpp_type v = value;
+    v.normalize();
+    if (v.get_exponent() == 0) {
+        return static_cast<boost::multiprecision::cpp_int>(v).str();
+    } else {
+        return static_cast<std::string>(v);
+    }
 }
 
 template<>

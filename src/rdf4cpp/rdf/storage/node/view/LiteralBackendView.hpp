@@ -2,12 +2,12 @@
 #define RDF4CPP_LITERALBACKENDHANDLE_HPP
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
+#include <rdf4cpp/rdf/util/Overloaded.hpp>
+
+#include <dice/hash.hpp>
 
 #include <any>
-#include <string>
 #include <string_view>
-
-#include <rdf4cpp/rdf/util/Overloaded.hpp>
 
 namespace rdf4cpp::rdf::storage::node::view {
 
@@ -15,14 +15,25 @@ struct LexicalFormLiteralBackendView {
     identifier::NodeID datatype_id;
     std::string_view lexical_form;
     std::string_view language_tag;
+    bool needs_escape;
 
-    bool operator==(LexicalFormLiteralBackendView const &) const noexcept = default;
+    bool operator==(LexicalFormLiteralBackendView const &other) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
 };
 
 struct ValueLiteralBackendView {
     identifier::LiteralType datatype;
     std::any value;
+
+    template<datatypes::FixedIdLiteralDatatype Contained>
+    [[nodiscard]] bool eq(typename Contained::cpp_type const &other) const noexcept {
+        return *std::any_cast<typename Contained::cpp_type>(&value) == other;
+    }
+
+    template<datatypes::FixedIdLiteralDatatype Contained>
+    [[nodiscard]] size_t hash() const noexcept {
+        return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(*std::any_cast<typename Contained::cpp_type>(&value));
+    }
 };
 
 /**

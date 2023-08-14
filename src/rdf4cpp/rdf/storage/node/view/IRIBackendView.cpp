@@ -1,17 +1,21 @@
 #include "IRIBackendView.hpp"
 
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::storage::node::view {
 std::string IRIBackendView::n_string() const noexcept {
-    return "<" + std::string{identifier} + ">";
+    std::string buf;
+    buf.reserve(identifier.size() + 2);
+    buf.push_back('<');
+    buf.append(identifier);
+    buf.push_back('>');
+    return buf;
 }
 size_t IRIBackendView::hash() const noexcept {
-    return std::hash<IRIBackendView>()(*this);
+    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(identifier);
 }
 }  // namespace rdf4cpp::rdf::storage::node::view
 
-size_t std::hash<rdf4cpp::rdf::storage::node::view::IRIBackendView>::operator()(const rdf4cpp::rdf::storage::node::view::IRIBackendView &x) const noexcept {
-    using namespace rdf4cpp::rdf::storage::util;
-    return robin_hood::hash<std::string_view>()(x.identifier);
+size_t std::hash<rdf4cpp::rdf::storage::node::view::IRIBackendView>::operator()(rdf4cpp::rdf::storage::node::view::IRIBackendView const &x) const noexcept {
+    return x.hash();
 }

@@ -29,6 +29,8 @@ namespace rdf4cpp::rdf {
  */
 class Literal : public Node {
 private:
+    [[nodiscard]] static bool lexical_form_needs_escape(std::string_view lexical_form) noexcept;
+
     /**
      * the implementation for all numeric, binary operations
      *
@@ -97,12 +99,12 @@ private:
     /**
      * Creates a simple Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
     [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
@@ -112,7 +114,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage const &node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -122,7 +124,7 @@ private:
     /**
      * Creates a language-tagged Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a string like type with contents of str.
@@ -134,6 +136,7 @@ private:
      * @param lang_tag_src source for the language tag of the newly created string
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
+     // TODO needs escape flag
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
 
     /**
@@ -246,7 +249,10 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
+        auto const lex = T::to_canonical_string(value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::identifier, node_storage},
                                                         node_storage);
     }
@@ -291,7 +297,11 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(compatible_value),
+        auto const lex = T::to_canonical_string(compatible_value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
@@ -320,7 +330,8 @@ public:
      */
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
 
-    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    Literal to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype
@@ -584,7 +595,6 @@ public:
 
 
     [[nodiscard]] explicit operator std::string() const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
     /**
@@ -604,40 +614,41 @@ public:
             throw std::runtime_error{"Literal::value error: incompatible type"};
         }
 
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            auto const view = this->handle_.literal_backend();
+            auto const &lit = view.get_lexical();
+
+            return lit.lexical_form;
+        }
+
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            auto const handle = this->is_inlined()
+                    ? this->lang_tagged_get_de_inlined().backend_handle()
+                    : this->backend_handle();
+
+            auto const view = handle.literal_backend();
+            auto const &lit = view.get_lexical();
+
+            return datatypes::registry::LangStringRepr{.lexical_form = lit.lexical_form,
+                                                       .language_tag = lit.language_tag};
+        }
+
         if constexpr (datatypes::IsInlineable<T>) {
             if (this->is_inlined()) {
-                if (this->datatype_eq<datatypes::rdf::LangString>()) {
-                    return this->lang_tagged_get_de_inlined().value<T>();
-                }
-
                 auto const inlined_value = this->handle_.node_id().literal_id();
                 return T::from_inlined(inlined_value);
             }
         }
 
-        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const view = this->handle_.literal_backend();
-            auto const &lit = view.get_lexical();
-
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            auto const view = this->handle_.literal_backend();
-            auto const &lit = view.get_lexical();
-
-            return lit.lexical_form;
-        } else {
-            auto const backend = handle_.literal_backend();
-            return backend.visit(
-                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                        return T::from_string(lexical.lexical_form);
-                    },
-                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                        assert(any.datatype == T::datatype_id);
-                        return std::any_cast<typename T::cpp_type>(any.value);
-                    });
-        }
+        auto const backend = handle_.literal_backend();
+        return backend.visit(
+                [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                    return T::from_string(lexical.lexical_form);
+                },
+                [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                    assert(any.datatype == T::datatype_id);
+                    return std::any_cast<typename T::cpp_type>(any.value);
+                });
     }
 
     [[nodiscard]] bool is_literal() const noexcept;

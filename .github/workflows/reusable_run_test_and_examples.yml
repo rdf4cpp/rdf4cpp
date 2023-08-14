@@ -14,6 +14,10 @@ on:
         type: boolean
       with-sanitizer:
         type: boolean
+      with-Werror:
+        type: boolean
+      with-AVX:
+        type: boolean
     secrets:
       coverall-token:
         description: 'Access token for coverall. Required if inputs.with-coverage'
@@ -27,7 +31,9 @@ jobs:
       compiler: ${{ inputs.compiler }}
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: false
+      with-Werror: ${{ inputs.with-Werror }}
       with-sanitizer: ${{ inputs.with-sanitizer }}
+      with-AVX: ${{ inputs.with-AVX }}
 
   test-and-examples-shared:
     uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
@@ -36,6 +42,7 @@ jobs:
       compiler: ${{ inputs.compiler }}
       cmake-version: ${{ inputs.cmake-version }}
       build-shared-libs: true
+      with-Werror: ${{ inputs.with-Werror }}
       with-coverage: ${{ inputs.with-coverage }}
     secrets:
-      coverall-token: ${{ inputs.coverall-token }}
+      coverall-token: ${{ secrets.coverall-token }}

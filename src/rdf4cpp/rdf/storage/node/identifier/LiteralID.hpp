@@ -23,9 +23,7 @@ struct __attribute__((__packed__)) LiteralID {
      */
     constexpr explicit LiteralID(uint64_t value) noexcept : value(value) { assert(value < (1UL << 42)); }
 
-    constexpr auto operator<=>(LiteralID const &) const noexcept = default;
-
-    constexpr bool operator==(LiteralID const &) const noexcept = default;
+    constexpr std::strong_ordering operator<=>(LiteralID const &) const noexcept = default;
 
     constexpr LiteralID &operator++() noexcept {
         ++value;

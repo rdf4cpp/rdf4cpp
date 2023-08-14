@@ -39,7 +39,19 @@ protected:
     explicit Node(NodeBackendHandle id) noexcept;
 
 public:
-    [[nodiscard]] Node to_node_storage(NodeStorage &node_storage) const noexcept;
+    /**
+     * Registers this node in the given node storage (if it does not already exist)
+     * @param node_storage node storage to register this node in
+     * @return this node but in node storage
+     */
+    Node to_node_storage(NodeStorage &node_storage) const noexcept;
+
+    /**
+     * Tries to retrieve this nodes equivalent node in the given node storage
+     * @param node_storage node storage to try to retrieve the node from
+     * @return this node but in node storage, or the null node if it does not exist in node_storage
+     */
+    [[nodiscard]] Node try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     // TODO: revisit comparison implementation
     // TODO: support comparison between NodeStorages

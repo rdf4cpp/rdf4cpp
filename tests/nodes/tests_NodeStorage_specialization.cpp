@@ -150,7 +150,7 @@ TEST_CASE("NodeStorage non-specialization xsd:String") {
 
         std::cout << "Testing with: " << std::quoted(value) << " as " << std::string_view{xsd::String::identifier} << '\n';
 
-        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first, .lexical_form = value, .language_tag = ""};
+        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first, .lexical_form = value, .language_tag = "", .needs_escape = false};
         auto const id = NodeStorage::default_instance().find_or_make_id(view);
         auto const id2 = NodeStorage::default_instance().find_or_make_id(view);
         CHECK(id == id2);
@@ -250,7 +250,10 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
 
         std::cout << "Testing with: " << std::quoted(value.lexical_form) << "@" << value.language_tag << " as " << std::string_view{rdf::LangString::identifier} << '\n';
 
-        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first, .lexical_form = value.lexical_form, .language_tag = value.language_tag};
+        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first,
+                                                 .lexical_form = value.lexical_form,
+                                                 .language_tag = value.language_tag,
+                                                 .needs_escape = false};
         auto const id = NodeStorage::default_instance().find_or_make_id(view);
         auto const id2 = NodeStorage::default_instance().find_or_make_id(view);
         CHECK(id == id2);

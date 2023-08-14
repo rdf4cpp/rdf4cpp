@@ -171,4 +171,18 @@ inline constexpr LiteralID NodeID::min_literal_id{1};
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 
+template<>
+struct std::hash<rdf4cpp::rdf::storage::node::identifier::NodeID> {
+    size_t operator()(rdf4cpp::rdf::storage::node::identifier::NodeID const id) const noexcept {
+        return std::hash<uint64_t>{}(id.value());
+    }
+};
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::identifier::NodeID> {
+    static size_t dice_hash(rdf4cpp::rdf::storage::node::identifier::NodeID const id) noexcept {
+        return dice_hash_templates<Policy>::dice_hash(id.value());
+    }
+};
+
 #endif  //RDF4CPP_NODEID_HPP

@@ -18,7 +18,7 @@ conan remote add dice-group https://conan.dice-research.org/artifactory/api/cona
 To use rdf4cpp, add it to your `conanfile.txt`:
 ```
 [requires]
-rdf4cpp/0.0.12
+rdf4cpp/0.0.13
 ```
 
 ### With FetchContent
@@ -28,7 +28,7 @@ include(FetchContent)
 FetchContent_Declare(
         rdf4cpp
         GIT_REPOSITORY "${CMAKE_CURRENT_SOURCE_DIR}/../"
-        GIT_TAG v0.0.12
+        GIT_TAG v0.0.13
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(rdf4cpp)
@@ -43,17 +43,18 @@ Beware: Conan will not be used for dependency retrieval if you include rdf4cpp v
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{10,11}, clang-{12,13,14} with libstdc++-11 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{11,12,13}, clang-{14,15,16} with libstdc++-11 on ubuntu 22.04. 
 
 ### Dependencies
 
-It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 20.04+:
+It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
 ```shell
 sudo apt install python3-pip
 pip3 install --user conan
 conan user
 conan profile new --detect default
 conan profile update settings.compiler.libcxx=libstdc++11 default
+conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 ```
 
 

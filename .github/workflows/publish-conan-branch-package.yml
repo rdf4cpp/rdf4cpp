@@ -1,5 +1,4 @@
 name: Publish Conan branch package
-
 on: [ push ]
 
 concurrency:

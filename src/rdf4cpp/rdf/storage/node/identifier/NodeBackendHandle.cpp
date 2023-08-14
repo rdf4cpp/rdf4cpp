@@ -2,52 +2,23 @@
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
+#include <bit>
+
 namespace rdf4cpp::rdf::storage::node::identifier {
 
-template<typename out_type, typename in_type>
-inline constexpr out_type &unsafe_cast(in_type &in) {
-    static_assert(sizeof(in_type) == sizeof(out_type));
-    return *reinterpret_cast<out_type *>(std::addressof(in));
-}
-
-template<typename out_type, typename in_type>
-inline constexpr out_type const &unsafe_cast(in_type const &in) {
-    static_assert(sizeof(in_type) == sizeof(out_type));
-    return *reinterpret_cast<out_type const *>(std::addressof(in));
-}
-
-template<typename out_type, typename in_type>
-inline constexpr out_type unsafe_copy_cast(in_type in) {
-    static_assert(sizeof(in_type) == sizeof(out_type));
-    return *reinterpret_cast<out_type *>(std::addressof(in));
-}
-
 struct __attribute__((__packed__)) NodeBackendHandleImpl {
-    union __attribute__((__packed__)) {
-        uint64_t raw_{};
-        struct __attribute__((__packed__)) {
-            NodeID node_id_;
-            RDFNodeType type_ : 2;
-            NodeStorageID::underlying_type storage_id_ : NodeStorageID::width;
-            uint8_t inlined : 1;
-            uint8_t free_tagging_bits : 3;
-        } fields_;
-    };
-
-    constexpr explicit NodeBackendHandleImpl(size_t raw) noexcept : raw_{raw} {}
-
-    constexpr NodeBackendHandleImpl(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
-        : fields_{.node_id_ = node_id, .type_ = node_type, .storage_id_ = node_storage_id.value, .inlined = inlined, .free_tagging_bits = tagging_bits} {}
-
-    [[nodiscard]] constexpr NodeStorageID storage_id() const noexcept { return NodeStorageID{fields_.storage_id_}; }
-    [[nodiscard]] constexpr NodeID node_id() const noexcept { return fields_.node_id_; }
+    NodeID node_id_;
+    RDFNodeType type_ : 2;
+    NodeStorageID::underlying_type storage_id_ : NodeStorageID::width;
+    uint8_t inlined : 1;
+    uint8_t free_tagging_bits : 3;
 };
 
 static_assert(sizeof(NodeBackendHandleImpl) == 8);
 static_assert(sizeof(NodeBackendHandle) == 8);
 
 RDFNodeType NodeBackendHandle::type() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.type_;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).type_;
 }
 bool NodeBackendHandle::is_iri() const noexcept {
     return type() == RDFNodeType::IRI;
@@ -62,7 +33,7 @@ bool NodeBackendHandle::is_variable() const noexcept {
     return type() == RDFNodeType::Variable;
 }
 bool NodeBackendHandle::null() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_.null();
+    return std::bit_cast<NodeBackendHandleImpl>(*this).node_id_.null();
 }
 
 view::IRIBackendView NodeBackendHandle::iri_backend() const noexcept {
@@ -79,27 +50,33 @@ view::VariableBackendView NodeBackendHandle::variable_backend() const noexcept {
 }
 
 NodeID NodeBackendHandle::node_id() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.node_id_;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).node_id_;
 }
 
 bool NodeBackendHandle::is_inlined() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.inlined;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).inlined;
 }
 
 uint8_t NodeBackendHandle::free_tagging_bits() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits;
+    return std::bit_cast<NodeBackendHandleImpl>(*this).free_tagging_bits;
 }
 void NodeBackendHandle::set_free_tagging_bits(uint8_t new_value) {
     assert(new_value < (1 << 3));
-    unsafe_cast<NodeBackendHandleImpl>(*this).fields_.free_tagging_bits = new_value;
+    auto tmp = std::bit_cast<NodeBackendHandleImpl>(*this);
+    tmp.free_tagging_bits = new_value;
+    raw_ = std::bit_cast<uint64_t>(tmp);
 }
+
 NodeStorageID NodeBackendHandle::node_storage_id() const noexcept {
-    return unsafe_cast<NodeBackendHandleImpl>(*this).storage_id();
+    return NodeStorageID{std::bit_cast<NodeBackendHandleImpl>(*this).storage_id_};
 }
+
 NodeBackendHandle::NodeBackendHandle(uint64_t raw) noexcept
-    : raw_{raw} {}
+    : raw_{raw} {
+}
 NodeBackendHandle::NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined, uint8_t tagging_bits) noexcept
-    : raw_(unsafe_copy_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id, inlined, tagging_bits})) {}
+    : raw_{std::bit_cast<uint64_t>(NodeBackendHandleImpl{node_id, node_type, node_storage_id.value, inlined, tagging_bits})} {
+}
 
 NodeBackendHandle NodeBackendHandle::from_raw(uint64_t raw) noexcept {
     return NodeBackendHandle{raw};

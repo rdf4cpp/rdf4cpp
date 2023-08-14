@@ -8,7 +8,6 @@
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 #include <array>
 #include <concepts>

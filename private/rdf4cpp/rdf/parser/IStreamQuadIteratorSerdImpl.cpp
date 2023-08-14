@@ -332,7 +332,7 @@ std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::n
                     return std::nullopt;  // eof reached
                 }
 
-                serd_reader_skip_error(this->reader.get());
+                serd_reader_skip_until_byte(this->reader.get(), '\n');
                 return nonstd::make_unexpected(*this->last_error);
             } else if (this->last_error.has_value()) {
                 // non-fatal, artificially inserted error

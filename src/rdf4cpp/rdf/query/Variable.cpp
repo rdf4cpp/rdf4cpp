@@ -16,13 +16,26 @@ Variable Variable::make_anonymous(std::string_view name, Node::NodeStorage &node
     return Variable{name, true, node_storage};
 }
 
-query::Variable Variable::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+Variable Variable::to_node_storage(NodeStorage &node_storage) const noexcept {
     if (handle_.node_storage_id() == node_storage.id()) {
         return *this;
     }
 
     auto const node_id = node_storage.find_or_make_id(NodeStorage::find_variable_backend_view(handle_));
-    return query::Variable{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
+    return Variable{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
+}
+
+Variable Variable::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    auto const node_id = node_storage.find_id(NodeStorage::find_variable_backend_view(handle_));
+    if (node_id == NodeID{}) {
+        return Variable{};
+    }
+
+    return Variable{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
 }
 
 bool Variable::is_anonymous() const {

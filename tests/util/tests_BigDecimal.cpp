@@ -1,9 +1,6 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-
 #include <doctest/doctest.h>
-#include <fmt/format.h>
+
 #include <rdf4cpp/rdf/util/BigDecimal.hpp>
 
 using Dec = rdf4cpp::rdf::util::BigDecimal<>;
@@ -16,29 +13,29 @@ TEST_CASE("basics") {
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<int32_t>);
         static_assert(rdf4cpp::rdf::util::BigDecimalBaseType<boost::multiprecision::cpp_int>);
         Dec d{500, 1};
-        CHECK(d > Dec{-500, 1});
+        CHECK_GT(d, Dec{-500, 1});
         CHECK(Dec{-500, 1} < d);
         CHECK(Dec{50, 0} == d);
-        CHECK(d > Dec{40, 0});
-        CHECK(d < Dec{60, 0});
+        CHECK_GT(d, Dec{40, 0});
+        CHECK_LT(d, Dec{60, 0});
         CHECK(Dec{40, 0} < d);
         CHECK(Dec{60, 0} > d);
-        CHECK(d != Dec{60, 1});
+        CHECK_NE(d, Dec{60, 1});
 
         int32_t m = std::numeric_limits<int32_t>::max();
-        CHECK(DecI{m, 5} < DecI{m, 0});
-        CHECK(DecI{m, 5} > DecI{0, 0});
-        CHECK(DecI{m, 5} > DecI{m, 10});
+        CHECK_LT(DecI{m, 5}, DecI{m, 0});
+        CHECK_GT(DecI{m, 5}, DecI{0, 0});
+        CHECK_GT(DecI{m, 5}, DecI{m, 10});
     }
     SUBCASE("normalize") {
         Dec d{500, 1};
         d.normalize();
-        CHECK(d == Dec{50, 0});
-        CHECK(d.get_exponent() == 0);
+        CHECK_EQ(d, Dec{50, 0});
+        CHECK_EQ(d.get_exponent(), 0);
         d = Dec{51, 1};
         d.normalize();
-        CHECK(d == Dec{51, 1});
-        CHECK(d.get_exponent() == 1);
+        CHECK_EQ(d, Dec{51, 1});
+        CHECK_EQ(d.get_exponent(), 1);
     }
 }
 
@@ -66,7 +63,7 @@ TEST_CASE("arithmetic") {
         CHECK(!DecI{m, 0}.mul_checked(DecI{m, 0}).has_value());
         Dec d{5, 0};
         d += Dec{5, 1};
-        CHECK(d == Dec{55, 1});
+        CHECK_EQ(d, Dec{55, 1});
     }
     SUBCASE("-") {
         CHECK((Dec{2, 0} - Dec{1, 0}) == Dec{1, 0});
@@ -81,12 +78,12 @@ TEST_CASE("arithmetic") {
         CHECK((Dec{-2, 0} - Dec{-1, 0}) == Dec{-1, 0});
         auto v = DecI{-5, 0}.sub_checked(DecI(mi, 0));
         CHECK(v.has_value());
-        CHECK(v.value() == DecI{-5 - mi});
+        CHECK_EQ(v.value(), DecI{-5 - mi});
         v = DecI{5, 0}.sub_checked(DecI(mi, 0));
         CHECK(!v.has_value());
         Dec d{5, 0};
         d -= Dec{5, 1};
-        CHECK(d == Dec{45, 1});
+        CHECK_EQ(d, Dec{45, 1});
     }
     SUBCASE("*") {
         CHECK((Dec{2, 0} * Dec{2, 0}) == Dec{4, 0});
@@ -103,7 +100,7 @@ TEST_CASE("arithmetic") {
         CHECK(!DecI{m, 100}.mul_checked(DecI{m, 0}).has_value());
         Dec d{5, 0};
         d *= Dec{5, 1};
-        CHECK(d == Dec{25, 1});
+        CHECK_EQ(d, Dec{25, 1});
     }
     SUBCASE("/") {
         CHECK((Dec{2, 0} / Dec{2, 0}) == Dec{1, 0});
@@ -118,7 +115,7 @@ TEST_CASE("arithmetic") {
         CHECK(!DecI{1, 0}.div_checked(DecI{3, 0}, 1000, RoundingMode::Floor).has_value());
         Dec d{5, 0};
         d /= Dec{2, 0};
-        CHECK(d == Dec{25, 1});
+        CHECK_EQ(d, Dec{25, 1});
     }
     SUBCASE("precision") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
@@ -147,11 +144,11 @@ TEST_CASE("arithmetic") {
         CHECK(!DecI{500, 0}.pow_checked(m).has_value());
     }
     SUBCASE("hash") {
-        CHECK(Dec{1, 0}.hash() == Dec{1, 0}.hash());
-        CHECK(Dec{1, 0}.hash() != Dec{2, 0}.hash());
-        CHECK(Dec{1, 0}.hash() != Dec{1, 1}.hash());
-        CHECK(Dec{1, 0}.hash() != Dec{-1, 0}.hash());
-        CHECK(Dec{1, 0}.hash() == Dec{10, 1}.hash());
+        CHECK_EQ(Dec{1, 0}.hash(), Dec{1, 0}.hash());
+        CHECK_NE(Dec{1, 0}.hash(), Dec{2, 0}.hash());
+        CHECK_NE(Dec{1, 0}.hash(), Dec{1, 1}.hash());
+        CHECK_NE(Dec{1, 0}.hash(), Dec{-1, 0}.hash());
+        CHECK_EQ(Dec{1, 0}.hash(), Dec{10, 1}.hash());
     }
 }
 
@@ -167,12 +164,12 @@ TEST_CASE("conversion") {
         CHECK(static_cast<std::string>(Dec{0, 5}) == "0.0");
         CHECK(static_cast<std::string>(Dec{100, 5}) == "0.001");
         CHECK(static_cast<std::string>(Dec{100, 0}) == "100.0");
-        CHECK(static_cast<std::string>(DecI{mini, 0}) == fmt::format("{}.0", mini));
+        CHECK(static_cast<std::string>(DecI{mini, 0}) == std::to_string(mini) + ".0");
     }
     SUBCASE("writing") {
         std::stringstream str{};
         str << Dec{50, 1};
-        CHECK(str.view() == "5.0");
+        CHECK_EQ(str.view(), "5.0");
         // uses string conversion, so no more tests here
     }
     SUBCASE("from double") {
@@ -181,16 +178,16 @@ TEST_CASE("conversion") {
         CHECK(Dec{500000.0} == Dec{500000, 0});
         CHECK(Dec{0.0009765625} == Dec{"0.0009765625"});
         CHECK(Dec{1.0} == Dec{1, 0});
-        CHECK(static_cast<float>(Dec{1.0}) == 1.0f);
+        CHECK_EQ(static_cast<float>(Dec{1.0}), 1.0f);
     }
     SUBCASE("to double") {
-        CHECK(static_cast<double>(Dec{50, 0}) == 50.0);
-        CHECK(static_cast<double>(Dec{500, 1}) == 50.0);
-        CHECK(static_cast<double>(Dec{static_cast<boost::multiprecision::cpp_int>(std::numeric_limits<double>::max()) * 100, 2}) == std::numeric_limits<double>::max());
+        CHECK_EQ(static_cast<double>(Dec{50, 0}), 50.0);
+        CHECK_EQ(static_cast<double>(Dec{500, 1}), 50.0);
+        CHECK_EQ(static_cast<double>(Dec{static_cast<boost::multiprecision::cpp_int>(std::numeric_limits<double>::max()) * 100, 2}), std::numeric_limits<double>::max());
     }
     SUBCASE("to float") {
-        CHECK(static_cast<float>(Dec{50, 0}) == 50.0f);
-        CHECK(static_cast<float>(Dec{500, 1}) == 50.0f);
+        CHECK_EQ(static_cast<float>(Dec{50, 0}), 50.0f);
+        CHECK_EQ(static_cast<float>(Dec{500, 1}), 50.0f);
     }
     SUBCASE("from string") {
         CHECK(Dec{"5"} == Dec{5, 0});
@@ -199,14 +196,14 @@ TEST_CASE("conversion") {
         CHECK(Dec{"54.32"} == Dec{5432, 2});
         CHECK(Dec{".54"} == Dec{54, 2});
         CHECK(Dec{"0005.000"} == Dec{5000, 3});
-        CHECK(Dec{"0005.000"}.get_exponent() == 3);
+        CHECK_EQ(Dec{"0005.000"}.get_exponent(), 3);
         CHECK(Dec{"-5"} == Dec{-5, 0});
         CHECK(Dec{"-5."} == Dec{-5, 0});
         CHECK(Dec{"-5.1"} == Dec{-51, 1});
         CHECK(Dec{"-54.32"} == Dec{-5432, 2});
         CHECK(Dec{"-.54"} == Dec{-54, 2});
         CHECK(Dec{"-0005.000"} == Dec{-5000, 3});
-        CHECK(Dec{"-0005.000"}.get_exponent() == 3);
+        CHECK_EQ(Dec{"-0005.000"}.get_exponent(), 3);
         CHECK(Dec{"0.0"} == Dec{"-0.0"});
         CHECK_THROWS_AS(Dec{"5.5.5"}, std::invalid_argument);
         CHECK_THROWS_AS(Dec{"5.5-5"}, std::invalid_argument);
@@ -221,5 +218,3 @@ TEST_CASE("conversion") {
         CHECK(static_cast<boost::multiprecision::cpp_int>(Dec{59, 1}) == boost::multiprecision::cpp_int{5});
     }
 }
-
-#pragma clang diagnostic pop
