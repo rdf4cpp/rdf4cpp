@@ -12,16 +12,30 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
     auto p = s.find_first_of(Timezone::begin_tokens);
+    if (p == 0)
+        throw std::runtime_error{"invalid seconds"};
     if (p == std::string::npos)
         throw std::invalid_argument{"missing timezone"};
     auto tz = Timezone::parse(s.substr(p));
     std::chrono::milliseconds ms = parse_milliseconds(s.substr(0, p));
     auto date = year / month / day;
     if (!date.ok())
-       throw std::invalid_argument("invalid date");
+        throw std::invalid_argument("invalid date");
+    if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
+        throw std::invalid_argument{"minutes out of range"};
+    if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
+        throw std::invalid_argument{"hours out of range"};
+    if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
+        throw std::invalid_argument{"seconds out of range"};
     auto time = hours + minutes + ms;
-    if (time > std::chrono::hours{24})
+    if (time == std::chrono::hours{24}) {
+        date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
+        if (!date.ok())
+            throw std::invalid_argument("invalid date");
+        time = std::chrono::hours{0};
+    } else if (time > std::chrono::hours{24}) {
         throw std::invalid_argument{"invalid time of day"};
+    }
 
     return ZonedTime{tz, construct(date, time)};
 }
@@ -30,6 +44,23 @@ template<>
 std::string capabilities::Default<xsd_dateTimeStamp>::to_canonical_string(const cpp_type &value) noexcept {
     auto str = std::format("{:%Y-%m-%dT%H:%M:%S%Z}", value);
     return str;
+}
+
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dateTimeStamp>::try_into_inlined(cpp_type const &value) noexcept {
+    if (value.get_time_zone() != xsd::DateTimeStamp::inlining_default_timezone)
+        return std::nullopt;
+    auto tp_sec = std::chrono::floor<std::chrono::seconds>(value.get_sys_time());
+    if ((value.get_sys_time() - tp_sec).count() != 0)
+        return std::nullopt;
+    auto s = static_cast<int64_t>(tp_sec.time_since_epoch().count());
+    return util::try_pack_integral<storage::node::identifier::LiteralID>(s);
+}
+
+template<>
+capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    std::integral auto i = util::unpack_integral<int64_t>(inlined);
+    return registry::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, registry::TimePointSys{std::chrono::seconds{i}}};
 }
 
 template<>
@@ -54,5 +85,6 @@ nonstd::expected<capabilities::Subtype<xsd_dateTimeStamp>::cpp_type, DynamicErro
 template struct LiteralDatatypeImpl<xsd_dateTimeStamp,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
-                                    capabilities::Subtype>;
+                                    capabilities::Subtype,
+                                    capabilities::Inlineable>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

@@ -96,6 +96,60 @@ std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_t
     return str.str();
 }
 
+struct __attribute__((__packed__)) InlinedDurationHelper {
+    static constexpr std::size_t width = storage::node::identifier::LiteralID::width;
+    static constexpr int seconds_width = 25;
+    static constexpr int months_with = width - seconds_width - 1;
+
+    static constexpr int64_t seconds_mask = ~int64_t{0} << seconds_width;
+    static constexpr int64_t months_mask = ~int64_t{0} << months_with;
+
+    unsigned int sign : 1;
+    unsigned int seconds : seconds_width;
+    unsigned int months : months_with;
+
+    InlinedDurationHelper(unsigned int s, unsigned int sec, unsigned int mo) : sign(s), seconds(sec), months(mo) {
+    }
+
+private:
+    [[maybe_unused]] unsigned int padding : 64 - width = 0;  // to make sure the rest of the int64 is 0
+};
+
+static_assert(numberOfBits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
+
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept {
+    auto ms = value.second;
+    auto months = value.first;
+    unsigned int sign = 0;
+    if (months < std::chrono::months{0}) {
+        sign = 1;
+        ms = -ms;
+        months = -months;
+    }
+    auto sec = std::chrono::floor<std::chrono::seconds>(ms);
+    if ((ms - sec) != std::chrono::milliseconds{0})
+        return std::nullopt;
+    if (sec.count() & InlinedDurationHelper::seconds_mask)
+        return std::nullopt;
+    if (months.count() & InlinedDurationHelper::months_mask)
+        return std::nullopt;
+    return util::pack<storage::node::identifier::LiteralID>(InlinedDurationHelper{
+            sign, static_cast<unsigned int>(sec.count()), static_cast<unsigned int>(months.count())});
+}
+
+template<>
+capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_duration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+    auto i = util::unpack<InlinedDurationHelper>(inlined);
+    std::chrono::seconds sec{i.seconds};
+    std::chrono::months months{i.months};
+    if (i.sign == 1) {
+        sec = -sec;
+        months = -months;
+    }
+    return std::make_pair(months, std::chrono::milliseconds{sec});
+}
+
 template<>
 std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     static constexpr std::array<TimePoint, 4> to_compare{
@@ -117,5 +171,6 @@ std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type c
 
 template struct LiteralDatatypeImpl<xsd_duration,
                                     capabilities::Comparable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 }  // namespace rdf4cpp::rdf::datatypes::registry

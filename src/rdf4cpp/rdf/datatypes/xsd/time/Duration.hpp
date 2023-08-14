@@ -22,13 +22,19 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
 template<>
 std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_type &value) noexcept;
 
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_duration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_duration,
                                            capabilities::Comparable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -36,7 +42,8 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 
 struct Duration : registry::LiteralDatatypeImpl<registry::xsd_duration,
                                                 registry::capabilities::Comparable,
-                                                registry::capabilities::FixedId> {};
+                                                registry::capabilities::FixedId,
+                                                registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 

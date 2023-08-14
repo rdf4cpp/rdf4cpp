@@ -256,13 +256,16 @@ struct InliningHelper {
     }
 };
 struct __attribute__((__packed__)) InliningHelperPacked {
-    static constexpr std::size_t tv_width = storage::node::identifier::LiteralID::width-11;
-    static constexpr std::size_t width = tv_width+11;
+    static constexpr std::size_t width = storage::node::identifier::LiteralID::width;
+    static constexpr std::size_t tv_width = width - 11;
 
     uint16_t tz_offset:11;
     uint32_t time_value:tv_width;
-    uint32_t padding:64-width = 0;
 
+private:
+    [[maybe_unused]] uint32_t padding : 64 - width = 0;  // to make sure the rest of the int64 is 0
+
+public:
     static constexpr int tz_shift = Timezone::max_value().offset.count() + 1;
     static_assert(numberOfBits(static_cast<unsigned int>(Timezone::max_value().offset.count() + tz_shift)) == 11);
 

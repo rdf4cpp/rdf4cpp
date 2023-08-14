@@ -27,6 +27,11 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 template<>
 std::string capabilities::Default<xsd_dateTimeStamp>::to_canonical_string(const cpp_type &value) noexcept;
 
+template<>
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dateTimeStamp>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTimeStamp>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
@@ -42,7 +47,8 @@ nonstd::expected<capabilities::Subtype<xsd_dateTimeStamp>::cpp_type, DynamicErro
 extern template struct LiteralDatatypeImpl<xsd_dateTimeStamp,
                                            capabilities::Comparable,
                                            capabilities::FixedId,
-                                           capabilities::Subtype>;
+                                           capabilities::Subtype,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 
@@ -51,7 +57,15 @@ namespace rdf4cpp::rdf::datatypes::xsd {
 struct DateTimeStamp : registry::LiteralDatatypeImpl<registry::xsd_dateTimeStamp,
                                                      registry::capabilities::Comparable,
                                                      registry::capabilities::FixedId,
-                                                     registry::capabilities::Subtype> {};
+                                                     registry::capabilities::Subtype,
+                                                     registry::capabilities::Inlineable> {
+    /**
+     * any DateTimeStamp with this Timezone may get inlined.
+     * can be changed at compile time.
+     * warning: loading a database that was saved with a different inlining_default_timezone is undefined behavior.
+     */
+    static constexpr registry::Timezone inlining_default_timezone = registry::Timezone();
+};
 
 }  // namespace rdf4cpp::rdf::datatypes::xsd
 
