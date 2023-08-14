@@ -450,6 +450,8 @@ public:
                 return T::from_string(this->lexical_form());
             } catch (std::runtime_error const &) {
                 return std::nullopt;
+            } catch (std::invalid_argument const &) {
+                return std::nullopt;
             }
         }
 
@@ -1116,51 +1118,91 @@ public:
 
     /**
      * returns the year part of this.
+     * @return year or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::year> year() const;
+    /**
+     * returns the year part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal year(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_year(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the month part of this.
+     * @return month or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::month> month() const;
     /**
      * returns the month part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal month(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_month(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the day part of this.
+     * @return day or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::day> day() const;
     /**
      * returns the day part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal day(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_day(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the hours part of this.
+     * @return hours ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::hours> hours() const;
     /**
      * returns the hours part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal hours(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_hours(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the minutes part of this.
+     * @return minutes ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::minutes> minutes() const;
     /**
      * returns the minutes part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return seconds or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const;
     /**
      * returns the seconds (including fractional) part of this.
      * @return xsd::Decimal or null literal
      */
-    [[nodiscard]] Literal seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * returns the timezone offset part of this.
-     * @return xsd::DayTimeDuration or null literal
+     * @return timezone or nullopt
      */
-    [[nodiscard]] Literal timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] std::optional<datatypes::registry::Timezone> timezone() const;
+    /**
+     * returns the timezone offset part of this.
+     * @return offset as xsd::DayTimeDuration or null literal
+     */
+    [[nodiscard]] Literal as_timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * returns the timezone offset part of this.
-     * @return simple literal or null literal
+     * @return timezone as string or nullopt
      */
-    [[nodiscard]] Literal tz(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] std::optional<std::string> tz() const;
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone as simple literal or null literal
+     */
+    [[nodiscard]] Literal as_tz(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
     /**
      * @return the effective boolean value of this

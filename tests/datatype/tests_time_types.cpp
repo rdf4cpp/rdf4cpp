@@ -459,45 +459,61 @@ TEST_CASE("Literal API") {
 
     CHECK(Literal::now().datatype_eq<datatypes::xsd::DateTime>());
 
-    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
-    CHECK(Literal::make_typed<datatypes::xsd::GYear>("2042").year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
-    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5").year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").as_year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").as_year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").as_year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::GYear>("2042").as_year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5").as_year() == Literal::make_typed<datatypes::xsd::Integer>("2042"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("5").as_year() == Literal{});
+    CHECK(Literal::make_simple("5").as_year() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("5-6").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5").month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("5-6").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-5").as_month() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("5").as_month() == Literal{});
+    CHECK(Literal::make_simple("5").as_month() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
-    CHECK(Literal::make_typed<datatypes::xsd::GDay>("5").day() == Literal::make_typed<datatypes::xsd::Integer>("5"));
-    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("5-6").day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").as_day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").as_day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").as_day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("5").as_day() == Literal::make_typed<datatypes::xsd::Integer>("5"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("5-6").as_day() == Literal::make_typed<datatypes::xsd::Integer>("6"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").as_day() == Literal{});
+    CHECK(Literal::make_simple("5").as_day() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").as_hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").as_hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").as_hours() == Literal::make_typed<datatypes::xsd::Integer>("1"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").as_hours() == Literal{});
+    CHECK(Literal::make_simple("5").as_hours() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").as_minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").as_minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").as_minutes() == Literal::make_typed<datatypes::xsd::Integer>("2"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").as_minutes() == Literal{});
+    CHECK(Literal::make_simple("5").as_minutes() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").seconds() == Literal::make_typed<datatypes::xsd::Decimal>("3"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").seconds() == Literal::make_typed<datatypes::xsd::Decimal>("3"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").seconds() == Literal::make_typed<datatypes::xsd::Integer>("3"));
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:3").as_seconds() == Literal::make_typed<datatypes::xsd::Decimal>("3"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").as_seconds() == Literal::make_typed<datatypes::xsd::Decimal>("3"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+1:0").as_seconds() == Literal::make_typed<datatypes::xsd::Decimal>("3"));
+    CHECK(Literal::make_typed<datatypes::xsd::Time>("1:2:59.999").as_seconds() == Literal::make_typed<datatypes::xsd::Decimal>("59.999"));
+    CHECK(Literal::make_typed<datatypes::xsd::GMonth>("5").as_seconds() == Literal{});
+    CHECK(Literal::make_simple("5").as_seconds() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1H"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT0H"));
-    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3+1:30").timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1H30M"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").as_timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1H"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").as_timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT0H"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3+1:30").as_timezone() == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1H30M"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3").as_timezone() == Literal{});
+    CHECK(Literal::make_simple("5").as_timezone() == Literal{});
 
-    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").tz() == Literal::make_simple("+1:00"));
-    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").tz() == Literal::make_simple("Z"));
-    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3+1:30").tz() == Literal::make_simple("+1:30"));
-    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3").tz() == Literal::make_simple(""));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3+1:0").as_tz() == Literal::make_simple("+1:00"));
+    CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z").as_tz() == Literal::make_simple("Z"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3+1:30").as_tz() == Literal::make_simple("+1:30"));
+    CHECK(Literal::make_typed<datatypes::xsd::GDay>("3").as_tz() == Literal::make_simple(""));
+    CHECK(Literal::make_simple("5").as_tz() == Literal{});
 }
 
 #pragma clang diagnostic pop
