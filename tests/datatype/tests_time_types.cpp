@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
@@ -556,5 +554,3 @@ TEST_CASE("Literal API") {
     CHECK(Literal::make_typed<datatypes::xsd::GDay>("3").as_tz() == Literal::make_simple(""));
     CHECK(Literal::make_simple("5").as_tz() == Literal{});
 }
-
-#pragma clang diagnostic pop
