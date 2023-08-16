@@ -6,10 +6,6 @@ jobs:
       matrix:
         cppenv:
           - os: ubuntu-22.04
-            compiler: gcc-11
-          - os: ubuntu-22.04
-            compiler: gcc-12
-          - os: ubuntu-22.04
             compiler: gcc-13
 
           - os: ubuntu-22.04
