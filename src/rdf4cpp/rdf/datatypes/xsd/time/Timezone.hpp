@@ -18,7 +18,7 @@ public:
 
     constexpr Timezone() = default;
 
-    constexpr explicit Timezone(const std::chrono::time_zone *tz, std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now())
+    inline explicit Timezone(const std::chrono::time_zone *tz, std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now())
         : offset(std::chrono::duration_cast<std::chrono::minutes>(tz->get_info(n).offset)) {
     }
 
@@ -232,7 +232,7 @@ constexpr T numberOfBits(T x) {
 }
 template<class TimeType>
     requires(sizeof(TimeType) <= 2)
-struct InliningHelper {
+struct __attribute__((__packed__)) InliningHelper {
     uint16_t tz_offset;
     TimeType time_value;
 

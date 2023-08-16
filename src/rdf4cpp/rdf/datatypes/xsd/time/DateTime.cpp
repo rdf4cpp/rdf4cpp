@@ -56,8 +56,7 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    std::integral auto i = util::unpack_integral<int64_t>(inlined);
-    return std::make_pair(TimePoint{std::chrono::seconds{i}}, std::nullopt);
+    return std::make_pair(TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
 }
 
 template<>

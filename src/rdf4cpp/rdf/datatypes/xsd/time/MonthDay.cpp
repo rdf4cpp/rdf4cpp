@@ -24,20 +24,23 @@ std::string capabilities::Default<xsd_gMonthDay>::to_canonical_string(const cpp_
     return str;
 }
 
-using IHelp = InliningHelper<std::chrono::month_day>;
+struct __attribute__((__packed__)) InliningHelperMonthDay {
+    uint8_t month, day;
+};
+using IHelp = InliningHelper<InliningHelperMonthDay>;
 static_assert(sizeof(std::chrono::month_day) == 2);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gMonthDay>::try_into_inlined(cpp_type const &value) noexcept {
-    IHelp i{value.first, value.second};
+    IHelp i{InliningHelperMonthDay{static_cast<uint8_t>(static_cast<unsigned int>(value.first.month())), static_cast<uint8_t>(static_cast<unsigned int>(value.first.day()))}, value.second};
     return util::pack<storage::node::identifier::LiteralID>(i);
 }
 
 template<>
 capabilities::Inlineable<xsd_gMonthDay>::cpp_type capabilities::Inlineable<xsd_gMonthDay>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<IHelp>(inlined);
-    return std::make_pair(i.time_value, i.decode_tz());
+    return std::make_pair(std::chrono::month{i.time_value.month} / std::chrono::day{i.time_value.day}, i.decode_tz());
 }
 
 template<>

@@ -59,8 +59,8 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    std::integral auto i = util::unpack_integral<int64_t>(inlined);
-    return registry::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, registry::TimePointSys{std::chrono::seconds{i}}};
+    return registry::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, registry::TimePointSys{
+                                                                                      std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}};
 }
 
 template<>

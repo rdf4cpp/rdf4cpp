@@ -24,20 +24,20 @@ std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type cons
     return TimeComparer<std::chrono::year>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
-using IHelp = InliningHelper<std::chrono::year>;
+using IHelp = InliningHelper<int16_t>;
 static_assert(sizeof(std::chrono::year) == 2);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gYear>::try_into_inlined(cpp_type const &value) noexcept {
-    IHelp i{value.first, value.second};
+    IHelp i{static_cast<int16_t>(static_cast<int>(value.first)), value.second};
     return util::pack<storage::node::identifier::LiteralID>(i);
 }
 
 template<>
 capabilities::Inlineable<xsd_gYear>::cpp_type capabilities::Inlineable<xsd_gYear>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<IHelp>(inlined);
-    return std::make_pair(i.time_value, i.decode_tz());
+    return std::make_pair(std::chrono::year{i.time_value}, i.decode_tz());
 }
 
 template<>
