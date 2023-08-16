@@ -7,6 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -53,5 +54,13 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::Duration const xsd_Duration_instance;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+template<typename Policy, typename A, typename B>
+struct dice::hash::dice_hash_overload<Policy, std::chrono::duration<A, B>> {
+    static size_t dice_hash(std::chrono::duration<A, B> const &x) noexcept {
+        auto m = x.count();
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(m);
+    }
+};
 
 #endif  //RDF4CPP_DURATION_HPP

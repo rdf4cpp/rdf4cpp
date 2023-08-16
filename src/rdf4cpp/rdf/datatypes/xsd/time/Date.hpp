@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -71,5 +72,15 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::Date const xsd_Date_instance;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, std::chrono::year_month_day> {
+    static size_t dice_hash(std::chrono::year_month_day const &x) noexcept {
+        auto year = static_cast<int>(x.year());
+        auto month = static_cast<unsigned int>(x.month());
+        auto day = static_cast<unsigned int>(x.day());
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(year, month, day));
+    }
+};
 
 #endif  //RDF4CPP_DATE_HPP

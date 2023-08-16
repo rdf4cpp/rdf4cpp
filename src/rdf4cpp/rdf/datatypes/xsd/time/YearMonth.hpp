@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -71,5 +72,14 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::GYearMonth const xsd_gYearMonth_instance;
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, std::chrono::year_month> {
+    static size_t dice_hash(std::chrono::year_month const &x) noexcept {
+        auto y = static_cast<int>(x.year());
+        auto m = static_cast<unsigned int>(x.month());
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(y, m));
+    }
+};
 
 #endif  //RDF4CPP_YEARMONTH_HPP

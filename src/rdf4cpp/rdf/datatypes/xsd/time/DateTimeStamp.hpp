@@ -8,6 +8,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -75,5 +76,14 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 [[maybe_unused]] inline xsd::DateTimeStamp const xsd_DateTimeStamp_instance;
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::ZonedTime> {
+    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::ZonedTime const &x) noexcept {
+        auto tp = x.get_sys_time().time_since_epoch().count();
+        auto off = x.get_time_zone().offset.count();
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(tp, off));
+    }
+};
 
 #endif  //RDF4CPP_DATETIMESTAMP_HPP

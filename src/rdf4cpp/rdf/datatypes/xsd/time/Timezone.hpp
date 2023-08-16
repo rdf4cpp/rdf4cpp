@@ -5,6 +5,7 @@
 #include <format>
 #include <string_view>
 
+#include <dice/hash.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
@@ -288,5 +289,20 @@ public:
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::Timezone> {
+    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::Timezone const &x) noexcept {
+        auto off = x.offset.count();
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
+    }
+};
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::OptionalTimezone> {
+    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::OptionalTimezone const &x) noexcept {
+        auto off = x.has_value() ? x->offset.count() : std::chrono::minutes{std::chrono::hours{15}}.count();
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
+    }
+};
 
 #endif  //RDF4CPP_TIMEZONE_HPP
