@@ -47,6 +47,10 @@ jobs:
           
           sudo apt-get update -y
 
+      - name: Ensure stdlib version
+        run: |
+          sudo apt install libstdc++-13-dev -y
+
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:

@@ -42,7 +42,7 @@ jobs:
 
       - name: Ensure stdlib version
         run: |
-          sudo apt install libstdc++-13-dev
+          sudo apt install libstdc++-13-dev -y
 
       - name: Install compiler
         id: install_cc
