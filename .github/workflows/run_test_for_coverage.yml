@@ -8,7 +8,7 @@ jobs:
       matrix:
         cppenv: [ {
           os: ubuntu-22.04,
-          compiler: "gcc-12",
+          compiler: "gcc-13",
         } ]
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
