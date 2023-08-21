@@ -1,14 +1,14 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/Year.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
-    auto tz = Timezone::try_parse(s);
-    auto year = parse_date_time_fragment<std::chrono::year, int, '\0'>(tz.second);
-    return std::make_pair(year, tz.first);
+    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0'>(s);
+    return std::make_pair(year, tz);
 }
 
 template<>
@@ -19,12 +19,16 @@ std::string capabilities::Default<xsd_gYear>::to_canonical_string(const cpp_type
     return str;
 }
 
+
+rdf::util::TimePoint year_to_tp(std::chrono::year t) {
+    return rdf::util::construct(t / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), rdf::util::TimePointReplacementTimeOfDay);
+}
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer<std::chrono::year>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return registry::util::TimeComparer::compare(year_to_tp(lhs.first), lhs.second, year_to_tp(rhs.first), rhs.second);
 }
 
-using IHelp = InliningHelper<int16_t>;
+using IHelp = registry::util::InliningHelper<int16_t>;
 static_assert(sizeof(std::chrono::year) == 2);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 
@@ -43,7 +47,7 @@ capabilities::Inlineable<xsd_gYear>::cpp_type capabilities::Inlineable<xsd_gYear
 template<>
 template<>
 capabilities::Subtype<xsd_gYear>::super_cpp_type<0> capabilities::Subtype<xsd_gYear>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(value.first / TimePointReplacementDate.month() / TimePointReplacementDate.day(), value.second);
+    return std::make_pair(value.first / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), value.second);
 }
 
 template<>
@@ -58,9 +62,4 @@ template struct LiteralDatatypeImpl<xsd_gYear,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
 
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::year>(std::chrono::year t) {
-    return construct(t / TimePointReplacementDate.month() / TimePointReplacementDate.day(), TimePointReplacementTimeOfDay);
-}
 }

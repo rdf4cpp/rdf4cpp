@@ -12,8 +12,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
-#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <type_traits>
 
 namespace rdf4cpp::rdf {
@@ -1186,7 +1186,7 @@ public:
      * returns the timezone offset part of this.
      * @return timezone or nullopt
      */
-    [[nodiscard]] std::optional<datatypes::registry::Timezone> timezone() const;
+    [[nodiscard]] std::optional<util::Timezone> timezone() const;
     /**
      * returns the timezone offset part of this.
      * @return offset as xsd::DayTimeDuration or null literal

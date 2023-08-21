@@ -1,12 +1,13 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/Duration.hpp>
 
 #include <ranges>
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration>::from_string(std::string_view s) {
+    using namespace registry::util;
     bool negative = false;
     if (!s.empty() && s[0] == '-') {
         negative = true;
@@ -115,7 +116,7 @@ private:
     [[maybe_unused]] unsigned int padding : 64 - width = 0;  // to make sure the rest of the int64 is 0
 };
 
-static_assert(numberOfBits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
+static_assert(registry::util::numberOfBits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept {
@@ -152,14 +153,14 @@ capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_du
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    static constexpr std::array<TimePoint, 4> to_compare{
-            construct(std::chrono::year{1696} / 9 / 1, std::chrono::milliseconds{0}),
-            construct(std::chrono::year{1697} / 2 / 1, std::chrono::milliseconds{0}),
-            construct(std::chrono::year{1903} / 3 / 1, std::chrono::milliseconds{0}),
-            construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
+    static constexpr std::array<rdf::util::TimePoint, 4> to_compare{
+            rdf::util::construct(std::chrono::year{1696} / 9 / 1, std::chrono::milliseconds{0}),
+            rdf::util::construct(std::chrono::year{1697} / 2 / 1, std::chrono::milliseconds{0}),
+            rdf::util::construct(std::chrono::year{1903} / 3 / 1, std::chrono::milliseconds{0}),
+            rdf::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
     };
-    auto cmp = [lhs, rhs](TimePoint tp) {
-        return TimeComparer<TimePoint>::compare(add_duration_to_date_time(tp, lhs), std::nullopt, add_duration_to_date_time(tp, rhs), std::nullopt);
+    auto cmp = [lhs, rhs](rdf::util::TimePoint tp) {
+        return registry::util::TimeComparer::compare(registry::util::add_duration_to_date_time(tp, lhs), std::nullopt, registry::util::add_duration_to_date_time(tp, rhs), std::nullopt);
     };
     std::partial_ordering o = cmp(to_compare[0]);
     for (unsigned int i = 1; i < to_compare.size(); ++i) {

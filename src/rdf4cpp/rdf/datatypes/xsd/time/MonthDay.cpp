@@ -1,19 +1,20 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/MonthDay.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthDay>::from_string(std::string_view s) {
+    using namespace registry::util;
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
-    auto tz = Timezone::try_parse(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(tz.second);
+    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(s);
     auto date = month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");
 
-    return std::make_pair(date, tz.first);
+    return std::make_pair(date, tz);
 }
 
 template<>
@@ -27,7 +28,7 @@ std::string capabilities::Default<xsd_gMonthDay>::to_canonical_string(const cpp_
 struct __attribute__((__packed__)) InliningHelperMonthDay {
     uint8_t month, day;
 };
-using IHelp = InliningHelper<InliningHelperMonthDay>;
+using IHelp = registry::util::InliningHelper<InliningHelperMonthDay>;
 static_assert(sizeof(std::chrono::month_day) == 2);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 
@@ -43,15 +44,19 @@ capabilities::Inlineable<xsd_gMonthDay>::cpp_type capabilities::Inlineable<xsd_g
     return std::make_pair(std::chrono::month{i.time_value.month} / std::chrono::day{i.time_value.day}, i.decode_tz());
 }
 
+rdf::util::TimePoint md_to_tp(std::chrono::month_day md) {
+    return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / md, rdf::util::TimePointReplacementTimeOfDay);
+}
+
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer<std::chrono::month_day>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return registry::util::TimeComparer::compare(md_to_tp(lhs.first), lhs.second, md_to_tp(rhs.first), rhs.second);
 }
 
 template<>
 template<>
 capabilities::Subtype<xsd_gMonthDay>::super_cpp_type<0> capabilities::Subtype<xsd_gMonthDay>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(TimePointReplacementDate.year() / value.first, value.second);
+    return std::make_pair(rdf::util::TimePointReplacementDate.year() / value.first, value.second);
 }
 
 template<>
@@ -65,10 +70,5 @@ template struct LiteralDatatypeImpl<xsd_gMonthDay,
                                     capabilities::FixedId,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::month_day>(std::chrono::month_day t) {
-    return construct(TimePointReplacementDate.year() / t, TimePointReplacementTimeOfDay);
-}
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

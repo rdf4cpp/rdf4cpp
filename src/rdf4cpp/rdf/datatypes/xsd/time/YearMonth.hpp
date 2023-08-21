@@ -6,7 +6,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <rdf4cpp/rdf/util/Timezone.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
 #include <dice/hash.hpp>
 
@@ -14,7 +14,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_gYearMonth> {
-    using cpp_datatype = std::pair<std::chrono::year_month, OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::year_month, rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_gYearMonth> {
@@ -50,9 +50,6 @@ extern template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                            capabilities::FixedId,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t);
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 

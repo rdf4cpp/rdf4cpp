@@ -1986,9 +1986,9 @@ Literal Literal::sha512(NodeStorage &node_storage) const {
 
 Literal Literal::now(NodeStorage &node_storage) {
     auto n = std::chrono::floor<std::chrono::milliseconds>(std::chrono::system_clock::now());
-    datatypes::registry::Timezone tz{};
-    datatypes::registry::TimePoint t = tz.to_local(n);
-    datatypes::registry::OptionalTimezone opt = std::nullopt;
+    util::Timezone tz{};
+    rdf::util::TimePoint t = tz.to_local(n);
+    rdf::util::OptionalTimezone opt = std::nullopt;
     return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
 }
 
@@ -2097,7 +2097,7 @@ Literal Literal::as_seconds(NodeStorage &node_storage) const {
     return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf::util::BigDecimal<>{r->count(), 3}, node_storage);
 }
 
-std::optional<datatypes::registry::Timezone> Literal::timezone() const {
+std::optional<util::Timezone> Literal::timezone() const {
     auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
     if (!casted.has_value())
         return std::nullopt;

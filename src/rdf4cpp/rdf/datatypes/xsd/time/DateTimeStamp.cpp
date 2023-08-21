@@ -1,22 +1,23 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dateTimeStamp>::from_string(std::string_view s) {
+    using namespace rdf::datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T'>(s);
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
-    auto p = s.find_first_of(Timezone::begin_tokens);
+    auto p = s.find_first_of(rdf::util::Timezone::begin_tokens);
     if (p == 0)
         throw std::runtime_error{"invalid seconds"};
     if (p == std::string::npos)
         throw std::invalid_argument{"missing timezone"};
-    auto tz = Timezone::parse(s.substr(p));
+    auto tz = rdf::util::Timezone::parse(s.substr(p));
     std::chrono::milliseconds ms = parse_milliseconds(s.substr(0, p));
     auto date = year / month / day;
     if (!date.ok())
@@ -37,7 +38,7 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
         throw std::invalid_argument{"invalid time of day"};
     }
 
-    return ZonedTime{tz, construct(date, time)};
+    return rdf::util::ZonedTime{tz, rdf::util::construct(date, time)};
 }
 
 template<>
@@ -59,8 +60,8 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    return registry::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, registry::TimePointSys{
-                                                                                      std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}};
+    return rdf::util::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, rdf::util::TimePointSys{
+                                                                                       std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}};
 }
 
 template<>
@@ -79,7 +80,7 @@ template<>
 nonstd::expected<capabilities::Subtype<xsd_dateTimeStamp>::cpp_type, DynamicError> capabilities::Subtype<xsd_dateTimeStamp>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     if (!value.second.has_value())
         return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
-    return ZonedTime{*value.second, value.first};
+    return rdf::util::ZonedTime{*value.second, value.first};
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTimeStamp,

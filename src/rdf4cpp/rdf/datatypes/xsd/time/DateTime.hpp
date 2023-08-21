@@ -6,14 +6,14 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <rdf4cpp/rdf/util/Timezone.hpp>
 #include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_dateTime> {
-    using cpp_datatype = std::pair<TimePoint, OptionalTimezone>;
+    using cpp_datatype = std::pair<rdf::util::TimePoint, rdf::util::OptionalTimezone>;
 };
 
 
@@ -56,8 +56,8 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::TimePoint> {
-    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::TimePoint const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::TimePoint> {
+    static size_t dice_hash(rdf4cpp::rdf::util::TimePoint const &x) noexcept {
         auto tp = x.time_since_epoch().count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(tp);
     }

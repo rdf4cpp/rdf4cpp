@@ -1,18 +1,19 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime>::from_string(std::string_view s) {
+    using namespace rdf::datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T'>(s);
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
-    auto tz = Timezone::try_parse(s);
-    std::chrono::milliseconds ms = parse_milliseconds(tz.second);
+    auto tz = rdf::util::Timezone::parse_optional(s);
+    std::chrono::milliseconds ms = parse_milliseconds(s);
     auto date = year / month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");
@@ -32,7 +33,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
         throw std::invalid_argument{"invalid time of day"};
     }
 
-    return std::make_pair(construct(date, time), tz.first);
+    return std::make_pair(rdf::util::construct(date, time), tz);
 }
 
 template<>
@@ -56,12 +57,12 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
-    return std::make_pair(TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
+    return std::make_pair(rdf::util::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
 }
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer<TimePoint>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return rdf::datatypes::registry::util::TimeComparer::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTime,

@@ -1,19 +1,20 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
+    using namespace registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
-    auto tz = Timezone::try_parse(s);
-    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0'>(tz.second);
+    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0'>(s);
     auto date = year / month;
     if (!date.ok())
         throw std::invalid_argument("invalid date");
 
-    return std::make_pair(date, tz.first);
+    return std::make_pair(date, tz);
 }
 
 template<>
@@ -44,9 +45,13 @@ capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month}, std::nullopt);
 }
 
+rdf::util::TimePoint ym_to_tp(std::chrono::year_month t) {
+    return rdf::util::construct(t / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
+}
+
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer<std::chrono::year_month>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return registry::util::TimeComparer::compare(ym_to_tp(lhs.first), lhs.second, ym_to_tp(rhs.first), rhs.second);
 }
 
 template<>
@@ -59,11 +64,6 @@ template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_gYearMonth>::cpp_type, DynamicError> capabilities::Subtype<xsd_gYearMonth>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(value.first.year() / value.first.month(), value.second);
-}
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::year_month>(std::chrono::year_month t) {
-    return construct(t / std::chrono::last, TimePointReplacementTimeOfDay);
 }
 
 template struct LiteralDatatypeImpl<xsd_gYearMonth,

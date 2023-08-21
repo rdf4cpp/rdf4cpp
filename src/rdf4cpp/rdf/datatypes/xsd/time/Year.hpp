@@ -6,14 +6,14 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <rdf4cpp/rdf/util/Timezone.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_gYear> {
-    using cpp_datatype = std::pair<std::chrono::year, OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::year, rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_gYear> {
@@ -51,9 +51,6 @@ extern template struct LiteralDatatypeImpl<xsd_gYear,
                                            capabilities::FixedId,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::year>(std::chrono::year t);
 
 }
 

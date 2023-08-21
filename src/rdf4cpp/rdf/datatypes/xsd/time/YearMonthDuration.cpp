@@ -1,12 +1,13 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.hpp>
 
 #include <ranges>
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd_yearMonthDuration>::from_string(std::string_view s) {
+    using namespace registry::util;
     bool negative = false;
     if (s[0] == '-') {
         negative = true;

@@ -6,14 +6,14 @@
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd/time/Timezone.hpp>
+#include <rdf4cpp/rdf/util/Timezone.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_time> {
-    using cpp_datatype = std::pair<std::chrono::milliseconds, OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_time> {
@@ -49,9 +49,6 @@ extern template struct LiteralDatatypeImpl<xsd_time,
                                            capabilities::FixedId,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
-
-template<>
-TimePoint to_point_on_timeline<std::chrono::milliseconds>(std::chrono::milliseconds t);
 
 }  // namespace rdf4cpp::rdf::datatypes::registry
 

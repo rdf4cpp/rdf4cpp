@@ -1,20 +1,21 @@
 #include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
 
-#include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
+    using namespace rdf::datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
-    auto tz = Timezone::try_parse(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(tz.second);
+    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(s);
     auto date = year / month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");
 
-    return std::make_pair(date, tz.first);
+    return std::make_pair(date, tz);
 }
 
 template<>
@@ -23,11 +24,6 @@ std::string capabilities::Default<xsd_date>::to_canonical_string(const cpp_type 
     if (value.second.has_value())
         str += value.second->to_canonical_string();
     return str;
-}
-
-template<>
-std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return TimeComparer<std::chrono::year_month_day>::compare(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 struct __attribute__((__packed__)) InliningHelperYearMonthDay {
@@ -51,21 +47,25 @@ capabilities::Inlineable<xsd_date>::cpp_type capabilities::Inlineable<xsd_date>:
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month} / std::chrono::day{i.day}, std::nullopt);
 }
 
-template<>
-TimePoint to_point_on_timeline<std::chrono::year_month_day>(std::chrono::year_month_day t) {
-    return construct(t, TimePointReplacementTimeOfDay);
+rdf::util::TimePoint date_to_tp(std::chrono::year_month_day d) {
+    return rdf::util::construct(d, rdf::util::TimePointReplacementTimeOfDay);
 }
 
 template<>
 template<>
 capabilities::Subtype<xsd_date>::super_cpp_type<0> capabilities::Subtype<xsd_date>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(to_point_on_timeline(value.first), value.second);
+    return std::make_pair(date_to_tp(value.first), value.second);
 }
 
 template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_date>::cpp_type, DynamicError> capabilities::Subtype<xsd_date>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(value.first)}, value.second);
+}
+
+template<>
+std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
+    return rdf::datatypes::registry::util::TimeComparer::compare(date_to_tp(lhs.first), lhs.second, date_to_tp(rhs.first), rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_date,
