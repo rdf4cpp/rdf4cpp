@@ -12,7 +12,7 @@ jobs:
     with:
       public_artifactory: true
       os: ubuntu-22.04
-      compiler: gcc-13
+      compiler: clang-14
       cmake-version: 3.22.6
       conan-version: 1.58
       use-tag: true
