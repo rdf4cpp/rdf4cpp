@@ -13,6 +13,7 @@
 #include <uni_algo/all.h>
 
 #include <rdf4cpp/rdf/IRI.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
 
@@ -1273,6 +1274,38 @@ bool Literal::is_string_like() const noexcept {
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    if ((this->datatype_eq<datatypes::xsd::DateTime>() || this->datatype_eq<datatypes::xsd::DateTimeStamp>() || this->datatype_eq<datatypes::xsd::Date>() || this->datatype_eq<datatypes::xsd::Time>()) &&
+        (other.datatype_eq<datatypes::xsd::Duration>() || other.datatype_eq<datatypes::xsd::DayTimeDuration>() || other.datatype_eq<datatypes::xsd::YearMonthDuration>())) {
+        if (this->datatype_eq<datatypes::xsd::Time>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>())
+            return Literal{};
+        auto this_dt = this->cast_to_value<datatypes::xsd::DateTime>();
+        if (!this_dt.has_value())
+            return Literal{};
+        auto other_dt = other.cast_to_value<datatypes::xsd::Duration>();
+        if (!other_dt.has_value())
+            return Literal{};
+        auto r = datatypes::registry::util::add_duration_to_date_time(this_dt->first, *other_dt);
+        if (this->datatype_eq<datatypes::xsd::Date>())
+            return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second));
+        if (this->datatype_eq<datatypes::xsd::Time>())
+            return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second));
+        return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second));
+    } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::DayTimeDuration>()) {
+        auto this_v = this->value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.value<datatypes::xsd::DayTimeDuration>();
+        int64_t r = 0;
+        if (__builtin_add_overflow(this_v.count(), other_v.count(), &r))
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r});
+    } else if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>()) {
+        auto this_v = this->value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.value<datatypes::xsd::YearMonthDuration>();
+        int64_t r = 0;
+        if (__builtin_add_overflow(this_v.count(), other_v.count(), &r))
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r});
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.add_fptr;
@@ -1295,6 +1328,52 @@ Literal &Literal::operator+=(const Literal &other) noexcept {
 }
 
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    if ((this->datatype_eq<datatypes::xsd::DateTime>() || this->datatype_eq<datatypes::xsd::Date>() || this->datatype_eq<datatypes::xsd::DateTimeStamp>() || this->datatype_eq<datatypes::xsd::Time>()) &&
+        (other.datatype_eq<datatypes::xsd::DateTime>() || other.datatype_eq<datatypes::xsd::Date>() || other.datatype_eq<datatypes::xsd::DateTimeStamp>() || other.datatype_eq<datatypes::xsd::Time>()) &&
+        this->datatype() == other.datatype()) {
+        auto this_dt = this->cast_to_value<datatypes::xsd::DateTime>();
+        if (!this_dt.has_value())
+            return Literal{};
+        auto other_dt = other.cast_to_value<datatypes::xsd::DateTime>();
+        if (!other_dt.has_value())
+            return Literal{};
+        rdf::util::ZonedTime this_tp{this_dt->second.has_value() ? *this_dt->second : util::Timezone{}, this_dt->first};
+        rdf::util::ZonedTime other_tp{other_dt->second.has_value() ? *other_dt->second : util::Timezone{}, other_dt->first};
+        auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
+        return make_typed_from_value<datatypes::xsd::DayTimeDuration>(d);
+    } else if ((this->datatype_eq<datatypes::xsd::DateTime>() || this->datatype_eq<datatypes::xsd::DateTimeStamp>() || this->datatype_eq<datatypes::xsd::Date>() || this->datatype_eq<datatypes::xsd::Time>()) &&
+               (other.datatype_eq<datatypes::xsd::Duration>() || other.datatype_eq<datatypes::xsd::DayTimeDuration>() || other.datatype_eq<datatypes::xsd::YearMonthDuration>())) {
+        if (this->datatype_eq<datatypes::xsd::Time>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>())
+            return Literal{};
+        auto this_dt = this->cast_to_value<datatypes::xsd::DateTime>();
+        if (!this_dt.has_value())
+            return Literal{};
+        auto other_dt = other.cast_to_value<datatypes::xsd::Duration>();
+        if (!other_dt.has_value())
+            return Literal{};
+        auto r = datatypes::registry::util::add_duration_to_date_time(this_dt->first, std::make_pair(-other_dt->first, -other_dt->second));
+        if (this->datatype_eq<datatypes::xsd::Date>())
+            return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second));
+        if (this->datatype_eq<datatypes::xsd::Time>())
+            return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second));
+        return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second));
+    } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::DayTimeDuration>()) {
+        auto this_v = this->value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.value<datatypes::xsd::DayTimeDuration>();
+        int64_t r = 0;
+        if (__builtin_sub_overflow(this_v.count(), other_v.count(), &r))
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r});
+    } else if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>()) {
+        auto this_v = this->value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.value<datatypes::xsd::YearMonthDuration>();
+        int64_t r = 0;
+        if (__builtin_sub_overflow(this_v.count(), other_v.count(), &r))
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r});
+    }
+
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.sub_fptr;
@@ -1317,6 +1396,18 @@ Literal &Literal::operator-=(const Literal &other) noexcept {
 }
 
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
+        auto ym = this->value<datatypes::xsd::YearMonthDuration>();
+        auto d = other.value<datatypes::xsd::Double>();
+        auto r = std::round(static_cast<double>(ym.count()) * d);
+        return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{static_cast<int64_t>(r)});
+    } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
+        auto ym = this->value<datatypes::xsd::DayTimeDuration>();
+        auto d = other.value<datatypes::xsd::Double>();
+        auto r = std::round(static_cast<double>(ym.count()) * d);
+        return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{static_cast<int64_t>(r)});
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.mul_fptr;
@@ -1339,6 +1430,32 @@ Literal &Literal::operator*=(const Literal &other) noexcept {
 }
 
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
+        auto ym = this->value<datatypes::xsd::YearMonthDuration>();
+        auto d = other.value<datatypes::xsd::Double>();
+        auto r = static_cast<int64_t>(std::round(static_cast<double>(ym.count()) / d));
+        return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r});
+    } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
+        auto ym = this->value<datatypes::xsd::DayTimeDuration>();
+        auto d = other.value<datatypes::xsd::Double>();
+        auto r = static_cast<int64_t>(std::round(static_cast<double>(ym.count()) / d));
+        return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r});
+    } else if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>()) {
+        auto this_v = util::BigDecimal<>{this->value<datatypes::xsd::YearMonthDuration>().count(), 0};
+        auto other_v = util::BigDecimal<>{other.value<datatypes::xsd::YearMonthDuration>().count(), 0};
+        auto r = this_v.div_checked(other_v, 1000);
+        if (!r.has_value())
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::Decimal>(*r);
+    } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::DayTimeDuration>()) {
+        auto this_v = util::BigDecimal<>{this->value<datatypes::xsd::DayTimeDuration>().count(), 0};
+        auto other_v = util::BigDecimal<>{other.value<datatypes::xsd::DayTimeDuration>().count(), 0};
+        auto r = this_v.div_checked(other_v, 1000);
+        if (!r.has_value())
+            return Literal{};
+        return make_typed_from_value<datatypes::xsd::Decimal>(*r);
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.div_fptr;
