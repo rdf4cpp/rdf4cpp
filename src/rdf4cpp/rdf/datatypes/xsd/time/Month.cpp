@@ -23,13 +23,12 @@ std::string capabilities::Default<xsd_gMonth>::to_canonical_string(const cpp_typ
     return str;
 }
 
-rdf::util::TimePoint month_to_tp(std::chrono::month m) {
-    return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / m / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
-}
-
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(month_to_tp(lhs.first), lhs.second, month_to_tp(rhs.first), rhs.second);
+    auto month_to_tp = [](std::chrono::month m) noexcept -> rdf::util::TimePoint {
+        return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / m / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
+    };
+    return registry::util::compare_time_points(month_to_tp(lhs.first), lhs.second, month_to_tp(rhs.first), rhs.second);
 }
 
 using IHelp = registry::util::InliningHelper<uint8_t>;

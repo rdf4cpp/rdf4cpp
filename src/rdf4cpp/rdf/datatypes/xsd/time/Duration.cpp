@@ -109,7 +109,7 @@ struct __attribute__((__packed__)) InlinedDurationHelper {
     unsigned int seconds : seconds_width;
     unsigned int months : months_with;
 
-    InlinedDurationHelper(unsigned int s, unsigned int sec, unsigned int mo) : sign(s), seconds(sec), months(mo) {
+    InlinedDurationHelper(unsigned int s, unsigned int sec, unsigned int mo) noexcept : sign(s), seconds(sec), months(mo) {
     }
 
 private:
@@ -160,7 +160,7 @@ std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type c
             rdf::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
     };
     auto cmp = [lhs, rhs](rdf::util::TimePoint tp) {
-        return registry::util::TimeComparer::compare(registry::util::add_duration_to_date_time(tp, lhs), std::nullopt, registry::util::add_duration_to_date_time(tp, rhs), std::nullopt);
+        return registry::util::compare_time_points(registry::util::add_duration_to_date_time(tp, lhs), std::nullopt, registry::util::add_duration_to_date_time(tp, rhs), std::nullopt);
     };
     std::partial_ordering o = cmp(to_compare[0]);
     for (unsigned int i = 1; i < to_compare.size(); ++i) {

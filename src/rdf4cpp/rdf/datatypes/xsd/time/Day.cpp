@@ -23,13 +23,12 @@ std::string capabilities::Default<xsd_gDay>::to_canonical_string(const cpp_type 
     return str;
 }
 
-rdf::util::TimePoint day_to_tp(std::chrono::day d) {
-    return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / rdf::util::TimePointReplacementDate.month() / d, rdf::util::TimePointReplacementTimeOfDay);
-}
-
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gDay>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(day_to_tp(lhs.first), lhs.second, day_to_tp(rhs.first), rhs.second);
+    auto day_to_tp = [](std::chrono::day d) noexcept -> rdf::util::TimePoint {
+        return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / rdf::util::TimePointReplacementDate.month() / d, rdf::util::TimePointReplacementTimeOfDay);
+    };
+    return registry::util::compare_time_points(day_to_tp(lhs.first), lhs.second, day_to_tp(rhs.first), rhs.second);
 }
 
 using IHelp = registry::util::InliningHelper<uint8_t>;

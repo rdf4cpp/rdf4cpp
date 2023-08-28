@@ -19,13 +19,12 @@ std::string capabilities::Default<xsd_gYear>::to_canonical_string(const cpp_type
     return str;
 }
 
-
-rdf::util::TimePoint year_to_tp(std::chrono::year t) {
-    return rdf::util::construct(t / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), rdf::util::TimePointReplacementTimeOfDay);
-}
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(year_to_tp(lhs.first), lhs.second, year_to_tp(rhs.first), rhs.second);
+    auto year_to_tp = [](std::chrono::year t) noexcept -> rdf::util::TimePoint {
+        return rdf::util::construct(t / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), rdf::util::TimePointReplacementTimeOfDay);
+    };
+    return registry::util::compare_time_points(year_to_tp(lhs.first), lhs.second, year_to_tp(rhs.first), rhs.second);
 }
 
 using IHelp = registry::util::InliningHelper<int16_t>;

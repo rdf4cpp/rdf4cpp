@@ -44,13 +44,12 @@ capabilities::Inlineable<xsd_gMonthDay>::cpp_type capabilities::Inlineable<xsd_g
     return std::make_pair(std::chrono::month{i.time_value.month} / std::chrono::day{i.time_value.day}, i.decode_tz());
 }
 
-rdf::util::TimePoint md_to_tp(std::chrono::month_day md) {
-    return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / md, rdf::util::TimePointReplacementTimeOfDay);
-}
-
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(md_to_tp(lhs.first), lhs.second, md_to_tp(rhs.first), rhs.second);
+    auto md_to_tp = [](std::chrono::month_day md) noexcept -> rdf::util::TimePoint {
+        return rdf::util::construct(rdf::util::TimePointReplacementDate.year() / md, rdf::util::TimePointReplacementTimeOfDay);
+    };
+    return registry::util::compare_time_points(md_to_tp(lhs.first), lhs.second, md_to_tp(rhs.first), rhs.second);
 }
 
 template<>

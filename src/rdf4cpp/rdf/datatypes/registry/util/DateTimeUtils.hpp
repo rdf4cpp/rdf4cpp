@@ -63,7 +63,7 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds(res_s);
 }
 
-inline rdf::util::TimePoint add_duration_to_date_time(rdf::util::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) {
+inline rdf::util::TimePoint add_duration_to_date_time(rdf::util::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) noexcept {
     auto days = std::chrono::floor<std::chrono::days>(tp);
     auto time = tp - days;
     std::chrono::year_month_day ymd{days};
@@ -73,42 +73,40 @@ inline rdf::util::TimePoint add_duration_to_date_time(rdf::util::TimePoint tp, s
     return rdf::util::construct(ymd, time + d.second);
 }
 
-class TimeComparer {
-    static inline rdf::util::TimePointSys apply_timezone(rdf::util::TimePoint t, rdf::util::Timezone tz) {
+static inline std::partial_ordering compare_time_points(rdf::util::TimePoint a, std::optional<rdf::util::Timezone> atz,
+                                                        rdf::util::TimePoint b, std::optional<rdf::util::Timezone> btz) noexcept {
+    auto apply_timezone = [](rdf::util::TimePoint t, rdf::util::Timezone tz) noexcept -> rdf::util::TimePointSys {
         return rdf::util::ZonedTime{tz, t}.get_sys_time();
-    }
+    };
 
-public:
-    static inline std::partial_ordering compare(rdf::util::TimePoint a, std::optional<rdf::util::Timezone> atz, rdf::util::TimePoint b, std::optional<rdf::util::Timezone> btz) {
-        rdf::util::TimePoint a_tp = a;
-        rdf::util::TimePoint b_tp = b;
-        if (atz.has_value()) {
-            rdf::util::TimePointSys a_sys = apply_timezone(a_tp, *atz);
-            if (btz.has_value()) {
-                return a_sys <=> apply_timezone(b_tp, *btz);
-            } else {
-                auto p14 = a_sys <=> apply_timezone(b_tp, rdf::util::Timezone::max_value());
-                auto m14 = a_sys <=> apply_timezone(b_tp, rdf::util::Timezone::min_value());
-                if (p14 != m14)
-                    return std::partial_ordering::unordered;
-                return p14;
-            }
+    rdf::util::TimePoint a_tp = a;
+    rdf::util::TimePoint b_tp = b;
+    if (atz.has_value()) {
+        rdf::util::TimePointSys a_sys = apply_timezone(a_tp, *atz);
+        if (btz.has_value()) {
+            return a_sys <=> apply_timezone(b_tp, *btz);
         } else {
-            if (btz.has_value()) {
-                rdf::util::TimePointSys b_sys = apply_timezone(b_tp, *btz);
-                auto p14 = apply_timezone(a_tp, rdf::util::Timezone::max_value()) <=> b_sys;
-                auto m14 = apply_timezone(a_tp, rdf::util::Timezone::min_value()) <=> b_sys;
-                if (p14 != m14)
-                    return std::partial_ordering::unordered;
-                return p14;
-            } else {
-                return a_tp <=> b_tp;
-            }
+            auto p14 = a_sys <=> apply_timezone(b_tp, rdf::util::Timezone::max_value());
+            auto m14 = a_sys <=> apply_timezone(b_tp, rdf::util::Timezone::min_value());
+            if (p14 != m14)
+                return std::partial_ordering::unordered;
+            return p14;
+        }
+    } else {
+        if (btz.has_value()) {
+            rdf::util::TimePointSys b_sys = apply_timezone(b_tp, *btz);
+            auto p14 = apply_timezone(a_tp, rdf::util::Timezone::max_value()) <=> b_sys;
+            auto m14 = apply_timezone(a_tp, rdf::util::Timezone::min_value()) <=> b_sys;
+            if (p14 != m14)
+                return std::partial_ordering::unordered;
+            return p14;
+        } else {
+            return a_tp <=> b_tp;
         }
     }
-};
+}
 template<std::unsigned_integral T>
-constexpr T numberOfBits(T x) {
+constexpr T numberOfBits(T x) noexcept {
     return x < 2 ? x : 1 + numberOfBits(x >> 1);
 }
 template<class TimeType>

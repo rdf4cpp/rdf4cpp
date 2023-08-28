@@ -62,7 +62,7 @@ capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_da
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return rdf::datatypes::registry::util::TimeComparer::compare(lhs.first, lhs.second, rhs.first, rhs.second);
+    return rdf::datatypes::registry::util::compare_time_points(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 
 template struct LiteralDatatypeImpl<xsd_dateTime,

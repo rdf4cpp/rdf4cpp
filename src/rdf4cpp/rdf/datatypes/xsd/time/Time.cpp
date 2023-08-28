@@ -54,7 +54,7 @@ capabilities::Inlineable<xsd_time>::cpp_type capabilities::Inlineable<xsd_time>:
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_time>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(rdf::util::construct(rdf::util::TimePointReplacementDate, lhs.first), lhs.second,
+    return registry::util::compare_time_points(rdf::util::construct(rdf::util::TimePointReplacementDate, lhs.first), lhs.second,
                                                  rdf::util::construct(rdf::util::TimePointReplacementDate, rhs.first), rhs.second);
 }
 

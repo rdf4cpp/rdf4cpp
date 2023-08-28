@@ -22,10 +22,10 @@ public:
         : offset(std::chrono::duration_cast<std::chrono::minutes>(tz->get_info(n).offset)) {
     }
 
-    constexpr explicit Timezone(std::chrono::hours h)
+    constexpr explicit Timezone(std::chrono::hours h) noexcept
         : offset(h) {}
 
-    constexpr explicit Timezone(std::chrono::minutes h)
+    constexpr explicit Timezone(std::chrono::minutes h) noexcept
         : offset(h) {}
 
     constexpr auto operator<=>(const Timezone &) const noexcept = default;
@@ -61,7 +61,7 @@ public:
         return tz;
     }
 
-    [[nodiscard]] std::string to_canonical_string() const {
+    [[nodiscard]] std::string to_canonical_string() const noexcept {
         if (offset.count() == 0)
             return "Z";
         auto c = offset.count();
@@ -78,17 +78,17 @@ public:
     }
 
     template<class Duration>
-    [[nodiscard]] auto to_sys(const std::chrono::local_time<Duration> &tp) const {
+    [[nodiscard]] auto to_sys(const std::chrono::local_time<Duration> &tp) const noexcept {
         return std::chrono::sys_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp - offset).time_since_epoch()};
     }
 
     template<class Duration>
-    [[nodiscard]] auto to_local(const std::chrono::sys_time<Duration> &tp) const {
+    [[nodiscard]] auto to_local(const std::chrono::sys_time<Duration> &tp) const noexcept {
         return std::chrono::local_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp + offset).time_since_epoch()};
     }
 
     template<class Duration>
-    [[nodiscard]] std::chrono::sys_info get_info(const std::chrono::sys_time<Duration> &) const {
+    [[nodiscard]] std::chrono::sys_info get_info(const std::chrono::sys_time<Duration> &) const noexcept {
         return std::chrono::sys_info{
                 std::chrono::sys_seconds{std::chrono::seconds{0l}},
                 std::chrono::sys_seconds{std::chrono::seconds{std::numeric_limits<int64_t>::max()}},
@@ -97,14 +97,14 @@ public:
                 to_canonical_string()};
     }
 
-    const Timezone *operator->() const {
+    const Timezone *operator->() const noexcept {
         return this;
     }
 
-    static constexpr Timezone max_value() {
+    static constexpr Timezone max_value() noexcept {
         return Timezone{std::chrono::hours{14}};
     };
-    static constexpr Timezone min_value() {
+    static constexpr Timezone min_value() noexcept {
         return Timezone{std::chrono::hours{-14}};
     };
 };
@@ -119,7 +119,7 @@ using ZonedTime = std::chrono::zoned_time<std::chrono::milliseconds, Timezone>;
 constexpr std::chrono::year_month_day TimePointReplacementDate = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
 constexpr std::chrono::milliseconds TimePointReplacementTimeOfDay{0};
 
-constexpr rdf::util::TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) {
+constexpr rdf::util::TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) noexcept {
     auto sd = static_cast<std::chrono::local_days>(date);
     auto ms = static_cast<rdf::util::TimePoint>(sd);
     ms += time_of_day;

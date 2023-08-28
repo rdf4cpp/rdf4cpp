@@ -45,13 +45,12 @@ capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month}, std::nullopt);
 }
 
-rdf::util::TimePoint ym_to_tp(std::chrono::year_month t) {
-    return rdf::util::construct(t / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
-}
-
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::TimeComparer::compare(ym_to_tp(lhs.first), lhs.second, ym_to_tp(rhs.first), rhs.second);
+    auto ym_to_tp = [](std::chrono::year_month t) noexcept -> rdf::util::TimePoint {
+        return rdf::util::construct(t / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
+    };
+    return registry::util::compare_time_points(ym_to_tp(lhs.first), lhs.second, ym_to_tp(rhs.first), rhs.second);
 }
 
 template<>

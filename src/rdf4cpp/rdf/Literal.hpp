@@ -1114,95 +1114,95 @@ public:
      * Note: will need to be buffered for each query, because each query has only one now.
      * @return std::chrono::system_clock::now() as xsd:dateTime
      */
-    [[nodiscard]] static Literal now(NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static Literal now(NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
 
     /**
      * returns the year part of this.
      * @return year or nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::year> year() const;
+    [[nodiscard]] std::optional<std::chrono::year> year() const noexcept;
     /**
      * returns the year part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_year(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_year(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the month part of this.
      * @return month or nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::month> month() const;
+    [[nodiscard]] std::optional<std::chrono::month> month() const noexcept;
     /**
      * returns the month part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_month(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_month(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the day part of this.
      * @return day or nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::day> day() const;
+    [[nodiscard]] std::optional<std::chrono::day> day() const noexcept;
     /**
      * returns the day part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_day(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_day(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the hours part of this.
      * @return hours ot nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::hours> hours() const;
+    [[nodiscard]] std::optional<std::chrono::hours> hours() const noexcept;
     /**
      * returns the hours part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_hours(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_hours(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the minutes part of this.
      * @return minutes ot nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::minutes> minutes() const;
+    [[nodiscard]] std::optional<std::chrono::minutes> minutes() const noexcept;
     /**
      * returns the minutes part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the seconds (including fractional) part of this.
      * @return seconds or nullopt
      */
-    [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const;
+    [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const noexcept;
     /**
      * returns the seconds (including fractional) part of this.
      * @return xsd::Decimal or null literal
      */
-    [[nodiscard]] Literal as_seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the timezone offset part of this.
      * @return timezone or nullopt
      */
-    [[nodiscard]] std::optional<util::Timezone> timezone() const;
+    [[nodiscard]] std::optional<util::Timezone> timezone() const noexcept;
     /**
      * returns the timezone offset part of this.
      * @return offset as xsd::DayTimeDuration or null literal
      */
-    [[nodiscard]] Literal as_timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * returns the timezone offset part of this.
      * @return timezone as string or nullopt
      */
-    [[nodiscard]] std::optional<std::string> tz() const;
+    [[nodiscard]] std::optional<std::string> tz() const noexcept;
     /**
      * returns the timezone offset part of this.
      * @return timezone as simple literal or null literal
      */
-    [[nodiscard]] Literal as_tz(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+    [[nodiscard]] Literal as_tz(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @return the effective boolean value of this
