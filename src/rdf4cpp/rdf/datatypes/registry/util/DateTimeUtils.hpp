@@ -7,11 +7,35 @@
 
 #include <dice/hash.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
+#include <rdf4cpp/rdf/util/CheckedInt.hpp>
 #include <rdf4cpp/rdf/util/Timezone.hpp>
 
 #endif  //RDF4CPP_DATETIMEUTILS_HPP
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
+using CheckedMilliseconds = std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, std::milli>;
+using CheckedMonths = std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, std::ratio<2629746>>;
+static_assert(std::same_as<std::chrono::months::period, CheckedMonths::period>);
+using CheckedTimePoint = std::chrono::time_point<std::chrono::local_t, CheckedMilliseconds>;
+using CheckedZonedTime = std::chrono::zoned_time<CheckedMilliseconds, rdf4cpp::rdf::util::Timezone>;
+
+template<class R>
+std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R> to_checked(std::chrono::duration<int64_t, R> v) noexcept {
+    return std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>{v.count()};
+}
+template<class R>
+std::chrono::duration<int64_t, R> from_checked(std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R> v) noexcept {
+    return std::chrono::duration<int64_t, R>{v.count().get_value()};
+}
+template<class C, class R>
+std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>> to_checked(std::chrono::time_point<C, std::chrono::duration<int64_t, R>> v) noexcept {
+    return std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>>{to_checked(v.time_since_epoch())};
+}
+template<class C, class R>
+std::chrono::time_point<C, std::chrono::duration<int64_t, R>> from_checked(std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>> v) noexcept {
+    return std::chrono::time_point<C, std::chrono::duration<int64_t, R>>{from_checked(v.time_since_epoch())};
+}
+
 template<class ResultType, class ParsingType, char Separator>
 ResultType parse_date_time_fragment(std::string_view &s) {
     std::string_view res_s = s;
@@ -64,14 +88,39 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds(res_s);
 }
 
-inline rdf4cpp::rdf::util::TimePoint add_duration_to_date_time(rdf4cpp::rdf::util::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) noexcept {
+inline bool in_ymd_bounds(rdf4cpp::rdf::util::TimePoint tp) noexcept {
+    static constexpr auto max = rdf4cpp::rdf::util::construct(std::chrono::year::max() / std::chrono::December / std::chrono::day{31},
+                                                              std::chrono::days{1} - std::chrono::milliseconds{1});
+    static constexpr auto min = rdf4cpp::rdf::util::construct(std::chrono::year::min() / std::chrono::January / std::chrono::day{1},
+                                                              std::chrono::milliseconds{0});
+    return max >= tp && tp >= min;
+}
+
+inline CheckedTimePoint add_duration_to_date_time(rdf4cpp::rdf::util::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) noexcept {
+    // only gets smaller, no overflow possible
     auto days = std::chrono::floor<std::chrono::days>(tp);
     auto time = tp - days;
     std::chrono::year_month_day ymd{days};
-    ymd += d.first;
+
+    int64_t m = static_cast<unsigned int>(ymd.month());
+    m += static_cast<int>(ymd.year()) * 12; // it did fit into a 64 bit TimePoint before, so this cannot overflow
+
+    if (__builtin_add_overflow(m, d.first.count(), &m))
+        return CheckedTimePoint{CheckedMilliseconds{rdf4cpp::rdf::util::CheckedIntegral<int64_t>{0, true}}};
+    int64_t y = (m-1) / 12;
+    m = std::abs(m-1) % 12 + 1;
+    if (y > static_cast<int>(std::chrono::year::max()) || y < static_cast<int>(std::chrono::year::min()))
+        return CheckedTimePoint{CheckedMilliseconds{rdf4cpp::rdf::util::CheckedIntegral<int64_t>{0, true}}};
+
+    ymd = std::chrono::year{static_cast<int>(y)} / std::chrono::month{static_cast<unsigned int>(m)} / ymd.day();
     if (!ymd.ok())
         ymd = ymd.year() / ymd.month() / std::chrono::last;
-    return rdf4cpp::rdf::util::construct(ymd, time + d.second);
+
+    CheckedTimePoint date = to_checked(static_cast<std::chrono::local_days>(ymd));
+    date += to_checked(time);
+    date += to_checked(d.second);
+
+    return date;
 }
 
 static inline std::partial_ordering compare_time_points(rdf4cpp::rdf::util::TimePoint a, std::optional<rdf4cpp::rdf::util::Timezone> atz,
