@@ -32,7 +32,7 @@ std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type con
 }
 
 using IHelp = registry::util::InliningHelper<uint8_t>;
-static_assert(registry::util::numberOfBits(12u) == 4);
+static_assert(registry::util::number_of_bits(12u) == 4);
 static_assert(sizeof(std::chrono::month) == 1);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 

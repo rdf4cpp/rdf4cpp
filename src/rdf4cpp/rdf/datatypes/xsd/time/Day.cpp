@@ -32,7 +32,7 @@ std::partial_ordering capabilities::Comparable<xsd_gDay>::compare(cpp_type const
 }
 
 using IHelp = registry::util::InliningHelper<uint8_t>;
-static_assert(registry::util::numberOfBits(31u) == 5);
+static_assert(registry::util::number_of_bits(31u) == 5);
 static_assert(sizeof(std::chrono::day) == 1);
 static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
 
