@@ -33,7 +33,7 @@ std::string capabilities::Default<xsd_time>::to_canonical_string(const cpp_type 
 }
 
 using IHelp = registry::util::InliningHelperPacked;
-static_assert(registry::util::numberOfBits(static_cast<unsigned int>(std::chrono::seconds{std::chrono::hours{24}}.count())) == 17);
+static_assert(registry::util::number_of_bits(static_cast<unsigned int>(std::chrono::seconds{std::chrono::hours{24}}.count())) == 17);
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_time>::try_into_inlined(cpp_type const &value) noexcept {

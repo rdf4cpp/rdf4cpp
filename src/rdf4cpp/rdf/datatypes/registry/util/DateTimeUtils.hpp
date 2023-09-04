@@ -156,8 +156,8 @@ static inline std::partial_ordering compare_time_points(rdf4cpp::rdf::util::Time
     }
 }
 template<std::unsigned_integral T>
-constexpr T numberOfBits(T x) noexcept {
-    return x < 2 ? x : 1 + numberOfBits(x >> 1);
+constexpr T number_of_bits(T x) noexcept {
+    return x < 2 ? x : 1 + number_of_bits(x >> 1);
 }
 template<class TimeType>
     requires(sizeof(TimeType) <= 2)
@@ -166,7 +166,7 @@ struct __attribute__((__packed__)) InliningHelper {
     TimeType time_value;
 
     static constexpr int tz_shift = rdf4cpp::rdf::util::Timezone::max_value().offset.count() + 1;
-    static_assert(numberOfBits(static_cast<unsigned int>(rdf4cpp::rdf::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
+    static_assert(number_of_bits(static_cast<unsigned int>(rdf::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
 
     static constexpr uint16_t encode_tz(rdf4cpp::rdf::util::OptionalTimezone tz) noexcept {
         if (tz.has_value())
@@ -197,7 +197,7 @@ private:
 
 public:
     static constexpr int tz_shift = rdf4cpp::rdf::util::Timezone::max_value().offset.count() + 1;
-    static_assert(numberOfBits(static_cast<unsigned int>(rdf4cpp::rdf::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
+    static_assert(number_of_bits(static_cast<unsigned int>(rdf::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
 
     static constexpr uint16_t encode_tz(rdf4cpp::rdf::util::OptionalTimezone tz) noexcept {
         if (tz.has_value())

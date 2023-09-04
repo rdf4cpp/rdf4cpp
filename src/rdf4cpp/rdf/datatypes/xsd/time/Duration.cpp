@@ -116,7 +116,7 @@ private:
     [[maybe_unused]] unsigned int padding : 64 - width = 0;  // to make sure the rest of the int64 is 0
 };
 
-static_assert(registry::util::numberOfBits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
+static_assert(registry::util::number_of_bits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept {

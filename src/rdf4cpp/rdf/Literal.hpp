@@ -448,9 +448,7 @@ public:
             // string -> any
             try {
                 return T::from_string(this->lexical_form());
-            } catch (std::runtime_error const &) {
-                return std::nullopt;
-            } catch (std::invalid_argument const &) {
+            } catch (...) {
                 return std::nullopt;
             }
         }
