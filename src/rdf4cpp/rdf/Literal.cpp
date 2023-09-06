@@ -819,7 +819,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         // string -> any
         try {
             return Literal::make_typed(this->lexical_form(), target, node_storage);
-        } catch (std::runtime_error const &) {
+        } catch (...) {
             return Literal{};
         }
     }
