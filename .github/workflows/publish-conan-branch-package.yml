@@ -14,6 +14,7 @@ jobs:
       compiler: clang-16
       cmake-version: 3.22.6
       conan-version: 1.60.2
+      conan-options: -o boost:header_only=True
     secrets:
       CONAN_USER: ${{ secrets.CONAN_USER }}
       CONAN_PW: ${{ secrets.CONAN_PW }}

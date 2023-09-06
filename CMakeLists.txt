@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.13)
+project(rdf4cpp VERSION 0.0.14)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -13,7 +13,7 @@ if (IS_TOP_LEVEL AND USE_CONAN)
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
     endif()
     set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS}")
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost:header_only=True")
 endif ()
 
 # find packages
