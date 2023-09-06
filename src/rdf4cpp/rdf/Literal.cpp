@@ -1408,11 +1408,15 @@ Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) cons
         auto ym = this->value<datatypes::xsd::YearMonthDuration>();
         auto d = other.value<datatypes::xsd::Double>();
         auto r = std::round(static_cast<double>(ym.count()) * d);
+        if (!datatypes::registry::util::fits_into<int64_t>(r))
+            return Literal{};
         return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{static_cast<int64_t>(r)});
     } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
         auto ym = this->value<datatypes::xsd::DayTimeDuration>();
         auto d = other.value<datatypes::xsd::Double>();
         auto r = std::round(static_cast<double>(ym.count()) * d);
+        if (!datatypes::registry::util::fits_into<int64_t>(r))
+            return Literal{};
         return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{static_cast<int64_t>(r)});
     }
 
@@ -1442,11 +1446,15 @@ Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) cons
         auto ym = this->value<datatypes::xsd::YearMonthDuration>();
         auto d = other.value<datatypes::xsd::Double>();
         auto r = static_cast<int64_t>(std::round(static_cast<double>(ym.count()) / d));
+        if (!datatypes::registry::util::fits_into<int64_t>(r))
+            return Literal{};
         return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r});
     } else if (this->datatype_eq<datatypes::xsd::DayTimeDuration>() && other.datatype_eq<datatypes::xsd::Double>()) {
         auto ym = this->value<datatypes::xsd::DayTimeDuration>();
         auto d = other.value<datatypes::xsd::Double>();
         auto r = static_cast<int64_t>(std::round(static_cast<double>(ym.count()) / d));
+        if (!datatypes::registry::util::fits_into<int64_t>(r))
+            return Literal{};
         return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r});
     } else if (this->datatype_eq<datatypes::xsd::YearMonthDuration>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>()) {
         auto this_v = util::BigDecimal<>{this->value<datatypes::xsd::YearMonthDuration>().count(), 0};

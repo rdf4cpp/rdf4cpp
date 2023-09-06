@@ -18,6 +18,7 @@ using CheckedMonths = std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<
 static_assert(std::same_as<std::chrono::months::period, CheckedMonths::period>);
 using CheckedTimePoint = std::chrono::time_point<std::chrono::local_t, CheckedMilliseconds>;
 using CheckedZonedTime = std::chrono::zoned_time<CheckedMilliseconds, rdf4cpp::rdf::util::Timezone>;
+using CheckedTimePointSys = std::chrono::time_point<std::chrono::system_clock, CheckedMilliseconds>;
 
 template<class R>
 std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R> to_checked(std::chrono::duration<int64_t, R> v) noexcept {
@@ -34,6 +35,17 @@ std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedInte
 template<class C, class R>
 std::chrono::time_point<C, std::chrono::duration<int64_t, R>> from_checked(std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>> v) noexcept {
     return std::chrono::time_point<C, std::chrono::duration<int64_t, R>>{from_checked(v.time_since_epoch())};
+}
+
+template<std::integral I>
+bool fits_into(double d) {
+    if (std::isnan(d) || std::isinf(d))
+        return false;
+    if (d >= static_cast<double>(std::numeric_limits<I>::max()))
+        return false;
+    if (d <= static_cast<double>(std::numeric_limits<I>::min()))
+        return false;
+    return true;
 }
 
 template<class ResultType, class ParsingType, char Separator>
@@ -125,33 +137,33 @@ inline CheckedTimePoint add_duration_to_date_time(rdf4cpp::rdf::util::TimePoint 
 
 static inline std::partial_ordering compare_time_points(rdf4cpp::rdf::util::TimePoint a, std::optional<rdf4cpp::rdf::util::Timezone> atz,
                                                         rdf4cpp::rdf::util::TimePoint b, std::optional<rdf4cpp::rdf::util::Timezone> btz) noexcept {
-    auto apply_timezone = [](rdf4cpp::rdf::util::TimePoint t, rdf4cpp::rdf::util::Timezone tz) noexcept -> rdf4cpp::rdf::util::TimePointSys {
-        return rdf4cpp::rdf::util::ZonedTime{tz, t}.get_sys_time();
+    auto apply_timezone = [](CheckedTimePoint t, rdf4cpp::rdf::util::Timezone tz) noexcept -> CheckedTimePointSys {
+        return CheckedZonedTime{tz, t}.get_sys_time();
     };
 
-    rdf4cpp::rdf::util::TimePoint a_tp = a;
-    rdf4cpp::rdf::util::TimePoint b_tp = b;
+    CheckedTimePoint a_tp = to_checked(a);
+    CheckedTimePoint b_tp = to_checked(b);
     if (atz.has_value()) {
-        rdf4cpp::rdf::util::TimePointSys a_sys = apply_timezone(a_tp, *atz);
+        CheckedTimePointSys a_sys = apply_timezone(a_tp, *atz);
         if (btz.has_value()) {
-            return a_sys <=> apply_timezone(b_tp, *btz);
+            return a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, *btz).time_since_epoch().count();
         } else {
-            auto p14 = a_sys <=> apply_timezone(b_tp, rdf4cpp::rdf::util::Timezone::max_value());
-            auto m14 = a_sys <=> apply_timezone(b_tp, rdf4cpp::rdf::util::Timezone::min_value());
+            auto p14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::rdf::util::Timezone::max_value()).time_since_epoch().count();
+            auto m14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::rdf::util::Timezone::min_value()).time_since_epoch().count();
             if (p14 != m14)
                 return std::partial_ordering::unordered;
             return p14;
         }
     } else {
         if (btz.has_value()) {
-            rdf4cpp::rdf::util::TimePointSys b_sys = apply_timezone(b_tp, *btz);
-            auto p14 = apply_timezone(a_tp, rdf4cpp::rdf::util::Timezone::max_value()) <=> b_sys;
-            auto m14 = apply_timezone(a_tp, rdf4cpp::rdf::util::Timezone::min_value()) <=> b_sys;
+            CheckedTimePointSys b_sys = apply_timezone(b_tp, *btz);
+            auto p14 = apply_timezone(a_tp, rdf4cpp::rdf::util::Timezone::max_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
+            auto m14 = apply_timezone(a_tp, rdf4cpp::rdf::util::Timezone::min_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
             if (p14 != m14)
                 return std::partial_ordering::unordered;
             return p14;
         } else {
-            return a_tp <=> b_tp;
+            return a_tp.time_since_epoch().count() <=> b_tp.time_since_epoch().count();
         }
     }
 }

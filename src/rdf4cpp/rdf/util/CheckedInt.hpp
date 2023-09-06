@@ -10,16 +10,16 @@ class CheckedIntegral {
     bool invalid = false;
 
 public:
-    CheckedIntegral(I value, bool invalid = false) noexcept : value(value), invalid(invalid) {}
+    constexpr CheckedIntegral(I value, bool invalid = false) noexcept : value(value), invalid(invalid) {}
 
-    [[nodiscard]] bool is_invalid() const noexcept {
+    [[nodiscard]]constexpr  bool is_invalid() const noexcept {
         return invalid;
     }
-    [[nodiscard]] I get_value() const noexcept {
+    [[nodiscard]]constexpr  I get_value() const noexcept {
         return value;
     }
 
-    std::partial_ordering operator<=>(const CheckedIntegral &other) const noexcept {
+    constexpr std::partial_ordering operator<=>(const CheckedIntegral &other) const noexcept {
         if (this->invalid && other.invalid)
             return std::partial_ordering::equivalent;
         if (this->invalid != other.invalid)
@@ -27,7 +27,7 @@ public:
         return this->value <=> other.value;
     }
 
-    CheckedIntegral &operator+=(const CheckedIntegral &other) noexcept {
+    constexpr CheckedIntegral &operator+=(const CheckedIntegral &other) noexcept {
         if (this->invalid || other.invalid) {
             this->invalid = true;
             return *this;
@@ -38,12 +38,12 @@ public:
         }
         return *this;
     }
-    CheckedIntegral operator+(const CheckedIntegral &other) const noexcept {
+    constexpr CheckedIntegral operator+(const CheckedIntegral &other) const noexcept {
         CheckedIntegral r = *this;
         r += other;
         return r;
     }
-    CheckedIntegral &operator-=(const CheckedIntegral &other) noexcept {
+    constexpr CheckedIntegral &operator-=(const CheckedIntegral &other) noexcept {
         if (this->invalid || other.invalid) {
             this->invalid = true;
             return *this;
@@ -54,12 +54,12 @@ public:
         }
         return *this;
     }
-    CheckedIntegral operator-(const CheckedIntegral &other) const noexcept {
+    constexpr CheckedIntegral operator-(const CheckedIntegral &other) const noexcept {
         CheckedIntegral r = *this;
         r -= other;
         return r;
     }
-    CheckedIntegral &operator*=(const CheckedIntegral &other) noexcept {
+    constexpr CheckedIntegral &operator*=(const CheckedIntegral &other) noexcept {
         if (this->invalid || other.invalid) {
             this->invalid = true;
             return *this;
@@ -70,12 +70,12 @@ public:
         }
         return *this;
     }
-    CheckedIntegral operator*(const CheckedIntegral &other) const noexcept {
+    constexpr CheckedIntegral operator*(const CheckedIntegral &other) const noexcept {
         CheckedIntegral r = *this;
         r *= other;
         return r;
     }
-    CheckedIntegral &operator/=(const CheckedIntegral &other) noexcept {
+    constexpr CheckedIntegral &operator/=(const CheckedIntegral &other) noexcept {
         if (this->invalid || other.invalid || other.value == 0) {
             this->invalid = true;
             return *this;
@@ -83,7 +83,7 @@ public:
         this->value = this->value / other.value;
         return *this;
     }
-    CheckedIntegral operator/(const CheckedIntegral &other) const noexcept {
+    constexpr CheckedIntegral operator/(const CheckedIntegral &other) const noexcept {
         CheckedIntegral r = *this;
         r /= other;
         return r;
