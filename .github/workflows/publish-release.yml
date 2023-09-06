@@ -16,6 +16,7 @@ jobs:
       cmake-version: 3.22.6
       conan-version: 1.58
       use-tag: true
+      conan-options: -o boost:header_only=True
     secrets:
       CONAN_USER: ${{ secrets.CONAN_USER }}
       CONAN_PW: ${{ secrets.CONAN_PW }}
