@@ -198,7 +198,7 @@ public:
      * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed.
      * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
      * @return current number of instances of this NodeStorage
-     * @safey this function is inherently racy as the reference count can even change between fetching it and looking at the value
+     * @safety this function is inherently racy as the reference count can even change between fetching it and looking at the value
      *      do _not_ use it to check the reference count for _any_ kind of synchronization.
      */
     [[nodiscard]] size_t ref_count() const noexcept;

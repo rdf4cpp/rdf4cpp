@@ -14,7 +14,7 @@
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
- * NodeBackendHandle is a a 64 bit wide type that is used to identify <dev>Node</dev>s stored at the backend.
+ * NodeBackendHandle is a a 64 bit wide type that is used to identify \ref Node "Nodes" stored at the backend.
  * It consists of a NodeID, a RDFNodeType, a NodeStorageID and free tagging bits.
  */
 class NodeBackendHandle {
@@ -31,6 +31,7 @@ public:
      * @param node_id NodeID to be used. NodeID() indicates a null() NodeBackendHandle.
      * @param node_type RDFNodeType to be used
      * @param node_storage_id  the NodeStorageID
+     * @param inlined inlined bit
      * @param tagging_bits tagging bits (must be all zero for usage with the backend)
      */
     explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined = false, uint8_t tagging_bits = {}) noexcept;
@@ -44,7 +45,7 @@ public:
 
     /**
      * Get the RDFNodeType
-     * @returnRDFNodeType
+     * @return RDFNodeType
      */
     [[nodiscard]] RDFNodeType type() const noexcept;
 

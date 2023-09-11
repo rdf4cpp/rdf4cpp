@@ -191,7 +191,7 @@ public:
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode
      */
@@ -202,7 +202,7 @@ public:
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * normalizes lexical_form to UTF-8 NFC.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
     [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
@@ -219,8 +219,8 @@ public:
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
-     * @tparam lexical_form the lexical form
-     * @param T the datatype
+     * @tparam T the datatype
+     * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
@@ -719,7 +719,6 @@ public:
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
      *
      * @param pattern xsd:string containing a regex to match against
-     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
      * @return whether this' lexical form matches the regex or the null literal if
      *      - this is not string-like
      *
@@ -746,8 +745,7 @@ public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace
      *
-     * @param pattern regex (as string) to match against
-     * @param replacement string to replace the matched pattern
+     * @param replacer replacement regex
      * @return the new string with the matches substring replaced by replacement
      */
     [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;

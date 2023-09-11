@@ -1,6 +1,7 @@
 
 /**
-* @file Registers xsd:boolean with DatatypeRegistry
+* @file
+* Registers xsd:boolean with DatatypeRegistry
 */
 
 #ifndef RDF4CPP_XSD_BOOLEAN_HPP
