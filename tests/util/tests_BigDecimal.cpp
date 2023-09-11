@@ -135,15 +135,18 @@ TEST_CASE("arithmetic") {
         CHECK(Dec{5, 0}.round(RoundingMode::Round) == Dec{5, 0});
         CHECK(round(Dec{450, 2}) == Dec{5, 0});
         CHECK(Dec{"-1.6"}.round(RoundingMode::Floor) == Dec{"-2.0"});
+        CHECK(Dec{"-1.4"}.round(RoundingMode::Floor) == Dec{"-2.0"});
         CHECK(Dec{"-1.0"}.round(RoundingMode::Floor) == Dec{"-1.0"});
         CHECK(Dec{"0.0"}.round(RoundingMode::Floor) == Dec{"0.0"});
         CHECK(Dec{"-1.6"}.round(RoundingMode::Round) == Dec{"-2.0"});
         CHECK(Dec{"-1.5"}.round(RoundingMode::Round) == Dec{"-2.0"});
+        CHECK(Dec{"-1.4"}.round(RoundingMode::Round) == Dec{"-1.0"});
         CHECK(Dec{"-1.0"}.round(RoundingMode::Round) == Dec{"-1.0"});
         CHECK(Dec{"0.0"}.round(RoundingMode::Round) == Dec{"0.0"});
         CHECK(Dec{"-1.6"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
         CHECK(Dec{"-1.0"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
         CHECK(Dec{"0.0"}.round(RoundingMode::Ceil) == Dec{"0.0"});
+        CHECK(Dec{"-1.4"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
     }
     SUBCASE("abs") {
         CHECK(Dec{51, 1}.abs() == Dec{51, 1});
