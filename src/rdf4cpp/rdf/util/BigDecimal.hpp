@@ -313,14 +313,29 @@ private:
     constexpr static BigDecimal handle_rounding(UnscaledValue_t v, Exponent_t e, UnscaledValue_t rem, RoundingMode m) noexcept {
         switch (m) {
             case RoundingMode::Floor:
-                return BigDecimal{v, e};
-            case RoundingMode::Ceil:
-                return BigDecimal{v + 1, e};
-            case RoundingMode::Round:
-                if (rem >= 5)
-                    return BigDecimal{v + 1, e};
-                else
+                if (v >= 0 || rem == 0)
                     return BigDecimal{v, e};
+                else
+                    return BigDecimal{v - 1, e};
+            case RoundingMode::Ceil:
+                if (v < 0 || rem == 0)
+                    return BigDecimal{v, e};
+                else
+                    return BigDecimal{v + 1, e};
+            case RoundingMode::Round:
+                if (rem < 0)
+                    rem = -rem;
+                if (v < 0) {
+                    if (rem >= 5)
+                        return BigDecimal{v - 1, e};
+                    else
+                        return BigDecimal{v, e};
+                } else {
+                    if (rem >= 5)
+                        return BigDecimal{v + 1, e};
+                    else
+                        return BigDecimal{v, e};
+                }
             default:
                 assert(false);
                 __builtin_unreachable();
