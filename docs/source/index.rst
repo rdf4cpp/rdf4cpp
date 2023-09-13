@@ -8,13 +8,5 @@ Welcome to rdf4cpp's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   api/library_root
 
-
-
-Indices and tables
-==================
-.. doxygenclass:: rdf4cpp::rdf::Literal
-    :members:
-
-* :ref:`search`
