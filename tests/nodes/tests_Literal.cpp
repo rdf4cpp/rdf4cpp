@@ -463,6 +463,13 @@ TEST_CASE("Literal - casting") {
 
         CHECK(lit2.null());
     }
+
+    SUBCASE("proper truncation") {
+        auto const lit1 = Literal::make_typed_from_value<Float>(-7.875E0);
+        auto const lit2 = lit1.cast<Integer>();
+
+        CHECK_EQ(lit2.value<Integer>(), -7);
+    }
 }
 
 TEST_CASE("Literal - misc functions") {

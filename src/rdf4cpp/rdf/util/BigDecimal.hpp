@@ -15,6 +15,7 @@ enum class RoundingMode {
     Floor,
     Ceil,
     Round,
+    Trunc,
 };
 
 enum class DecimalError {
@@ -29,7 +30,7 @@ template<BigDecimalBaseType UnscaledValue_t = boost::multiprecision::cpp_int, Bi
     requires(!std::signed_integral<Exponent_t> && !std::unsigned_integral<UnscaledValue_t>)
 class BigDecimal {
     // the entire class is loosely based on OpenJDKs BigDecimal: https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/master/src/java.base/share/classes/java/math/BigDecimal.java
-    
+
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
 
@@ -312,6 +313,8 @@ private:
 
     constexpr static BigDecimal handle_rounding(UnscaledValue_t v, Exponent_t e, UnscaledValue_t rem, RoundingMode m) noexcept {
         switch (m) {
+            case RoundingMode::Trunc:
+                return BigDecimal{v, e};
             case RoundingMode::Floor:
                 if (v >= 0 || rem == 0)
                     return BigDecimal{v, e};
@@ -757,7 +760,7 @@ public:
     [[nodiscard]] constexpr explicit operator UnscaledValue_t() const noexcept {
         if (exponent == 0)
             return unscaled_value;
-        return round(RoundingMode::Floor).unscaled_value;
+        return round(RoundingMode::Trunc).unscaled_value;
     }
 
     /**
@@ -834,6 +837,18 @@ BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Ex
 template<class UnscaledValue_t, class Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> round(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.round(RoundingMode::Round);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> floor(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return r.round(RoundingMode::Floor);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> ceil(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return r.round(RoundingMode::Ceil);
+}
+template<class UnscaledValue_t, class Exponent_t>
+BigDecimal<UnscaledValue_t, Exponent_t> trunc(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
+    return r.round(RoundingMode::Trunc);
 }
 template<class UnscaledValue_t, class Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> abs(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
