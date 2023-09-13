@@ -4,17 +4,38 @@
 #endif  //RDF4CPP_CHECKEDINT_HPP
 
 namespace rdf4cpp::rdf::util {
+/**
+ * Wraps an integer type and keeps track of Overflows and similar Undefined Behavior.
+ * Designed to be used in std::chrono::duration, but may be used standalone.
+ * @tparam I Integer type to wrap
+ */
 template<std::integral I>
 class CheckedIntegral {
     I value;
     bool invalid = false;
 
 public:
+    /**
+     * Creates a CheckedIntegral from the underlying type and optionally a invalid specifier.
+     * @note
+     * Not explicit to allow arithmetic operations on CheckedIntegral and its underlying type.
+     * @param value
+     * @param invalid
+     */
     constexpr CheckedIntegral(I value, bool invalid = false) noexcept : value(value), invalid(invalid) {}
 
+    /**
+     * Checks if the contained value is invalid.
+     * @return
+     */
     [[nodiscard]]constexpr  bool is_invalid() const noexcept {
         return invalid;
     }
+    /**
+     * Returns the contained value.
+     * @note returned value is garbage, if is_invalid() evaluates to true.
+     * @return
+     */
     [[nodiscard]]constexpr  I get_value() const noexcept {
         return value;
     }
@@ -28,14 +49,8 @@ public:
     }
 
     constexpr CheckedIntegral &operator+=(const CheckedIntegral &other) noexcept {
-        if (this->invalid || other.invalid) {
-            this->invalid = true;
-            return *this;
-        }
-        if (__builtin_add_overflow(this->value, other.value, &this->value)) {
-            this->invalid = true;
-            return *this;
-        }
+        this->invalid |= other.invalid;
+        this->invalid |= __builtin_add_overflow(this->value, other.value, &this->value);
         return *this;
     }
     constexpr CheckedIntegral operator+(const CheckedIntegral &other) const noexcept {
@@ -44,14 +59,8 @@ public:
         return r;
     }
     constexpr CheckedIntegral &operator-=(const CheckedIntegral &other) noexcept {
-        if (this->invalid || other.invalid) {
-            this->invalid = true;
-            return *this;
-        }
-        if (__builtin_sub_overflow(this->value, other.value, &this->value)) {
-            this->invalid = true;
-            return *this;
-        }
+        this->invalid |= other.invalid;
+        this->invalid |= __builtin_sub_overflow(this->value, other.value, &this->value);
         return *this;
     }
     constexpr CheckedIntegral operator-(const CheckedIntegral &other) const noexcept {
@@ -60,14 +69,8 @@ public:
         return r;
     }
     constexpr CheckedIntegral &operator*=(const CheckedIntegral &other) noexcept {
-        if (this->invalid || other.invalid) {
-            this->invalid = true;
-            return *this;
-        }
-        if (__builtin_mul_overflow(this->value, other.value, &this->value)) {
-            this->invalid = true;
-            return *this;
-        }
+        this->invalid |= other.invalid;
+        this->invalid |= __builtin_mul_overflow(this->value, other.value, &this->value);
         return *this;
     }
     constexpr CheckedIntegral operator*(const CheckedIntegral &other) const noexcept {

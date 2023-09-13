@@ -10,7 +10,11 @@
 #include <rdf4cpp/rdf/util/CheckedInt.hpp>
 #include <rdf4cpp/rdf/util/Timezone.hpp>
 
-#endif  //RDF4CPP_DATETIMEUTILS_HPP
+/**
+ * @file
+ * various date/time utilities
+ * @note this header is not intended to be included by end users. But if something in here is useful for some edge cases, feel free to do so anyway.
+ */
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 using CheckedMilliseconds = std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, std::milli>;
@@ -20,23 +24,58 @@ using CheckedTimePoint = std::chrono::time_point<std::chrono::local_t, CheckedMi
 using CheckedZonedTime = std::chrono::zoned_time<CheckedMilliseconds, rdf4cpp::rdf::util::Timezone>;
 using CheckedTimePointSys = std::chrono::time_point<std::chrono::system_clock, CheckedMilliseconds>;
 
+/**
+ * turns any duration to its CheckedIntegral counterpart.
+ * @tparam R
+ * @param v
+ * @return
+ */
 template<class R>
 std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R> to_checked(std::chrono::duration<int64_t, R> v) noexcept {
     return std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>{v.count()};
 }
+/**
+ * turns any CheckedIntegral duration back to its integer based duration.
+ * @note undefined behavior, if v is invalid
+ * @tparam R
+ * @param v
+ * @return
+ */
 template<class R>
 std::chrono::duration<int64_t, R> from_checked(std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R> v) noexcept {
+    assert(!v.count().is_invalid());
     return std::chrono::duration<int64_t, R>{v.count().get_value()};
 }
+/**
+ * turns any time_point to its CheckedIntegral counterpart.
+ * @tparam C
+ * @tparam R
+ * @param v
+ * @return
+ */
 template<class C, class R>
 std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>> to_checked(std::chrono::time_point<C, std::chrono::duration<int64_t, R>> v) noexcept {
     return std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>>{to_checked(v.time_since_epoch())};
 }
+/**
+ * turns any CheckedIntegral time_point back to its integer based time_point.
+ * @note undefined behavior, if v is invalid
+ * @tparam C
+ * @tparam R
+ * @param v
+ * @return
+ */
 template<class C, class R>
 std::chrono::time_point<C, std::chrono::duration<int64_t, R>> from_checked(std::chrono::time_point<C, std::chrono::duration<rdf4cpp::rdf::util::CheckedIntegral<int64_t>, R>> v) noexcept {
     return std::chrono::time_point<C, std::chrono::duration<int64_t, R>>{from_checked(v.time_since_epoch())};
 }
 
+/**
+ * checks if a double fits into a specified integer type.
+ * @tparam I
+ * @param d
+ * @return
+ */
 template<std::integral I>
 bool fits_into(double d) {
     if (std::isnan(d) || std::isinf(d))
@@ -230,3 +269,5 @@ public:
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::util
+
+#endif  //RDF4CPP_DATETIMEUTILS_HPP
