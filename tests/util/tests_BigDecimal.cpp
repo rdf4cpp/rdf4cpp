@@ -121,32 +121,50 @@ TEST_CASE("arithmetic") {
         CHECK(((Dec{1, 0} + Dec{2, 0} + Dec{3, 0}) / Dec{3, 0}) == Dec{2, 0});
     }
     SUBCASE("round") {
-        CHECK(Dec{50, 1}.round(RoundingMode::Floor) == Dec{5, 0});
-        CHECK(Dec{51, 1}.round(RoundingMode::Floor) == Dec{5, 0});
-        CHECK(Dec{56, 1}.round(RoundingMode::Floor) == Dec{5, 0});
-        CHECK(Dec{50, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
-        CHECK(Dec{41, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
-        CHECK(Dec{47, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
-        CHECK(Dec{50, 1}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(Dec{51, 1}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(Dec{48, 1}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(Dec{549, 2}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(Dec{450, 2}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(Dec{5, 0}.round(RoundingMode::Round) == Dec{5, 0});
-        CHECK(round(Dec{450, 2}) == Dec{5, 0});
-        CHECK(Dec{"-1.6"}.round(RoundingMode::Floor) == Dec{"-2.0"});
-        CHECK(Dec{"-1.4"}.round(RoundingMode::Floor) == Dec{"-2.0"});
-        CHECK(Dec{"-1.0"}.round(RoundingMode::Floor) == Dec{"-1.0"});
-        CHECK(Dec{"0.0"}.round(RoundingMode::Floor) == Dec{"0.0"});
-        CHECK(Dec{"-1.6"}.round(RoundingMode::Round) == Dec{"-2.0"});
-        CHECK(Dec{"-1.5"}.round(RoundingMode::Round) == Dec{"-2.0"});
-        CHECK(Dec{"-1.4"}.round(RoundingMode::Round) == Dec{"-1.0"});
-        CHECK(Dec{"-1.0"}.round(RoundingMode::Round) == Dec{"-1.0"});
-        CHECK(Dec{"0.0"}.round(RoundingMode::Round) == Dec{"0.0"});
-        CHECK(Dec{"-1.6"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
-        CHECK(Dec{"-1.0"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
-        CHECK(Dec{"0.0"}.round(RoundingMode::Ceil) == Dec{"0.0"});
-        CHECK(Dec{"-1.4"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
+        SUBCASE("floor") {
+            CHECK(Dec{50, 1}.round(RoundingMode::Floor) == Dec{5, 0});
+            CHECK(Dec{51, 1}.round(RoundingMode::Floor) == Dec{5, 0});
+            CHECK(Dec{56, 1}.round(RoundingMode::Floor) == Dec{5, 0});
+            CHECK(Dec{"-1.6"}.round(RoundingMode::Floor) == Dec{"-2.0"});
+            CHECK(Dec{"-1.4"}.round(RoundingMode::Floor) == Dec{"-2.0"});
+            CHECK(Dec{"-1.0"}.round(RoundingMode::Floor) == Dec{"-1.0"});
+            CHECK(Dec{"0.0"}.round(RoundingMode::Floor) == Dec{"0.0"});
+        }
+
+        SUBCASE("ceil") {
+            CHECK(Dec{50, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
+            CHECK(Dec{41, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
+            CHECK(Dec{47, 1}.round(RoundingMode::Ceil) == Dec{5, 0});
+            CHECK(Dec{"-1.6"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
+            CHECK(Dec{"-1.0"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
+            CHECK(Dec{"0.0"}.round(RoundingMode::Ceil) == Dec{"0.0"});
+            CHECK(Dec{"-1.4"}.round(RoundingMode::Ceil) == Dec{"-1.0"});
+        }
+
+        SUBCASE("round") {
+            CHECK(Dec{50, 1}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(Dec{51, 1}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(Dec{48, 1}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(Dec{549, 2}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(Dec{450, 2}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(Dec{5, 0}.round(RoundingMode::Round) == Dec{5, 0});
+            CHECK(round(Dec{450, 2}) == Dec{5, 0});
+            CHECK(Dec{"-1.6"}.round(RoundingMode::Round) == Dec{"-2.0"});
+            CHECK(Dec{"-1.5"}.round(RoundingMode::Round) == Dec{"-2.0"});
+            CHECK(Dec{"-1.4"}.round(RoundingMode::Round) == Dec{"-1.0"});
+            CHECK(Dec{"-1.0"}.round(RoundingMode::Round) == Dec{"-1.0"});
+            CHECK(Dec{"0.0"}.round(RoundingMode::Round) == Dec{"0.0"});
+        }
+
+        SUBCASE("trunc") {
+            CHECK(Dec{50, 1}.round(RoundingMode::Trunc) == Dec{5, 0});
+            CHECK(Dec{51, 1}.round(RoundingMode::Trunc) == Dec{5, 0});
+            CHECK(Dec{56, 1}.round(RoundingMode::Trunc) == Dec{5, 0});
+            CHECK(Dec{"-1.6"}.round(RoundingMode::Trunc) == Dec{"-1.0"});
+            CHECK(Dec{"-1.4"}.round(RoundingMode::Trunc) == Dec{"-1.0"});
+            CHECK(Dec{"-1.0"}.round(RoundingMode::Trunc) == Dec{"-1.0"});
+            CHECK(Dec{"0.0"}.round(RoundingMode::Trunc) == Dec{"0.0"});
+        }
     }
     SUBCASE("abs") {
         CHECK(Dec{51, 1}.abs() == Dec{51, 1});
