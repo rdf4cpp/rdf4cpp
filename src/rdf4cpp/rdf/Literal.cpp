@@ -651,7 +651,19 @@ Literal::operator std::string() const noexcept {
 
     std::string buf;
 
-    if (this->datatype_eq<datatypes::rdf::LangString>()) {
+    if (this->datatype_eq<datatypes::xsd::String>()) {
+        auto const value = this->backend_handle().literal_backend().get_lexical();
+
+        if (value.needs_escape) [[unlikely]] {
+            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + 2);
+            append_quoted_lexical(buf, value.lexical_form);
+        } else {
+            buf.reserve(value.lexical_form.size() + 2);
+            buf.push_back('"');
+            buf.append(value.lexical_form);
+            buf.push_back('"');
+        }
+    } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
 
         if (value.needs_escape) [[unlikely]] {
