@@ -7,6 +7,7 @@
 #include <cmath>
 #include <concepts>
 #include <stdexcept>
+#include <format>
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 
@@ -28,8 +29,10 @@ I from_chars(std::string_view s) {
     I value;
     auto const res = std::from_chars(s.data(), s.data() + s.size(), value);
 
-    if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
-        throw std::runtime_error{"xsd integer parsing error: " + std::make_error_code(res.ec).message()};
+    if (res.ec != std::errc{}) {
+        throw std::runtime_error{std::format("xsd integer parsing error: {} at {}", std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
+    } else if (res.ptr != s.data() + s.size()) {
+        throw std::runtime_error{std::format("xsd integer parsing error: unexpected char at {}", std::string_view(res.ptr, s.data() + s.size()))};
     } else {
         return value;
     }
