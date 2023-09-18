@@ -3,6 +3,7 @@ src/rdf4cpp/rdf/version.hpp
 docu
 doc/*
 docs/build/*
+docs/source/api/*
 
 # Based on https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
 
