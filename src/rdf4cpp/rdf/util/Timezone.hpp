@@ -65,7 +65,7 @@ public:
         if (offset.count() == 0)
             return "Z";
         auto c = offset.count();
-        return std::format("{:+}:{:02}", c / 60, std::abs(c) % 60);
+        return std::format("{:+03}:{:02}", c / 60, std::abs(c) % 60);
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {
