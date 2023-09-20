@@ -7,10 +7,10 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
-    auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
-    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
+    auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");

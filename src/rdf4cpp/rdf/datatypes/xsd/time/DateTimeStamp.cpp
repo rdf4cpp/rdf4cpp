@@ -7,18 +7,18 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dateTimeStamp>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
-    auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
-    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T'>(s);
-    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
-    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
+    auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T', identifier>(s);
+    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
+    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto p = s.find_first_of(rdf::util::Timezone::begin_tokens);
     if (p == 0)
         throw std::runtime_error{"invalid seconds"};
     if (p == std::string::npos)
         throw std::invalid_argument{"missing timezone"};
     auto tz = rdf::util::Timezone::parse(s.substr(p));
-    std::chrono::milliseconds ms = parse_milliseconds(s.substr(0, p));
+    std::chrono::milliseconds ms = parse_milliseconds<identifier>(s.substr(0, p));
     auto date = year / month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");

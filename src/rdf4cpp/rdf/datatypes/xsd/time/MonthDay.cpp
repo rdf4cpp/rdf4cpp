@@ -7,9 +7,15 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthDay>::from_string(std::string_view s) {
     using namespace registry::util;
-    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
+    if (!s.starts_with("--")) {
+        throw std::invalid_argument{"gMonth prefix missing"};
+    }
+
+    s.remove_prefix(2);
+
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");
@@ -19,7 +25,7 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
 
 template<>
 std::string capabilities::Default<xsd_gMonthDay>::to_canonical_string(const cpp_type &value) noexcept {
-    auto str = std::format("{:%m-%d}", value.first);
+    auto str = std::format("--{:%m-%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
     return str;
