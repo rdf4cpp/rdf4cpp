@@ -43,7 +43,7 @@ Beware: Conan will not be used for dependency retrieval if you include rdf4cpp v
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{11,12,13}, clang-{14,15,16} with libstdc++-11 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{13}, clang-{15,16} with libstdc++-13 on ubuntu 22.04. 
 
 ### Dependencies
 
@@ -53,7 +53,7 @@ sudo apt install python3-pip
 pip3 install --user conan
 conan user
 conan profile new --detect default
-conan profile update settings.compiler.libcxx=libstdc++11 default
+conan profile update settings.compiler.libcxx=libstdc++13 default
 conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 ```
 
