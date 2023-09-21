@@ -7,17 +7,24 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s) {
     using namespace registry::util;
+    if (!s.starts_with("---")) {
+        throw std::invalid_argument{"missing gDay prexfix"};
+    }
+
+    s.remove_prefix(3);
+
     auto tz = rdf::util::Timezone::parse_optional(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0'>(s);
-    if (!day.ok())
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
+    if (!day.ok()) {
         throw std::invalid_argument("invalid day");
+    }
 
     return std::make_pair(day, tz);
 }
 
 template<>
 std::string capabilities::Default<xsd_gDay>::to_canonical_string(const cpp_type &value) noexcept {
-    auto str = std::format("{:%d}", value.first);
+    auto str = std::format("---{:%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
     return str;

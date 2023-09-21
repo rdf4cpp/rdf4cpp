@@ -7,13 +7,13 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
-    auto year = parse_date_time_fragment<std::chrono::year, int, '-'>(s);
-    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-'>(s);
-    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T'>(s);
-    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
-    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
+    auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
+    auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
+    auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T', identifier>(s);
+    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
+    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
-    std::chrono::milliseconds ms = parse_milliseconds(s);
+    std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
     if (!date.ok())
         throw std::invalid_argument("invalid date");

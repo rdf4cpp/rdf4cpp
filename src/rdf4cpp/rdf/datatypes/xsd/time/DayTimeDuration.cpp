@@ -19,15 +19,15 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
     auto p = s.find('T');
     auto date = s.substr(0, p);
     auto time = p == std::string::npos ? std::string_view{""} : s.substr(p);
-    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D'>(date);
+    auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D', identifier>(date);
     if (!time.empty()) {
         if (time[0] != 'T')
             throw std::invalid_argument{"duration missing T"};
         time = time.substr(1);
     }
-    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H'>(time);
-    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M'>(time);
-    auto seconds = parse_duration_milliseconds(time);
+    auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H', identifier>(time);
+    auto minutes = parse_duration_fragment<std::chrono::minutes, uint64_t, 'M', identifier>(time);
+    auto seconds = parse_duration_milliseconds<identifier>(time);
 
     std::chrono::milliseconds ms{};
     if (days.has_value())
