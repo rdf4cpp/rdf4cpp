@@ -19,7 +19,7 @@ namespace rdf4cpp::rdf::datatypes::registry::util {
  * @return the resulting value
  * @throws std::runtime_error if the string cannot be parsed
  */
-template<std::integral I>
+template<std::integral I, ConstexprString datatype>
 I from_chars(std::string_view s) {
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
@@ -30,9 +30,9 @@ I from_chars(std::string_view s) {
     auto const res = std::from_chars(s.data(), s.data() + s.size(), value);
 
     if (res.ec != std::errc{}) {
-        throw std::runtime_error{std::format("xsd integer parsing error: {} at {}", std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
+        throw std::runtime_error{std::format("{} parsing error: {} at {}", datatype, std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
     } else if (res.ptr != s.data() + s.size()) {
-        throw std::runtime_error{std::format("xsd integer parsing error: unexpected char at {}", std::string_view(res.ptr, s.data() + s.size()))};
+        throw std::runtime_error{std::format("{} parsing error: unexpected char at {}", datatype, std::string_view(res.ptr, s.data() + s.size()))};
     } else {
         return value;
     }
@@ -80,7 +80,7 @@ std::string to_chars_simplified(I const value) noexcept {
  * @return the resulting value
  * @throws std::runtime_error if the string cannot be parsed
  */
-template<std::floating_point F>
+template<std::floating_point F, ConstexprString datatype>
 F from_chars(std::string_view s) {
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
@@ -92,7 +92,7 @@ F from_chars(std::string_view s) {
 
     if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{"xsd floating point parsing error: " + std::make_error_code(res.ec).message()};
+        throw std::runtime_error{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
     }
 
     return value;

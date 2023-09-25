@@ -5,7 +5,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_unsigned_int>::cpp_type capabilities::Default<xsd_unsigned_int>::from_string(std::string_view s) {
-    return util::from_chars<cpp_type>(s);
+    return util::from_chars<cpp_type, identifier>(s);
 }
 
 template<>

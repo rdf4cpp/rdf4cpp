@@ -87,20 +87,20 @@ bool fits_into(double d) {
     return true;
 }
 
-template<class ResultType, class ParsingType, char Separator>
+template<class ResultType, class ParsingType, char Separator, ConstexprString datatype>
 ResultType parse_date_time_fragment(std::string_view &s) {
     std::string_view res_s = s;
     if constexpr (Separator != '\0') {
         auto p = s.find(Separator, 1);
         if (p == std::string::npos)
-            throw std::invalid_argument(std::format("missing {}", Separator));
+            throw std::invalid_argument(std::format("{} parse error: missing {}", datatype, Separator));
         res_s = s.substr(0, p);
         s = s.substr(p + 1);
     }
-    return ResultType{from_chars<ParsingType>(res_s)};
+    return ResultType{from_chars<ParsingType, datatype>(res_s)};
 }
 
-template<class ResultType, class ParsingType, char Separator>
+template<class ResultType, class ParsingType, char Separator, ConstexprString datatype>
 std::optional<ResultType> parse_duration_fragment(std::string_view &s) {
     if (s.empty())
         return std::nullopt;
@@ -110,23 +110,26 @@ std::optional<ResultType> parse_duration_fragment(std::string_view &s) {
         return std::nullopt;
     res_s = s.substr(0, p);
     s = s.substr(p + 1);
-    return ResultType{from_chars<ParsingType>(res_s)};
+    return ResultType{from_chars<ParsingType, datatype>(res_s)};
 }
 
+template<ConstexprString datatype>
 inline std::chrono::milliseconds parse_milliseconds(std::string_view s) {
     auto p = s.find('.');
     std::chrono::milliseconds ms{};
     if (p != std::string::npos) {
         auto milli_s = s.substr(p + 1, 3);
-        ms = std::chrono::milliseconds{from_chars<unsigned int>(milli_s)};
+        ms = std::chrono::milliseconds{from_chars<unsigned int, datatype>(milli_s)};
         for (size_t i = milli_s.length(); i < 3; ++i) {
             ms *= 10;
         }
         s = s.substr(0, p);
     }
-    std::chrono::seconds sec{from_chars<unsigned int>(s)};
+    std::chrono::seconds sec{from_chars<unsigned int, datatype>(s)};
     return sec + ms;
 }
+
+template<ConstexprString datatype>
 inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std::string_view &s) {
     if (s.empty())
         return std::nullopt;
@@ -136,7 +139,7 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
         return std::nullopt;
     res_s = s.substr(0, p);
     s = s.substr(p + 1);
-    return parse_milliseconds(res_s);
+    return parse_milliseconds<datatype>(res_s);
 }
 
 inline bool in_ymd_bounds(rdf4cpp::rdf::util::TimePoint tp) noexcept {

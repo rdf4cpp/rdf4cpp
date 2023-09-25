@@ -7,10 +7,10 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_string(std::string_view s) {
     using namespace registry::util;
-    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':'>(s);
-    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':'>(s);
+    auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
+    auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
-    std::chrono::milliseconds ms = parse_milliseconds(s);
+    std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
         throw std::invalid_argument{"minutes out of range"};
     if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))

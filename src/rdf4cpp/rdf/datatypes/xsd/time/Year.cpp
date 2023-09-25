@@ -7,7 +7,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
     auto tz = rdf::util::Timezone::parse_optional(s);
-    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0'>(s);
+    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s);
     return std::make_pair(year, tz);
 }
 

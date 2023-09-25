@@ -42,8 +42,8 @@ public:
         auto sep = v.find(':');
         if (sep == std::string::npos)
             throw std::invalid_argument{"timezone missing :"};
-        std::chrono::hours h{datatypes::registry::util::from_chars<int32_t>(v.substr(0, sep))};
-        tz.offset = std::chrono::minutes{datatypes::registry::util::from_chars<int32_t>(v.substr(sep + 1))} + std::chrono::minutes{h};
+        std::chrono::hours h{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(0, sep))};
+        tz.offset = std::chrono::minutes{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(sep + 1))} + std::chrono::minutes{h};
         if (negative)
             tz.offset *= -1;
         if (tz.offset.count() < -840 || tz.offset.count() > 840)
@@ -65,7 +65,7 @@ public:
         if (offset.count() == 0)
             return "Z";
         auto c = offset.count();
-        return std::format("{:+}:{:02}", c / 60, std::abs(c) % 60);
+        return std::format("{:+03}:{:02}", c / 60, std::abs(c) % 60);
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {
