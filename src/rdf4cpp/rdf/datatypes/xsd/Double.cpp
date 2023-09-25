@@ -7,7 +7,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::from_string(std::string_view s) {
-    return util::from_chars<cpp_type>(s);
+    return util::from_chars<cpp_type, identifier>(s);
 }
 
 template<>

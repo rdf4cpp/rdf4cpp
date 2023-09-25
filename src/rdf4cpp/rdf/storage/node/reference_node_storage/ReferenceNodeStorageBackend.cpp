@@ -72,6 +72,20 @@ decltype(auto) ReferenceNodeStorageBackend::visit_specialized(S &&container, ide
             return f(std::get<9>(std::forward<S>(container)));
         case xsd::HexBinary::fixed_id.to_underlying():
             return f(std::get<10>(std::forward<S>(container)));
+        case xsd::Date::fixed_id.to_underlying():
+            return f(std::get<11>(std::forward<S>(container)));
+        case xsd::DateTime::fixed_id.to_underlying():
+            return f(std::get<12>(std::forward<S>(container)));
+        case xsd::DateTimeStamp::fixed_id.to_underlying():
+            return f(std::get<13>(std::forward<S>(container)));
+        case xsd::GYearMonth::fixed_id.to_underlying():
+            return f(std::get<14>(std::forward<S>(container)));
+        case xsd::Duration::fixed_id.to_underlying():
+            return f(std::get<15>(std::forward<S>(container)));
+        case xsd::DayTimeDuration::fixed_id.to_underlying():
+            return f(std::get<16>(std::forward<S>(container)));
+        case xsd::YearMonthDuration::fixed_id.to_underlying():
+            return f(std::get<17>(std::forward<S>(container)));
         default:
             assert(false);
             __builtin_unreachable();

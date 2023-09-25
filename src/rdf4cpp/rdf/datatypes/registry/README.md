@@ -211,7 +211,7 @@ To implement custom conversion behaviour the functions of [capabilities::Promota
 ```c++
 template<>
 template<>
-inline capabilites::Promotable<your_type>::promoted_cpp_type<IX> capabilites::Promotable::promote<IX>(cpp_type const &value) noexcept {
+inline capabilities::Promotable<your_type>::promoted_cpp_type<IX> capabilities::Promotable::promote<IX>(cpp_type const &value) noexcept {
     // do some complex conversion
 }
 
@@ -224,7 +224,7 @@ inline nonstd::expected<cpp_type, DynamicError> capabilities::Promotable<your_ty
 
 template<>
 template<>
-inline capabilites::Subtype<your_type>::super_cpp_type<IX> capabilites::Subtype::into_supertype<IX>(cpp_type const &value) noexcept {
+inline capabilities::Subtype<your_type>::super_cpp_type<IX> capabilites::Subtype::into_supertype<IX>(cpp_type const &value) noexcept {
     // do some complex conversion
 }
 

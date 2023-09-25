@@ -40,6 +40,10 @@ jobs:
         with:
           cmakeVersion: ${{ inputs.cmake-version }}
 
+      - name: Ensure stdlib version
+        run: |
+          sudo apt install libstdc++-13-dev -y
+
       - name: Install compiler
         id: install_cc
         uses: rlalik/setup-cpp-compiler@v1.2

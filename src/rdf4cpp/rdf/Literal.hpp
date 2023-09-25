@@ -12,8 +12,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
-#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <type_traits>
 
 namespace rdf4cpp::rdf {
@@ -420,6 +420,105 @@ public:
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] Literal cast(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept {
         return this->cast(IRI{T::datatype_id, node_storage}, node_storage);
+    }
+
+    /**
+     * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+     *
+     * @return conversion result
+     */
+    template<datatypes::LiteralDatatype T>
+    requires (!std::same_as<T, datatypes::xsd::String>)
+    std::optional<typename T::cpp_type> cast_to_value() const noexcept {
+        using namespace datatypes::registry;
+        using namespace datatypes::xsd;
+
+        if (this->null()) {
+            return std::nullopt;
+        }
+
+        auto const this_dtid = this->datatype_id();
+        DatatypeIDView const target_dtid = T::datatype_id;
+
+        if (this_dtid == target_dtid) {
+            return this->value<T>();
+        }
+
+        if (this_dtid == String::datatype_id) {
+            // string -> any
+            try {
+                return T::from_string(this->lexical_form());
+            } catch (...) {
+                return std::nullopt;
+            }
+        }
+
+        if constexpr (std::same_as<T, Boolean>) {
+            // any -> bool
+            rdf::util::TriBool t = this->ebv();
+            if (t == rdf::util::TriBool::Err)
+                return std::nullopt;
+            else if (t == rdf::util::TriBool::True)
+                return true;
+            else
+                return false;
+        }
+
+        auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+        if (target_e == nullptr) {
+            // target not registered
+            return std::nullopt;
+        }
+
+        if (this_dtid == Boolean::datatype_id && target_e->numeric_ops.has_value()) {
+            // bool -> numeric
+            if (target_e->numeric_ops->is_impl()) {
+                auto value = this->template value<Boolean>() ? target_e->numeric_ops->get_impl().one_value_fptr()
+                                                             : target_e->numeric_ops->get_impl().zero_value_fptr();
+
+                return std::any_cast<typename T::cpp_type>(value);
+            } else {
+                auto const &impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
+                auto const *target_num_impl = DatatypeRegistry::get_numerical_ops(impl_converter.target_type_id);
+                assert(target_num_impl != nullptr);
+
+                // perform conversion as impl numeric type
+                auto const value = this->template value<Boolean>() ? target_num_impl->get_impl().one_value_fptr()
+                                                                   : target_num_impl->get_impl().zero_value_fptr();
+
+                // downcast to target
+                auto target_value = impl_converter.inverted_convert(value);
+
+                if (!target_value.has_value()) {
+                    // not representable as target type
+                    return std::nullopt;
+                }
+
+                return std::any_cast<typename T::cpp_type>(*target_value);
+            }
+        }
+
+        auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+        if (this_e == nullptr) {
+            // this datatype not registered
+            return std::nullopt;
+        }
+
+        if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+            // general cast
+            // TODO: if performance is bad split into separate cases for up-, down- and cross-casting to avoid one set of std::any wrapping and unwrapping for the former 2
+
+            auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
+            auto target_value = common_conversion->inverted_convert_rhs(common_type_value); // downcast to target
+            if (!target_value.has_value()) {
+                // downcast failed
+                return std::nullopt;
+            }
+            return std::any_cast<typename T::cpp_type>(*target_value);
+        }
+
+        // no conversion found
+        return std::nullopt;
     }
 
     /**
@@ -1005,6 +1104,101 @@ public:
      * @return SHA2-512 hash as simple literal, or null literal if this is not of type xsd::String
      */
     [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
+
+    /**
+     * returns the current time.
+     * Note: will need to be buffered for each query, because each query has only one now.
+     * @return std::chrono::system_clock::now() as xsd:dateTime
+     */
+    [[nodiscard]] static Literal now(NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * returns the year part of this.
+     * @return year or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::year> year() const noexcept;
+    /**
+     * returns the year part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_year(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the month part of this.
+     * @return month or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::month> month() const noexcept;
+    /**
+     * returns the month part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_month(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the day part of this.
+     * @return day or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::day> day() const noexcept;
+    /**
+     * returns the day part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_day(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the hours part of this.
+     * @return hours ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::hours> hours() const noexcept;
+    /**
+     * returns the hours part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_hours(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the minutes part of this.
+     * @return minutes ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::minutes> minutes() const noexcept;
+    /**
+     * returns the minutes part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return seconds or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const noexcept;
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return xsd::Decimal or null literal
+     */
+    [[nodiscard]] Literal as_seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone or nullopt
+     */
+    [[nodiscard]] std::optional<util::Timezone> timezone() const noexcept;
+    /**
+     * returns the timezone offset part of this.
+     * @return offset as xsd::DayTimeDuration or null literal
+     */
+    [[nodiscard]] Literal as_timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone as string or nullopt
+     */
+    [[nodiscard]] std::optional<std::string> tz() const noexcept;
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone as simple literal or null literal
+     */
+    [[nodiscard]] Literal as_tz(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @return the effective boolean value of this

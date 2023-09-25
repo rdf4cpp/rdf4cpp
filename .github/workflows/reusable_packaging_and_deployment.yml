@@ -33,6 +33,10 @@ jobs:
 
           sudo apt-get update -y
 
+      - name: Ensure stdlib version
+        run: |
+          sudo apt install libstdc++-13-dev -y
+
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
@@ -71,7 +75,7 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing
+          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing -o boost:header_only=True
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
 
   test-fetch-content-static:

@@ -42,7 +42,15 @@ private:
                NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Double>>,
 
                NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>> specialized_literal_storage_;
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>,
+
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Date>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTime>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTimeStamp>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::GYearMonth>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Duration>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DayTimeDuration>>,
+               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
     std::atomic<uint64_t> next_fallback_literal_id_{NodeID::min_literal_id.value};
     std::array<std::atomic<uint64_t>, std::tuple_size_v<decltype(specialized_literal_storage_)>> next_specialized_literal_ids_;

@@ -19,7 +19,7 @@ TEST_CASE("Literal - Check for only lexical form") {
     CHECK_EQ(lit1.lexical_form(), "Bunny");
     CHECK_EQ(lit1.datatype(), iri);
     CHECK_EQ(lit1.language_tag(), "");
-    CHECK_EQ(std::string(lit1), "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
+    CHECK_EQ(std::string(lit1), "\"Bunny\"");
 }
 
 TEST_CASE("Literal - Check for lexical form with IRI") {
@@ -35,7 +35,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         CHECK_EQ(lit1.lexical_form(), "Bunny");
         CHECK_EQ(lit1.datatype(), iri);
         CHECK_EQ(lit1.language_tag(), "");
-        CHECK_EQ(std::string(lit1), "\"Bunny\"^^<http://www.w3.org/2001/XMLSchema#string>");
+        CHECK_EQ(std::string(lit1), "\"Bunny\"");
 
         [[maybe_unused]] Literal no_discard_dummy;
         CHECK_THROWS_AS(no_discard_dummy = Literal::make_simple("\xc3\x28"), std::runtime_error);
@@ -462,6 +462,13 @@ TEST_CASE("Literal - casting") {
         auto const lit2 = lit1.template cast<UnsignedInt>();
 
         CHECK(lit2.null());
+    }
+
+    SUBCASE("proper truncation") {
+        auto const lit1 = Literal::make_typed_from_value<Float>(-7.875E0);
+        auto const lit2 = lit1.cast<Integer>();
+
+        CHECK_EQ(lit2.value<Integer>(), -7);
     }
 }
 

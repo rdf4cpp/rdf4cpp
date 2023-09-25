@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.13)
+project(rdf4cpp VERSION 0.0.17)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -13,7 +13,7 @@ if (IS_TOP_LEVEL AND USE_CONAN)
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
     endif()
     set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS}")
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost:header_only=True")
 endif ()
 
 # find packages
@@ -159,6 +159,18 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
         src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Year.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Month.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Day.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/YearMonth.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/MonthDay.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Date.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Time.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/DateTime.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/Duration.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.cpp
+        src/rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.cpp
         src/rdf4cpp/rdf/namespaces/BFLC.cpp
         src/rdf4cpp/rdf/namespaces/FOAF.cpp
         src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
