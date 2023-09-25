@@ -1286,31 +1286,6 @@ bool Literal::is_string_like() const noexcept {
     return type == datatypes::xsd::String::fixed_id || type == datatypes::rdf::LangString::fixed_id;
 }
 
-bool Literal::is_timepoint_like() const noexcept {
-    auto const type = this->handle_.node_id().literal_type();
-    if (!type.is_fixed()) {
-        return false;
-    }
-
-    // TODO: this does not cover custom types deriving from xsd:dateTime
-    return type == datatypes::xsd::DateTime::fixed_id
-           || type == datatypes::xsd::DateTimeStamp::fixed_id
-           || type == datatypes::xsd::Date::fixed_id
-           || type == datatypes::xsd::Time::fixed_id;
-}
-
-bool Literal::is_duration_like() const noexcept {
-    auto const type = this->handle_.node_id().literal_type();
-    if (!type.is_fixed()) {
-        return false;
-    }
-
-    // TODO: this does not cover custom types deriving from xsd:duration
-    return type == datatypes::xsd::Duration::fixed_id
-           || type == datatypes::xsd::DayTimeDuration::fixed_id
-           || type == datatypes::xsd::YearMonthDuration::fixed_id;
-}
-
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
     // DayTimeDuration + DayTimeDuration
     {

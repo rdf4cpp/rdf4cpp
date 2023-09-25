@@ -97,16 +97,6 @@ private:
     [[nodiscard]] bool is_string_like() const noexcept;
 
     /**
-     * @return if this' datatype is xsd:dateTime, xsd:dateTimeStamp, xsd:date or xsd:time
-     */
-    [[nodiscard]] bool is_timepoint_like() const noexcept;
-
-    /**
-     * @return if this' datatype is xsd:duration or one of its subtypes
-     */
-    [[nodiscard]] bool is_duration_like() const noexcept;
-
-    /**
      * Creates a simple Literal directly without any safety checks
      */
     [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept;
