@@ -1,6 +1,5 @@
 src/rdf4cpp/rdf/version.hpp
 
-docu
 docs/doxygen_output/*
 docs/build/*
 docs/source/api/*

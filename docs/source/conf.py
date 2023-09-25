@@ -41,7 +41,6 @@ breathe_projects = {
     "rdf4cpp": "../doxygen_output/xml/",
 }
 breathe_default_project = "rdf4cpp"
-breathe_default_members = 'members'
 
 # Setup the exhale extension
 exhale_args = {
