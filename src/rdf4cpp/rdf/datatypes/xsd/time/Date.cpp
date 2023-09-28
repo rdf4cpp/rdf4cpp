@@ -13,7 +13,7 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
     if (!date.ok())
-        throw std::invalid_argument("invalid date");
+        throw std::runtime_error("invalid date");
 
     return std::make_pair(date, tz);
 }
