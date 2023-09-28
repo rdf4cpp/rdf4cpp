@@ -13,7 +13,7 @@ Installation
 ------------
 Until its first stable release, rdf4cpp will not be available via Conan Center. Instead, it is available via the artifactory of the `DICE Research Group <https://dice-research.org/>`_.
 
-You need the package manager `Conan <https://conan.io/downloads.html>`_ installed and set up. You can add the DICE artifactory with: ::
+You need the package manager `Conan <https://conan.io/downloads.html>`_ version 1 installed and set up. You can add the DICE artifactory with: ::
 
     conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 
@@ -40,7 +40,7 @@ ____________
 It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+: ::
 
     sudo apt install python3-pip
-    pip3 install --user conan
+    pip3 install --user "conan<2"
     conan user
     conan profile new --detect default
     conan profile update settings.compiler.libcxx=libstdc++13 default

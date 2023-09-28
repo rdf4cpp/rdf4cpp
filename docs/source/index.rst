@@ -10,6 +10,7 @@ Welcome to rdf4cpp's documentation!
    :maxdepth: 2
 
    getting_started
+   users_guide
    api/library_root
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
