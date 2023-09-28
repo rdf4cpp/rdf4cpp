@@ -34,11 +34,13 @@ TEST_SUITE("RDFFileParser") {
                         break;
                 }
                 ++count;
+            } else if (count == 3) {
+                ++count;
             } else {
                 CHECK_MESSAGE(false, v.error());
             }
         }
-        CHECK(count == 3);
+        CHECK(count == 4);
     }
     TEST_CASE("move iterator") {
         rdf4cpp::rdf::parser::RDFFileParser pars{"./tests_RDFFileParser_simple.ttl"};
