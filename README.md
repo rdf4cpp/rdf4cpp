@@ -1,4 +1,5 @@
 ⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
+
 ⚠️ rdf4cpp uses Conan 1 and is not compatible with Conan 2. ⚠️
 
 # rdf4cpp
@@ -20,7 +21,7 @@ conan remote add dice-group https://conan.dice-research.org/artifactory/api/cona
 To use rdf4cpp, add it to your `conanfile.txt`:
 ```
 [requires]
-rdf4cpp/0.0.13
+rdf4cpp/0.0.18
 ```
 
 ### With FetchContent
@@ -30,7 +31,7 @@ include(FetchContent)
 FetchContent_Declare(
         rdf4cpp
         GIT_REPOSITORY "${CMAKE_CURRENT_SOURCE_DIR}/../"
-        GIT_TAG v0.0.13
+        GIT_TAG v0.0.18
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(rdf4cpp)
