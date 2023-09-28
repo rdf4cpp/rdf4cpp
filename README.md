@@ -1,4 +1,6 @@
 ⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
+⚠️ rdf4cpp uses Conan 1 and is not compatible with Conan 2. ⚠️
+
 # rdf4cpp
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
@@ -47,10 +49,10 @@ CI builds and tests rdf4cpp with gcc-{11,12,13}, clang-{14,15,16} with libstdc++
 
 ### Dependencies
 
-It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
+It is recommended to include build dependencies via conan version 1. Set up Conan as follows on Ubuntu 22.04+:
 ```shell
 sudo apt install python3-pip
-pip3 install --user conan
+pip3 install --user "conan<2"
 conan user
 conan profile new --detect default
 conan profile update settings.compiler.libcxx=libstdc++11 default
