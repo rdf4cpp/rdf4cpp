@@ -5,8 +5,6 @@
 
 
 import subprocess, os, sys
-sys.path.append("/home/mcb/other_c/breathe/")
-sys.path.append("/home/mcb/other_c/exhale/")
 subprocess.call('cd ../../; rm -r docs/build/', shell=True)
 subprocess.call('cd ../../; rm -r docs/doxygen_output/', shell=True)
 subprocess.call('cd ../../; rm -r docs/source/api/', shell=True)
