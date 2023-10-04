@@ -12,6 +12,7 @@ Welcome to rdf4cpp's documentation!
    getting_started
    users_guide
    api/library_root
+   technical
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
 
