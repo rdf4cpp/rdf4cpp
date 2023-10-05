@@ -79,6 +79,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::ZonedTime> {
     static size_t dice_hash(rdf4cpp::rdf::util::ZonedTime const &x) noexcept {
@@ -87,5 +88,6 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::ZonedTime> {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(tp, off));
     }
 };
+#endif
 
 #endif  //RDF4CPP_DATETIMESTAMP_HPP

@@ -854,6 +854,8 @@ BigDecimal<UnscaledValue_t, Exponent_t> abs(const BigDecimal<UnscaledValue_t, Ex
     return r.abs();
 }
 }  // namespace rdf4cpp::rdf::util
+
+#ifndef DOXYGEN_PARSER
 template<class UnscaledValue_t, class Exponent_t>
 struct std::hash<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
     size_t operator()(const rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t> &r) const {
@@ -874,6 +876,7 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::BigDecimal<U, 
         return x.template hash<Policy>();
     }
 };
+#endif
 
 template<class UnscaledValue_t, class Exponent_t>
 class std::numeric_limits<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {

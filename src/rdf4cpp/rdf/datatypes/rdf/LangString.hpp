@@ -77,6 +77,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
     static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) noexcept {
@@ -90,5 +91,6 @@ struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
         return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x);
     }
 };
+#endif
 
 #endif  //RDF4CPP_RDF_LANGSTRING_HPP

@@ -9,7 +9,6 @@ subprocess.call('cd ../../; rm -r docs/build/', shell=True)
 subprocess.call('cd ../../; rm -r docs/doxygen_output/', shell=True)
 subprocess.call('cd ../../; rm -r docs/source/api/', shell=True)
 subprocess.call('cd ../../; doxygen', shell=True)
-#subprocess.call('cd ../../; python3 /home/mcb/other_c/breathe/breathe-apidoc.py -T -g file -o ./docs/source/ ./doc/xml/', shell=True)
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -53,7 +52,6 @@ exhale_args = {
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": False,
-    "exhaleDoxygenStdin":    "INPUT = ../include",
     "listingExclude": ["mz*"],
     "fullToctreeMaxDepth": 2,
 }

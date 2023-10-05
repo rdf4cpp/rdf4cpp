@@ -380,13 +380,16 @@ template<util::ConstexprString type_iri, template<util::ConstexprString> typenam
 struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_iri>... {
     using typename capabilities::Default<type_iri>::cpp_type;
 
-    static constexpr DatatypeIDView const datatype_id = []() {
+private:
+    static consteval auto get_datatype_id() {
         if constexpr (HasFixedId<LiteralDatatypeImpl>) {
             return DatatypeIDView{LiteralDatatypeImpl::fixed_id};
         } else {
             return DatatypeIDView{LiteralDatatypeImpl::identifier};
         }
-    }();
+    }
+public:
+    static constexpr DatatypeIDView const datatype_id = get_datatype_id();
 
     static_assert((datatype_id.is_dynamic() && !reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier))
                           || (datatype_id.is_fixed() && reserved_datatype_ids.contains(LiteralDatatypeImpl::identifier)),

@@ -128,6 +128,7 @@ constexpr rdf::util::TimePoint construct(std::chrono::year_month_day date, std::
 
 }  // namespace rdf4cpp::rdf::util
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::Timezone> {
     static size_t dice_hash(rdf4cpp::rdf::util::Timezone const &x) noexcept {
@@ -142,5 +143,6 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::OptionalTimezo
         return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
     }
 };
+#endif
 
 #endif  //RDF4CPP_TIMEZONE_HPP

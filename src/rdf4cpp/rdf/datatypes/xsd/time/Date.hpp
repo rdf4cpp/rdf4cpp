@@ -72,6 +72,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, std::chrono::year_month_day> {
     static size_t dice_hash(std::chrono::year_month_day const &x) noexcept {
@@ -81,5 +82,6 @@ struct dice::hash::dice_hash_overload<Policy, std::chrono::year_month_day> {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(year, month, day));
     }
 };
+#endif
 
 #endif  //RDF4CPP_DATE_HPP

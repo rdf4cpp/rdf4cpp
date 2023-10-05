@@ -523,7 +523,9 @@ public:
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
+     * \verbatim embed:rst:leading-asterisk
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
+     * \endverbatim
      * @return lexical form
      */
     [[nodiscard]] util::CowString lexical_form() const noexcept;

@@ -57,6 +57,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy, typename A, typename B>
 struct dice::hash::dice_hash_overload<Policy, std::chrono::duration<A, B>> {
     static size_t dice_hash(std::chrono::duration<A, B> const &x) noexcept {
@@ -64,5 +65,6 @@ struct dice::hash::dice_hash_overload<Policy, std::chrono::duration<A, B>> {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(m);
     }
 };
+#endif
 
 #endif  //RDF4CPP_DURATION_HPP

@@ -76,15 +76,17 @@ For `rdf::langString` the language tag can be inlined into the `LiteralID`.
 This uses the uppermost bits of the `LiteralID`. The amount of bits used depends on the configuration (default 2).
 Inlining uses only as many bits as it needs, the remaining bits of the `LiteralID` is used for storing the
 truncated `LiteralID`
-If you are operating on `LiteralID`s directly, you need to check if they are inlined and possibly de-inline them before
-using (the inlining tagging bit of the `NodeBackendHandle`will be set).
+If you are operating on `LiteralID`\s directly, you need to check if they are inlined and possibly de-inline them before
+using (the inlining tagging bit of the `NodeBackendHandle` will be set).
 
 Important Notes
 _______________
 
- - `NodeBackendHandle`s depend on the initialization order of `NodeManager`s and the creation order if `Node`s within
-  a `NodeManager`.
-  - They are not guaranteed to be equal between two executions.
-  - `NodeID`s are not guaranteed to be equal between two `NodeManager`s.
+ - `NodeBackendHandle`\s depend on the initialization order of `NodeManager`\s and the creation order if `Node`\s within
+   a `NodeManager`.
+
+   - They are not guaranteed to be equal between two executions.
+   - `NodeID`\s are not guaranteed to be equal between two `NodeManager`\s.
+
  - When persisting a `NodeStorage` special care must be taken that the `NodeStorage` is loaded next time with the
-  same `NodeStorageID` as last time. Otherwise, the `NodeBackendHandle`s will be invalid.
+   same `NodeStorageID` as last time. Otherwise, the `NodeBackendHandle`\s will be invalid.
