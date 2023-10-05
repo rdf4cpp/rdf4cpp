@@ -127,7 +127,7 @@ Value inlining
 
 By default, values of literals are stored in the :doc:`node_storage`.
 However, to avoid the overhead of accessing it values of datatypes can also be packed
-into the 42-bit :class:`rdf4cpp::rdf::storage::node::identifier::LiteralID` (\ :doc:`node_id`\ ) of a
+into the 42-bit :class:`rdf4cpp::rdf::storage::node::identifier::LiteralID` (\ :doc:`NodeBackendHandle`\ ) of a
 node storage handle. In turn, the value can be directly extracted from the handle, without having to access the NodeStorage
 Value inlining requires the specific value to actually fit into the available 42 bits.
 However, it does not require that every possible value of a type fits into these available bits.
