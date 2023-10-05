@@ -60,6 +60,7 @@ struct Base64BinaryRepr {
     std::strong_ordering operator<=>(Base64BinaryRepr const &) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_base64_binary> {
     using cpp_datatype = Base64BinaryRepr;
@@ -70,6 +71,7 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 
 template<>
 std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_base64_binary,
                                            capabilities::FixedId>;

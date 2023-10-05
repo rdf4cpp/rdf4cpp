@@ -10,6 +10,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_long> {
     using cpp_datatype = int64_t;
@@ -37,6 +38,7 @@ bool capabilities::Logical<xsd_long>::effective_boolean_value(cpp_type const &va
 template<>
 template<>
 nonstd::expected<capabilities::Default<xsd_long>::cpp_type, DynamicError> capabilities::Subtype<xsd_long>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_long,
                                            capabilities::Logical,

@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTime> {
     using cpp_datatype = std::pair<rdf::util::TimePoint, rdf::util::OptionalTimezone>;
@@ -31,6 +32,7 @@ capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_da
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_dateTime,
                                            capabilities::Comparable,

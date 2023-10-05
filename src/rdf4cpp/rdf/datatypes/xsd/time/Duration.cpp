@@ -5,6 +5,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -169,6 +170,7 @@ std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type c
     }
     return o;
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_duration,
                                     capabilities::Comparable,

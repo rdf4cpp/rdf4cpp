@@ -2,6 +2,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<owl_real>::cpp_type capabilities::Default<owl_real>::from_string(std::string_view s) {
     try {
@@ -46,6 +47,7 @@ template<>
 nonstd::expected<capabilities::Numeric<owl_real>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::ceil(cpp_type const &operand) noexcept {
     return boost::multiprecision::ceil(operand);
 }
+#endif
 
 template struct LiteralDatatypeImpl<owl_real,
                                     capabilities::Logical,

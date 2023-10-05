@@ -4,6 +4,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -64,6 +65,7 @@ template<>
 nonstd::expected<capabilities::Subtype<xsd_gYearMonth>::cpp_type, DynamicError> capabilities::Subtype<xsd_gYearMonth>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(value.first.year() / value.first.month(), value.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                     capabilities::Comparable,

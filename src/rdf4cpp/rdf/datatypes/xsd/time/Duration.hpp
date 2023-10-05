@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_duration> {
     using cpp_datatype = std::pair<std::chrono::months, std::chrono::milliseconds>;
@@ -31,6 +32,7 @@ capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_du
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_duration,
                                            capabilities::Comparable,

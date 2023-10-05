@@ -7,6 +7,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
     // https://www.w3.org/TR/xmlschema11-2/#decimal
@@ -132,6 +133,7 @@ template<>
 std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return lhs <=> rhs;
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_decimal,
                                     capabilities::Logical,

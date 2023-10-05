@@ -3,6 +3,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_long>::cpp_type capabilities::Default<xsd_long>::from_string(std::string_view s) {
     return util::from_chars<cpp_type, identifier>(s);
@@ -27,6 +28,7 @@ nonstd::expected<capabilities::Default<xsd_long>::cpp_type, DynamicError> capabi
 
     return static_cast<cpp_type>(value);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_long,
                                     capabilities::Logical,

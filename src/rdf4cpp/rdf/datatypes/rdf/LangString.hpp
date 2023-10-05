@@ -19,6 +19,7 @@ struct LangStringRepr {
     auto operator<=>(LangStringRepr const &other) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<rdf_lang_string> {
     using cpp_datatype = LangStringRepr;
@@ -52,6 +53,7 @@ inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlinea
     assert(false);
     __builtin_unreachable();
 }
+#endif
 
 extern template struct LiteralDatatypeImpl<rdf_lang_string,
                                            capabilities::Comparable,

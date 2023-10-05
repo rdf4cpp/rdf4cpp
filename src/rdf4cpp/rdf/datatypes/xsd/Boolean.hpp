@@ -13,6 +13,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_boolean> {
     using cpp_datatype = bool;
@@ -32,6 +33,7 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_boolean>::cpp_type capabilities::Inlineable<xsd_boolean>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_boolean,
                                            capabilities::Logical,

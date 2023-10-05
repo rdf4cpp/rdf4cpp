@@ -63,6 +63,7 @@ struct HexBinaryRepr {
     std::strong_ordering operator<=>(HexBinaryRepr const &) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_hex_binary> {
     using cpp_datatype = HexBinaryRepr;
@@ -73,6 +74,7 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 
 template<>
 std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_hex_binary,
                                            capabilities::FixedId>;

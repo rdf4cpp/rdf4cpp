@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_gDay> {
     using cpp_datatype = std::pair<std::chrono::day, rdf::util::OptionalTimezone>;
@@ -44,6 +45,7 @@ capabilities::Subtype<xsd_gDay>::super_cpp_type<0> capabilities::Subtype<xsd_gDa
 template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_gDay>::cpp_type, DynamicError> capabilities::Subtype<xsd_gDay>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_gDay,
                                            capabilities::Comparable,
