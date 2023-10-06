@@ -6,7 +6,7 @@ Getting Started
 Usage
 -----
 
-.. literalinclude:: ../../examples/literal_datatypes.cpp
+.. literalinclude:: ../../examples/getting_started.cpp
     :language: cpp
 
 Installation

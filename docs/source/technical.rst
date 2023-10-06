@@ -3,5 +3,5 @@ Technical Documentatation
 
 .. toctree::
 
-    datatype_registry
-    storage
+    t_datatype_registry
+    t_storage

@@ -5,6 +5,8 @@
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
 
+Current documentation: https://rdf4cpp.readthedocs.io/en/latest/
+
 ## Usage 
 check out the [examples](./examples) directory. 
 

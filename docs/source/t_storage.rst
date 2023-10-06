@@ -3,9 +3,9 @@ Storage
 
 .. toctree::
 
-    node_storage
-    NodeBackendHandle
-    node_storage_view
+    t_node_storage
+    t_NodeBackendHandle
+    t_node_storage_view
 
 In rdf4cpp, we try our best to spare the user the details of how graphs and RDF nodes are actually stored in the backend.
 So if you just want to use rdf4cpp, you most probably do not need to go down this rabbit hole. You can just use the defaults.

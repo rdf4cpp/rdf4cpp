@@ -4,7 +4,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 
-import subprocess, os, sys
+import subprocess, os, sys, re
 subprocess.call('cd ../../; rm -r docs/build/', shell=True)
 subprocess.call('cd ../../; rm -r docs/doxygen_output/', shell=True)
 subprocess.call('cd ../../; rm -r docs/source/api/', shell=True)
@@ -16,7 +16,17 @@ subprocess.call('cd ../../; doxygen', shell=True)
 project = 'rdf4cpp'
 copyright = '2023, DICE Group'
 author = 'DICE Group'
-release = '0.0.14'
+
+# get release version from cmake
+release = '0.0.0'
+with open("../../CMakeLists.txt", "r") as file:
+    for line in file:
+        m = re.match(r"project\(rdf4cpp VERSION ([0-9.]+)\)", line)
+        if m is not None:
+            release = m.group(1)
+            break
+
+version = release
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
