@@ -125,9 +125,9 @@ To assign a fixed identifier to a datatype, two steps are required:
 Value inlining
 --------------
 
-By default, values of literals are stored in the :doc:`node_storage`.
+By default, values of literals are stored in the :doc:`t_node_storage`.
 However, to avoid the overhead of accessing it values of datatypes can also be packed
-into the 42-bit :class:`rdf4cpp::rdf::storage::node::identifier::LiteralID` (\ :doc:`NodeBackendHandle`\ ) of a
+into the 42-bit :class:`rdf4cpp::rdf::storage::node::identifier::LiteralID` (\ :doc:`t_NodeBackendHandle`\ ) of a
 node storage handle. In turn, the value can be directly extracted from the handle, without having to access the NodeStorage
 Value inlining requires the specific value to actually fit into the available 42 bits.
 However, it does not require that every possible value of a type fits into these available bits.
@@ -309,14 +309,17 @@ that is s levels above the source and p levels right to the source, in that orde
 
 For example the table for the simplified `xsd:int` from above looks like this
 
-.. code-block:: none
-
-    | s \ p | 0                           | 1                         | 2                          |
-    |-------|-----------------------------|---------------------------|----------------------------|
-    | 0     | `xsd:int` <-> `xsd:int`     |                           |                            |
-    | 1     | `xsd:int` <-> `xsd:long`    |                           |                            |
-    | 2     | `xsd:int` <-> `xsd:integer` |                           |                            |
-    | 3     | `xsd:int` <-> `xsd:decimal` | `xsd:int` <-> `xsd:float` | `xsd:int` <-> `xsd:double` |
++--------+-----------------------------+---------------------------+----------------------------+
+| s \\ p | 0                           | 1                         | 2                          |
++========+=============================+===========================+============================+
+| 0      | `xsd:int` <-> `xsd:int`     |                           |                            |
++--------+-----------------------------+---------------------------+----------------------------+
+| 1      | `xsd:int` <-> `xsd:long`    |                           |                            |
++--------+-----------------------------+---------------------------+----------------------------+
+| 2      | `xsd:int` <-> `xsd:integer` |                           |                            |
++--------+-----------------------------+---------------------------+----------------------------+
+| 3      | `xsd:int` <-> `xsd:decimal` | `xsd:int` <-> `xsd:float` | `xsd:int` <-> `xsd:double` |
++--------+-----------------------------+---------------------------+----------------------------+
 
 Type Hierarchy Ranks
 ++++++++++++++++++++

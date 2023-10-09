@@ -3,10 +3,10 @@ Node Storage
 
  - `NodeStorage` is the central proxy class for `Node` storage backend.
  - `INodeStorage` is an abstract class that node storage backends must implement.
- - Identifiers for Nodes and their properties are found in :doc:`NodeBackendHandle`
+ - Identifiers for Nodes and their properties are found in :doc:`t_NodeBackendHandle`
  - A reference implementation of a thread-safe node storage backend based on `tsl::sparse_map` is provided
    at :class:`rdf4cpp::rdf::storage::node::reference_node_storage::ReferenceNodeStorageBackend`
- - :doc:`node_storage_view` contains proxy classes to access information about a node stored in an implementation-specific
+ - :doc:`t_node_storage_view` contains proxy classes to access information about a node stored in an implementation-specific
    backend.
 
 Requirements for `INodeStorage` Implementations

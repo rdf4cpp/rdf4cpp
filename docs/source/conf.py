@@ -41,7 +41,7 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'furo'
 html_static_path = ['_static']
 
 breathe_projects = {
@@ -64,6 +64,7 @@ exhale_args = {
     "exhaleExecutesDoxygen": False,
     "listingExclude": ["mz*"],
     "fullToctreeMaxDepth": 2,
+    "contentsDirectives": False,
 }
 
 # Tell sphinx what the primary language being documented is.
