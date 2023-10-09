@@ -521,6 +521,53 @@ public:
         return std::nullopt;
     }
 
+        /**
+         * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+         * Only considers casts from subtype to supertype.
+         *
+         * @return conversion result
+         */
+        template<datatypes::LiteralDatatype T>
+        requires (!std::same_as<T, datatypes::xsd::String>)
+        std::optional<typename T::cpp_type> cast_to_supertype_value() const noexcept {
+            using namespace datatypes::registry;
+            using namespace datatypes::xsd;
+
+            if (this->null()) {
+                return std::nullopt;
+            }
+
+            auto const this_dtid = this->datatype_id();
+            DatatypeIDView const target_dtid = T::datatype_id;
+
+            if (this_dtid == target_dtid) {
+                return this->value<T>();
+            }
+
+            auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+            if (target_e == nullptr) {
+                // target not registered
+                return std::nullopt;
+            }
+
+            auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+            if (this_e == nullptr) {
+                // this datatype not registered
+                return std::nullopt;
+            }
+
+            if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+                if (common_conversion->target_type_id != target_dtid) // the found conversion does require downcasting
+                    return std::nullopt;
+
+                auto const target_value = common_conversion->convert_lhs(this->value());
+                return std::any_cast<typename T::cpp_type>(target_value);
+            }
+
+            // no conversion found
+            return std::nullopt;
+        }
+
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`

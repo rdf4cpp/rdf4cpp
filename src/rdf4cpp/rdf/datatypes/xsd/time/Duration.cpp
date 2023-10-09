@@ -160,7 +160,11 @@ std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type c
             rdf::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
     };
     auto cmp = [lhs, rhs](rdf::util::TimePoint tp) {
-        return registry::util::compare_time_points(registry::util::add_duration_to_date_time(tp, lhs), std::nullopt, registry::util::add_duration_to_date_time(tp, rhs), std::nullopt);
+        auto l = registry::util::add_duration_to_date_time(tp, lhs);
+        auto r = registry::util::add_duration_to_date_time(tp, rhs);
+        if (l.time_since_epoch().count().is_invalid() || r.time_since_epoch().count().is_invalid())
+            return std::partial_ordering::unordered;
+        return registry::util::compare_time_points(registry::util::from_checked(l), std::nullopt, registry::util::from_checked(r), std::nullopt);
     };
     std::partial_ordering o = cmp(to_compare[0]);
     for (unsigned int i = 1; i < to_compare.size(); ++i) {
