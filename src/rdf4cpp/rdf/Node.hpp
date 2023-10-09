@@ -179,6 +179,13 @@ struct std::hash<rdf4cpp::rdf::Node> {
     }
 };
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::Node> {
+    static inline size_t dice_hash(rdf4cpp::rdf::Node const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(x.backend_handle());
+    }
+};
+
 #include <ostream>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
