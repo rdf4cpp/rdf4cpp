@@ -23,11 +23,8 @@ bool DefaultSolutionSequenceBackend::const_iterator::ended() const {
     return iter_ == end_;
 }
 void DefaultSolutionSequenceBackend::const_iterator::forward_to_solution() {
-    while (not is_solution()) {
-        if (not ended())
-            iter_++;
-        else
-            break;
+    while (!ended() && !is_solution()) {
+        ++iter_;
     }
 }
 bool DefaultSolutionSequenceBackend::const_iterator::is_solution() const {
