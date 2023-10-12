@@ -8,11 +8,11 @@ using namespace rdf4cpp::rdf;
 
 TEST_CASE("base functions") {
     DefaultDatasetBackend set{};
-    CHECK(set.begin() == set.end());
+    CHECK((set.begin() == set.end()));
     set.add(Quad{IRI{"www.example.com/sub"}, IRI{"www.example.com/pred"}, IRI{"www.example.com/obj"}});
     set.add(Quad{IRI{"www.example.com/graph"}, IRI{"www.example.com/sub"}, IRI{"www.example.com/pred"}, Literal::make_simple("some string")});
     SUBCASE("simple functions") {
-        CHECK(set.begin() != set.end());
+        CHECK((set.begin() != set.end()));
         for (const auto &q : set) {
             CHECK(q.subject() == IRI{"www.example.com/sub"});
             CHECK(q.predicate() == IRI{"www.example.com/pred"});
@@ -33,7 +33,7 @@ TEST_CASE("base functions") {
     SUBCASE("empty pattern") {
         query::QuadPattern pattern{query::Variable("g"), query::Variable("x"), IRI{"www.example.com/pred2"}, query::Variable{"z"}};
         auto sol = set.match(pattern);
-        CHECK(sol.begin() == sol.end());
+        CHECK((sol.begin() == sol.end()));
     }
 
     SUBCASE("pattern") {
