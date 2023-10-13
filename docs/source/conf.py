@@ -3,11 +3,15 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import subprocess, re
 
-import subprocess, os, sys, re
+# remove anything from the previous build
+# if this is not done, sphinx throws random errors
 subprocess.call('cd ../../; rm -r docs/build/', shell=True)
 subprocess.call('cd ../../; rm -r docs/doxygen_output/', shell=True)
 subprocess.call('cd ../../; rm -r docs/source/api/', shell=True)
+
+# generate doxygen xml output
 subprocess.call('cd ../../; doxygen', shell=True)
 
 # -- Project information -----------------------------------------------------
@@ -62,9 +66,9 @@ exhale_args = {
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": False,
-    "listingExclude": ["mz*"],
-    "fullToctreeMaxDepth": 2,
-    "contentsDirectives": False,
+    "listingExclude":        ["mz*"],
+    "fullToctreeMaxDepth":   2,
+    "contentsDirectives":    False,
 }
 
 # Tell sphinx what the primary language being documented is.

@@ -25,6 +25,10 @@ To use rdf4cpp, add it to your `conanfile.txt`:
 rdf4cpp/0.0.13
 ```
 
+Note:
+
+If you want to include rdf4cpp without using conan, make sure you also include its dependencies exposed via the rdf4cpp API.
+
 ### With FetchContent
 Use
 ```

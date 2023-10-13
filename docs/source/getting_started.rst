@@ -20,10 +20,14 @@ You need the package manager `Conan <https://conan.io/downloads.html>`_ version 
 
 To use rdf4cpp, add it to your :code:`conanfile.txt`:
 
-.. code-block:: ini
+.. parsed-literal::
 
     [requires]
-    rdf4cpp/0.0.13
+    rdf4cpp/\ |release|
+
+.. note::
+
+    If you want to include rdf4cpp without using conan, make sure you also include its dependencies exposed via the rdf4cpp API.
 
 Build
 -----
