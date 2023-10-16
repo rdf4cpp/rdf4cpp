@@ -68,4 +68,11 @@ public:
 };
 }  // namespace rdf4cpp::rdf
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::Quad> {
+    static inline size_t dice_hash(rdf4cpp::rdf::Quad const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(x.graph(), x.subject(), x.predicate(), x.object()));
+    }
+};
+
 #endif  //RDF4CPP_QUAD_HPP
