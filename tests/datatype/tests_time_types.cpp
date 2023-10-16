@@ -111,8 +111,8 @@ TEST_CASE("datatype gMonth") {
     CHECK(Literal::make_typed<datatypes::xsd::GMonth>("--12+14:00").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GMonth>("--12-14:00").is_inlined());
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("13"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonth>("13"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -135,8 +135,8 @@ TEST_CASE("datatype gDay") {
     CHECK(Literal::make_typed<datatypes::xsd::GDay>("---31+14:00").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GDay>("---31-14:00").is_inlined());
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("---00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("---32"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("---00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GDay>("---32"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -163,10 +163,10 @@ TEST_CASE("datatype gYearMonth") {
     CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1-14:00").is_inlined());
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("01-00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("-32768-01"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32767-32"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32768-30"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("01-00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("-32768-01"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32767-32"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("32768-30"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -190,11 +190,11 @@ TEST_CASE("datatype gMonthDay") {
     CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("--12-31+14:00").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GMonthDay>("--12-31-14:00").is_inlined());
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--01-00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--00-01"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--12-32"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--13-30"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--02-30"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--01-00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--00-01"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--12-32"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--13-30"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GMonthDay>("--02-30"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -221,11 +221,12 @@ TEST_CASE("datatype date") {
     CHECK(!Literal::make_typed<datatypes::xsd::Date>("2042-12-31-14:00").is_inlined());
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::Date::fixed_id));
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-01-00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-00-01"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-12-32"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-13-30"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-02-30"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-01-00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-00-01"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-12-32"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-13-30"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-02-30"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("1937-0-0"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -252,12 +253,12 @@ TEST_CASE("datatype time") {
     CHECK(Literal::make_typed<datatypes::xsd::Time>("00:00:00.000-14:00").is_inlined());
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("-10:00:00.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("25:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("25:00:00.000"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:-1:00.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:70:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:70:00.000"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:-1.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:70.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:5.-100"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:70.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Time>("00:00:5.-100"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 }
 
@@ -308,17 +309,17 @@ TEST_CASE("datatype dateTime") {
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DateTime::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T-10:00:00.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T25:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T25:00:00.000"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:-1:00.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:70:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:70:00.000"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:-1.000"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:70.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:5.-100"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-01-00T00:00:00.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-00-01T00:00:00.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-12-32T00:00:00.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-13-30T00:00:00.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-02-30T00:00:00.000"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:70.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T00:00:5.-100"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-01-00T00:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-00-01T00:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-12-32T00:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-13-30T00:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-02-30T00:00:00.000"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
     CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-05-06T00:00:00.000") == Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T24:00:00.000"));
     CHECK(Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T24:00:00.000").lexical_form() == "2042-05-06T00:00:00.000");
@@ -366,20 +367,20 @@ TEST_CASE("datatype dateTimeStamp") {
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DateTimeStamp::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T-10:00:00.000Z"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T25:00:00.000Z"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T25:00:00.000Z"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:-1:00.000Z"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:70:00.000Z"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:70:00.000Z"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:00:-1.000Z"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:00:70.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:00:5.-100Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-01-00T00:00:00.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-00-01T00:00:00.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-12-32T00:00:00.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-13-30T00:00:00.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-30T00:00:00.000Z"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000+20:00"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000-20:00"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:00:70.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T00:00:5.-100Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-01-00T00:00:00.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-00-01T00:00:00.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-12-32T00:00:00.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-13-30T00:00:00.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-30T00:00:00.000Z"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000+20:00"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-02-24T00:00:00.000-20:00"), std::runtime_error);
     CHECK(a == Literal{});  // turn off unused and nodiscard ignored warnings
     CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-06T00:00:00.000Z") == Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T24:00:00.000Z"));
     CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T24:00:00.000Z").lexical_form() == "2042-05-06T00:00:00.000Z");
@@ -407,11 +408,11 @@ TEST_CASE("datatype duration") {
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::Duration::fixed_id));
 
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>(""), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>(""), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("PT"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P5M24Y"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P5YABC"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("P5YABC"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>("-P5Y-3D"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
@@ -437,13 +438,13 @@ TEST_CASE("datatype dayTimeDuration") {
     CHECK(Literal::make_typed<datatypes::xsd::DayTimeDuration>("P500DT42M").is_inlined());
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DayTimeDuration::fixed_id));
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>(""), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>(""), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT5M24H"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5DABC"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P10Y"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5M"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5DABC"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P10Y"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P5M"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
     basic_test<datatypes::xsd::DayTimeDuration>("PT1M", "PT30S", std::partial_ordering::greater);
@@ -463,13 +464,13 @@ TEST_CASE("datatype yearMonthDuration") {
     CHECK(Literal::make_typed<datatypes::xsd::YearMonthDuration>("P500Y30M").is_inlined());
     CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::YearMonthDuration::fixed_id));
     Literal a{};
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>(""), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>(""), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5M24Y"), std::runtime_error);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5YABC"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT10H"), std::invalid_argument);
-    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5D"), std::invalid_argument);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5YABC"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("PT10H"), std::runtime_error);
+    CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P5D"), std::runtime_error);
     CHECK(a == Literal{}); // turn off unused and nodiscard ignored warnings
 
     basic_test<datatypes::xsd::YearMonthDuration>("P1M", "P2M", std::partial_ordering::less);
@@ -553,4 +554,59 @@ TEST_CASE("Literal API") {
     CHECK(Literal::make_typed<datatypes::xsd::GDay>("---3+1:30").as_tz() == Literal::make_simple("+01:30"));
     CHECK(Literal::make_typed<datatypes::xsd::GDay>("---3").as_tz() == Literal::make_simple(""));
     CHECK(Literal::make_simple("5").as_tz() == Literal{});
+}
+
+TEST_CASE("arithmetic") {
+    using namespace rdf4cpp::rdf;
+
+    CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-5-6").cast_to_supertype_value<datatypes::xsd::DateTime>().has_value());
+    CHECK(!Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3").cast_to_supertype_value<datatypes::xsd::Date>().has_value());
+
+    CHECK((Literal::make_typed<datatypes::xsd::Date>("2042-5-6") - Literal::make_typed<datatypes::xsd::Date>("2042-5-5")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1D"));
+    CHECK((Literal::make_typed<datatypes::xsd::Date>("2042-4-6") - Literal::make_typed<datatypes::xsd::Date>("2042-5-7")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("-P31D"));
+    CHECK((Literal::make_typed<datatypes::xsd::Time>("1:2:3") - Literal::make_typed<datatypes::xsd::Time>("1:1:3")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT1M"));
+    CHECK((Literal::make_typed<datatypes::xsd::Time>("1:2:3") - Literal::make_typed<datatypes::xsd::Time>("1:3:3")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("-PT1M"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") - Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T1:2:3")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1D"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z") - Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-7T1:2:3Z")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("-P1D"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z") - Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3+10:00")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT10H"));
+    CHECK((Literal::make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(rdf4cpp::rdf::util::TimePoint{std::chrono::milliseconds{std::numeric_limits<int64_t>::min()}}, std::nullopt)) - Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T1:2:3")) == Literal{});
+
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S")) == Literal::make_typed<datatypes::xsd::DateTime>("2042-5-7T1:2:4"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z") + Literal::make_typed<datatypes::xsd::DayTimeDuration>("-P1DT1S")) == Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T1:2:2Z"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y2M")) == Literal::make_typed<datatypes::xsd::DateTime>("2043-7-6T1:2:3"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed<datatypes::xsd::Duration>("P1Y2MT5S")) == Literal::make_typed<datatypes::xsd::DateTime>("2043-7-6T1:2:8"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-10-6T1:2:3") + Literal::make_typed<datatypes::xsd::Duration>("P4M")) == Literal::make_typed<datatypes::xsd::DateTime>("2043-2-6T1:2:3"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-2-6T1:2:3") + Literal::make_typed<datatypes::xsd::Duration>("-P4M")) == Literal::make_typed<datatypes::xsd::DateTime>("2041-10-6T1:2:3"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed<datatypes::xsd::Duration>("P1Y14MT5S")) == Literal::make_typed<datatypes::xsd::DateTime>("2044-7-6T1:2:8"));
+    CHECK((Literal::make_typed<datatypes::xsd::Date>("2042-5-6") + Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y")) == Literal::make_typed<datatypes::xsd::Date>("2043-5-6"));
+    CHECK((Literal::make_typed<datatypes::xsd::Time>("1:2:3") + Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S")) == Literal::make_typed<datatypes::xsd::Time>("1:2:4"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{std::numeric_limits<int64_t>::max()})) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") + Literal::make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{std::numeric_limits<int64_t>::max()})) == Literal{});
+
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") - Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S")) == Literal::make_typed<datatypes::xsd::DateTime>("2042-5-5T1:2:2"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-5-6T1:2:3Z") - Literal::make_typed<datatypes::xsd::DayTimeDuration>("-P1DT1S")) == Literal::make_typed<datatypes::xsd::DateTime>("2042-5-7T1:2:4Z"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") - Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y2M")) == Literal::make_typed<datatypes::xsd::DateTime>("2041-3-6T1:2:3"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("2042-5-6T1:2:3") - Literal::make_typed<datatypes::xsd::Duration>("P1Y2MT3S")) == Literal::make_typed<datatypes::xsd::DateTime>("2041-3-6T1:2:0"));
+    CHECK((Literal::make_typed<datatypes::xsd::Date>("2042-5-6") - Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y")) == Literal::make_typed<datatypes::xsd::Date>("2041-5-6"));
+    CHECK((Literal::make_typed<datatypes::xsd::Time>("1:2:3") - Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S")) == Literal::make_typed<datatypes::xsd::Time>("1:2:2"));
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("-2042-5-6T1:2:3") - Literal::make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{std::numeric_limits<int64_t>::max()})) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::DateTime>("-2042-5-6T1:2:3") - Literal::make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{std::numeric_limits<int64_t>::max()})) == Literal{});
+
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S") + Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1H")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2DT1H1S"));
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y") + Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y2M")) == Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y2M"));
+    CHECK((Literal::make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{std::numeric_limits<int64_t>::max()}) + Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1H")) == Literal{});
+    CHECK((Literal::make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{std::numeric_limits<int64_t>::max()}) + Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y2M")) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1M") - Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("PT59S"));
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y") - Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y")) == Literal::make_typed<datatypes::xsd::YearMonthDuration>("-P1Y"));
+
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S") * Literal::make_typed<datatypes::xsd::Double>("2")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2DT2S"));
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y") * Literal::make_typed<datatypes::xsd::Double>("2")) == Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y"));
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S") * Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::infinity())) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y") * Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::infinity())) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2DT2S") / Literal::make_typed<datatypes::xsd::Double>("2")) == Literal::make_typed<datatypes::xsd::DayTimeDuration>("P1DT1S"));
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y") / Literal::make_typed<datatypes::xsd::Double>("2")) == Literal::make_typed<datatypes::xsd::YearMonthDuration>("P1Y"));
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2DT2S") / Literal::make_typed_from_value<datatypes::xsd::Double>(0.0)) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y") / Literal::make_typed_from_value<datatypes::xsd::Double>(0.0)) == Literal{});
+    CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P4D") / Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2D")) == Literal::make_typed<datatypes::xsd::Decimal>("2"));
+    CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P4Y") / Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y")) == Literal::make_typed<datatypes::xsd::Decimal>("2"));
 }

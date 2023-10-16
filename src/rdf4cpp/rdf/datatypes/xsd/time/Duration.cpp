@@ -15,7 +15,7 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
         s = s.substr(1);
     }
     if (s.empty() || s[0] != 'P')
-        throw std::invalid_argument{"duration missing P"};
+        throw std::runtime_error{"duration missing P"};
     s = s.substr(1);
     auto p = s.find('T');
     auto date = s.substr(0, p);
@@ -25,7 +25,7 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
     auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D', identifier>(date);
     if (!time.empty()) {
         if (time[0] != 'T')
-            throw std::invalid_argument{"duration missing T"};
+            throw std::runtime_error{"duration missing T"};
         time = time.substr(1);
     }
     auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H', identifier>(time);
@@ -41,9 +41,9 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
     if (days.has_value())
         ms += *days;
     if (!date.empty() || !time.empty())
-        throw std::invalid_argument{"expected end of string"};
+        throw std::runtime_error{"expected end of string"};
     if (!years.has_value() && !months.has_value() && !days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
-        throw std::invalid_argument{"duration without any fields"};
+        throw std::runtime_error{"duration without any fields"};
     }
     if (hours.has_value())
         ms += *hours;
@@ -161,7 +161,11 @@ std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type c
             rdf::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
     };
     auto cmp = [lhs, rhs](rdf::util::TimePoint tp) {
-        return registry::util::compare_time_points(registry::util::add_duration_to_date_time(tp, lhs), std::nullopt, registry::util::add_duration_to_date_time(tp, rhs), std::nullopt);
+        auto l = registry::util::add_duration_to_date_time(tp, lhs);
+        auto r = registry::util::add_duration_to_date_time(tp, rhs);
+        if (l.time_since_epoch().count().is_invalid() || r.time_since_epoch().count().is_invalid())
+            return std::partial_ordering::unordered;
+        return registry::util::compare_time_points(registry::util::from_checked(l), std::nullopt, registry::util::from_checked(r), std::nullopt);
     };
     std::partial_ordering o = cmp(to_compare[0]);
     for (unsigned int i = 1; i < to_compare.size(); ++i) {

@@ -160,4 +160,12 @@ struct std::hash<rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle> {
     }
 };
 
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle> {
+    static inline size_t dice_hash(rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(x.raw());
+    }
+};
+
 #endif  //RDF4CPP_NODEBACKENDHANDLE_HPP

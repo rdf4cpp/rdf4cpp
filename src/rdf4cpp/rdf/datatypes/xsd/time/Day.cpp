@@ -9,7 +9,7 @@ template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s) {
     using namespace registry::util;
     if (!s.starts_with("---")) {
-        throw std::invalid_argument{"missing gDay prexfix"};
+        throw std::runtime_error{"missing gDay prexfix"};
     }
 
     s.remove_prefix(3);
@@ -17,7 +17,7 @@ capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     if (!day.ok()) {
-        throw std::invalid_argument("invalid day");
+        throw std::runtime_error("invalid day");
     }
 
     return std::make_pair(day, tz);

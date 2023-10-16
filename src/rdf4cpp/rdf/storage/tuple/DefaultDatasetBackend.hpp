@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <set>
+#include <dice/sparse-map/sparse_set.hpp>
+
 namespace rdf4cpp::rdf::storage::tuple {
 
 struct DefaultDatasetBackend : public IDatasetBackend {
@@ -18,7 +20,7 @@ private:
 
 public:
     // TODO: thread safety
-    std::set<Quad> quads_{};
+    dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> quads_{};
 
     explicit DefaultDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 

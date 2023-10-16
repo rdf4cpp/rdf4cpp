@@ -41,13 +41,13 @@ public:
         v = v.substr(1);
         auto sep = v.find(':');
         if (sep == std::string::npos)
-            throw std::invalid_argument{"timezone missing :"};
+            throw std::runtime_error{"timezone missing :"};
         std::chrono::hours h{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(0, sep))};
         tz.offset = std::chrono::minutes{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(sep + 1))} + std::chrono::minutes{h};
         if (negative)
             tz.offset *= -1;
         if (tz.offset.count() < -840 || tz.offset.count() > 840)
-            throw std::invalid_argument{"timezone offset too big"};
+            throw std::runtime_error{"timezone offset too big"};
         return tz;
     }
 

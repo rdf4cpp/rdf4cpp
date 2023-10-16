@@ -9,7 +9,7 @@ template<>
 capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::from_string(std::string_view s) {
     using namespace registry::util;
     if (!s.starts_with("--")) {
-        throw std::invalid_argument{"missing gMonth prefix"};
+        throw std::runtime_error{"missing gMonth prefix"};
     }
 
     s.remove_prefix(2);
@@ -17,7 +17,7 @@ capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::f
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     if (!month.ok())
-        throw std::invalid_argument("invalid month");
+        throw std::runtime_error("invalid month");
 
     return std::make_pair(month, tz);
 }

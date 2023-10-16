@@ -1,7 +1,8 @@
 #include "DefaultSolutionSequenceBackend.hpp"
 namespace rdf4cpp::rdf::storage::tuple {
 
-DefaultSolutionSequenceBackend::DefaultSolutionSequenceBackend(DefaultSolutionSequenceBackend::QuadPattern pattern, const std::set<Quad> *quads)
+DefaultSolutionSequenceBackend::DefaultSolutionSequenceBackend(DefaultSolutionSequenceBackend::QuadPattern pattern,
+                                                               const dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> *quads)
     : ISolutionSequenceBackend(pattern), quads_{quads} {
 }
 ISolutionSequenceBackend::const_iterator DefaultSolutionSequenceBackend::begin() const {
@@ -10,23 +11,20 @@ ISolutionSequenceBackend::const_iterator DefaultSolutionSequenceBackend::begin()
 ISolutionSequenceBackend::const_iterator DefaultSolutionSequenceBackend::end() const {
     return ISolutionSequenceBackend::const_iterator{const_iterator{pattern_, quads_}};
 }
-DefaultSolutionSequenceBackend::const_iterator::const_iterator(const std::set<rdf4cpp::rdf::Quad> *data, const DefaultSolutionSequenceBackend::QuadPattern &pattern)
+DefaultSolutionSequenceBackend::const_iterator::const_iterator(const dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> *data, const DefaultSolutionSequenceBackend::QuadPattern &pattern)
     : iter_(data->begin()), end_(data->end()), pattern_(pattern),
       solution_{pattern} {
     if (not ended())
         forward_to_solution();
 }
-DefaultSolutionSequenceBackend::const_iterator::const_iterator(const DefaultSolutionSequenceBackend::QuadPattern &pattern, const std::set<rdf4cpp::rdf::Quad> *data)
+DefaultSolutionSequenceBackend::const_iterator::const_iterator(const DefaultSolutionSequenceBackend::QuadPattern &pattern, const dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> *data)
     : iter_(data->end()), end_(data->end()), pattern_(pattern) {}
 bool DefaultSolutionSequenceBackend::const_iterator::ended() const {
     return iter_ == end_;
 }
 void DefaultSolutionSequenceBackend::const_iterator::forward_to_solution() {
-    while (not is_solution()) {
-        if (not ended())
-            iter_++;
-        else
-            break;
+    while (!ended() && !is_solution()) {
+        ++iter_;
     }
 }
 bool DefaultSolutionSequenceBackend::const_iterator::is_solution() const {

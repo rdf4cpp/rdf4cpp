@@ -9,7 +9,7 @@ template<>
 capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthDay>::from_string(std::string_view s) {
     using namespace registry::util;
     if (!s.starts_with("--")) {
-        throw std::invalid_argument{"gMonth prefix missing"};
+        throw std::runtime_error{"gMonth prefix missing"};
     }
 
     s.remove_prefix(2);
@@ -19,7 +19,7 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = month / day;
     if (!date.ok())
-        throw std::invalid_argument("invalid date");
+        throw std::runtime_error("invalid date");
 
     return std::make_pair(date, tz);
 }
