@@ -20,7 +20,7 @@ private:
 
 public:
     // TODO: thread safety
-    dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>> quads_{};
+    dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> quads_{};
 
     explicit DefaultDatasetBackend(node::NodeStorage &node_storage = node::NodeStorage::default_instance());
 

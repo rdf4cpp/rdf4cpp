@@ -11,11 +11,11 @@ class DefaultSolutionSequenceBackend : public ISolutionSequenceBackend {
     using QuadPattern = query::QuadPattern;
     using SolutionSequence = query::SolutionSequence;
     using Solution = query::Solution;
-    dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>> const *quads_{};
+    dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> const *quads_{};
 
 public:
     DefaultSolutionSequenceBackend() = default;
-    DefaultSolutionSequenceBackend(QuadPattern pattern, dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>> const *quads);
+    DefaultSolutionSequenceBackend(QuadPattern pattern, dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> const *quads);
     ~DefaultSolutionSequenceBackend() override = default;
 
     [[nodiscard]] ISolutionSequenceBackend::const_iterator begin() const override;
@@ -24,16 +24,16 @@ public:
     struct const_iterator {
         using difference_type = std::ptrdiff_t;
         using value_type = Solution;
-        dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>>::const_iterator iter_;
-        dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>>::const_iterator end_;
+        dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>>::const_iterator iter_;
+        dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>>::const_iterator end_;
         QuadPattern pattern_;
         mutable Solution solution_;
 
 
         const_iterator() = default;
-        const_iterator(dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>> const *data, const QuadPattern &pattern);
+        const_iterator(dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> const *data, const QuadPattern &pattern);
 
-        const_iterator(const QuadPattern &pattern, dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad>> const *data);
+        const_iterator(const QuadPattern &pattern, dice::sparse_map::sparse_set<Quad, dice::hash::DiceHash<Quad, dice::hash::Policies::wyhash>> const *data);
 
         bool ended() const;
         void forward_to_solution();
