@@ -381,7 +381,7 @@ struct LiteralDatatypeImpl : capabilities::Default<type_iri>, Capabilities<type_
     using typename capabilities::Default<type_iri>::cpp_type;
 
 private:
-    static consteval auto get_datatype_id() {
+    static constexpr auto get_datatype_id() {
         if constexpr (HasFixedId<LiteralDatatypeImpl>) {
             return DatatypeIDView{LiteralDatatypeImpl::fixed_id};
         } else {
