@@ -14,7 +14,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_date> {
-    using cpp_datatype = std::pair<std::chrono::year_month_day, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::year_month_day, ::rdf4cpp::rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_date> {

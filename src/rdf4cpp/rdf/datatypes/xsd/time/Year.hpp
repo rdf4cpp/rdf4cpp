@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_gYear> {
-    using cpp_datatype = std::pair<std::chrono::year, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::year, ::rdf4cpp::rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_gYear> {

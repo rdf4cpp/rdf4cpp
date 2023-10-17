@@ -1,9 +1,9 @@
 #ifndef RDF4CPP_NODESTORAGE_HPP
 #define RDF4CPP_NODESTORAGE_HPP
 
+#include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>

@@ -14,7 +14,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_dateTimeStamp> {
-    using cpp_datatype = rdf::util::ZonedTime;
+    using cpp_datatype = ::rdf4cpp::rdf::util::ZonedTime;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_dateTimeStamp> {

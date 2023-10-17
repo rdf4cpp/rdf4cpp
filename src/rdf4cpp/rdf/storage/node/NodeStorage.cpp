@@ -1,5 +1,7 @@
 #include "NodeStorage.hpp"
 
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
+
 #include <algorithm>
 
 namespace rdf4cpp::rdf::storage::node {

@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 struct DatatypeMapping<xsd_time> {
-    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::milliseconds, ::rdf4cpp::rdf::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_time> {
