@@ -1,18 +1,16 @@
 #ifndef RDF4CPP_NODEID_HPP
 #define RDF4CPP_NODEID_HPP
 
+#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
 
-#include <rdf4cpp/rdf/datatypes/xsd.hpp>
-#include <rdf4cpp/rdf/datatypes/rdf.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
-
 #include <cassert>
 #include <compare>
 #include <utility>
-#include <string_view>
+
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
@@ -21,10 +19,6 @@ namespace rdf4cpp::rdf::storage::node::identifier {
 class __attribute__((__packed__)) NodeID {
 public:
     static constexpr size_t width = 48;
-
-    static std::pair<NodeID, std::string_view> const default_graph_iri;
-    static std::pair<NodeID, std::string_view> const xsd_string_iri;
-    static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
 
     static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
@@ -154,15 +148,6 @@ constexpr NodeID literal_type_to_iri_node_id(LiteralType const datatype) {
     assert(datatype.is_fixed());
     return NodeID{datatype.to_underlying()};
 }
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{literal_type_to_iri_node_id(datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri]),
-                                                                               datatypes::registry::default_graph_iri};
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{literal_type_to_iri_node_id(datatypes::xsd::String::fixed_id),
-                                                                            datatypes::xsd::String::identifier};
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{literal_type_to_iri_node_id(datatypes::rdf::LangString::fixed_id),
-                                                                                datatypes::rdf::LangString::identifier};
 
 inline constexpr NodeID NodeID::min_bnode_id{1};
 inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};

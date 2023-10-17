@@ -4,6 +4,7 @@
 #include <atomic>
 #include <tuple>
 
+#include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/NodeTypeStorage.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>

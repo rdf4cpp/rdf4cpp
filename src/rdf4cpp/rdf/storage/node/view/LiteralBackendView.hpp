@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_LITERALBACKENDHANDLE_HPP
 #define RDF4CPP_LITERALBACKENDHANDLE_HPP
 
+#include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
 

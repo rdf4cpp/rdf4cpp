@@ -78,7 +78,7 @@ Literal Literal::make_null() noexcept {
 
 Literal Literal::make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-                                             .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
+                                             .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(datatypes::xsd::String::fixed_id),
                                              .lexical_form = lexical_form,
                                              .language_tag = "",
                                              .needs_escape = needs_escape}),
@@ -105,7 +105,7 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept {
     auto node_id = node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-            .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+            .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(datatypes::rdf::LangString::fixed_id),
             .lexical_form = lexical_form,
             .language_tag = lang,
             .needs_escape = needs_escape});
