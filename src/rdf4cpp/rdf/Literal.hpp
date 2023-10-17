@@ -3,17 +3,20 @@
 
 
 #include <any>
+#include <chrono>
 #include <optional>
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
-#include <rdf4cpp/rdf/datatypes/owl.hpp>
-#include <rdf4cpp/rdf/datatypes/rdf.hpp>
-#include <rdf4cpp/rdf/datatypes/xsd.hpp>
+#include <rdf4cpp/rdf/datatypes/rdf/LangString.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/Double.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
+#include <rdf4cpp/rdf/util/Timezone.hpp>
 #include <type_traits>
 
 namespace rdf4cpp::rdf {
@@ -1321,6 +1324,13 @@ template<>
 struct std::hash<rdf4cpp::rdf::Literal> {
     inline size_t operator()(rdf4cpp::rdf::Literal const &v) const noexcept {
         return std::hash<rdf4cpp::rdf::Node>()(v);
+    }
+};
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::Literal> {
+    static size_t dice_hash(rdf4cpp::rdf::Literal const &v) noexcept {
+        return DiceHash<rdf4cpp::rdf::Node>()(v);
     }
 };
 

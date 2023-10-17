@@ -6,6 +6,9 @@
 #include <rdf4cpp/rdf/Namespace.hpp>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/namespaces.hpp>
+#include <rdf4cpp/rdf/datatypes/rdf.hpp>
+#include <rdf4cpp/rdf/datatypes/owl.hpp>
+#include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
 #include <rdf4cpp/rdf/version.hpp>

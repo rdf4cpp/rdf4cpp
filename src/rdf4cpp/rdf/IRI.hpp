@@ -100,4 +100,11 @@ struct std::hash<rdf4cpp::rdf::IRI> {
     }
 };
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::IRI> {
+    static size_t dice_hash(rdf4cpp::rdf::IRI const &v) noexcept {
+        return DiceHash<rdf4cpp::rdf::Node>()(v);
+    }
+};
+
 #endif  //RDF4CPP_IRI_HPP

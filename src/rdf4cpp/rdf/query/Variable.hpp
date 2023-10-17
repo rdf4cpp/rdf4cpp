@@ -48,4 +48,11 @@ struct std::hash<rdf4cpp::rdf::query::Variable> {
     }
 };
 
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::query::Variable> {
+    static size_t dice_hash(rdf4cpp::rdf::query::Variable const &v) noexcept {
+        return DiceHash<rdf4cpp::rdf::Node>()(v);
+    }
+};
+
 #endif  //RDF4CPP_VARIABLE_HPP
