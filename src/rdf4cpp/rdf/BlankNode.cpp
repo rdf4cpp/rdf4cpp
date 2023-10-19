@@ -40,8 +40,17 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
+void BlankNode::serialize(void *stream, Sink const &ser) const {
+    auto const backend = handle_.bnode_backend();
+    ser.size_hint(backend.identifier.size() + 2, stream);
+    ser.write("_:", 1, 2, stream);
+    ser.write(backend.identifier.data(), 1, backend.identifier.size(), stream);
+}
+
 BlankNode::operator std::string() const noexcept {
-    return "_:" + std::string{handle_.bnode_backend().identifier};
+    std::string ret;
+    serialize(&ret, Sink::make_string_sink());
+    return ret;
 }
 
 bool BlankNode::is_literal() const noexcept { return false; }
@@ -49,7 +58,7 @@ bool BlankNode::is_variable() const noexcept { return false; }
 bool BlankNode::is_blank_node() const noexcept { return true; }
 bool BlankNode::is_iri() const noexcept { return false; }
 std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
-    os << static_cast<std::string>(node);
+    node.serialize(&os, Sink::make_ostream_sink());
     return os;
 }
 

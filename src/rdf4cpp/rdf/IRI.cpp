@@ -79,6 +79,14 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
+void IRI::serialize(void *stream, Sink const &ser) const {
+    auto const backend = handle_.iri_backend();
+    ser.size_hint(backend.identifier.size() + 2, stream);
+    ser.write("<", 1, 1, stream);
+    ser.write(backend.identifier.data(), 1, backend.identifier.size(), stream);
+    ser.write(">", 1, 1, stream);
+}
+
 IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
 
 bool IRI::is_literal() const noexcept { return false; }

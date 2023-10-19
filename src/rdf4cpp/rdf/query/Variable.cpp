@@ -45,8 +45,25 @@ bool Variable::is_anonymous() const {
 std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
+
+void Variable::serialize(void *stream, Sink const &ser) const {
+    auto const backend = handle_.variable_backend();
+
+    if (backend.is_anonymous) {
+        ser.size_hint(backend.name.size() + 2, stream);
+        ser.write("_:", 1, 2, stream);
+    } else {
+        ser.size_hint(backend.name.size() + 1, stream);
+        ser.write("?", 1, 1, stream);
+    }
+
+    ser.write(backend.name.data(), 1, backend.name.size(), stream);
+}
+
 Variable::operator std::string() const {
-    return handle_.variable_backend().n_string();
+    std::string ret;
+    serialize(&ret, Sink::make_string_sink());
+    return ret;
 }
 bool Variable::is_literal() const { return false; }
 bool Variable::is_variable() const { return true; }
@@ -54,7 +71,7 @@ bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
 std::ostream &operator<<(std::ostream &os, const Variable &variable) {
-    os << static_cast<std::string>(variable);
+    variable.serialize(&os, Sink::make_ostream_sink());
     return os;
 }
 

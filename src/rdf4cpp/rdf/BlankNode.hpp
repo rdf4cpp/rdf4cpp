@@ -42,9 +42,10 @@ public:
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
+    void serialize(void *stream, Sink const &ser) const;
     [[nodiscard]] explicit operator std::string() const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
+
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
     [[nodiscard]] bool is_blank_node() const noexcept;

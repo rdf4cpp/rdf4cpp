@@ -29,7 +29,6 @@ private:
 
     using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
 
-    std::reference_wrapper<std::istream> istream;
     mutable storage::node::NodeStorage node_storage;
 
     OwnedSerdReader reader;
@@ -69,7 +68,7 @@ private:
     }
 
 public:
-    Impl(std::istream &istream, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
+    Impl(void *stream, Source const &src, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
 
     /**
      * @return true if this will no longer yield values

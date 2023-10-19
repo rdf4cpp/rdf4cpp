@@ -7,6 +7,7 @@
 #include <nonstd/expected.hpp>
 
 #include <rdf4cpp/rdf/Quad.hpp>
+#include <rdf4cpp/rdf/Stream.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 
@@ -66,12 +67,17 @@ public:
     /**
      * Constructs the end-of-stream iterator
      */
-    IStreamQuadIterator(std::default_sentinel_t) noexcept;
+    explicit IStreamQuadIterator(std::default_sentinel_t) noexcept;
 
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
 
     IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept = default;
+
+    IStreamQuadIterator(void *stream, Source const &src,
+                        ParsingFlags flags = ParsingFlags::none(),
+                        prefix_storage_type prefixes = {},
+                        storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
     explicit IStreamQuadIterator(std::istream &istream, ParsingFlags flags = ParsingFlags::none(),
                                  prefix_storage_type prefixes = {},
@@ -84,6 +90,9 @@ public:
 
     bool operator==(IStreamQuadIterator const &) const noexcept;
     bool operator!=(IStreamQuadIterator const &) const noexcept;
+
+    bool operator==(std::default_sentinel_t) const noexcept;
+    bool operator!=(std::default_sentinel_t) const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::parser

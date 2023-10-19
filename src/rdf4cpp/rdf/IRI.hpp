@@ -66,8 +66,8 @@ public:
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
+    void serialize(void *stream, Sink const &ser) const;
     [[nodiscard]] explicit operator std::string() const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, const IRI &iri);
 
     [[nodiscard]] bool is_literal() const noexcept;

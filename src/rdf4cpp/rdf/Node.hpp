@@ -6,6 +6,7 @@
  * Long
  */
 
+#include <rdf4cpp/rdf/Stream.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
@@ -20,6 +21,7 @@ class IRI;
 namespace query {
 class Variable;
 };
+
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
@@ -67,6 +69,15 @@ public:
      * Construct the null-node
      */
     [[nodiscard]] static Node make_null() noexcept;
+
+    /**
+     * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
+     * to stream using ser
+     *
+     * @param stream any type erased stream object
+     * @param ser a Sink for stream
+     */
+    void serialize(void *stream, Sink const &ser) const;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
