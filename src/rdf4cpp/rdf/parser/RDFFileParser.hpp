@@ -37,13 +37,15 @@ public:
     class iterator {
         friend class RDFFileParser;
         friend bool operator==(const RDFFileParser::iterator &iter, std::default_sentinel_t) noexcept;
-        std::unique_ptr<FILE, decltype([](FILE *f) { fclose(f); })> stream_;
+        FILE *stream_;
         std::unique_ptr<IStreamQuadIterator> iter_;
 
         iterator();
         iterator(FILE *stream, ParsingFlags flags, const storage::node::NodeStorage &node_storage);
 
     public:
+        ~iterator() noexcept;
+
         using value_type = IStreamQuadIterator::value_type;
         using reference = IStreamQuadIterator::reference;
         using pointer = IStreamQuadIterator::pointer;

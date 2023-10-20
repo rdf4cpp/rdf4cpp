@@ -26,7 +26,10 @@ RDFFileParser::iterator::iterator()
 RDFFileParser::iterator::iterator(FILE *stream, ParsingFlags flags,
                                   const rdf4cpp::rdf::storage::node::NodeStorage &node_storage)
     : stream_(stream),
-      iter_(std::make_unique<IStreamQuadIterator>(stream_.get(), Source::make_c_file_source(), flags, IStreamQuadIterator::prefix_storage_type{}, node_storage)) {
+      iter_(std::make_unique<IStreamQuadIterator>(stream_, Source::make_c_file_source(), flags, IStreamQuadIterator::prefix_storage_type{}, node_storage)) {
+}
+RDFFileParser::iterator::~iterator() noexcept {
+    fclose(stream_);
 }
 RDFFileParser::iterator::reference RDFFileParser::iterator::operator*() const noexcept {
     return (*iter_).operator*();
