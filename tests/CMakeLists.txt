@@ -288,6 +288,14 @@ target_link_libraries(tests_IStreamQuadIterator
 set_property(TARGET tests_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
+add_executable(bench_IStreamQuadIterator parser/bench_RDFFileParser.cpp)
+target_link_libraries(bench_IStreamQuadIterator
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET bench_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
+add_test(NAME bench_IStreamQuadIterator COMMAND bench_IStreamQuadIterator)
+
 add_executable(tests_RDFFileParser parser/tests_RDFFileParser.cpp)
 target_link_libraries(tests_RDFFileParser
         doctest::doctest
