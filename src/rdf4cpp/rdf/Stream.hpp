@@ -10,47 +10,47 @@
 namespace rdf4cpp::rdf {
 
 struct Sink {
-    size_t (*write)(void const *buf, size_t elem_size, size_t len, void *stream);
-    void (*size_hint)(size_t hint, void *stream);
-    int (*error)(void *stream);
+    size_t (*write)(void const *buf, size_t elem_size, size_t len, void *stream) noexcept;
+    void (*size_hint)(size_t hint, void *stream) noexcept;
+    int (*error)(void *stream) noexcept;
 
     [[nodiscard]] static constexpr Sink make_string_sink() noexcept {
         return Sink{
-                .write = [](void const *buf, size_t elem_size, size_t len, void *stream) {
+                .write = [](void const *buf, size_t elem_size, size_t len, void *stream) noexcept {
                     reinterpret_cast<std::string *>(stream)->append(reinterpret_cast<char const *>(buf), elem_size * len);
                     return elem_size * len;
                 },
-                .size_hint = [](size_t hint, void *stream) {
+                .size_hint = [](size_t hint, void *stream) noexcept  {
                     reinterpret_cast<std::string *>(stream)->reserve(hint);
                 },
-                .error = []([[maybe_unused]] void *stream) {
+                .error = []([[maybe_unused]] void *stream) noexcept {
                     return 0;
                 }};
     }
 
     [[nodiscard]] static constexpr Sink make_ostream_sink() noexcept {
         return Sink{
-                .write = [](void const *buf, size_t elem_size, size_t len, void *stream_) {
+                .write = [](void const *buf, size_t elem_size, size_t len, void *stream_) noexcept {
                     auto *stream = reinterpret_cast<std::ostream *>(stream_);
                     return static_cast<size_t>(stream->rdbuf()->sputn(reinterpret_cast<char const *>(buf), static_cast<std::streamsize>(elem_size * len)));
                 },
-                .size_hint = []([[maybe_unused]] size_t hint, [[maybe_unused]] void *stream) {
+                .size_hint = []([[maybe_unused]] size_t hint, [[maybe_unused]] void *stream) noexcept {
                     // ignore
                 },
-                .error = [](void *stream) {
+                .error = [](void *stream) noexcept {
                     return static_cast<int>(reinterpret_cast<std::ostream *>(stream)->fail());
                 }};
     }
 
     [[nodiscard]] static constexpr Sink make_c_file_sink() noexcept {
         return Sink{
-                .write = [](void const *buf, size_t elem_size, size_t len, void *stream) {
+                .write = [](void const *buf, size_t elem_size, size_t len, void *stream) noexcept {
                     return fwrite(buf, elem_size, len, reinterpret_cast<FILE *>(stream));
                 },
-                .size_hint = []([[maybe_unused]] size_t hint, [[maybe_unused]] void *stream) {
+                .size_hint = []([[maybe_unused]] size_t hint, [[maybe_unused]] void *stream) noexcept {
                     // ignore
                 },
-                .error = [](void *stream) {
+                .error = [](void *stream) noexcept {
                     return ferror(reinterpret_cast<FILE *>(stream));
                 }};
     }
