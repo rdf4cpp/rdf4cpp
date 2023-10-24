@@ -40,12 +40,21 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-void BlankNode::serialize(void *stream, Sink const &ser) const {
-    auto const backend = handle_.bnode_backend();
-    ser.size_hint(backend.identifier.size() + 2, stream);
-    ser.write("_:", 1, 2, stream);
-    ser.write(backend.identifier.data(), 1, backend.identifier.size(), stream);
+#define TRY_WRITE(...) {                                                           \
+    std::string_view const str{__VA_ARGS__};                                       \
+    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
+        return false;                                                              \
+    }                                                                              \
 }
+
+bool BlankNode::serialize(void *stream, Sink const sink) const noexcept {
+    auto const backend = handle_.bnode_backend();
+    TRY_WRITE("_:");
+    TRY_WRITE(backend.identifier);
+    return true;
+}
+
+#undef TRY_WRITE
 
 BlankNode::operator std::string() const noexcept {
     std::string ret;

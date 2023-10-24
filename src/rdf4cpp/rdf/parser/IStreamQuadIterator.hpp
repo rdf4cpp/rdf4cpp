@@ -74,7 +74,7 @@ public:
 
     IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept = default;
 
-    IStreamQuadIterator(void *stream, Source const &src,
+    IStreamQuadIterator(void *stream, Source src,
                         ParsingFlags flags = ParsingFlags::none(),
                         prefix_storage_type prefixes = {},
                         storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;

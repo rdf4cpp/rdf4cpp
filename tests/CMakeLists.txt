@@ -2,7 +2,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(doctest REQUIRED)
 find_package(nanobench REQUIRED)
-find_package(CURL REQUIRED)
 
 # add the executable for all tests
 add_executable(tests_Variable query/tests_Variable.cpp)
@@ -290,13 +289,12 @@ target_link_libraries(tests_IStreamQuadIterator
 set_property(TARGET tests_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
-add_executable(bench_IStreamQuadIterator parser/bench_RDFFileParser.cpp)
-target_link_libraries(bench_IStreamQuadIterator
+add_executable(bench_SerDe bench_SerDe.cpp)
+target_link_libraries(bench_SerDe
         nanobench::nanobench
-        CURL::libcurl
         rdf4cpp
 )
-set_property(TARGET bench_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
+set_property(TARGET bench_SerDe PROPERTY CXX_STANDARD 20)
 
 add_executable(tests_RDFFileParser parser/tests_RDFFileParser.cpp)
 target_link_libraries(tests_RDFFileParser

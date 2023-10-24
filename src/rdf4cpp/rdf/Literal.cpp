@@ -100,7 +100,7 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
                                              .datatype = fixed_id,
                                              .value = std::move(value)}),
-                              storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+                                     storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept {
@@ -111,9 +111,9 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool 
             .needs_escape = needs_escape});
 
     bool inlined = false;
-    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang); // check if the lang_tag can be inlined
+    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
-        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value()); // check if we have enough space
+        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
         if (inlined_id.has_value()) {
             node_id = NodeID{inlined_id.value(), node_id.literal_type()};
             inlined = true;
@@ -302,7 +302,6 @@ Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
 
                     return node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
                                                                                                      .value = std::move(value)});
-
                 }
 
                 // send over IRI corresponding to this datatype
@@ -397,7 +396,6 @@ Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const 
 
                     return node_storage.find_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
                                                                                              .value = std::move(value)});
-
                 }
 
                 // Default case.
@@ -609,78 +607,74 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     return Literal::make_boolean(this->language_tag_eq(other), node_storage);
 }
 
-void Literal::serialize(void *stream, Sink const &ser) const {
-    auto const write = [stream, &ser](std::string_view str) {
-        ser.write(str.data(), 1, str.size(), stream);
-    };
+#define TRY_WRITE(...) {                                                           \
+    std::string_view const str{__VA_ARGS__};                                       \
+    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
+        return false;                                                              \
+    }                                                                              \
+}
 
+// https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+#define TRY_WRITE_QUOTED_LEXICAL_FORM(lexical) \
+    TRY_WRITE("\"");                           \
+    for (char const ch : lexical) {            \
+        switch (ch) {                          \
+            case '"': {                        \
+                TRY_WRITE(R"(\")");            \
+                break;                         \
+            }                                  \
+            case '\\': {                       \
+                TRY_WRITE(R"(\\)");            \
+                break;                         \
+            }                                  \
+            case '\n': {                       \
+                TRY_WRITE(R"(\n)");            \
+                break;                         \
+            }                                  \
+            case '\r': {                       \
+                TRY_WRITE(R"(\r)");            \
+                break;                         \
+            }                                  \
+            [[likely]] default: {              \
+                TRY_WRITE(&ch, 1);             \
+                break;                         \
+            }                                  \
+        }                                      \
+    }                                          \
+    TRY_WRITE("\"");
+
+bool Literal::serialize(void *stream, Sink const sink) const noexcept {
     if (this->null()) {
-        write("null");
-        return;
+        TRY_WRITE("null");
+        return true;
     }
-
-    auto const estimated_escaped_size = [](size_t size) noexcept {
-        return static_cast<size_t>(static_cast<double>(size) * 1.2); // TODO tweak factor
-    };
-
-    auto const append_quoted_lexical = [&](std::string_view const lexical) noexcept {
-        // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-
-        write("\"");
-        for (char const ch : lexical) {
-            switch (ch) {
-                case '"': {
-                    write(R"(\")");
-                    break;
-                }
-                case '\\': {
-                    write(R"(\\)");
-                    break;
-                }
-                case '\n': {
-                    write(R"(\n)");
-                    break;
-                }
-                case '\r': {
-                    write(R"(\r)");
-                    break;
-                }
-                [[likely]] default: {
-                    write({&ch, 1});
-                    break;
-                }
-            }
-        }
-        write("\"");
-    };
 
     if (this->datatype_eq<datatypes::xsd::String>()) {
         auto const value = this->backend_handle().literal_backend().get_lexical();
 
         if (value.needs_escape) [[unlikely]] {
-            ser.size_hint(estimated_escaped_size(value.lexical_form.size()) + 2, stream);
-            append_quoted_lexical(value.lexical_form);
+            TRY_WRITE_QUOTED_LEXICAL_FORM(value.lexical_form);
         } else {
-            ser.size_hint(value.lexical_form.size() + 2, stream);
-            write("\"");
-            write(value.lexical_form);
-            write("\"");
+            TRY_WRITE("\"");
+            TRY_WRITE(value.lexical_form);
+            TRY_WRITE("\"");
         }
+
+        return true;
     } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
 
         if (value.needs_escape) [[unlikely]] {
-            ser.size_hint(estimated_escaped_size(value.lexical_form.size()) + value.language_tag.size() + 3, stream);
-            append_quoted_lexical(value.lexical_form);
+            TRY_WRITE_QUOTED_LEXICAL_FORM(value.lexical_form);
         } else {
-            ser.size_hint(value.lexical_form.size() + value.language_tag.size() + 3, stream);
-            write("\"");
-            write(value.lexical_form);
-            write("\"");
+            TRY_WRITE("\"");
+            TRY_WRITE(value.lexical_form);
+            TRY_WRITE("\"");
         }
 
-        write("@");
-        write(value.language_tag);
+        TRY_WRITE("@");
+        TRY_WRITE(value.language_tag);
+        return true;
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
         // Notes:
@@ -695,35 +689,34 @@ void Literal::serialize(void *stream, Sink const &ser) const {
         auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
         auto const &datatype_iri = entry->datatype_iri;
 
-        ser.size_hint(lexical_form.size() + datatype_iri.size() + 6, stream);
-        write("\"");
-        write(lexical_form);
-        write("\"^^<");
-        write(datatype_iri);
-        write(">");
+        TRY_WRITE("\"");
+        TRY_WRITE(lexical_form);
+        TRY_WRITE("\"^^<");
+        TRY_WRITE(datatype_iri);
+        TRY_WRITE(">");
+        return true;
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
 
-        this->backend_handle().literal_backend().visit(
+        return this->backend_handle().literal_backend().visit(
                 [&](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                     auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  this->backend_handle().node_storage_id()});
 
                     if (lexical_backend.needs_escape) [[unlikely]] {
-                        ser.size_hint(estimated_escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4, stream);
-                        append_quoted_lexical(lexical_backend.lexical_form);
+                        TRY_WRITE_QUOTED_LEXICAL_FORM(lexical_backend.lexical_form);
                     } else {
-                        ser.size_hint(lexical_backend.lexical_form.size() + dtype_iri.identifier.size() + 4, stream);
-                        write("\"");
-                        write(lexical_backend.lexical_form);
-                        write("\"");
+                        TRY_WRITE("\"");
+                        TRY_WRITE(lexical_backend.lexical_form);
+                        TRY_WRITE("\"");
                     }
 
-                    write("^^<");
-                    write(dtype_iri.identifier);
-                    write(">");
+                    TRY_WRITE("^^<");
+                    TRY_WRITE(dtype_iri.identifier);
+                    TRY_WRITE(">");
+                    return true;
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
                     // Notes:
@@ -736,15 +729,18 @@ void Literal::serialize(void *stream, Sink const &ser) const {
                     auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
                     auto const &datatype_iri = entry->datatype_iri;
 
-                    ser.size_hint(lexical_form.size() + datatype_iri.size() + 6, stream);
-                    write("\"");
-                    write(lexical_form);
-                    write("\"^^<");
-                    write(datatype_iri);
-                    write(">");
+                    TRY_WRITE("\"");
+                    TRY_WRITE(lexical_form);
+                    TRY_WRITE("\"^^<");
+                    TRY_WRITE(datatype_iri);
+                    TRY_WRITE(">");
+                    return true;
                 });
     }
 }
+
+#undef TRY_WRITE
+#undef TRY_WRITE_QUOTED_LEXICAL_FORM
 
 Literal::operator std::string() const noexcept {
     std::string ret;

@@ -640,7 +640,7 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-    void serialize(void *stream, Sink const &ser) const;
+    bool serialize(void *stream, Sink sink) const noexcept;
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 

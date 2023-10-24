@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] std::string_view name() const;
 
-    void serialize(void *stream, Sink const &ser) const;
+    bool serialize(void *stream, Sink sink) const noexcept;
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);
 

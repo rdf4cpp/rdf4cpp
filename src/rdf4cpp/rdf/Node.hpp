@@ -72,12 +72,12 @@ public:
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
-     * to stream using ser
+     * to stream using sink
      *
      * @param stream any type erased stream object
-     * @param ser a Sink for stream
+     * @param sink a Sink for stream
      */
-    void serialize(void *stream, Sink const &ser) const;
+    bool serialize(void *stream, Sink sink) const noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

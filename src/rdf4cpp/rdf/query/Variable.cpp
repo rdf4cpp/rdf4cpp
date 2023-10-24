@@ -46,19 +46,27 @@ std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
 
-void Variable::serialize(void *stream, Sink const &ser) const {
+#define TRY_WRITE(...) {                                                           \
+    std::string_view const str{__VA_ARGS__};                                       \
+    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
+        return false;                                                              \
+    }                                                                              \
+}
+
+bool Variable::serialize(void *stream, Sink const sink) const noexcept {
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {
-        ser.size_hint(backend.name.size() + 2, stream);
-        ser.write("_:", 1, 2, stream);
+        TRY_WRITE("_:");
     } else {
-        ser.size_hint(backend.name.size() + 1, stream);
-        ser.write("?", 1, 1, stream);
+        TRY_WRITE("?");
     }
 
-    ser.write(backend.name.data(), 1, backend.name.size(), stream);
+    TRY_WRITE(backend.name);
+    return true;
 }
+
+#undef TRY_WRITE
 
 Variable::operator std::string() const {
     std::string ret;
