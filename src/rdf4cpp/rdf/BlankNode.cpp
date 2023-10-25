@@ -1,4 +1,4 @@
-#include "BlankNode.hpp"
+#include <rdf4cpp/rdf/BlankNode.hpp>
 
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
@@ -43,21 +43,22 @@ std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_b
 bool BlankNode::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     auto const backend = handle_.bnode_backend();
 
-    TRY_WRITE("_:");
-    TRY_WRITE(backend.identifier);
+    RDF4CPP_DETAIL_TRY_SER("_:");
+    RDF4CPP_DETAIL_TRY_SER(backend.identifier);
     return true;
 }
 
 BlankNode::operator std::string() const noexcept {
-    assert(false);
+    return handle_.bnode_backend().n_string();
 }
 
 bool BlankNode::is_literal() const noexcept { return false; }
 bool BlankNode::is_variable() const noexcept { return false; }
 bool BlankNode::is_blank_node() const noexcept { return true; }
 bool BlankNode::is_iri() const noexcept { return false; }
-std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
-    assert(false);
+std::ostream &operator<<(std::ostream &os, const BlankNode &bnode) {
+    os << static_cast<std::string>(bnode);
+    return os;
 }
 
 

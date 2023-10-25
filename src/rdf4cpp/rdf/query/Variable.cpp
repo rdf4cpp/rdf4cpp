@@ -1,4 +1,4 @@
-#include "Variable.hpp"
+#include <rdf4cpp/rdf/query/Variable.hpp>
 
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
@@ -50,17 +50,17 @@ bool Variable::serialize(char **buf, size_t *buf_size, FlushFunc const flush, vo
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {
-        TRY_WRITE("_:");
+        RDF4CPP_DETAIL_TRY_SER("_:");
     } else {
-        TRY_WRITE("?");
+        RDF4CPP_DETAIL_TRY_SER("?");
     }
 
-    TRY_WRITE(backend.name);
+    RDF4CPP_DETAIL_TRY_SER(backend.name);
     return true;
 }
 
 Variable::operator std::string() const {
-    assert(false);
+    return handle_.variable_backend().n_string();
 }
 bool Variable::is_literal() const { return false; }
 bool Variable::is_variable() const { return true; }
@@ -68,8 +68,8 @@ bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
 std::ostream &operator<<(std::ostream &os, const Variable &variable) {
-    assert(false);
+    os << static_cast<std::string>(variable);
+    return os;
 }
-
 
 }  // namespace rdf4cpp::rdf::query

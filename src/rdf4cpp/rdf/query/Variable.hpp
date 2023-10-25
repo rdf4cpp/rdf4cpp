@@ -26,6 +26,12 @@ public:
     [[nodiscard]] std::string_view name() const;
 
     bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
+
+    template<Serializer Ser>
+    bool serialize(Ser &ser) const noexcept {
+        return serialize(&ser.buf(), &ser.buf_size(), &Ser::flush, &ser);
+    }
+
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);
 

@@ -1,11 +1,11 @@
-#include "Node.hpp"
+#include <rdf4cpp/rdf/Node.hpp>
 
-#include "rdf4cpp/rdf/util/Overloaded.hpp"
 #include <cassert>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/Literal.hpp>
 #include <rdf4cpp/rdf/query/Variable.hpp>
+
 
 namespace rdf4cpp::rdf {
 
@@ -79,7 +79,9 @@ bool Node::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *
 }
 
 Node::operator std::string() const noexcept {
-    assert(false);
+    StringSerializer ser;
+    serialize(ser);
+    return ser.finalize();
 }
 
 bool Node::is_literal() const noexcept {
@@ -176,7 +178,8 @@ bool Node::null() const noexcept {
     return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
-    assert(false);
+    os << std::string{node};
+    return os;
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;

@@ -45,41 +45,18 @@ void serialize(std::filesystem::path const &out_path, Dataset const &ds) {
     }
     setbuf(out_file, nullptr);
 
-    struct Buffer {
-        FILE *out_file;
-        std::array<char, BUFSIZ> buffer;
+    CFileSerializer ser{out_file};
 
-        constexpr Buffer(FILE *file) noexcept : out_file{file} {
-        }
-
-        static void flush(void *self_, char **buf, size_t *buf_size) noexcept {
-            auto *self = reinterpret_cast<Buffer *>(self_);
-
-            auto const bytes_written = fwrite(self->buffer.data(), 1, *buf - self->buffer.data(), self->out_file);
-            *buf -= bytes_written;
-            *buf_size += bytes_written;
-        }
-    };
-
-    Buffer buffer{out_file};
-
-    auto write = [&, data = &buffer, flush = &Buffer::flush](char **buf, size_t *buf_size, std::string_view str2) {
-        TRY_WRITE(str2);
-        return true;
-    };
-
-    char *buf = buffer.buffer.data();
-    size_t buf_size = buffer.buffer.size();
     for (auto const &quad : ds) {
-        quad.subject().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
-        write(&buf, &buf_size, " ");
-        quad.predicate().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
-        write(&buf, &buf_size, " ");
-        quad.object().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
-        write(&buf, &buf_size, " .\n");
+        quad.subject().serialize(ser);
+        serialize_str(" ", ser);
+        quad.predicate().serialize(ser);
+        serialize_str(" ", ser);
+        quad.object().serialize(ser);
+        serialize_str(" .\n", ser);
     }
 
-    fwrite(buffer.buffer.data(), 1, buf - buffer.buffer.data(), buffer.out_file);
+    ser.finalize();
     fclose(out_file);
 }
 
