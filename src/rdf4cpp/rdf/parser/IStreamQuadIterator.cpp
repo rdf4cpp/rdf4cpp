@@ -3,6 +3,27 @@
 
 namespace rdf4cpp::rdf::parser {
 
+/**
+ * Adaptor function so that serd can read from std::istreams.
+ * Matches the interface of SerdSource
+ */
+static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
+    assert(elem_size == 1);
+
+    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    self->read(static_cast<char *>(buf), static_cast<std::streamsize>(count));
+    return self->gcount();
+}
+
+/**
+ * Adaptor function for serd to check if an std::istream is ok
+ * Matches the interface of SerdStreamErrorFunc
+ */
+static int istream_error(void *voided_self) noexcept {
+    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    return *self ? 0 : 1;
+}
+
 bool IStreamQuadIterator::is_at_end() const noexcept {
     return this->impl == nullptr || this->impl->is_at_end();
 }
@@ -15,13 +36,18 @@ IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
     : impl{nullptr} {
 }
 
-IStreamQuadIterator::IStreamQuadIterator(void *stream, Source src, ParsingFlags flags, prefix_storage_type prefixes, storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(stream, src, flags, std::move(prefixes), std::move(node_storage))} {
+IStreamQuadIterator::IStreamQuadIterator(void *stream,
+                                         ReadFunc read,
+                                         ErrorFunc error,
+                                         ParsingFlags flags,
+                                         prefix_storage_type prefixes,
+                                         storage::node::NodeStorage node_storage) noexcept
+    : impl{std::make_unique<Impl>(stream, read, error, flags, std::move(prefixes), std::move(node_storage))} {
     ++*this;
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream, ParsingFlags flags, prefix_storage_type prefixes, storage::node::NodeStorage node_storage) noexcept
-    : IStreamQuadIterator{&istream, Source::make_istream_source(), flags, std::move(prefixes), std::move(node_storage)} {
+    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, std::move(prefixes), std::move(node_storage)} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;

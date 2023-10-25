@@ -20,8 +20,11 @@ void deserialize(std::filesystem::path const &in_path, Dataset &ds, storage::nod
     if (in_file == nullptr) {
         throw std::system_error{std::error_code{errno, std::system_category()}};
     }
+    setbuf(in_file, nullptr);
 
-    parser::IStreamQuadIterator qit{in_file, Source::make_c_file_source(),
+    parser::IStreamQuadIterator qit{in_file,
+                                    reinterpret_cast<parser::ReadFunc>(&fread),
+                                    reinterpret_cast<parser::ErrorFunc>(&ferror),
                                     parser::ParsingFlags::none(),
                                     {},
                                     node_storage};
@@ -40,18 +43,43 @@ void serialize(std::filesystem::path const &out_path, Dataset const &ds) {
     if (out_file == nullptr) {
         throw std::system_error{std::error_code{errno, std::system_category()}};
     }
+    setbuf(out_file, nullptr);
 
-    static constexpr auto sink = Sink::make_c_file_sink();
+    struct Buffer {
+        FILE *out_file;
+        std::array<char, BUFSIZ> buffer;
 
+        constexpr Buffer(FILE *file) noexcept : out_file{file} {
+        }
+
+        static void flush(void *self_, char **buf, size_t *buf_size) noexcept {
+            auto *self = reinterpret_cast<Buffer *>(self_);
+
+            auto const bytes_written = fwrite(self->buffer.data(), 1, *buf - self->buffer.data(), self->out_file);
+            *buf -= bytes_written;
+            *buf_size += bytes_written;
+        }
+    };
+
+    Buffer buffer{out_file};
+
+    auto write = [&, data = &buffer, flush = &Buffer::flush](char **buf, size_t *buf_size, std::string_view str2) {
+        TRY_WRITE(str2);
+        return true;
+    };
+
+    char *buf = buffer.buffer.data();
+    size_t buf_size = buffer.buffer.size();
     for (auto const &quad : ds) {
-        quad.subject().serialize(out_file, sink);
-        sink.write(" ", 1, 1, out_file);
-        quad.predicate().serialize(out_file, sink);
-        sink.write(" ", 1, 1, out_file);
-        quad.object().serialize(out_file, sink);
-        sink.write(" .\n", 1, 3, out_file);
+        quad.subject().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
+        write(&buf, &buf_size, " ");
+        quad.predicate().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
+        write(&buf, &buf_size, " ");
+        quad.object().serialize(&buf, &buf_size, &Buffer::flush, &buffer);
+        write(&buf, &buf_size, " .\n");
     }
 
+    fwrite(buffer.buffer.data(), 1, buf - buffer.buffer.data(), buffer.out_file);
     fclose(out_file);
 }
 
@@ -60,7 +88,7 @@ int main() {
     std::filesystem::create_directory(base);
 
     std::filesystem::path const in_path = base / "swdf.nt";
-    std::filesystem::path const out_path = base / "swdf-out.nt";
+    std::filesystem::path const out_path = "/dev/null";
 
     download_swdf(base);
 

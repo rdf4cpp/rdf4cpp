@@ -607,13 +607,6 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     return Literal::make_boolean(this->language_tag_eq(other), node_storage);
 }
 
-#define TRY_WRITE(...) {                                                           \
-    std::string_view const str{__VA_ARGS__};                                       \
-    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
-        return false;                                                              \
-    }                                                                              \
-}
-
 // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
 #define TRY_WRITE_QUOTED_LEXICAL_FORM(lexical) \
     TRY_WRITE("\"");                           \
@@ -643,7 +636,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     }                                          \
     TRY_WRITE("\"");
 
-bool Literal::serialize(void *stream, Sink const sink) const noexcept {
+bool Literal::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     if (this->null()) {
         TRY_WRITE("null");
         return true;
@@ -739,13 +732,10 @@ bool Literal::serialize(void *stream, Sink const sink) const noexcept {
     }
 }
 
-#undef TRY_WRITE
 #undef TRY_WRITE_QUOTED_LEXICAL_FORM
 
 Literal::operator std::string() const noexcept {
-    std::string ret;
-    serialize(&ret, Sink::make_string_sink());
-    return ret;
+    assert(false);
 }
 bool Literal::is_literal() const noexcept { return true; }
 bool Literal::is_variable() const noexcept { return false; }
@@ -763,8 +753,7 @@ bool Literal::is_numeric() const noexcept {
 }
 
 std::ostream &operator<<(std::ostream &os, const Literal &literal) {
-    literal.serialize(&os, Sink::make_ostream_sink());
-    return os;
+    assert(false);
 }
 
 std::any Literal::value() const noexcept {

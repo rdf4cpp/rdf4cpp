@@ -6,7 +6,7 @@
  * Long
  */
 
-#include <rdf4cpp/rdf/Stream.hpp>
+
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
@@ -21,6 +21,29 @@ class IRI;
 namespace query {
 class Variable;
 };
+
+#define TRY_WRITE(...) {                                                   \
+    std::string_view str{__VA_ARGS__};                                     \
+    while (true) {                                                         \
+        auto const max_write = std::min(str.size(), *buf_size);            \
+        *buf = static_cast<char *>(memcpy(*buf, str.data(), max_write));   \
+        *buf_size -= max_write;                                            \
+                                                                           \
+        if (max_write == str.size()) [[likely]] {                          \
+            break;                                                         \
+        } else {                                                           \
+            str.remove_prefix(max_write);                                  \
+            if (flush(data, buf, buf_size); *buf_size == 0) [[unlikely]] { \
+                return false;                                              \
+            }                                                              \
+        }                                                                  \
+    }                                                                      \
+}
+
+/**
+ * Flushes user defined data, updating *buf and *buf_size to match the new write area.
+ */
+using FlushFunc = void (*)(void *data, char **buf, size_t *buf_size) noexcept;
 
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
@@ -72,12 +95,14 @@ public:
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
-     * to stream using sink
      *
-     * @param stream any type erased stream object
-     * @param sink a Sink for stream
+     * @param buf pointer to buffer, will be updated by this function to allow for chaining of multiple serialize calls
+     * @param buf_size pointer to buffer size, will be updated by this function to allow for chaining of multiple serialize calls
+     * @param flush flush function, will be called when *buf is exhausted. flush is supposed to either increase the size of *buf
+     *      or flush the data somewhere else and then update *buf and *buf_size accordingly
+     * @param data arbitrary user data to be passed to flush
      */
-    bool serialize(void *stream, Sink sink) const noexcept;
+    bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

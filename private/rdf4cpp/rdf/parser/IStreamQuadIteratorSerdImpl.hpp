@@ -68,7 +68,12 @@ private:
     }
 
 public:
-    Impl(void *stream, Source src, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
+    Impl(void *stream,
+         ReadFunc read,
+         ErrorFunc,
+         ParsingFlags flags,
+         PrefixMap prefixes,
+         storage::node::NodeStorage node_storage) noexcept;
 
     /**
      * @return true if this will no longer yield values

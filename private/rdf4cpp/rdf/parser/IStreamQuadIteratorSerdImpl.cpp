@@ -276,7 +276,11 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     return SERD_SUCCESS;
 }
 
-IStreamQuadIterator::Impl::Impl(void *stream, Source src, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept
+IStreamQuadIterator::Impl::Impl(void *stream,
+                                ReadFunc read,
+                                ErrorFunc error,
+                                ParsingFlags flags, PrefixMap prefixes,
+                                storage::node::NodeStorage node_storage) noexcept
     : node_storage{std::move(node_storage)},
       reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       prefixes{std::move(prefixes)},
@@ -284,7 +288,7 @@ IStreamQuadIterator::Impl::Impl(void *stream, Source src, ParsingFlags flags, Pr
 
     serd_reader_set_strict(this->reader.get(), flags.contains(ParsingFlag::Strict));
     serd_reader_set_error_sink(this->reader.get(), &Impl::on_error, this);
-    serd_reader_start_source_stream(this->reader.get(), src.read, src.error, stream, nullptr, 4096);
+    serd_reader_start_source_stream(this->reader.get(), read, error, stream, nullptr, 4096);
 }
 
 std::optional<nonstd::expected<Quad, ParsingError>> IStreamQuadIterator::Impl::next() noexcept {

@@ -7,7 +7,7 @@
 #include <nonstd/expected.hpp>
 
 #include <rdf4cpp/rdf/Quad.hpp>
-#include <rdf4cpp/rdf/Stream.hpp>
+
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 
@@ -15,6 +15,16 @@
 #include <dice/sparse-map/sparse_map.hpp>
 
 namespace rdf4cpp::rdf::parser {
+
+/**
+ * Identical semantics to fread.
+ */
+using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream) noexcept;
+
+/**
+ * Identical semantics to ferror.
+ */
+using ErrorFunc = int (*)(void *stream) noexcept;
 
 /**
  * Similar to std::istream_iterator<>.
@@ -74,7 +84,9 @@ public:
 
     IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept = default;
 
-    IStreamQuadIterator(void *stream, Source src,
+    IStreamQuadIterator(void *stream,
+                        ReadFunc read,
+                        ErrorFunc,
                         ParsingFlags flags = ParsingFlags::none(),
                         prefix_storage_type prefixes = {},
                         storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;

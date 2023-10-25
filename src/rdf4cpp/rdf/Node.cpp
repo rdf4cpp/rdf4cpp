@@ -57,19 +57,19 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(void *stream, Sink sink) const noexcept {
+bool Node::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(stream, sink);
+            return IRI{handle_}.serialize(buf, buf_size, flush, data);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(stream, sink);
+            return query::Variable{handle_}.serialize(buf, buf_size, flush, data);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(stream, sink);
+            return BlankNode{handle_}.serialize(buf, buf_size, flush, data);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(stream, sink);
+            return Literal{handle_}.serialize(buf, buf_size, flush, data);
         }
         default: {
             assert(false);
@@ -79,9 +79,7 @@ bool Node::serialize(void *stream, Sink sink) const noexcept {
 }
 
 Node::operator std::string() const noexcept {
-    std::string ret;
-    serialize(&ret, Sink::make_string_sink());
-    return ret;
+    assert(false);
 }
 
 bool Node::is_literal() const noexcept {
@@ -178,8 +176,7 @@ bool Node::null() const noexcept {
     return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
-    node.serialize(&os, Sink::make_ostream_sink());
-    return os;
+    assert(false);
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;

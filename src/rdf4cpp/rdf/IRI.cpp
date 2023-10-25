@@ -79,22 +79,14 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
-#define TRY_WRITE(...) {                                                           \
-    std::string_view const str{__VA_ARGS__};                                       \
-    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
-        return false;                                                              \
-    }                                                                              \
-}
-
-bool IRI::serialize(void *stream, Sink const sink) const noexcept {
+bool IRI::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     auto const backend = handle_.iri_backend();
+
     TRY_WRITE("<");
     TRY_WRITE(backend.identifier);
     TRY_WRITE(">");
     return true;
 }
-
-#undef TRY_WRITE
 
 IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
 
@@ -108,8 +100,7 @@ IRI IRI::default_graph(NodeStorage &node_storage) {
     return IRI{"", node_storage};
 }
 std::ostream &operator<<(std::ostream &os, const IRI &iri) {
-    os << static_cast<std::string>(iri);
-    return os;
+    assert(false);
 }
 std::string_view IRI::identifier() const noexcept {
     return handle_.iri_backend().identifier;

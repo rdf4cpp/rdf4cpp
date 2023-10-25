@@ -25,7 +25,7 @@ public:
 
     [[nodiscard]] std::string_view name() const;
 
-    bool serialize(void *stream, Sink sink) const noexcept;
+    bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);
 

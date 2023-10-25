@@ -46,14 +46,7 @@ std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
 
-#define TRY_WRITE(...) {                                                           \
-    std::string_view const str{__VA_ARGS__};                                       \
-    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
-        return false;                                                              \
-    }                                                                              \
-}
-
-bool Variable::serialize(void *stream, Sink const sink) const noexcept {
+bool Variable::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {
@@ -66,12 +59,8 @@ bool Variable::serialize(void *stream, Sink const sink) const noexcept {
     return true;
 }
 
-#undef TRY_WRITE
-
 Variable::operator std::string() const {
-    std::string ret;
-    serialize(&ret, Sink::make_string_sink());
-    return ret;
+    assert(false);
 }
 bool Variable::is_literal() const { return false; }
 bool Variable::is_variable() const { return true; }
@@ -79,8 +68,7 @@ bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
 std::ostream &operator<<(std::ostream &os, const Variable &variable) {
-    variable.serialize(&os, Sink::make_ostream_sink());
-    return os;
+    assert(false);
 }
 
 

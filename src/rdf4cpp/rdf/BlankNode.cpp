@@ -40,26 +40,16 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-#define TRY_WRITE(...) {                                                           \
-    std::string_view const str{__VA_ARGS__};                                       \
-    if (sink.write(str.data(), 1, str.size(), stream) < str.size()) [[unlikely]] { \
-        return false;                                                              \
-    }                                                                              \
-}
-
-bool BlankNode::serialize(void *stream, Sink const sink) const noexcept {
+bool BlankNode::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
     auto const backend = handle_.bnode_backend();
+
     TRY_WRITE("_:");
     TRY_WRITE(backend.identifier);
     return true;
 }
 
-#undef TRY_WRITE
-
 BlankNode::operator std::string() const noexcept {
-    std::string ret;
-    serialize(&ret, Sink::make_string_sink());
-    return ret;
+    assert(false);
 }
 
 bool BlankNode::is_literal() const noexcept { return false; }
@@ -67,8 +57,7 @@ bool BlankNode::is_variable() const noexcept { return false; }
 bool BlankNode::is_blank_node() const noexcept { return true; }
 bool BlankNode::is_iri() const noexcept { return false; }
 std::ostream &operator<<(std::ostream &os, const BlankNode &node) {
-    node.serialize(&os, Sink::make_ostream_sink());
-    return os;
+    assert(false);
 }
 
 
