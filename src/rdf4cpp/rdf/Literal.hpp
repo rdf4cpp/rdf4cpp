@@ -640,6 +640,9 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * See Node::serialize
+     */
     bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
 
     template<Serializer Ser>

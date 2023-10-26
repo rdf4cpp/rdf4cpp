@@ -25,6 +25,9 @@ public:
 
     [[nodiscard]] std::string_view name() const;
 
+    /**
+     * See Node::serialize
+     */
     bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
 
     template<Serializer Ser>

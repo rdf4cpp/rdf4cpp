@@ -74,11 +74,20 @@ public:
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
+     * Takes as input pointers to variables holding the properties of a buffer i.e. start address and length.
+     * Will modify the variables containing the buffer properties as it operates. I.e. writing a single byte corresponds to *buf += 1 && *buf_size -= 1.
+     * If buf is exhausted (i.e. *buf_size == 0) will call flush. The task of flush is to create additional buffer room.
+     * Flush takes as input a void * to some structure that also knows *buf and *buf_size. It must then get some additional buffer space from somewhere
+     * and update *buf and *buf_size to represent the new buffer room.
+     *
      * @param buf pointer to buffer, will be updated by this function to allow for chaining of multiple serialize calls
      * @param buf_size pointer to buffer size, will be updated by this function to allow for chaining of multiple serialize calls
      * @param flush flush function, will be called when *buf is exhausted. flush is supposed to either increase the size of *buf
      *      or flush the data somewhere else and then update *buf and *buf_size accordingly
      * @param data arbitrary user data to be passed to flush
+     *
+     * For specific usage examples have a look at StringSerializer and
+     * how the template Node::serialize<Serializer> uses Serializers and tests/bench_SerDe.cpp#serialize.
      */
     bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
 
