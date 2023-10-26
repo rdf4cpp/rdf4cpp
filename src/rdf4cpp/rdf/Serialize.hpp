@@ -67,8 +67,8 @@ private:
     size_t buf_size_ = 0;
 
 public:
-    [[nodiscard]] char *&buf() noexcept { return buf_; }
-    [[nodiscard]] size_t &buf_size() noexcept { return buf_size_; }
+    [[nodiscard]] constexpr char *&buf() noexcept { return buf_; }
+    [[nodiscard]] constexpr size_t &buf_size() noexcept { return buf_size_; }
 
     static void flush(void *self) noexcept {
         reinterpret_cast<CRTP *>(self)->flush_impl();
