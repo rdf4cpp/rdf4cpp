@@ -41,7 +41,7 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-bool BlankNode::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
+bool BlankNode::serialize(char **const buf, size_t *const buf_size, FlushFunc const flush, void *const data) const noexcept {
     auto const backend = handle_.bnode_backend();
 
     RDF4CPP_DETAIL_TRY_SER("_:");

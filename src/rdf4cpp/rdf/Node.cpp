@@ -57,7 +57,7 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *data) const noexcept {
+bool Node::serialize(char **const buf, size_t *const buf_size, FlushFunc const flush, void *const data) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
             return IRI{handle_}.serialize(buf, buf_size, flush, data);

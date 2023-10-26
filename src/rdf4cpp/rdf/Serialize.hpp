@@ -29,7 +29,7 @@ using FlushFunc = void (*)(void *data) noexcept;
 /**
  * Serializes a string
  */
-inline bool serialize_str(std::string_view str, char **buf, size_t *buf_size, FlushFunc flush, void *data) noexcept {
+inline bool serialize_str(std::string_view str, char **const buf, size_t *const buf_size, FlushFunc const flush, void *const data) noexcept {
     while (true) {
         auto const max_write = std::min(str.size(), *buf_size);
         memcpy(*buf, str.data(), max_write);
@@ -39,10 +39,11 @@ inline bool serialize_str(std::string_view str, char **buf, size_t *buf_size, Fl
         if (max_write == str.size()) [[likely]] {
             break;
         } else {
-            str.remove_prefix(max_write);
             if (flush(data); *buf_size == 0) [[unlikely]] {
                 return false;
             }
+
+            str.remove_prefix(max_write);
         }
     }
     return true;
@@ -70,7 +71,7 @@ public:
     [[nodiscard]] size_t &buf_size() noexcept { return buf_size_; }
 
     static void flush(void *self) noexcept {
-        return reinterpret_cast<CRTP *>(self)->flush_impl();
+        reinterpret_cast<CRTP *>(self)->flush_impl();
     }
 };
 
@@ -90,7 +91,7 @@ public:
         buf_size() = buffer_.size();
     }
 
-    Output &finalize() noexcept {
+    [[nodiscard]] Output &finalize() noexcept {
         buffer_.resize(static_cast<size_t>(buf() - buffer_.data()));
         return buffer_;
     }
@@ -161,11 +162,12 @@ public:
     }
 
     void flush_impl() noexcept {
-        auto const bytes_written = static_cast<size_t>(static_cast<bool>(
-                os_->write(buffer_.data(), static_cast<std::streamsize>(buf() - buffer_.data()))));
+        if (!os_->write(buffer_.data(), static_cast<std::streamsize>(buf() - buffer_.data()))) {
+            return;
+        }
 
-        buf() -= bytes_written;
-        buf_size() += bytes_written;
+        buf() = buffer_.data();
+        buf_size() = buffer_.size();
     }
 };
 
