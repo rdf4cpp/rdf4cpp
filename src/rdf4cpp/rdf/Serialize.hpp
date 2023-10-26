@@ -24,7 +24,7 @@ concept Serializer = requires (T &ser, void *voided_self) {
 /**
  * Flushes user defined data
  */
-using FlushFunc = size_t (*)(void *data) noexcept;
+using FlushFunc = void (*)(void *data) noexcept;
 
 /**
  * Serializes a string
