@@ -1,4 +1,5 @@
 #include <rdf4cpp/rdf/BlankNode.hpp>
+#include <rdf4cpp/rdf/TrySerialize.hpp>
 
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}

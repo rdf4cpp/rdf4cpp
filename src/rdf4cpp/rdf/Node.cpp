@@ -79,9 +79,24 @@ bool Node::serialize(char **buf, size_t *buf_size, FlushFunc const flush, void *
 }
 
 Node::operator std::string() const noexcept {
-    StringSerializer ser;
-    serialize(ser);
-    return ser.finalize();
+    switch (handle_.type()) {
+        [[likely]] case RDFNodeType::IRI: {
+            return std::string{IRI{handle_}};
+        }
+        case RDFNodeType::Variable: {
+            return std::string{query::Variable{handle_}};
+        }
+        case RDFNodeType::BNode: {
+            return std::string{BlankNode{handle_}};
+        }
+        case RDFNodeType::Literal: {
+            return std::string{Literal{handle_}};
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
+    }
 }
 
 bool Node::is_literal() const noexcept {

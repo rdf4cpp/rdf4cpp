@@ -12,7 +12,8 @@
 
 #include <uni_algo/all.h>
 
-#include "Serialize.hpp"
+#include <rdf4cpp/rdf/Serialize.hpp>
+#include <rdf4cpp/rdf/TrySerialize.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>

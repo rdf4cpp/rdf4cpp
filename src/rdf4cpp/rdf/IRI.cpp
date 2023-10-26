@@ -1,4 +1,5 @@
 #include <rdf4cpp/rdf/IRI.hpp>
+#include <rdf4cpp/rdf/TrySerialize.hpp>
 
 #include <sstream>
 

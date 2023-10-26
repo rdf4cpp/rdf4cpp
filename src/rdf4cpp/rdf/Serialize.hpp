@@ -24,34 +24,27 @@ concept Serializer = requires (T &ser, void *voided_self) {
 /**
  * Flushes user defined data
  */
-using FlushFunc = void (*)(void *data) noexcept;
+using FlushFunc = size_t (*)(void *data) noexcept;
 
 /**
- * Note to future implementors:
- * This is a macro because it is measurably faster
- * Trying to force the compiler to inline this code (as a function) simply does not achieve the same result
+ * Serializes a string
  */
-#define RDF4CPP_DETAIL_TRY_SER(...) {                                            \
-    std::string_view _detail_str{__VA_ARGS__};                                   \
-    while (true) {                                                               \
-        auto const max_write = std::min(_detail_str.size(), *buf_size);          \
-        *buf = static_cast<char *>(memcpy(*buf, _detail_str.data(), max_write)); \
-        *buf_size -= max_write;                                                  \
-                                                                                 \
-        if (max_write == _detail_str.size()) [[likely]] {                        \
-            break;                                                               \
-        } else {                                                                 \
-            _detail_str.remove_prefix(max_write);                                \
-            if (flush(data); *buf_size == 0) [[unlikely]] {                      \
-                return false;                                                    \
-            }                                                                    \
-        }                                                                        \
-    }                                                                            \
-}
-
-
 inline bool serialize_str(std::string_view str, char **buf, size_t *buf_size, FlushFunc flush, void *data) noexcept {
-    RDF4CPP_DETAIL_TRY_SER(str);
+    while (true) {
+        auto const max_write = std::min(str.size(), *buf_size);
+        memcpy(*buf, str.data(), max_write);
+        *buf += max_write;
+        *buf_size -= max_write;
+
+        if (max_write == str.size()) [[likely]] {
+            break;
+        } else {
+            str.remove_prefix(max_write);
+            if (flush(data); *buf_size == 0) [[unlikely]] {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
