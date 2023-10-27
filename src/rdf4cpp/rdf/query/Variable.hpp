@@ -28,11 +28,11 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
+    bool serialize(void *buffer, Cursor &cursor, FlushFunc flush) const noexcept;
 
     template<Serializer Ser>
     bool serialize(Ser &ser) const noexcept {
-        return serialize(&ser.buf(), &ser.buf_size(), &Ser::flush, &ser);
+        return serialize(&ser.buffer(), ser.cursor(), &Ser::flush);
     }
 
     [[nodiscard]] explicit operator std::string() const;

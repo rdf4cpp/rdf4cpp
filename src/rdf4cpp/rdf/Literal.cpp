@@ -638,7 +638,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     }                                                  \
     RDF4CPP_DETAIL_TRY_SER("\"");
 
-bool Literal::serialize(char **const buf, size_t *const buf_size, FlushFunc const flush, void *const data) const noexcept {
+bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flush) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_SER("null");
         return true;

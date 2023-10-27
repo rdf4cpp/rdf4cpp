@@ -57,19 +57,19 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(char **const buf, size_t *const buf_size, FlushFunc const flush, void *const data) const noexcept {
+bool Node::serialize(void *const buffer, Cursor &cursor, FlushFunc const flush) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buf, buf_size, flush, data);
+            return IRI{handle_}.serialize(buffer, cursor, flush);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(buf, buf_size, flush, data);
+            return query::Variable{handle_}.serialize(buffer, cursor, flush);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(buf, buf_size, flush, data);
+            return BlankNode{handle_}.serialize(buffer, cursor, flush);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(buf, buf_size, flush, data);
+            return Literal{handle_}.serialize(buffer, cursor, flush);
         }
         default: {
             assert(false);

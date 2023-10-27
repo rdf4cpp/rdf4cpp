@@ -74,30 +74,31 @@ public:
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * Takes as input pointers to variables holding the properties of a buffer i.e. start address and length.
-     * Will modify the variables containing the buffer properties as it operates. I.e. writing a single byte corresponds to *buf += 1 && *buf_size -= 1.
-     * If buf is exhausted (i.e. *buf_size == 0) will call flush. The task of flush is to create additional buffer room.
-     * Flush takes as input a void * to some structure that also knows *buf and *buf_size. It must then get some additional buffer space from somewhere
-     * and update *buf and *buf_size to represent the new buffer room.
+     * Takes as input an arbitrary, flushable/extendable buffer type (e.g. a std::string) a cursor
+     * into the buffer (that describes its base address and length) and a function to flush the buffer (i.e. to either flush to io or extend the buffer).
+     * During operation will update the cursor to reflect the current start of the spare capacity and remaining length.
+     * When the remaining length reaches zero, flush is called using the provided buffer and cursor. Its task is to somehow make more buffer
+     * room and then adjust the cursor to point to the new spare room.
      *
-     * @param buf pointer to buffer, will be updated by this function to allow for chaining of multiple serialize calls
-     * @param buf_size pointer to buffer size, will be updated by this function to allow for chaining of multiple serialize calls
-     * @param flush flush function, will be called when *buf is exhausted. flush is supposed to either increase the size of *buf
-     *      or flush the data somewhere else and then update *buf and *buf_size accordingly
-     * @param data arbitrary user data to be passed to flush
+     * @param buffer pointer to arbitrary buffer structure
+     * @param cursor cursor into buffer
+     * @param flush function to flush the contents of buffer and update cursor to point to the new free space
+     * @return true if serialization was successful, false if a call to flush was not able to make room
      *
      * For specific usage examples have a look at StringSerializer and
      * how the template Node::serialize<Serializer> uses Serializers and tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(char **buf, size_t *buf_size, FlushFunc flush, void *data) const noexcept;
+    bool serialize(void *buffer, Cursor &cursor, FlushFunc flush) const noexcept;
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
-     * using the serializer ser
+     *
+     * @param ser a serializer
+     * @return true if serialization was successful, false if a call to Ser::flush was not able to make room
      */
     template<Serializer Ser>
     bool serialize(Ser &ser) const noexcept {
-        return serialize(&ser.buf(), &ser.buf_size(), &Ser::flush, &ser);
+        return serialize(&ser.buffer(), ser.cursor(), &Ser::flush);
     }
 
     /**
