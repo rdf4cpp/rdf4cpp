@@ -304,6 +304,14 @@ target_link_libraries(tests_RDFFileParser
 set_property(TARGET tests_RDFFileParser PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_RDFFileParser COMMAND tests_RDFFileParser)
 
+add_executable(tests_Serialize serializer/tests_Serialize.cpp)
+target_link_libraries(tests_Serialize
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_Serialize PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Serialize COMMAND tests_Serialize)
+
 add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
 target_link_libraries(tests_Namespace_life_cycle
         doctest::doctest
