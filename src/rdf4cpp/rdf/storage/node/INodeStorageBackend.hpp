@@ -18,7 +18,7 @@ namespace rdf4cpp::rdf::storage::node {
 class NodeStorage;
 
 /**
- * Interface that must be implemented by any NodeStorageBackendImplementation. A reference implementation is available with reference_node_storage::ReferenceNodeStorageBackend..
+ * Interface that must be implemented by any NodeStorageBackendImplementation. A reference implementation is available with reference_node_storage::SyncReferenceNodeStorageBackend..
  */
 class INodeStorageBackend {
 public:

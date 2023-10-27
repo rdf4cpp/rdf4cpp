@@ -1,7 +1,7 @@
-#ifndef RDF4CPP_NODETYPESTORAGE_HPP
-#define RDF4CPP_NODETYPESTORAGE_HPP
+#ifndef RDF4CPP_SYNCNODETYPESTORAGE_HPP
+#define RDF4CPP_SYNCNODETYPESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
+#include "rdf4cpp/rdf/storage/node/identifier/NodeID.hpp"
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
 
@@ -16,7 +16,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
  */
 template<class BackendType_t>
-struct NodeTypeStorage {
+struct SyncNodeTypeStorage {
     using Backend = BackendType_t;
     using BackendView = typename Backend::View;
 private:
@@ -83,4 +83,4 @@ public:
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
-#endif  //RDF4CPP_NODETYPESTORAGE_HPP
+#endif  //RDF4CPP_SYNCNODETYPESTORAGE_HPP

@@ -3,7 +3,6 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
@@ -163,8 +162,8 @@ public:
     }
 
     /**
-     * Create a new instance of reference_node_storage::ReferenceNodeStorageBackend.
-     * @return NodeStorage backed by reference_node_storage::ReferenceNodeStorageBackend
+     * Create a new instance of reference_node_storage::SyncReferenceNodeStorageBackend.
+     * @return NodeStorage backed by reference_node_storage::SyncReferenceNodeStorageBackend
      */
     static NodeStorage new_instance();
 

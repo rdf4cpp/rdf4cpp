@@ -26,7 +26,7 @@
 - Some `IRIs` are reserved by default (see [reserved_datatype_ids](../../datatypes/registry/FixedIdMappings.hpp))
   these `IRIs` _must always_ be present in the `NodeStorage` 
   and assigned the given `NodeID`. **Not upholding this invariant results in undefined behaviour.
-  See [ReferenceNodeStorage::ReferenceNodeStorage()](reference_node_storage/ReferenceNodeStorageBackend.cpp)
+  See [SyncReferenceNodeStorageBackend::SyncReferenceNodeStorageBackend()](reference_node_storage/sync/SyncReferenceNodeStorageBackend.cpp)
   for the expected usage.**
 
 ## General Notes for Implementors
