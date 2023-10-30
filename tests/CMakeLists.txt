@@ -336,6 +336,14 @@ target_link_libraries(tests_dataset_backend
 set_property(TARGET tests_dataset_backend PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_dataset_backend COMMAND tests_dataset_backend)
 
+add_executable(tests_IRIFactory nodes/tests_IRIFactory.cpp)
+target_link_libraries(tests_IRIFactory
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_IRIFactory PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_IRIFactory COMMAND tests_IRIFactory)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

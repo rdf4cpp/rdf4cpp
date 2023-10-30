@@ -203,6 +203,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/writer/NNodeWriter.cpp
         src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
         src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
+        src/rdf4cpp/rdf/IRIFactory.cpp
         private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
         private/rdf4cpp/rdf/regex/RegexImpl.cpp
         private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
