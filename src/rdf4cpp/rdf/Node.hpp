@@ -7,7 +7,7 @@
  */
 
 
-#include <rdf4cpp/rdf/Serialize.hpp>
+#include "rdf4cpp/rdf/writer/BufWriter.hpp"
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 
@@ -74,8 +74,8 @@ public:
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * Takes as input an arbitrary, flushable/extendable buffer type (e.g. a std::string) a cursor
-     * into the buffer (that describes its base address and length) and a function to flush the buffer (i.e. to either flush to io or extend the buffer).
+     * Takes as input an arbitrary, flushable/extendable buffer type (e.g. a std::string), a cursor
+     * into the buffer (that describes its base address and length of the free segment) and a function to flush the buffer (i.e. to either flush to io or extend the buffer).
      * During operation will update the cursor to reflect the current start of the spare capacity and remaining length.
      * When the remaining length reaches zero, flush is called using the provided buffer and cursor. Its task is to somehow make more buffer
      * room and then adjust the cursor to point to the new spare room.
@@ -85,20 +85,20 @@ public:
      * @param flush function to flush the contents of buffer and update cursor to point to the new free space
      * @return true if serialization was successful, false if a call to flush was not able to make room
      *
-     * For specific usage examples have a look at StringSerializer and
-     * how the template Node::serialize<Serializer> uses Serializers and tests/bench_SerDe.cpp#serialize.
+     * For specific usage examples have a look at StringWriter and
+     * how the template Node::serialize<BufWriter> uses Serializers and tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(void *buffer, Cursor &cursor, FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * @param ser a serializer
-     * @return true if serialization was successful, false if a call to Ser::flush was not able to make room
+     * @param w a serializer
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    template<Serializer Ser>
-    bool serialize(Ser &ser) const noexcept {
-        return serialize(&ser.buffer(), ser.cursor(), &Ser::flush);
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
     }
 
     /**

@@ -45,15 +45,15 @@ void serialize(std::filesystem::path const &out_path, Dataset const &ds) {
     }
     setbuf(out_file, nullptr);
 
-    CFileSerializer ser{out_file};
+    writer::BufCFileWriter ser{out_file};
 
     for (auto const &quad : ds) {
         quad.subject().serialize(ser);
-        serialize_str(" ", ser);
+        write_str(" ", ser);
         quad.predicate().serialize(ser);
-        serialize_str(" ", ser);
+        write_str(" ", ser);
         quad.object().serialize(ser);
-        serialize_str(" .\n", ser);
+        write_str(" .\n", ser);
     }
 
     ser.finalize();

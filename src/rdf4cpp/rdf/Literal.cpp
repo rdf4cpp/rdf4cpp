@@ -12,8 +12,8 @@
 
 #include <uni_algo/all.h>
 
-#include <rdf4cpp/rdf/Serialize.hpp>
-#include <rdf4cpp/rdf/TrySerialize.hpp>
+#include "rdf4cpp/rdf/writer/BufWriter.hpp"
+#include "rdf4cpp/rdf/writer/TryWrite.hpp"
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
@@ -611,36 +611,36 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
 
 // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
 #define RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(lexical) \
-    RDF4CPP_DETAIL_TRY_SER("\"");                      \
+    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");                \
     for (char const ch : lexical) {                    \
         switch (ch) {                                  \
             case '"': {                                \
-                RDF4CPP_DETAIL_TRY_SER(R"(\")");       \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\")"); \
                 break;                                 \
             }                                          \
             case '\\': {                               \
-                RDF4CPP_DETAIL_TRY_SER(R"(\\)");       \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\\)"); \
                 break;                                 \
             }                                          \
             case '\n': {                               \
-                RDF4CPP_DETAIL_TRY_SER(R"(\n)");       \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\n)"); \
                 break;                                 \
             }                                          \
             case '\r': {                               \
-                RDF4CPP_DETAIL_TRY_SER(R"(\r)");       \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\r)"); \
                 break;                                 \
             }                                          \
             [[likely]] default: {                      \
-                RDF4CPP_DETAIL_TRY_SER(&ch, 1);        \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(&ch, 1);  \
                 break;                                 \
             }                                          \
         }                                              \
     }                                                  \
-    RDF4CPP_DETAIL_TRY_SER("\"");
+    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flush) const noexcept {
+bool Literal::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
     if (this->null()) {
-        RDF4CPP_DETAIL_TRY_SER("null");
+        RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
     }
 
@@ -650,9 +650,9 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
         if (value.needs_escape) [[unlikely]] {
             RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(value.lexical_form);
         } else {
-            RDF4CPP_DETAIL_TRY_SER("\"");
-            RDF4CPP_DETAIL_TRY_SER(value.lexical_form);
-            RDF4CPP_DETAIL_TRY_SER("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR(value.lexical_form);
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         }
 
         return true;
@@ -662,13 +662,13 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
         if (value.needs_escape) [[unlikely]] {
             RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(value.lexical_form);
         } else {
-            RDF4CPP_DETAIL_TRY_SER("\"");
-            RDF4CPP_DETAIL_TRY_SER(value.lexical_form);
-            RDF4CPP_DETAIL_TRY_SER("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR(value.lexical_form);
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         }
 
-        RDF4CPP_DETAIL_TRY_SER("@");
-        RDF4CPP_DETAIL_TRY_SER(value.language_tag);
+        RDF4CPP_DETAIL_TRY_WRITE_STR("@");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
         return true;
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
@@ -684,11 +684,11 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
         auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
         auto const &datatype_iri = entry->datatype_iri;
 
-        RDF4CPP_DETAIL_TRY_SER("\"");
-        RDF4CPP_DETAIL_TRY_SER(lexical_form);
-        RDF4CPP_DETAIL_TRY_SER("\"^^<");
-        RDF4CPP_DETAIL_TRY_SER(datatype_iri);
-        RDF4CPP_DETAIL_TRY_SER(">");
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
+        RDF4CPP_DETAIL_TRY_WRITE_STR(">");
         return true;
     } else {
         using storage::node::NodeStorage;
@@ -703,14 +703,14 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
                     if (lexical_backend.needs_escape) [[unlikely]] {
                         RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(lexical_backend.lexical_form);
                     } else {
-                        RDF4CPP_DETAIL_TRY_SER("\"");
-                        RDF4CPP_DETAIL_TRY_SER(lexical_backend.lexical_form);
-                        RDF4CPP_DETAIL_TRY_SER("\"");
+                        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+                        RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_backend.lexical_form);
+                        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     }
 
-                    RDF4CPP_DETAIL_TRY_SER("^^<");
-                    RDF4CPP_DETAIL_TRY_SER(dtype_iri.identifier);
-                    RDF4CPP_DETAIL_TRY_SER(">");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^<");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(dtype_iri.identifier);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
                     return true;
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
@@ -724,11 +724,11 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
                     auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
                     auto const &datatype_iri = entry->datatype_iri;
 
-                    RDF4CPP_DETAIL_TRY_SER("\"");
-                    RDF4CPP_DETAIL_TRY_SER(lexical_form);
-                    RDF4CPP_DETAIL_TRY_SER("\"^^<");
-                    RDF4CPP_DETAIL_TRY_SER(datatype_iri);
-                    RDF4CPP_DETAIL_TRY_SER(">");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
                     return true;
                 });
     }
@@ -737,7 +737,7 @@ bool Literal::serialize(void *const buffer, Cursor &cursor, FlushFunc const flus
 #undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
 
 Literal::operator std::string() const noexcept {
-    StringSerializer ser;
+    writer::StringWriter ser;
     serialize(ser);
     return ser.finalize();
 }

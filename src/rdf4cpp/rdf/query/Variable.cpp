@@ -1,5 +1,5 @@
+#include "rdf4cpp/rdf/writer/TryWrite.hpp"
 #include <rdf4cpp/rdf/query/Variable.hpp>
-#include <rdf4cpp/rdf/TrySerialize.hpp>
 
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
@@ -47,16 +47,16 @@ std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
 
-bool Variable::serialize(void *const buffer, Cursor &cursor, FlushFunc const flush) const noexcept {
+bool Variable::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {
-        RDF4CPP_DETAIL_TRY_SER("_:");
+        RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
     } else {
-        RDF4CPP_DETAIL_TRY_SER("?");
+        RDF4CPP_DETAIL_TRY_WRITE_STR("?");
     }
 
-    RDF4CPP_DETAIL_TRY_SER(backend.name);
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.name);
     return true;
 }
 

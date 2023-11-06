@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_SERIALIZE_HPP
-#define RDF4CPP_SERIALIZE_HPP
+#ifndef RDF4CPP_BUFWRITER_HPP
+#define RDF4CPP_BUFWRITER_HPP
 
 #include <array>
 #include <cstdio>
@@ -9,7 +9,7 @@
 #include <string_view>
 #include <system_error>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp::rdf::writer {
 
 /**
  * A cursor into a buffer
@@ -43,27 +43,69 @@ public:
     }
 };
 
-template<typename T>
-concept Serializer = requires (T &ser) {
-    typename T::Output;
-    typename T::Buffer;
+/**
+ * A type that can be used for buffered output.
+ * Conceptually, it is three things.
+ * Some buffer-like object a cursor into that buffer and a way to flush the buffer somewhere to make some room.
+ *
+ * Users of this concept write to the provided buffer in the place where the cursor points.
+ * After writing the cursor should be advanced.
+ * If the cursor says that there is no more room flush should be called.
+ */
+template<typename W>
+concept BufWriter = requires (W &bw) {
+    /**
+     * Return type of finalize, typically void
+     */
+    typename W::Output;
 
-    { ser.buffer() } -> std::same_as<typename T::Buffer &>;
-    { ser.cursor() } -> std::same_as<Cursor &>;
-    { ser.finalize() } -> std::convertible_to<typename T::Output>;
-    T::flush(&ser.buffer(), ser.cursor());
+    /**
+     * Type of the internal buffer
+     */
+    typename W::Buffer;
+
+    /**
+     * The underlying buffer, the only thing this need to be able to do is be used in flush
+     */
+    { bw.buffer() } -> std::same_as<typename W::Buffer &>;
+
+    /**
+     * The cursor pointing inside of w.buffer()
+     */
+    { bw.cursor() } -> std::same_as<Cursor &>;
+
+    /**
+     * Triggers a final flush, needs to be called after you are done using this BufWriter
+     */
+    { bw.finalize() } -> std::convertible_to<typename W::Output>;
+
+    /**
+     * Flushes bw.buffer() and repoints bw.cursor() to the new free space
+     */
+    W::flush(&bw.buffer(), bw.cursor());
 };
 
 /**
- * Flushes user defined data
+ * Flushes user defined data.
+ * the functions task is it to somehow make room in buffer and point the cursor to that new, free space
+ *
+ * @param buffer buffer to make room in
+ * @param cursor a pointer + size pair into buffer (pointing to the free space)
  */
 using FlushFunc = void (*)(void *buffer, Cursor &cursor) noexcept;
 
 /**
  * Serializes the given string as is
- * See Node::serialize for more details on the signature/usage
+ *
+ * @param str string to write
+ * @param buffer pointer to arbitrary buffer structure
+ * @param cursor cursor into buffer
+ * @param flush function to flush the contents of buffer and update cursor to point to the new free space
+ * @return true if serialization was successful, false if a call to flush was not able to make room
+ *
+ * @see Node::serialize for more details on the signature/usage
  */
-inline bool serialize_str(std::string_view str, void *const buffer, Cursor &cursor, FlushFunc const flush) noexcept {
+inline bool write_str(std::string_view str, void *const buffer, Cursor &cursor, FlushFunc const flush) noexcept {
     while (true) {
         auto const max_write = std::min(str.size(), cursor.size());
         memcpy(cursor.data(), str.data(), max_write);
@@ -86,24 +128,27 @@ inline bool serialize_str(std::string_view str, void *const buffer, Cursor &curs
  * Serializes a string as is
  * See Node::serialize<> for more details on the signature/usage
  */
-template<Serializer Ser>
-bool serialize_str(std::string_view str, Ser &ser) {
-    return serialize_str(str, &ser.buffer(), ser.cursor(), &Ser::flush);
+template<BufWriter Ser>
+bool write_str(std::string_view str, Ser &ser) {
+    return write_str(str, &ser.buffer(), ser.cursor(), &Ser::flush);
 }
 
 /**
  * (Optional) base class for serializers.
  * Encapsulates a cursor and some buffer type and makes the implementation of flush less error prone.
+ *
+ * @tparam CRTP derived class that is inheriting from BufWriterBase (https://en.cppreference.com/w/cpp/language/crtp)
+ * @tparam Buffer buffer type to be used
  */
 template<typename CRTP, typename Buffer>
-struct SerializerBase {
+struct BufWriterBase {
 private:
     Buffer buffer_;
     Cursor cursor_;
 
 public:
     template<typename ...BufferArgs>
-    explicit constexpr SerializerBase(BufferArgs &&...buffer_args) : buffer_{std::forward<BufferArgs>(buffer_args)...} {
+    explicit constexpr BufWriterBase(BufferArgs &&...buffer_args) : buffer_{std::forward<BufferArgs>(buffer_args)...} {
     }
 
     [[nodiscard]] constexpr Cursor &cursor() noexcept { return cursor_; }
@@ -119,12 +164,12 @@ using StringBuffer = std::string;
 /**
  * A serializer that serializes to a std::string
  */
-struct StringSerializer : SerializerBase<StringSerializer, StringBuffer> {
+struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
 public:
     using Buffer = StringBuffer;
     using Output = std::string;
 
-    explicit StringSerializer(size_t cap = 256) noexcept {
+    explicit StringWriter(size_t cap = 256) noexcept {
         buffer().resize(cap);
         cursor().repoint(buffer().data(), buffer().size());
     }
@@ -155,11 +200,11 @@ struct CFileBuffer {
  * It is advisable to set the internal file buffer to nullptr
  * because this serializer has an internal buffer
  */
-struct CFileSerializer : SerializerBase<CFileSerializer, CFileBuffer> {
+struct BufCFileWriter : BufWriterBase<BufCFileWriter, CFileBuffer> {
     using Buffer = CFileBuffer;
     using Output = void;
 
-    explicit constexpr CFileSerializer(FILE *file) noexcept : SerializerBase<CFileSerializer, CFileBuffer>{file} {
+    explicit constexpr BufCFileWriter(FILE *file) noexcept : BufWriterBase<BufCFileWriter, CFileBuffer>{file} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
@@ -190,11 +235,11 @@ struct OStreamBuffer {
  * It is advisable to set the associated stream buffer to nullptr
  * because this serializer has an internal buffer.
  */
-struct OStreamSerializer : SerializerBase<OStreamSerializer, OStreamBuffer> {
+struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     using Buffer = OStreamBuffer;
     using Output = void;
 
-    explicit constexpr OStreamSerializer(std::ostream &os) noexcept : SerializerBase<OStreamSerializer, OStreamBuffer>{os} {
+    explicit constexpr BufOStreamWriter(std::ostream &os) noexcept : BufWriterBase<BufOStreamWriter, OStreamBuffer>{os} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
@@ -215,6 +260,6 @@ struct OStreamSerializer : SerializerBase<OStreamSerializer, OStreamBuffer> {
     }
 };
 
-} // namespace rdf4cpp::rdf
+} // namespace rdf4cpp::rdf::writer
 
-#endif // RDF4CPP_SERIALIZE_HPP
+#endif  // RDF4CPP_BUFWRITER_HPP

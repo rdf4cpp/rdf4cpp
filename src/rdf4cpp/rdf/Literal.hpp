@@ -159,8 +159,9 @@ private:
      */
     [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
 
-public:
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
+
+public:
 
     /**
      * Constructs the null-literal
@@ -643,11 +644,11 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, Cursor &cursor, FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
 
-    template<Serializer Ser>
-    bool serialize(Ser &ser) const noexcept {
-        return serialize(&ser.buffer(), ser.cursor(), &Ser::flush);
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
     }
 
     [[nodiscard]] explicit operator std::string() const noexcept;

@@ -1,5 +1,5 @@
+#include "rdf4cpp/rdf/writer/TryWrite.hpp"
 #include <rdf4cpp/rdf/BlankNode.hpp>
-#include <rdf4cpp/rdf/TrySerialize.hpp>
 
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
@@ -41,11 +41,11 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-bool BlankNode::serialize(void *const buffer, Cursor &cursor, FlushFunc const flush) const noexcept {
+bool BlankNode::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.bnode_backend();
 
-    RDF4CPP_DETAIL_TRY_SER("_:");
-    RDF4CPP_DETAIL_TRY_SER(backend.identifier);
+    RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.identifier);
     return true;
 }
 

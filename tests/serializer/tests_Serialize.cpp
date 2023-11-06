@@ -15,7 +15,7 @@ TEST_SUITE("Serialize") {
             expected = std::string{node};
         }
 
-        StringSerializer ser;
+        writer::StringWriter ser;
         node.serialize(ser);
         auto result = ser.finalize();
 
@@ -82,20 +82,20 @@ TEST_SUITE("Serialize") {
                                     "<http://url.com/subj#6> <http://url.com#pred> \"Spherical Cow\"@jk .\n" // rdf:langString, non-inlined language
                                     "<http://url.com/subj#7> <http://url.com#pred> \"Spherical Cow\"^^<http://unknow-datatype.org#dt> .\n"; // unknown datatype
 
-    TEST_CASE("Reserialize NTriples StringSerializer") {
+    TEST_CASE("Reserialize NTriples StringWriter") {
         using namespace rdf4cpp::rdf::parser;
 
-        StringSerializer ser{4096};
+        writer::StringWriter ser{4096};
 
         std::istringstream iss{triples};
         for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
             REQUIRE(qit->has_value());
             (*qit)->subject().serialize(ser);
-            serialize_str(" ", ser);
+            write_str(" ", ser);
             (*qit)->predicate().serialize(ser);
-            serialize_str(" ", ser);
+            write_str(" ", ser);
             (*qit)->object().serialize(ser);
-            serialize_str(" .\n", ser);
+            write_str(" .\n", ser);
         }
 
         auto result = ser.finalize();
@@ -103,7 +103,7 @@ TEST_SUITE("Serialize") {
         CHECK_EQ(result, std::string_view{triples});
     }
 
-    TEST_CASE("Reserialize NTriples CFileSerializer") {
+    TEST_CASE("Reserialize NTriples BufCFileWriter") {
         using namespace rdf4cpp::rdf::parser;
 
         std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-cfile-{}", std::random_device{}());
@@ -113,17 +113,17 @@ TEST_SUITE("Serialize") {
             REQUIRE(out_file != nullptr);
             setbuf(out_file, nullptr);
 
-            CFileSerializer ser{out_file};
+            writer::BufCFileWriter ser{out_file};
 
             std::istringstream iss{triples};
             for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
                 REQUIRE(qit->has_value());
                 (*qit)->subject().serialize(ser);
-                serialize_str(" ", ser);
+                write_str(" ", ser);
                 (*qit)->predicate().serialize(ser);
-                serialize_str(" ", ser);
+                write_str(" ", ser);
                 (*qit)->object().serialize(ser);
-                serialize_str(" .\n", ser);
+                write_str(" .\n", ser);
             }
 
             ser.finalize();
@@ -143,7 +143,7 @@ TEST_SUITE("Serialize") {
         std::filesystem::remove(path);
     }
 
-    TEST_CASE("Reserialize NTriples OStreamSerializer") {
+    TEST_CASE("Reserialize NTriples BufOStreamWriter") {
         using namespace rdf4cpp::rdf::parser;
 
         std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-ostream-{}", std::random_device{}());
@@ -152,17 +152,17 @@ TEST_SUITE("Serialize") {
             std::ofstream ofs{path};
             REQUIRE(ofs.is_open());
 
-            OStreamSerializer ser{ofs};
+            writer::BufOStreamWriter ser{ofs};
 
             std::istringstream iss{triples};
             for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
                 REQUIRE(qit->has_value());
                 (*qit)->subject().serialize(ser);
-                serialize_str(" ", ser);
+                write_str(" ", ser);
                 (*qit)->predicate().serialize(ser);
-                serialize_str(" ", ser);
+                write_str(" ", ser);
                 (*qit)->object().serialize(ser);
-                serialize_str(" .\n", ser);
+                write_str(" .\n", ser);
             }
 
             ser.finalize();
