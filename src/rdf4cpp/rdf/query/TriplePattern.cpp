@@ -1,4 +1,4 @@
-#include "TriplePattern.hpp"
+#include <rdf4cpp/rdf/query/TriplePattern.hpp>
 namespace rdf4cpp::rdf::query {
 TriplePattern::operator std::string() const {
     return static_cast<std::string>(subject()) + " " + static_cast<std::string>(predicate()) + " " + static_cast<std::string>(object()) + " . ";

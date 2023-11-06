@@ -1,4 +1,4 @@
-#include "Namespace.hpp"
+#include <rdf4cpp/rdf/Namespace.hpp>
 
 namespace rdf4cpp::rdf {
 

@@ -12,8 +12,8 @@
 
 #include <uni_algo/all.h>
 
-#include "rdf4cpp/rdf/writer/BufWriter.hpp"
-#include "rdf4cpp/rdf/writer/TryWrite.hpp"
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>

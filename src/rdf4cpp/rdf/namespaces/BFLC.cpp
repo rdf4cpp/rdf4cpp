@@ -1,4 +1,4 @@
-#include "BFLC.hpp"
+#include <rdf4cpp/rdf/namespaces/BFLC.hpp>
 
 namespace rdf4cpp::rdf::namespaces {
 

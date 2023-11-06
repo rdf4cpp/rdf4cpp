@@ -7,7 +7,7 @@
  */
 
 
-#include "rdf4cpp/rdf/writer/BufWriter.hpp"
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 

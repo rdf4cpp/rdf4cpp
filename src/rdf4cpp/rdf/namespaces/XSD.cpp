@@ -1,4 +1,4 @@
-#include "XSD.hpp"
+#include <rdf4cpp/rdf/namespaces/XSD.hpp>
 
 namespace rdf4cpp::rdf::namespaces {
 

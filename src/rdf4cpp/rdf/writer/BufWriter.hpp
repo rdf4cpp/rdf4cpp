@@ -46,7 +46,7 @@ public:
 /**
  * A type that can be used for buffered output.
  * Conceptually, it is three things.
- * Some buffer-like object a cursor into that buffer and a way to flush the buffer somewhere to make some room.
+ * Some buffer-like object, a cursor into that buffer and a way to flush the buffer somewhere to make some room.
  *
  * Users of this concept write to the provided buffer in the place where the cursor points.
  * After writing the cursor should be advanced.

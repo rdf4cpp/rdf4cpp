@@ -1,4 +1,4 @@
-#include "NodeStorage.hpp"
+#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <algorithm>
 

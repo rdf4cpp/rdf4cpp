@@ -1,4 +1,4 @@
-#include "BNodeBackendView.hpp"
+#include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 
 #include <dice/hash.hpp>
 

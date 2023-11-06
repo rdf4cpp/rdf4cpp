@@ -1,4 +1,4 @@
-#include "RDF.hpp"
+#include <rdf4cpp/rdf/namespaces/RDF.hpp>
 
 #include <charconv>
 

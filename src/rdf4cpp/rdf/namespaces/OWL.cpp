@@ -1,4 +1,4 @@
-#include "OWL.hpp"
+#include <rdf4cpp/rdf/namespaces/OWL.hpp>
 
 namespace rdf4cpp::rdf::namespaces {
 

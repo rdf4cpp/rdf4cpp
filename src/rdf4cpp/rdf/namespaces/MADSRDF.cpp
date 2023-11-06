@@ -1,4 +1,4 @@
-#include "MADSRDF.hpp"
+#include <rdf4cpp/rdf/namespaces/MADSRDF.hpp>
 
 namespace rdf4cpp::rdf::namespaces {
 

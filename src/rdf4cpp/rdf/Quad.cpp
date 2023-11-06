@@ -1,4 +1,4 @@
-#include "Quad.hpp"
+#include <rdf4cpp/rdf/Quad.hpp>
 
 namespace rdf4cpp::rdf {
 Quad::Quad(Node subject, Node predicate, Node object) : QuadPattern(IRI::default_graph(), subject, predicate, object) {}

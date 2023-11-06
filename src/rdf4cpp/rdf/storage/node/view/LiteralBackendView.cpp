@@ -1,4 +1,4 @@
-#include "LiteralBackendView.hpp"
+#include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 
 #include <dice/hash.hpp>
 

@@ -1,4 +1,4 @@
-#include "rdf4cpp/rdf/writer/TryWrite.hpp"
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 
 namespace rdf4cpp::rdf {

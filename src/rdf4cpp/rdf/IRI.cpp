@@ -1,4 +1,4 @@
-#include "rdf4cpp/rdf/writer/TryWrite.hpp"
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 
 #include <sstream>
