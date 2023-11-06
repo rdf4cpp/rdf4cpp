@@ -11,25 +11,15 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_vie
     return create_and_validate(iri, storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_absolute_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
-    std::string pre{prefix};
-    auto i = prefixes.find(pre);
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
+    auto i = prefixes.find(prefix);
     if (i == prefixes.end())
         return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
-    pre = i->second;
-    pre.append(local);
-    return create_and_validate(pre, storage);
-}
-
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
-    std::string pre{prefix};
-    auto i = prefixes.find(pre);
-    if (i == prefixes.end())
-        return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
-    pre = base;
-    pre.append(i->second);
-    pre.append(local);
-    return create_and_validate(pre, storage);
+    std::string deref {i->second};
+    deref.append(local);
+    if (is_relative(deref))
+        return from_relative(deref, storage);
+    return create_and_validate(deref, storage);
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept {
@@ -41,8 +31,14 @@ void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expande
     prefixes[pre] = expanded;
 }
 void IRIFactory::clear_prefix(std::string_view prefix) {
-    std::string pre{prefix};
-    prefixes.erase(pre);
+    prefixes.erase(prefix);
+}
+bool IRIFactory::is_relative(std::string_view iri) noexcept {
+    auto c = iri.find(':');
+    if (c == std::string_view::npos) // no : -> relative
+        return true;
+    auto s = iri.find('/');
+    return c > s; // :/ -> absolute, /: -> relative
 }
 
 }  // namespace rdf4cpp::rdf
