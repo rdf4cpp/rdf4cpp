@@ -41,7 +41,10 @@ public:
         std::unique_ptr<IStreamQuadIterator> iter_;
 
         iterator();
-        iterator(FILE *stream, ParsingFlags flags, const storage::node::NodeStorage &node_storage);
+        /**
+         * Constructs an iterator by taking ownership of the given file
+         */
+        iterator(FILE *&&stream, ParsingFlags flags, const storage::node::NodeStorage &node_storage);
 
     public:
         ~iterator() noexcept;

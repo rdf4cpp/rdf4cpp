@@ -10,8 +10,10 @@ using namespace rdf4cpp::rdf;
 
 TEST_SUITE("Serialize") {
     template<typename NodeT>
-    void run_ser_test(NodeT node) {
-        auto expected = std::string{node};
+    void run_ser_test(NodeT node, std::optional<std::string> expected = std::nullopt) {
+        if (!expected.has_value()) {
+            expected = std::string{node};
+        }
 
         StringSerializer ser;
         node.serialize(ser);
@@ -47,27 +49,27 @@ TEST_SUITE("Serialize") {
 
         SUBCASE("xsd:string") {
             auto lit = Literal::make_simple("simple");
-            run_ser_test(lit);
+            run_ser_test(lit, "\"simple\"");
         }
         SUBCASE("non-inlined xsd:integer") {
             auto lit = Literal::make_typed_from_value<xsd::Integer>(xsd::Integer::cpp_type{"87960930222089"});
-            run_ser_test(lit);
+            run_ser_test(lit, "\"87960930222089\"^^<http://www.w3.org/2001/XMLSchema#integer>");
         }
         SUBCASE("inlined xsd:int") {
             auto lit = Literal::make_typed_from_value<xsd::Int>(754);
-            run_ser_test(lit);
+            run_ser_test(lit, "\"754\"^^<http://www.w3.org/2001/XMLSchema#int>");
         }
         SUBCASE("rdf:langString, inlined language") {
             auto lit = Literal::make_lang_tagged("spherical cow", "en");
-            run_ser_test(lit);
+            run_ser_test(lit, "\"spherical cow\"@en");
         }
         SUBCASE("rdf:langString, non-inlined language") {
             auto lit = Literal::make_lang_tagged("spherical cow", "nonexistent");
-            run_ser_test(lit);
+            run_ser_test(lit, "\"spherical cow\"@nonexistent");
         }
         SUBCASE("unknown datatype") {
             auto lit = Literal::make_typed("very value", IRI::make("http://datatypes.com#dt"));
-            run_ser_test(lit);
+            run_ser_test(lit, "\"very value\"^^<http://datatypes.com#dt>");
         }
     }
 

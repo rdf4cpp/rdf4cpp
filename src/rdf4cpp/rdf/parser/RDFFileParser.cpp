@@ -14,7 +14,7 @@ RDFFileParser::iterator RDFFileParser::begin() const {
     if (stream == nullptr) {
         throw std::system_error{errno, std::system_category()};
     }
-    return {stream, flags_, node_storage_};
+    return {std::move(stream), flags_, node_storage_};
 }
 std::default_sentinel_t RDFFileParser::end() const noexcept {
     return {};
@@ -23,7 +23,7 @@ std::default_sentinel_t RDFFileParser::end() const noexcept {
 RDFFileParser::iterator::iterator()
     : stream_(nullptr), iter_(nullptr) {
 }
-RDFFileParser::iterator::iterator(FILE *stream, ParsingFlags flags,
+RDFFileParser::iterator::iterator(FILE *&&stream, ParsingFlags flags,
                                   const rdf4cpp::rdf::storage::node::NodeStorage &node_storage)
     : stream_(stream),
       iter_(std::make_unique<IStreamQuadIterator>(stream_, reinterpret_cast<ReadFunc>(&fread), reinterpret_cast<ErrorFunc>(&ferror),

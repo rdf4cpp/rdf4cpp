@@ -5,7 +5,12 @@ namespace rdf4cpp::rdf::parser {
 
 /**
  * Adaptor function so that serd can read from std::istreams.
- * Matches the interface of SerdSource
+ * Matches the interface of SerdSource/fread
+ *
+ * @param buf pointer to buffer to be written to
+ * @param elem_size sizeof each element being written, guaranteed to always be 1
+ * @param count number of elements to write
+ * @param voided_self pointer to std::istream cast to void *
  */
 static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
     assert(elem_size == 1);
@@ -18,6 +23,8 @@ static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t 
 /**
  * Adaptor function for serd to check if an std::istream is ok
  * Matches the interface of SerdStreamErrorFunc
+ *
+ * @param voided_self pointer to std::istream cast to void *
  */
 static int istream_error(void *voided_self) noexcept {
     auto *self = reinterpret_cast<std::istream *>(voided_self);
