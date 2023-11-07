@@ -60,7 +60,7 @@ private:
     friend struct WeakNodeScope;
     friend struct std::hash<NodeScope>;
 
-    static inline std::array<node_scope_detail::ControlBlock, 1023> node_scope_instances_{};
+    static inline constinit std::array<node_scope_detail::ControlBlock, 1023> node_scope_instances_{};
 
     identifier::NodeScopeID backend_index_;
     INodeScope *cached_backend_ptr_;
@@ -113,11 +113,27 @@ public:
      *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
-     * @throws std::runtime_error if a nullptr is provided
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::logic_error if the provided backend is already registered
+     * @throws std::length_error if the maximum number of node scopes was exceeded
      * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
      *      after calling this function.
      */
     static NodeScope register_backend(INodeScope *&&backend_instance);
+
+    /**
+     * Registers a INodeScope at a specific ID
+     *
+     * @param id id to assign the instance
+     * @param backend_instance instance to be registered
+     * @return an NodeStorage encapsulating backend_instance
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::logic_error if the provided backend is already registered
+     * @throws std::length_error if the maximum number of node scopes was exceeded
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
+     */
+    static NodeScope register_backend_at(identifier::NodeScopeID id, INodeScope *&&backend_instance);
 
     /**
      * Create a new instance using reference_backends::scope::ReferenceNodeScope
@@ -127,7 +143,12 @@ public:
 
     template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeScope>
     static NodeScope new_instance(Args &&...args) {
-        return register_backend(new BackendImpl(std::forward<Args>(args)...));
+        return register_backend(new BackendImpl{std::forward<Args>(args)...});
+    }
+
+    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeScope>
+    static NodeScope new_instance_at(identifier::NodeScopeID id, Args &&...args) {
+        return register_backend_at(id, new BackendImpl{std::forward<Args>(args)...});
     }
 
     /**

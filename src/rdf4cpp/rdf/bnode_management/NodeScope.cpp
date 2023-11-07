@@ -82,7 +82,7 @@ NodeScope::~NodeScope() {
 
 NodeScope NodeScope::register_backend(INodeScope *&&backend_instance) {
     if (backend_instance == nullptr) [[unlikely]] {
-        throw std::runtime_error{"Backend instance must not be null"};
+        throw std::invalid_argument{"Backend instance must not be null"};
     }
 
     for (size_t ix = 0; ix < NodeScope::node_scope_instances_.size(); ++ix) {
@@ -96,11 +96,32 @@ NodeScope NodeScope::register_backend(INodeScope *&&backend_instance) {
 
             return NodeScope{identifier::NodeScopeID{static_cast<uint16_t>(ix)}, backend_instance};
         } else if (old_value == backend_instance) [[unlikely]] {
-            throw std::runtime_error{"The provided backend is already registered"};
+            throw std::logic_error{"The provided backend is already registered"};
         }
     }
 
-    throw std::runtime_error{"Maximum number of backend instances exceeded"};
+    delete backend_instance;
+    throw std::length_error{"Maximum number of backend instances exceeded"};
+}
+
+NodeScope NodeScope::register_backend_at(identifier::NodeScopeID id, INodeScope *&&backend_instance) {
+    if (backend_instance == nullptr) [[unlikely]] {
+        throw std::invalid_argument{"Backend instance must not be null"};
+    }
+
+    auto &slot = NodeScope::node_scope_instances_[id.to_underlying()];
+
+    INodeScope *old_value = nullptr;
+    if (slot.backend.compare_exchange_strong(old_value, backend_instance, std::memory_order_release, std::memory_order_acquire)) [[likely]] {
+        // found slot
+        slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with lookup_instance
+        slot.refcount.store(1, std::memory_order_relaxed);
+
+        return NodeScope{id, backend_instance};
+    }
+
+    delete backend_instance;
+    throw std::logic_error{"The node scope ID is already in use"};
 }
 
 NodeScope NodeScope::new_instance() {

@@ -19,6 +19,7 @@ using pointer = typename allocator_type<T>::pointer;
 
 inline constexpr auto generator_name = "generator";
 inline constexpr auto scope_name = "scope";
+inline constexpr auto scope_id_name = "id";
 
 using namespace rdf4cpp::rdf;
 using namespace rdf4cpp::rdf::util;

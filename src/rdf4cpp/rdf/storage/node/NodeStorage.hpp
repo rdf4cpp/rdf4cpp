@@ -59,13 +59,12 @@ class NodeStorage {
      */
 
     friend struct WeakNodeStorage;
-    friend struct std::hash<NodeStorage>;
 
     /**
      * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
      * The last value of a identifier::NodeStorageID (i.e. 1023) is reserved as the invalid index.
      */
-    static inline std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
+    static inline constinit std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
     /**
      * Makes sure the default_instance_ is initialized only once
      */
@@ -159,7 +158,19 @@ public:
      */
     template<typename BackendImpl, typename... Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
     static NodeStorage new_instance(Args &&...args) {
-        return register_backend(new BackendImpl(std::forward<Args>(args)...));
+        return register_backend(new BackendImpl{std::forward<Args>(args)...});
+    }
+
+    /**
+     * Attempt to create a NodeStorage with a custom Backend at a specific id
+     * @tparam BackendImpl Class deriving from INodeStorage
+     * @param id id to assign the node storage
+     * @param args arguments to construct BackendImpl
+     * @return NodeStorage referring to the instance.
+     */
+    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
+    static NodeStorage new_instance_at(identifier::NodeStorageID id, Args &&...args) {
+        return register_backend_at(id, new BackendImpl{std::forward<Args>(args)...});
     }
 
     /**
@@ -180,11 +191,25 @@ public:
      *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
-     * @throws std::runtime_error if a nullptr is provided
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::length_error if the maximum number of backend instances has been exceeded
      * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
      *      after calling this function.
      */
     static NodeStorage register_backend(INodeStorageBackend *&&backend_instance);
+
+    /**
+     * Attempts to register a INodeStorageBackend at a specific id
+     *
+     * @param id id to assign the instance
+     * @param backend_instance instance to be registered
+     * @return an NodeStorage encapsulating backend_instance
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::logic_error if the given id is already in use
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
+     */
+     static NodeStorage register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance);
 
 public:
     NodeStorage(NodeStorage &&other) noexcept;
