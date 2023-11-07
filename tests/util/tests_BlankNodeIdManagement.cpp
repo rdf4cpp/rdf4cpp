@@ -78,47 +78,11 @@ TEST_SUITE("blank node id management") {
             auto fresh = scope.generate_node();
             CHECK(fresh != b1);
             CHECK(fresh != b2);
-
-            /*Node sibling_1;
-            Node sibling_2;
-
-            {
-                auto subscope = scope.subscope("some_graph");
-
-                auto sb1 = subscope.get_or_generate_node("abc");
-                CHECK(b1 == sb1);
-
-                {
-                    auto subsubscope = subscope.subscope("inner");
-                    auto ssb1 = subsubscope.get_or_generate_node("abc");
-                    CHECK(ssb1 == sb1);
-                    CHECK(ssb1 == b1);
-                }
-
-                sibling_1 = subscope.get_or_generate_node("siblings");
-            }
-
-            {
-                auto subscope = scope.subscope("other_graph");
-                sibling_2 = subscope.get_or_generate_node("siblings");
-            }
-
-            CHECK(sibling_1 != sibling_2);*/
         }
 
         NodeScope mng2 = NodeScope::new_instance();
         CHECK(mng2.try_get_node("abc").null());
     }
-
-    /*TEST_CASE("empty subscope id") {
-        NodeScope scope = NodeScope::new_instance();
-        NodeScope subscope = scope.subscope("");
-
-        auto b1 = scope.get_or_generate_node("aaa");
-        auto b2 = subscope.get_or_generate_node("aaa");
-
-        CHECK(b1 == b2);
-    }*/
 
     TEST_CASE("union and merge semantics") {
         auto &generator = NodeGenerator::default_instance();

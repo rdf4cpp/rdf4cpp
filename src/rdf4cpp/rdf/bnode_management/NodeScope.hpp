@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::util {
 namespace identifier {
 
 struct NodeScopeID {
-    static constexpr size_t width = 10;
+    static constexpr size_t width = 16;
     using underlying_type = uint16_t;
 
 private:
@@ -60,7 +60,7 @@ private:
     friend struct WeakNodeScope;
     friend struct std::hash<NodeScope>;
 
-    static inline constinit std::array<node_scope_detail::ControlBlock, 1023> node_scope_instances_{};
+    static inline constinit std::array<node_scope_detail::ControlBlock, (1 << 16) - 1> node_scope_instances_{};
 
     identifier::NodeScopeID backend_index_;
     INodeScope *cached_backend_ptr_;
