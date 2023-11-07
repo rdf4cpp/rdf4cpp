@@ -32,32 +32,23 @@ void blank_nodes() {
         assert(remembered_b1 != remembered_b2);
         print(remembered_b2);
 
-        /*{
+        {
             // subscopes for e.g. multiple graphs in one file
-            util::NodeScope subscope = scope.subscope("http://some-graph.com");
+            util::ReferenceNodeScopeManager mng = util::ReferenceNodeScopeManager::new_instance();
+            util::NodeScope subscope_1 = mng.scope("http://some-graph.com");
+            util::NodeScope subscope_2 = mng.scope("http://other-graph.com");
 
-            Node remembered_b1_sub = subscope.get_or_generate_node("some-bnode-label");
+            Node remembered_b1_sub = subscope_1.get_or_generate_node("some-bnode-label");
             assert(remembered_b1 == remembered_b1_sub); // remembers mapping from parent scope
             print(remembered_b1_sub);
 
             {
-                // nested subscopes
-                util::NodeScope subsubscope = subscope.subscope("queryA");
+                Node new_sub1_b1 = subscope_1.get_or_generate_node("new-bnode-label");
+                Node new_sub2_b1 = subscope_2.get_or_generate_node("new-bnode-label");
 
-                Node remembered_b1_sub_sub = subsubscope.get_or_generate_node("some-bnode-label");
-                assert(remembered_b1 == remembered_b1_sub_sub); // also remembers mapping of parent's-parent
-                assert(remembered_b1_sub == remembered_b1_sub_sub);
+                assert(new_sub1_b1 != new_sub2_b1);
             }
         }
-
-        {
-            // subscopes are reusable
-            util::NodeScope subscope = scope.subscope("http://some-graph.com");
-
-            Node remembered_b1_sub_again = subscope.try_get_node("some-bnode-label");
-            assert(!remembered_b1_sub_again.null());
-            print(remembered_b1_sub_again);
-        }*/
     }
 
     // all old scope state is destroyed here, labels are not remembered by new scopes

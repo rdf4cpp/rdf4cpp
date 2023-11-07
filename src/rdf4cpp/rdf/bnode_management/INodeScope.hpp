@@ -37,6 +37,9 @@ struct INodeScope {
      *
      * @param label the label of the mapping
      * @param handle the handle of the mapping
+     * @throws std::invalid_argument if the given node is already labeled
+     *
+     * @warning handle must be a handle to a valid node otherwise behaviour is undefined
      */
     virtual void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) = 0;
 };

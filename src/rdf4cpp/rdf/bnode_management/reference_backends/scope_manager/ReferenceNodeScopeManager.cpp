@@ -4,12 +4,12 @@
 
 namespace rdf4cpp::rdf::util {
 
-ReferenceNodeScopeManager::node_scope_type &ReferenceNodeScopeManager::subscope(std::string_view subnamespace) noexcept {
-    if (auto it = subscopes.find(subnamespace); it != subscopes.end()) {
+ReferenceNodeScopeManager::node_scope_type &ReferenceNodeScopeManager::scope(std::string_view name) noexcept {
+    if (auto it = scopes.find(name); it != scopes.end()) {
         return it.value();
     }
 
-    auto [it, inserted] = subscopes.emplace(subnamespace, util::NodeScope::new_instance());
+    auto [it, inserted] = scopes.emplace(name, util::NodeScope::new_instance());
     assert(inserted);
     return it.value();
 }

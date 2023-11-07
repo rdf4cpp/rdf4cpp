@@ -26,11 +26,11 @@ int main(int argc, char **argv) {
         auto scope_impl_ptr = std::get<0>(manager.find<PersistableScope>(scope_name));
         NodeScope scope = NodeScope::new_instance_at<PersistableScopeFrontent>(scope_id, scope_impl_ptr);
 
-        BlankNode bnode2 = scope.get_or_generate_node("spherical cow", generator).as_blank_node();
+        BlankNode bnode2 = scope.get_or_generate_node("abc", generator).as_blank_node();
         std::cout << bnode2.backend_handle().raw() << " " << bnode2.identifier() << std::endl;
         assert(bnode2.identifier() == "1");
 
-        BlankNode bnode3 = scope.get_or_generate_node("hello world", generator).as_blank_node();
+        BlankNode bnode3 = scope.get_or_generate_node("def", generator).as_blank_node();
         std::cout << bnode3.backend_handle().raw() << " " << bnode3.identifier() << std::endl;
         assert(bnode3.identifier() == "3");
     }

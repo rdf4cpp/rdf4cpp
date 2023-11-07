@@ -2,16 +2,16 @@
 
 namespace rdf4cpp::rdf::util {
 
-ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope const &other) : label_to_storage{other.label_to_storage} {}
+ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope const &other) : label_to_handle_{other.label_to_handle_} {}
 
-ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope &&other) noexcept : label_to_storage{std::move(other.label_to_storage)},
-                                                                              storage_to_label{std::move(other.storage_to_label)} {
+ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope &&other) noexcept : label_to_handle_{std::move(other.label_to_handle_)},
+                                                                              handle_to_label_{std::move(other.handle_to_label_)} {
 }
 
 storage::node::identifier::NodeBackendHandle ReferenceNodeScope::find_node(std::string_view label) const noexcept {
-    std::shared_lock lock{this->mutex};
+    std::shared_lock lock{this->mutex_};
 
-    if (auto it = this->label_to_storage.find(label); it != this->label_to_storage.end()) {
+    if (auto it = this->label_to_handle_.find(label); it != this->label_to_handle_.end()) {
         return it->second;
     }
 
@@ -19,9 +19,9 @@ storage::node::identifier::NodeBackendHandle ReferenceNodeScope::find_node(std::
 }
 
 std::optional<std::string_view> ReferenceNodeScope::find_label(storage::node::identifier::NodeBackendHandle handle) const noexcept {
-    std::shared_lock lock{this->mutex};
+    std::shared_lock lock{this->mutex_};
 
-    if (auto it = this->storage_to_label.find(handle); it != this->storage_to_label.end()) {
+    if (auto it = this->handle_to_label_.find(handle); it != this->handle_to_label_.end()) {
         return it->second;
     }
 
@@ -29,12 +29,14 @@ std::optional<std::string_view> ReferenceNodeScope::find_label(storage::node::id
 }
 
 void ReferenceNodeScope::label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) {
-    std::unique_lock lock{this->mutex};
+    std::unique_lock lock{this->mutex_};
 
-    auto const [it, inserted] = this->label_to_storage.emplace(label, handle);
-    assert(inserted);
+    auto const [it, inserted] = this->label_to_handle_.emplace(label, handle);
+    if (!inserted) {
+        throw std::invalid_argument{"Node already labeled"};
+    }
 
-    auto const [_, inserted2] = this->storage_to_label.emplace(handle, it->first);
+    auto const [_, inserted2] = this->handle_to_label_.emplace(handle, it->first);
     assert(inserted2);
 }
 

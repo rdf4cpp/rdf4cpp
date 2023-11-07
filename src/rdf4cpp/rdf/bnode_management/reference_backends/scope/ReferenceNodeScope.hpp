@@ -43,15 +43,17 @@ private:
     };
 
 private:
-    std::shared_mutex mutable mutex; // protects label_to_storage and storage_to_label
+    std::shared_mutex mutable mutex_; // protects label_to_handle_ and handle_to_label_
 
     dice::sparse_map::sparse_map<PinnedString,
                                  storage::node::identifier::NodeBackendHandle,
                                  dice::hash::DiceHashwyhash<std::string_view>,
-                                 std::equal_to<>> label_to_storage;
+                                 std::equal_to<>>
+            label_to_handle_;
 
     dice::sparse_map::sparse_map<storage::node::identifier::NodeBackendHandle,
-                                 std::string_view> storage_to_label;
+                                 std::string_view>
+            handle_to_label_;
 
     ReferenceNodeScope(ReferenceNodeScope const &other);
 public:

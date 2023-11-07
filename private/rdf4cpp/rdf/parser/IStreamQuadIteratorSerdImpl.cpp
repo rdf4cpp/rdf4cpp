@@ -74,9 +74,9 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
         assert(this->state->blank_node_generator != nullptr);
         assert(this->state->blank_node_scope_manager != nullptr);
 
-        return this->state->blank_node_scope_manager->subscope(graph_str).get_or_generate_node(node_str,
-                                                                                               *this->state->blank_node_generator,
-                                                                                               this->state->node_storage);
+        return this->state->blank_node_scope_manager->scope(graph_str).get_or_generate_node(node_str,
+                                                                                            *this->state->blank_node_generator,
+                                                                                            this->state->node_storage);
     } catch (std::runtime_error const &e) {
         // TODO: check when actual blank node validation implemented
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
