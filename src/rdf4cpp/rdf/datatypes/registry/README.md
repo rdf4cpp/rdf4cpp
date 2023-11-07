@@ -123,7 +123,9 @@ node storage handle. In turn, the value can be directly extracted from the handl
 Value inlining requires the specific value to actually fit into the available 42 bits.
 However, it does not require that every possible value of a type fits into these available bits.
 To enable value inlining, the capability [capabilities::Inlineable](./LiteralDatatypeImpl.hpp) needs to be specialized.
-Note: Inlining requires the datatype to have a fixed id as well.
+Notes: Inlining requires the datatype to have a fixed id as well. Addionally, inlining capable literals
+are assumed to never need any form of escaping to convert them to their  n-triples string representation.
+I.e. the output of their corresponding `to_string` function will be used without escaping it.
 
 ### Type System / Type Hierarchy
 Datatypes can be arranged in a hierarchy. There are two types of relationships
@@ -209,7 +211,7 @@ To implement custom conversion behaviour the functions of [capabilities::Promota
 ```c++
 template<>
 template<>
-inline capabilites::Promotable<your_type>::promoted_cpp_type<IX> capabilites::Promotable::promote<IX>(cpp_type const &value) noexcept {
+inline capabilities::Promotable<your_type>::promoted_cpp_type<IX> capabilities::Promotable::promote<IX>(cpp_type const &value) noexcept {
     // do some complex conversion
 }
 
@@ -222,7 +224,7 @@ inline nonstd::expected<cpp_type, DynamicError> capabilities::Promotable<your_ty
 
 template<>
 template<>
-inline capabilites::Subtype<your_type>::super_cpp_type<IX> capabilites::Subtype::into_supertype<IX>(cpp_type const &value) noexcept {
+inline capabilities::Subtype<your_type>::super_cpp_type<IX> capabilites::Subtype::into_supertype<IX>(cpp_type const &value) noexcept {
     // do some complex conversion
 }
 

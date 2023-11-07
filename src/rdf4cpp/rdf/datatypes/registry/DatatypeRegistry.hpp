@@ -1,12 +1,13 @@
 #ifndef RDF4CPP_DATATYPEREGISTRY_HPP
 #define RDF4CPP_DATATYPEREGISTRY_HPP
 
+#include "rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp"
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 
-#include <any>
 #include <algorithm>
+#include <any>
 #include <functional>
 #include <optional>
 #include <string>
@@ -23,7 +24,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  */
 class DatatypeRegistry {
 public:
-    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id - 1; // ids from 1 to n stored in places 0 to n-1
+    static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id - 1;  // ids from 1 to n stored in places 0 to n-1
 
     /**
      * Constructs an instance of a type from a string.
@@ -31,8 +32,8 @@ public:
     using factory_fptr_t = std::any (*)(std::string_view);
     using to_string_fptr_t = std::string (*)(std::any const &) noexcept;
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
-    using try_into_inlined_fptr_t = std::optional<uint64_t> (*)(std::any const &) noexcept;
-    using from_inlined_fptr_t = std::any (*)(uint64_t) noexcept;
+    using try_into_inlined_fptr_t = std::optional<storage::node::identifier::LiteralID> (*)(std::any const &) noexcept;
+    using from_inlined_fptr_t = std::any (*)(storage::node::identifier::LiteralID) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
@@ -322,6 +323,152 @@ public:
      * or there is no viable conversion, else the found conversion
      */
     [[nodiscard]] static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) noexcept;
+
+public:
+    class LangTagInlines {
+        /**
+         * language tags to try to inline.
+         * the vector can be modified at startup.
+         * WARNING: modifying the vector after any Literal was created is UNDEFINED BEHAVIOR.
+         * this includes Literals already created in a persistent node storage.
+         */
+#ifdef MODIFYABLE_LANG_TAG_INLINES
+        static inline std::vector<std::string>
+                tags_to_inline{
+                        "de",
+                        "en",
+                        "fr",
+                        "ch",
+                };
+
+    public:
+        /**
+         * sets the language tags to try to inline.
+         * may only be called at startup.
+         * WARNING: calling this method after any Literal was created is UNDEFINED BEHAVIOR.
+         * this includes Literals already created in a persistent node storage.
+         */
+        static inline void set_tags_to_inline(std::initializer_list<std::string> li) {
+            tags_to_inline = li;
+        }
+        /**
+         * add one language tag to try to inline.
+         * may only be called at startup.
+         * WARNING: calling this method after any Literal was created is UNDEFINED BEHAVIOR.
+         * this includes Literals already created in a persistent node storage.
+         */
+        static inline void add_tag_to_inline(std::string_view t) {
+            tags_to_inline.emplace_back(t);
+        }
+#else
+        static constexpr std::array<std::string_view, 4> tags_to_inline{
+                "de",
+                "en",
+                "fr",
+                "ch",
+        };
+
+    public:
+        /**
+         * define MODIFYABLE_LANG_TAG_INLINES to modify which tags get inlined at runtime.
+         */
+        static void set_tags_to_inline(std::initializer_list<std::string>) = delete;
+        /**
+         * define MODIFYABLE_LANG_TAG_INLINES to modify which tags get inlined at runtime.
+         */
+        static void add_tag_to_inline(std::string_view) = delete;
+#endif
+
+    public:
+        static inline const auto &get_tags_to_inline() {
+            return tags_to_inline;
+        }
+
+        using LangTagID = uint64_t;
+
+        static constexpr size_t bits_needed_for(uint64_t i) {
+            return std::bit_width(i);
+        }
+
+        /**
+         * number of bits needed for the current tags to inline
+         */
+        static constexpr size_t inlined_size() noexcept {
+            // number of bits needed for the biggest id
+            return bits_needed_for(tags_to_inline.size() - 1);
+        }
+
+    private:
+        /**
+         * shift where the inlined tag is located
+         */
+        static constexpr uint64_t shift() noexcept {
+            return storage::node::identifier::LiteralID::width - inlined_size();
+        }
+
+        /**
+         * mask for the inlined language tag
+         */
+        static constexpr uint64_t mask_inlined() noexcept {
+            return ((1l << inlined_size()) - 1) << shift();
+        }
+
+        /**
+         * mask for the base literal id
+         */
+        static constexpr uint64_t mask_base_id() noexcept {
+            return (1l << shift()) - 1;
+        }
+
+    public:
+        /**
+         * converts a inlined language tag id back to its language tag.
+         * @param id
+         * @return language tag or the empty string on a invalid id
+         */
+        static constexpr std::string_view inlined_to_tag(LangTagID id) noexcept {
+            if (id < tags_to_inline.size())
+                return tags_to_inline[id];
+            return "";
+        }
+
+        /**
+         * tries to convert a language tag to its inlined id.
+         * @param tag
+         * @return id or std::nullopt
+         */
+        static constexpr std::optional<LangTagID> try_tag_to_inlined(std::string_view tag) noexcept {
+            for (uint64_t i = 0; i < tags_to_inline.size(); ++i) {
+                if (tags_to_inline[i] == tag) {
+                    return i;
+                }
+            }
+            return std::nullopt;
+        }
+
+        /**
+         * tries to inline a language tag into a LiteralID
+         * @param id
+         * @param tag
+         * @return inlined LiteralID or std::nullopt
+         */
+        static constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
+            if ((id.value & mask_inlined()) != 0)
+                return std::nullopt;
+            return storage::node::identifier::LiteralID{id.value | (tag << shift())};
+        }
+
+        /**
+         * extracts the base LiteralID and the language tag id
+         * @param id
+         * @return [language_tag_id, base_literal_id]
+         */
+        static constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
+            uint64_t t = (id.value & mask_inlined()) >> shift();
+            uint64_t i = id.value & mask_base_id();
+            return std::pair{t, storage::node::identifier::LiteralID{i}};
+        }
+    };
 };
 
 template<typename Map>
@@ -560,13 +707,13 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
 template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
     return InliningOps {
-        .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<uint64_t> {
-            auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
-            return LiteralDatatype_t::try_into_inlined(val);
-        },
-        .from_inlined_fptr = [](uint64_t inlined_value) noexcept -> std::any {
-            return LiteralDatatype_t::from_inlined(inlined_value);
-        }};
+            .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<storage::node::identifier::LiteralID> {
+                auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
+                return LiteralDatatype_t::try_into_inlined(val);
+            },
+            .from_inlined_fptr = [](storage::node::identifier::LiteralID inlined_value) noexcept -> std::any {
+                return LiteralDatatype_t::from_inlined(inlined_value);
+            }};
 }
 
 }  // namespace rdf4cpp::rdf::datatypes::registry

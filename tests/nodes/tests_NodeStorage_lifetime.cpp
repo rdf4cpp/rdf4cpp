@@ -71,11 +71,17 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
             NodeStorage ns_copy2 = ns;
             CHECK(ns.ref_count() == 3);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wself-move"
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wself-assign-overloaded"
+#endif
             ns_copy = ns_copy;  // expecting noop
             CHECK(ns.ref_count() == 3);
 
             ns_copy = std::move(ns_copy);  // expecting noop
             CHECK(ns.ref_count() == 3);
+#pragma GCC diagnostic pop
 
             ns_copy = ns_copy2;
             CHECK(ns.ref_count() == 3);
@@ -280,5 +286,11 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
             std::this_thread::sleep_for(50ms);
             run.store(true, std::memory_order_release);
         }
+    }
+
+    TEST_CASE("no default instance overwrite") {
+        auto inst = NodeStorage::new_instance();
+        NodeStorage::set_default_instance(inst);
+        CHECK(NodeStorage::default_instance().id() == inst.id());
     }
 }

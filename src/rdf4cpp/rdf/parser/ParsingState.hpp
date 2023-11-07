@@ -3,8 +3,9 @@
 
 #include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
+#include <dice/sparse-map/sparse_map.hpp>
+#include <dice/hash.hpp>
 
 #include <string>
 #include <string_view>
@@ -34,10 +35,10 @@ namespace rdf4cpp::rdf::parser {
  * @endcode
  */
 struct ParsingState {
-    using prefix_storage_type = rdf4cpp::rdf::storage::util::tsl::sparse_map<
+    using prefix_storage_type = dice::sparse_map::sparse_map<
             std::string,
             std::string,
-            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
+            dice::hash::DiceHashwyhash<std::string_view>,
             std::equal_to<>>;
 
     using blank_node_generator_type = util::NodeGenerator;

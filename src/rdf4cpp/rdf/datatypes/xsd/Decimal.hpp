@@ -2,9 +2,12 @@
 #define RDF4CPP_XSD_DECIMAL_HPP
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeMapping.hpp>
-#include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include <rdf4cpp/rdf/util/BigDecimal.hpp>
+
+#include <dice/hash.hpp>
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
@@ -14,7 +17,7 @@ template<>
 struct DatatypeMapping<xsd_decimal> {
     // needs at least 18 decimal digits of precision
     // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
-    using cpp_datatype = boost::multiprecision::number<boost::multiprecision::cpp_dec_float<18, int16_t>>;
+    using cpp_datatype = rdf4cpp::rdf::util::BigDecimal<>;
 };
 
 template<>
@@ -47,6 +50,9 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::div_result_cpp_type, Dynami
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::mul_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::mul(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
+nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::neg(cpp_type const &operand) noexcept;
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::abs(cpp_type const &operand) noexcept;

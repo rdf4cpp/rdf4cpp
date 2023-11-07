@@ -7,7 +7,6 @@
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
 
 #include <array>
 #include <concepts>
@@ -524,15 +523,5 @@ public:
 };
 
 }  // namespace rdf4cpp::rdf::storage::node
-
-template<>
-struct std::hash<rdf4cpp::rdf::storage::node::NodeStorage> {
-    size_t operator()(rdf4cpp::rdf::storage::node::NodeStorage const &storage) const noexcept;
-};
-
-template<>
-struct std::hash<rdf4cpp::rdf::storage::node::WeakNodeStorage> {
-    size_t operator()(rdf4cpp::rdf::storage::node::WeakNodeStorage const &storage) const noexcept;
-};
 
 #endif  //RDF4CPP_NODESTORAGE_HPP

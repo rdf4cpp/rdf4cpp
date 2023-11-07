@@ -11,6 +11,9 @@
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 #include <rdf4cpp/rdf/parser/ParsingState.hpp>
 
+#include <dice/hash.hpp>
+#include <dice/sparse-map/sparse_map.hpp>
+
 namespace rdf4cpp::rdf::parser {
 
 /**
@@ -51,7 +54,7 @@ private:
     struct Impl;
 
     std::unique_ptr<Impl> impl;
-    nonstd::expected<Quad, error_type> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
+    nonstd::expected<ok_type, error_type> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
 
     [[nodiscard]] bool is_at_end() const noexcept;
 

@@ -3,10 +3,10 @@
 
 #include <array>
 
-namespace dice::rdf4cpp {
+namespace rdf4cpp {
 inline constexpr const char name[] = "rdf4cpp";
 inline constexpr const char version[] = "@PROJECT_VERSION@";
 inline constexpr std::array<int, 3> version_tuple = {@PROJECT_VERSION_MAJOR@, @PROJECT_VERSION_MINOR@, @PROJECT_VERSION_PATCH@};
-}// namespace dice::rdf4cpp
+}// namespace rdf4cpp
 
 #endif//RDF4CPP_VERSION_H

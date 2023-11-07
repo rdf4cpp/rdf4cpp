@@ -2,8 +2,9 @@
 #define RDF4CPP_NAMESPACE_HPP
 
 #include <rdf4cpp/rdf/IRI.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
+#include <dice/hash.hpp>
+#include <dice/sparse-map/sparse_map.hpp>
 
 #include <string>
 #include <string_view>
@@ -38,9 +39,8 @@ protected:
     /**
      * Cache storing the <div>NodeBackendHandle</div> for prefixes. This saves roundtrips to NodeStorage.
      */
-    mutable storage::util::tsl::sparse_map<std::string, storage::node::identifier::NodeBackendHandle,
-                                   storage::util::robin_hood::hash<std::string_view>, std::equal_to<>>
-            cache_;
+    mutable dice::sparse_map::sparse_map<std::string, storage::node::identifier::NodeBackendHandle,
+                                         dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>> cache_;
 
 public:
     /**

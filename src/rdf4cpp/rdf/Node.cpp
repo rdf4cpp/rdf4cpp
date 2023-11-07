@@ -16,29 +16,43 @@ Node Node::make_null() noexcept {
 }
 
 Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
-    if (handle_.node_storage_id() == node_storage.id())
-        return *this;
-    else {
-        auto const into_node = [&](NodeID node_id) {
-            return Node{NodeBackendHandle{node_id, handle_.type(), node_storage.id()}};
-        };
+    switch (handle_.type()) {
+        case RDFNodeType::Variable: {
+            return query::Variable{handle_}.to_node_storage(node_storage);
+        }
+        case RDFNodeType::BNode: {
+            return BlankNode{handle_}.to_node_storage(node_storage);
+        }
+        case RDFNodeType::IRI: {
+            return IRI{handle_}.to_node_storage(node_storage);
+        }
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.to_node_storage(node_storage);
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
+    }
+}
 
-        switch (this->backend_handle().type()) {
-            case RDFNodeType::Variable: {
-                return into_node(node_storage.find_or_make_id(NodeStorage::find_variable_backend_view(handle_)));
-            }
-            case RDFNodeType::BNode: {
-                return into_node(node_storage.find_or_make_id(NodeStorage::find_bnode_backend_view(handle_)));
-            }
-            case RDFNodeType::IRI: {
-                return into_node(node_storage.find_or_make_id(NodeStorage::find_iri_backend_view(handle_)));
-            }
-            case RDFNodeType::Literal: {
-                return Literal{handle_}.to_node_storage(node_storage);
-            }
-            default:
-                assert(false);
-                __builtin_unreachable();
+Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+    switch (handle_.type()) {
+        case RDFNodeType::Variable: {
+            return query::Variable{handle_}.try_get_in_node_storage(node_storage);
+        }
+        case RDFNodeType::BNode: {
+            return BlankNode{handle_}.try_get_in_node_storage(node_storage);
+        }
+        case RDFNodeType::IRI: {
+            return IRI{handle_}.try_get_in_node_storage(node_storage);
+        }
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.try_get_in_node_storage(node_storage);
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
         }
     }
 }

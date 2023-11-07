@@ -1,0 +1,24 @@
+name: Run unit tests and examples
+on: [ 'push' ]
+
+
+jobs:
+  tests_and_example_matrix:
+    strategy:
+      matrix:
+        cppenv: [ {
+          os: ubuntu-22.04,
+          compiler: "gcc-13",
+        } ]
+      fail-fast: false
+    name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
+    uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
+    with:
+      os: ${{ matrix.cppenv.os }}
+      compiler: ${{ matrix.cppenv.compiler }}
+      cmake-version: 3.22.6
+      with-coverage: true
+      with-sanitizer: false
+      build-shared-libs: true
+    secrets:
+      coverall-token: ${{ secrets.COVERALLS_TOKEN }}

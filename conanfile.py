@@ -19,21 +19,25 @@ class Recipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    options = {"shared": [True, False], "fPIC": [True, False], "with_test_deps": [True, False]}
+    default_options = {"shared": False, "fPIC": True, "with_test_deps": False}
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
-    requires = (("fmt/9.0.0", "private"),  # format must only be used within cpp files
-                "expected-lite/0.6.2",
-                "boost/1.79.0",
-                "re2/20221201",
-                ("utfcpp/3.2.3", "private"),
-                "openssl/3.0.8",
-                "zlib/1.2.12",  # force override version from openssl and boost
-                "uni-algo/0.7.1",
-                "metall/0.21") # TODO fix dependency properly
-
     generators = ("CMakeDeps", "CMakeToolchain")
+
+    def requirements(self):
+        self.requires("boost/1.81.0")
+        self.requires("expected-lite/0.6.2")
+        self.requires("re2/20221201")
+        self.requires("openssl/3.0.8")
+        self.requires("uni-algo/0.7.1")
+        self.requires("dice-hash/0.4.3")
+        self.requires("dice-sparse-map/0.2.4")
+
+        if self.options.with_test_deps:
+            self.requires("doctest/2.4.11")
+            self.requires("metall/0.26")
+
 
     def set_version(self):
         if not hasattr(self, 'version') or self.version is None:
@@ -43,7 +47,6 @@ class Recipe(ConanFile):
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-        self.options["fmt"].header_only = True
 
     _cmake = None
 

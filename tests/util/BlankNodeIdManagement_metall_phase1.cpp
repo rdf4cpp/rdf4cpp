@@ -24,6 +24,7 @@ int main(int argc, char **argv) {
 
         auto scope_impl_ptr = manager.construct<PersistableScope>(scope_name)(manager.get_allocator());
         NodeScope scope = NodeScope::new_instance<PersistableScopeFrontent>(scope_impl_ptr);
+        std::cout << "Scope Id: " << scope.id().to_underlying() << std::endl;
 
         BlankNode bnode2 = scope.get_or_generate_node("spherical cow", generator).as_blank_node();
         std::cout << bnode2.backend_handle().raw() << " " << bnode2.identifier() << std::endl;

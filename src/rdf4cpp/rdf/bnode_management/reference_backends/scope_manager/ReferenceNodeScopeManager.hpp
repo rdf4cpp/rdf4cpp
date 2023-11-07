@@ -2,17 +2,18 @@
 #define RDF4CPP_REFERENCENODESCOPEMANAGER_HPP
 
 #include <rdf4cpp/rdf/bnode_management/INodeScopeManager.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <dice/sparse-map/sparse_map.hpp>
+
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::util {
 
 struct ReferenceNodeScopeManager : INodeScopeManager {
     using node_scope_type = util::NodeScope;
-    using node_scope_storage_type = rdf4cpp::rdf::storage::util::tsl::sparse_map<
+    using node_scope_storage_type = dice::sparse_map::sparse_map<
             std::string,
             node_scope_type,
-            rdf4cpp::rdf::storage::util::robin_hood::hash<std::string_view>,
+            dice::hash::DiceHashwyhash<std::string_view>,
             std::equal_to<>>;
 
     [[nodiscard]] static ReferenceNodeScopeManager &default_instance() noexcept;

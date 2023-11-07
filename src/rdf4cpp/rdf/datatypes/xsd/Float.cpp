@@ -7,7 +7,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 template<>
 capabilities::Default<xsd_float>::cpp_type capabilities::Default<xsd_float>::from_string(std::string_view s) {
-    return util::from_chars<cpp_type>(s);
+    return util::from_chars<cpp_type, identifier>(s);
 }
 
 template<>
@@ -46,12 +46,12 @@ nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, Dynamic
 }
 
 template<>
-std::optional<uint64_t> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
-    return util::pack<uint64_t>(value);
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
+    return util::pack<storage::node::identifier::LiteralID>(value);
 }
 
 template<>
-capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(uint64_t const inlined) noexcept {
+capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::node::identifier::LiteralID const inlined) noexcept {
     return util::unpack<cpp_type>(inlined);
 }
 

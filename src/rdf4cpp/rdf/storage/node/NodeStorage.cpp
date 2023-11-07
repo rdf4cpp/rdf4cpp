@@ -55,6 +55,7 @@ NodeStorage &NodeStorage::default_instance() {
 }
 
 void NodeStorage::set_default_instance(NodeStorage const &node_context) {
+    std::call_once(default_init_once_flag, []() {});
     default_instance_ = node_context;
 }
 
@@ -393,13 +394,3 @@ NodeStorage WeakNodeStorage::upgrade() const {
 }
 
 }  // namespace rdf4cpp::rdf::storage::node
-
-size_t std::hash<rdf4cpp::rdf::storage::node::NodeStorage>::operator()(rdf4cpp::rdf::storage::node::NodeStorage const &storage) const noexcept {
-    return rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(storage.backend_index.value);
-}
-
-size_t std::hash<rdf4cpp::rdf::storage::node::WeakNodeStorage>::operator()(rdf4cpp::rdf::storage::node::WeakNodeStorage const &storage) const noexcept {
-    return rdf4cpp::rdf::storage::util::robin_hood::hash<std::array<size_t, 2>>{}(std::array<size_t, 2>{
-            rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(storage.backend_index.value),
-            rdf4cpp::rdf::storage::util::robin_hood::hash<size_t>{}(storage.generation)});
-}

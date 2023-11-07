@@ -1,33 +1,28 @@
 #ifndef RDF4CPP_VARIABLEBACKEND_HPP
 #define RDF4CPP_VARIABLEBACKEND_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
-#include <compare>
-#include <memory>
 #include <string>
-#include <string_view>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
-class VariableBackend {
-    std::string name_;
-    bool anonymous_;
-    size_t hash_;
-
-public:
+struct VariableBackend {
     using View = view::VariableBackendView;
-    explicit VariableBackend(std::string_view name, bool anonymous = false) noexcept;
-    explicit VariableBackend(view::VariableBackendView view) noexcept;
 
-    [[nodiscard]] bool is_anonymous() const noexcept;
+    size_t hash;
+    std::string name;
+    bool is_anonymous;
 
-    [[nodiscard]] std::string_view name() const noexcept;
+    explicit VariableBackend(view::VariableBackendView const &view) noexcept : hash{view.hash()},
+                                                                               name{view.name},
+                                                                               is_anonymous{view.is_anonymous} {
+    }
 
-    [[nodiscard]] size_t hash() const noexcept { return hash_; }
-
-    explicit operator view::VariableBackendView() const noexcept;
+    explicit operator View() const noexcept {
+        return View{.name = name,
+                    .is_anonymous = is_anonymous};
+    }
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

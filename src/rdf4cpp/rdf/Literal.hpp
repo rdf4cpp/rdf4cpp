@@ -12,8 +12,8 @@
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/regex/Regex.hpp>
 #include <rdf4cpp/rdf/util/CowString.hpp>
-#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/util/Overloaded.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <type_traits>
 
 namespace rdf4cpp::rdf {
@@ -29,6 +29,8 @@ namespace rdf4cpp::rdf {
  */
 class Literal : public Node {
 private:
+    [[nodiscard]] static bool lexical_form_needs_escape(std::string_view lexical_form) noexcept;
+
     /**
      * the implementation for all numeric, binary operations
      *
@@ -97,12 +99,12 @@ private:
     /**
      * Creates a simple Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, NodeStorage &node_storage) noexcept;
 
     [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
 
@@ -112,7 +114,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage const &node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -122,7 +124,7 @@ private:
     /**
      * Creates a language-tagged Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, NodeStorage &node_storage) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept;
 
     /**
      * Creates a string like type with contents of str.
@@ -134,7 +136,16 @@ private:
      * @param lang_tag_src source for the language tag of the newly created string
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
+     // TODO needs escape flag
     [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, NodeStorage &node_storage) noexcept;
+
+    /**
+     * Creates a normal accessible Literal from a lang tagged string.
+     * Do not leak this, this would make lang tag inlining useless.
+     * note: no safety checks here, make sure this is actually a inlined language tagged string before calling!
+     * @return de inlined lang tagged literal
+     */
+    [[nodiscard]] Literal lang_tagged_get_de_inlined() const noexcept;
 
     /**
      * Checks if the dynamic datatype of this is equal to datatype
@@ -165,33 +176,53 @@ public:
      * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode
      */
     [[nodiscard]] static Literal make_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
+     * normalizes lexical_form to UTF-8 NFC.
+     * @param lexical_form the lexical form
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_simple_normalize(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
      * @param lang the language tag
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode
      */
     [[nodiscard]] static Literal make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
                                                   NodeStorage &node_storage = NodeStorage::default_instance());
 
     /**
+     * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
+     * normalizes lexical_form to UTF-8 NFC.
+     * @param lexical_form the lexical form
+     * @param lang the language tag
+     * @param node_storage optional custom node_storage used to store the literal
+     */
+    [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
+                                                            NodeStorage &node_storage = NodeStorage::default_instance());
+    /**
      * Constructs a Literal from a lexical form and a datatype.
      * @param lexical_form the lexical form
      * @param datatype the datatype
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
                                             NodeStorage &node_storage = NodeStorage::default_instance());
-
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
      * @tparam lexical_form the lexical form
      * @param T the datatype
      * @param node_storage optional custom node_storage used to store the literal
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
@@ -201,7 +232,7 @@ public:
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
             throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
         } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(lexical_form, node_storage);
+            return Literal::make_simple(lexical_form, node_storage);
         }
 
         auto value = T::from_string(lexical_form);
@@ -218,12 +249,13 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(value),
+        auto const lex = T::to_canonical_string(value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::identifier, node_storage},
                                                         node_storage);
     }
-
-    [[nodiscard]] Literal to_node_storage(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * Constructs a literal from a compatible type. In this version of the function the datatype is specified at compile time.
@@ -233,6 +265,7 @@ public:
      * @tparam T the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
+     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype T>
@@ -240,13 +273,13 @@ public:
                                                        NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            return Literal::make_lang_tagged_unchecked(compatible_value.lexical_form,
-                                                       compatible_value.language_tag,
-                                                       node_storage);
+            return Literal::make_lang_tagged(compatible_value.lexical_form,
+                                             compatible_value.language_tag,
+                                             node_storage);
         }
 
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
-            return Literal::make_simple_unchecked(compatible_value, node_storage);
+            return Literal::make_simple(compatible_value, node_storage);
         }
 
         if constexpr (datatypes::IsInlineable<T>) {
@@ -264,7 +297,11 @@ public:
             }
         }
 
-        return Literal::make_noninlined_typed_unchecked(T::to_canonical_string(compatible_value),
+        auto const lex = T::to_canonical_string(compatible_value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+
+        return Literal::make_noninlined_typed_unchecked(lex,
+                                                        needs_escape,
                                                         IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
@@ -292,6 +329,9 @@ public:
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    Literal to_node_storage(NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype
@@ -383,6 +423,152 @@ public:
     }
 
     /**
+     * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+     *
+     * @return conversion result
+     */
+    template<datatypes::LiteralDatatype T>
+    requires (!std::same_as<T, datatypes::xsd::String>)
+    std::optional<typename T::cpp_type> cast_to_value() const noexcept {
+        using namespace datatypes::registry;
+        using namespace datatypes::xsd;
+
+        if (this->null()) {
+            return std::nullopt;
+        }
+
+        auto const this_dtid = this->datatype_id();
+        DatatypeIDView const target_dtid = T::datatype_id;
+
+        if (this_dtid == target_dtid) {
+            return this->value<T>();
+        }
+
+        if (this_dtid == String::datatype_id) {
+            // string -> any
+            try {
+                return T::from_string(this->lexical_form());
+            } catch (...) {
+                return std::nullopt;
+            }
+        }
+
+        if constexpr (std::same_as<T, Boolean>) {
+            // any -> bool
+            rdf::util::TriBool t = this->ebv();
+            if (t == rdf::util::TriBool::Err)
+                return std::nullopt;
+            else if (t == rdf::util::TriBool::True)
+                return true;
+            else
+                return false;
+        }
+
+        auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+        if (target_e == nullptr) {
+            // target not registered
+            return std::nullopt;
+        }
+
+        if (this_dtid == Boolean::datatype_id && target_e->numeric_ops.has_value()) {
+            // bool -> numeric
+            if (target_e->numeric_ops->is_impl()) {
+                auto value = this->template value<Boolean>() ? target_e->numeric_ops->get_impl().one_value_fptr()
+                                                             : target_e->numeric_ops->get_impl().zero_value_fptr();
+
+                return std::any_cast<typename T::cpp_type>(value);
+            } else {
+                auto const &impl_converter = DatatypeRegistry::get_numeric_op_impl_conversion(*target_e);
+                auto const *target_num_impl = DatatypeRegistry::get_numerical_ops(impl_converter.target_type_id);
+                assert(target_num_impl != nullptr);
+
+                // perform conversion as impl numeric type
+                auto const value = this->template value<Boolean>() ? target_num_impl->get_impl().one_value_fptr()
+                                                                   : target_num_impl->get_impl().zero_value_fptr();
+
+                // downcast to target
+                auto target_value = impl_converter.inverted_convert(value);
+
+                if (!target_value.has_value()) {
+                    // not representable as target type
+                    return std::nullopt;
+                }
+
+                return std::any_cast<typename T::cpp_type>(*target_value);
+            }
+        }
+
+        auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+        if (this_e == nullptr) {
+            // this datatype not registered
+            return std::nullopt;
+        }
+
+        if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+            // general cast
+            // TODO: if performance is bad split into separate cases for up-, down- and cross-casting to avoid one set of std::any wrapping and unwrapping for the former 2
+
+            auto const common_type_value = common_conversion->convert_lhs(this->value()); // upcast to common
+            auto target_value = common_conversion->inverted_convert_rhs(common_type_value); // downcast to target
+            if (!target_value.has_value()) {
+                // downcast failed
+                return std::nullopt;
+            }
+            return std::any_cast<typename T::cpp_type>(*target_value);
+        }
+
+        // no conversion found
+        return std::nullopt;
+    }
+
+        /**
+         * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+         * Only considers casts from subtype to supertype.
+         *
+         * @return conversion result
+         */
+        template<datatypes::LiteralDatatype T>
+        requires (!std::same_as<T, datatypes::xsd::String>)
+        std::optional<typename T::cpp_type> cast_to_supertype_value() const noexcept {
+            using namespace datatypes::registry;
+            using namespace datatypes::xsd;
+
+            if (this->null()) {
+                return std::nullopt;
+            }
+
+            auto const this_dtid = this->datatype_id();
+            DatatypeIDView const target_dtid = T::datatype_id;
+
+            if (this_dtid == target_dtid) {
+                return this->value<T>();
+            }
+
+            auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+            if (target_e == nullptr) {
+                // target not registered
+                return std::nullopt;
+            }
+
+            auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+            if (this_e == nullptr) {
+                // this datatype not registered
+                return std::nullopt;
+            }
+
+            if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+                if (common_conversion->target_type_id != target_dtid) // the found conversion does require downcasting
+                    return std::nullopt;
+
+                auto const target_value = common_conversion->convert_lhs(this->value());
+                return std::any_cast<typename T::cpp_type>(target_value);
+            }
+
+            // no conversion found
+            return std::nullopt;
+        }
+
+    /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
      * @return lexical form
@@ -416,13 +602,13 @@ public:
     [[nodiscard]] IRI datatype() const noexcept;
 
     /**
-     * Returns the language tag of this Literal. If the string is empty this has no lanugage tag.
+     * Returns the language tag of this Literal. If the string is empty this has no language tag.
      * @return language tag
      */
     [[nodiscard]] std::string_view language_tag() const noexcept;
 
     /**
-     * @return the language tag of this Literal as xsd:string. If the string is empty this has no lanugage tag.
+     * @return the language tag of this Literal as xsd:string. If the string is empty this has no language tag.
      */
     [[nodiscard]] Literal as_language_tag(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
@@ -456,7 +642,6 @@ public:
 
 
     [[nodiscard]] explicit operator std::string() const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
 
     /**
@@ -476,36 +661,41 @@ public:
             throw std::runtime_error{"Literal::value error: incompatible type"};
         }
 
-        if constexpr (datatypes::IsInlineable<T>) {
-            if (this->is_inlined()) {
-                auto const inlined_value = this->handle_.node_id().literal_id().value;
-                return T::from_inlined(inlined_value);
-            }
-        }
-
-        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
-            auto const view = this->handle_.literal_backend();
-            auto const &lit = view.get_lexical();
-
-            return datatypes::registry::LangStringRepr{
-                    .lexical_form = lit.lexical_form,
-                    .language_tag = lit.language_tag};
-        } else if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
             auto const view = this->handle_.literal_backend();
             auto const &lit = view.get_lexical();
 
             return lit.lexical_form;
-        } else {
-            auto const backend = handle_.literal_backend();
-            return backend.visit(
-                    [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                        return T::from_string(lexical.lexical_form);
-                    },
-                    [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                        assert(any.datatype == T::datatype_id);
-                        return std::any_cast<typename T::cpp_type>(any.value);
-                    });
         }
+
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            auto const handle = this->is_inlined()
+                    ? this->lang_tagged_get_de_inlined().backend_handle()
+                    : this->backend_handle();
+
+            auto const view = handle.literal_backend();
+            auto const &lit = view.get_lexical();
+
+            return datatypes::registry::LangStringRepr{.lexical_form = lit.lexical_form,
+                                                       .language_tag = lit.language_tag};
+        }
+
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (this->is_inlined()) {
+                auto const inlined_value = this->handle_.node_id().literal_id();
+                return T::from_inlined(inlined_value);
+            }
+        }
+
+        auto const backend = handle_.literal_backend();
+        return backend.visit(
+                [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                    return T::from_string(lexical.lexical_form);
+                },
+                [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                    assert(any.datatype == T::datatype_id);
+                    return std::any_cast<typename T::cpp_type>(any.value);
+                });
     }
 
     [[nodiscard]] bool is_literal() const noexcept;
@@ -964,6 +1154,100 @@ public:
      */
     [[nodiscard]] Literal sha512(NodeStorage &node_storage = NodeStorage::default_instance()) const;
 
+    /**
+     * returns the current time.
+     * Note: will need to be buffered for each query, because each query has only one now.
+     * @return std::chrono::system_clock::now() as xsd:dateTime
+     */
+    [[nodiscard]] static Literal now(NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * returns the year part of this.
+     * @return year or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::year> year() const noexcept;
+    /**
+     * returns the year part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_year(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the month part of this.
+     * @return month or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::month> month() const noexcept;
+    /**
+     * returns the month part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_month(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the day part of this.
+     * @return day or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::day> day() const noexcept;
+    /**
+     * returns the day part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_day(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the hours part of this.
+     * @return hours ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::hours> hours() const noexcept;
+    /**
+     * returns the hours part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_hours(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the minutes part of this.
+     * @return minutes ot nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::minutes> minutes() const noexcept;
+    /**
+     * returns the minutes part of this.
+     * @return xsd::Integer or null literal
+     */
+    [[nodiscard]] Literal as_minutes(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return seconds or nullopt
+     */
+    [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const noexcept;
+    /**
+     * returns the seconds (including fractional) part of this.
+     * @return xsd::Decimal or null literal
+     */
+    [[nodiscard]] Literal as_seconds(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone or nullopt
+     */
+    [[nodiscard]] std::optional<util::Timezone> timezone() const noexcept;
+    /**
+     * returns the timezone offset part of this.
+     * @return offset as xsd::DayTimeDuration or null literal
+     */
+    [[nodiscard]] Literal as_timezone(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone as string or nullopt
+     */
+    [[nodiscard]] std::optional<std::string> tz() const noexcept;
+    /**
+     * returns the timezone offset part of this.
+     * @return timezone as simple literal or null literal
+     */
+    [[nodiscard]] Literal as_tz(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
     /**
      * @return the effective boolean value of this
@@ -987,6 +1271,13 @@ public:
 
     friend class Node;
 };
+
+/**
+ * normalizes a UTF-8 string to NFC
+ * @param utf8
+ * @return normalized string
+ */
+[[nodiscard]] std::string normalize_unicode(std::string_view utf8);
 
 /**
  * @return whether lang_tag matches the basic language range lang_range

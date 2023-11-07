@@ -9,9 +9,8 @@
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
 
-
 #include <compare>
-#include <cstddef>
+#include <cstdint>
 
 namespace rdf4cpp::rdf::storage::node::identifier {
 /**
@@ -21,6 +20,8 @@ namespace rdf4cpp::rdf::storage::node::identifier {
 class NodeBackendHandle {
 private:
     uint64_t raw_;
+
+    explicit NodeBackendHandle(uint64_t raw) noexcept;
 
 public:
     NodeBackendHandle() noexcept = default;
@@ -33,6 +34,13 @@ public:
      * @param tagging_bits tagging bits (must be all zero for usage with the backend)
      */
     explicit NodeBackendHandle(NodeID node_id, RDFNodeType node_type, NodeStorageID node_storage_id, bool inlined = false, uint8_t tagging_bits = {}) noexcept;
+
+    /**
+     * Constructs a NodeBackendHandle from it's raw bit representation.
+     * @param raw bit repr
+     * @return NodeBackendHandle
+     */
+    static NodeBackendHandle from_raw(uint64_t raw) noexcept;
 
     /**
      * Get the RDFNodeType
@@ -148,6 +156,14 @@ template<>
 struct std::hash<rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle> {
     inline size_t operator()(rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle const &v) const noexcept {
         return v.raw();
+    }
+};
+
+
+template<typename Policy>
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle> {
+    static inline size_t dice_hash(rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle const &x) noexcept {
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(x.raw());
     }
 };
 

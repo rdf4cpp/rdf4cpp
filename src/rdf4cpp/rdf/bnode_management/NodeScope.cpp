@@ -1,6 +1,6 @@
 #include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceNodeScope.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
+#include <dice/hash.hpp>
 
 namespace rdf4cpp::rdf::util {
 
@@ -214,11 +214,10 @@ NodeScope WeakNodeScope::upgrade() const {
 }  //namespace rdf4cpp::rdf::util
 
 size_t std::hash<rdf4cpp::rdf::util::NodeScope>::operator()(rdf4cpp::rdf::util::NodeScope const &scope) const noexcept {
-    return rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(scope.backend_index_.to_underlying());
+    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(scope.backend_index_.to_underlying());
 }
 
 size_t std::hash<rdf4cpp::rdf::util::WeakNodeScope>::operator()(rdf4cpp::rdf::util::WeakNodeScope const &scope) const noexcept {
-    return rdf4cpp::rdf::storage::util::robin_hood::hash<std::array<size_t, 2>>{}(std::array<size_t, 2>{
-            rdf4cpp::rdf::storage::util::robin_hood::hash<uint16_t>{}(scope.backend_index_.to_underlying()),
-            rdf4cpp::rdf::storage::util::robin_hood::hash<size_t>{}(scope.generation_)});
+    return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(
+            std::make_pair(scope.backend_index_.to_underlying(), scope.generation_));
 }

@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_BNODEBACKENDHANDLE_HPP
 #define RDF4CPP_BNODEBACKENDHANDLE_HPP
 
-#include <compare>
 #include <string>
 #include <string_view>
 
@@ -20,8 +19,8 @@ struct BNodeBackendView {
      * @return N-Triples conform string representation.
      */
     [[nodiscard]] std::string n_string() const noexcept;
-    std::strong_ordering operator<=>(BNodeBackendView const &) const noexcept = default;
 
+    auto operator<=>(BNodeBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::storage::node::view

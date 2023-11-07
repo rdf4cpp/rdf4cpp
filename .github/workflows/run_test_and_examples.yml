@@ -1,27 +1,18 @@
 name: Run unit tests and examples
 on: [ 'pull_request' ]
-
-
 jobs:
   tests_and_example_matrix:
     strategy:
       matrix:
-        cppenv: [ {
-          os: ubuntu-22.04,
-          compiler: "gcc-11",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "gcc-12",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-12",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-13",
-        }, {
-          os: ubuntu-22.04,
-          compiler: "clang-14",
-        } ]
+        cppenv:
+          - os: ubuntu-22.04
+            compiler: gcc-13
+
+          - os: ubuntu-22.04
+            compiler: clang-15
+          - os: ubuntu-22.04
+            compiler: clang-16
+
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
     uses: ./.github/workflows/reusable_run_test_and_examples.yml
@@ -30,6 +21,6 @@ jobs:
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
       with-coverage: false
-      with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-14' }}
-    secrets:
-      coverall-token: ${{ secrets.COVERALLS_TOKEN }}
+      with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-16' }}
+      with-Werror: ${{ matrix.cppenv.compiler == 'clang-16' || matrix.cppenv.compiler == 'gcc-13' }}
+      with-AVX: ${{ matrix.cppenv.compiler == 'clang-16' }}

@@ -21,6 +21,22 @@ jobs:
         shell: bash
 
     steps:
+      - name: Add Repos for for gcc-13 and clang-16
+        run: |
+          # gcc-13
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+
+          # clang-16
+          source /etc/os-release
+          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
+          curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm-16.gpg > /dev/null
+
+          sudo apt-get update -y
+
+      - name: Ensure stdlib version
+        run: |
+          sudo apt install libstdc++-13-dev -y
+
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.24.3
         with:
@@ -36,14 +52,12 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
-        env:
-          CC: ${{ steps.install_cc.outputs.cc }}
-          CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
-          pip3 install "conan==1.59" ${{ fromJSON('["", "gcovr"]')[inputs.with-coverage] }}
+          pip3 install "conan==1.60.1"
           conan user
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan remote add -f dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 
       - name: Cache conan data
         id: cache-conan
@@ -61,7 +75,7 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing
+          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing -o boost:header_only=True
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
 
   test-fetch-content-static:

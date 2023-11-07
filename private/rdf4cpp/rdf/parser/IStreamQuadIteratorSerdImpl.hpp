@@ -13,8 +13,6 @@
 
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -61,6 +59,19 @@ private:
     static SerdStatus on_base(void *voided_self, SerdNode const *uri) noexcept;
     static SerdStatus on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept;
     static SerdStatus on_stmt(void *voided_self, SerdStatementFlags, SerdNode const *graph, SerdNode const *subj, SerdNode const *pred, SerdNode const *obj, SerdNode const *obj_datatype, SerdNode const *obj_lang) noexcept;
+
+    static constexpr SerdSyntax extract_syntax_from_flags(ParsingFlags flags) noexcept {
+        switch (flags.get_syntax()) {
+            case ParsingFlag::TriG:
+                return SerdSyntax::SERD_TRIG;
+            case ParsingFlag::NTriples:
+                return SerdSyntax::SERD_NTRIPLES;
+            case ParsingFlag::NQuads:
+                return SerdSyntax::SERD_NQUADS;
+            default:
+                return SerdSyntax::SERD_TURTLE;
+        }
+    }
 
 public:
     Impl(std::istream &istream, flags_type flags, state_type *initial_state) noexcept;

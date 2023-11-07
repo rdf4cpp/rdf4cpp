@@ -1,20 +1,68 @@
 #include "Literal.hpp"
 
+#include <algorithm>
+#include <execution>
 #include <random>
+#include <ranges>
 #include <sstream>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include <uni_algo/case.h>
+#include <uni_algo/all.h>
 
 #include <rdf4cpp/rdf/IRI.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
-#include <rdf4cpp/rdf/util/Utf8.hpp>
 
 #include <openssl/evp.h>
+
+namespace rdf4cpp::rdf {
+static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_form) noexcept {
+    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+    auto const it = std::find_if(std::execution::unseq, lexical_form.begin(), lexical_form.end(), [](char const ch) noexcept {
+        return ch == '"' || ch == '\\' || ch == '\n' || ch == '\r';
+    });
+
+    return it != lexical_form.end();
+}
+} // namespace rdf4cpp::rdf
+
+#ifdef __AVX2__
+#include <immintrin.h>
+
+namespace rdf4cpp::rdf {
+bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+    __m256i const masks[4]{_mm256_set1_epi8('"'),
+                           _mm256_set1_epi8('\\'),
+                           _mm256_set1_epi8('\n'),
+                           _mm256_set1_epi8('\r')};
+
+    for (size_t bix = 0; bix < lexical_form.size() / 32; ++bix) {
+        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data() + (bix * 32)));
+        for (auto const &mask : masks) {
+            auto const eq = _mm256_cmpeq_epi8(mask, chars);
+
+            if (_mm256_movemask_epi8(eq) > 0) {
+                return true;
+            }
+        }
+    }
+
+    auto const rest = lexical_form.size() % 32;
+    return lexical_form_needs_escape_non_simd(lexical_form.substr(lexical_form.size() - rest));
+}
+} // rdf4cpp::rdf
+#else
+namespace rdf4cpp::rdf {
+bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+    return lexical_form_needs_escape_non_simd(lexical_form);
+}
+} // namespace rdf4cpp::rdf
+#endif
 
 namespace rdf4cpp::rdf {
 
@@ -28,47 +76,61 @@ Literal Literal::make_null() noexcept {
     return Literal{};
 }
 
-Literal Literal::make_simple_unchecked(std::string_view lexical_form, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_simple_unchecked(std::string_view lexical_form, bool needs_escape, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = storage::node::identifier::NodeID::xsd_string_iri.first,
                                              .lexical_form = lexical_form,
-                                             .language_tag = ""}),
+                                             .language_tag = "",
+                                             .needs_escape = needs_escape}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
 }
 
-Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
                                              .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
                                              .lexical_form = lexical_form,
-                                             .language_tag = ""}),
+                                             .language_tag = "",
+                                             .needs_escape = needs_escape}),
                                      storage::node::identifier::RDFNodeType::Literal,
                                      node_storage.id()}};
 }
 
-Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, NodeStorage &node_storage) noexcept {
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
                                              .datatype = fixed_id,
                                              .value = std::move(value)}),
                               storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
-Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, std::string_view lang, Node::NodeStorage &node_storage) noexcept {
-    return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-                                             .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
-                                             .lexical_form = lexical_form,
-                                             .language_tag = lang}),
+Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept {
+    auto node_id = node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
+            .datatype_id = storage::node::identifier::NodeID::rdf_langstring_iri.first,
+            .lexical_form = lexical_form,
+            .language_tag = lang,
+            .needs_escape = needs_escape});
+
+    bool inlined = false;
+    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang); // check if the lang_tag can be inlined
+    if (lang_tag_i.has_value()) {
+        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value()); // check if we have enough space
+        if (inlined_id.has_value()) {
+            node_id = NodeID{inlined_id.value(), node_id.literal_type()};
+            inlined = true;
+        }
+    }
+
+    return Literal{NodeBackendHandle{node_id,
                                      storage::node::identifier::RDFNodeType::Literal,
-                                     node_storage.id()}};
+                                     node_storage.id(), inlined}};
 }
 
-Literal Literal::make_inlined_typed_unchecked(uint64_t inlined_value, storage::node::identifier::LiteralType fixed_id, Node::NodeStorage &node_storage) noexcept {
+Literal Literal::make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, NodeStorage const &node_storage) noexcept {
     using namespace storage::node::identifier;
 
-    assert(inlined_value >> LiteralID::width == 0);
     assert(fixed_id != LiteralType::other());
 
-    return Literal{NodeBackendHandle{NodeID{LiteralID{inlined_value}, fixed_id},
+    return Literal{NodeBackendHandle{NodeID{inlined_value, fixed_id},
                                      RDFNodeType::Literal,
                                      node_storage.id(),
                                      true}};
@@ -88,17 +150,27 @@ Literal Literal::make_typed_unchecked(std::any &&value, datatypes::registry::Dat
     }
 
     return Literal::make_noninlined_typed_unchecked(entry.to_canonical_string_fptr(value),
+                                                    false,
                                                     IRI{datatype, node_storage},
                                                     node_storage);
 }
 
 Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, Node::NodeStorage &node_storage) noexcept {
+    auto const needs_escape = lexical_form_needs_escape(str);
+
     if (lang_tag_src.datatype_eq<datatypes::rdf::LangString>()) {
-        return Literal::make_lang_tagged_unchecked(str, lang_tag_src.language_tag(), node_storage);
+        return Literal::make_lang_tagged_unchecked(str, needs_escape, lang_tag_src.language_tag(), node_storage);
     }
 
     assert(lang_tag_src.datatype_eq<datatypes::xsd::String>());
-    return Literal::make_simple_unchecked(str, node_storage);
+    return Literal::make_simple_unchecked(str, needs_escape, node_storage);
+}
+
+Literal Literal::lang_tagged_get_de_inlined() const noexcept {
+    auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
+    return Literal{NodeBackendHandle{NodeID{id, this->handle_.node_id().literal_type()},
+                                     handle_.type(),
+                                     handle_.node_storage_id()}};
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
@@ -107,16 +179,37 @@ bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept
 }
 
 Literal Literal::make_simple(std::string_view lexical_form, Node::NodeStorage &node_storage) {
-    return Literal::make_simple_unchecked(lexical_form, node_storage);
+    if (!una::is_valid_utf8(lexical_form)) {
+        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+    }
+
+    auto const needs_escape = lexical_form_needs_escape(lexical_form);
+    return Literal::make_simple_unchecked(lexical_form, needs_escape, node_storage);
 }
 
-Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, Node::NodeStorage &node_storage) {
-    std::string lowercase_lang_tag;
-    std::transform(lang_tag.begin(), lang_tag.end(), std::back_inserter(lowercase_lang_tag), [](char const ch) {
-        return static_cast<char>(std::tolower(ch));
-    });
+Literal Literal::make_simple_normalize(std::string_view lexical_form, Node::NodeStorage &node_storage) {
+    auto const lex = una::norm::to_nfc_utf8(lexical_form);
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
+}
 
-    return Literal::make_lang_tagged_unchecked(lexical_form, lowercase_lang_tag, node_storage);
+Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
+                                  Node::NodeStorage &node_storage) {
+    if (!una::is_valid_utf8(lexical_form)) [[unlikely]] {
+        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+    }
+
+    auto const lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+    auto const needs_escape = lexical_form_needs_escape(lexical_form);
+    return Literal::make_lang_tagged_unchecked(lexical_form, needs_escape, lowercase_lang_tag, node_storage);
+}
+
+Literal Literal::make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
+                                            Node::NodeStorage &node_storage) {
+    auto const lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
+    auto const lex = una::norm::to_nfc_utf8(lexical_form);
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_lang_tagged_unchecked(lex, needs_escape, lowercase_lang_tag, node_storage);
 }
 
 Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, Node::NodeStorage &node_storage) {
@@ -126,11 +219,12 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
 
     if (datatype_identifier == datatypes::rdf::LangString::datatype_id) {
         // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
-        throw std::invalid_argument{"cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
+        throw std::invalid_argument{
+                "cannot construct rdf:langString without a language tag, please call one of the other factory functions"};
     }
 
     if (datatype_identifier == datatypes::xsd::String::datatype_id) {
-        return Literal::make_simple_unchecked(lexical_form, node_storage);
+        return Literal::make_simple(lexical_form, node_storage);
     }
 
     if (auto const *entry = DatatypeRegistry::get_entry(datatype_identifier); entry != nullptr) {
@@ -140,7 +234,8 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
         return Literal::make_typed_unchecked(std::move(cpp_value), datatype_identifier, *entry, node_storage);
     } else {
         // doesn't exist in the registry no way to canonicalize
-        return Literal::make_noninlined_typed_unchecked(lexical_form, datatype, node_storage);
+        auto const needs_escape = lexical_form_needs_escape(lexical_form);
+        return Literal::make_noninlined_typed_unchecked(lexical_form, needs_escape, datatype, node_storage);
     }
 }
 
@@ -169,41 +264,179 @@ Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
     return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
 }
 
-Literal Literal::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
+    using datatypes::registry::DatatypeRegistry;
+
     if (handle_.node_storage_id() == node_storage.id()) {
         return *this;
     }
 
+    if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            auto const data = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
+            return Literal::make_lang_tagged_unchecked(data.lexical_form,
+                                                       data.needs_escape,
+                                                       data.language_tag,
+                                                       node_storage);
+        }
+
+        auto const node_id = this->handle_.node_id();
+        return Literal::make_inlined_typed_unchecked(node_id.literal_id(),
+                                                     node_id.literal_type(),
+                                                     node_storage);
+    }
+
     auto literal_view = handle_.literal_backend();
-    auto const node_id = literal_view.visit(
-            [&](storage::node::view::LexicalFormLiteralBackendView &lexical) noexcept {
+    auto node_id = literal_view.visit(
+            [&](storage::node::view::LexicalFormLiteralBackendView &lexical_backend) noexcept {
+                if (auto const dt_id = storage::node::identifier::iri_node_id_to_literal_type(lexical_backend.datatype_id);
+                    dt_id.is_fixed() && node_storage.has_specialized_storage_for(dt_id)) {
+
+                    // This node storage doesn't have specialized storage for the given type but the target node storage does.
+                    // Need to send value over.
+                    // This doesn't work for rdf:langString, but it shouldn't have a specialized storage anyway.
+                    assert(!this->datatype_eq<datatypes::rdf::LangString>());
+
+                    auto const from_string = DatatypeRegistry::get_factory(dt_id);
+                    auto value = from_string(lexical_backend.lexical_form);
+
+                    return node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
+                                                                                                     .value = std::move(value)});
+
+                }
+
                 // send over IRI corresponding to this datatype
-                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical.datatype_id,
+                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  handle_.node_storage_id()});
-                lexical.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
+                lexical_backend.datatype_id = node_storage.find_or_make_id(dtype_iri_view);
 
                 // find or make the requested node
                 return node_storage.find_or_make_id(literal_view);
             },
-            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                // no need to send over IRI, as it (a fixed datatype) must already be present
+            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                // no need to send over datatype IRI, as this having a specialized storage requires
+                // that the datatype is fixed, so it must already be present
 
-                if (node_storage.has_specialized_storage_for(any.datatype)) {
-                    // target node storage is also specialized for this datatype, directly send it over
-                    return node_storage.find_or_make_id(literal_view);
+                if (!node_storage.has_specialized_storage_for(value_backend.datatype)) {
+                    // target node storage is not specialized for this datatype, need to convert to lexical form
+                    auto const to_string = DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{value_backend.datatype});
+                    assert(to_string != nullptr);
+                    std::string const str = to_string(value_backend.value);
+
+                    return node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
+                            .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
+                            .lexical_form = str,
+                            .language_tag = "",
+                            .needs_escape = false});
                 }
 
-                // target node storage is not specialized for this datatype, need to convert to lexical form
-                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{any.datatype});
-                assert(to_string != nullptr);
-                std::string const str = to_string(any.value);
-
-                return node_storage.find_or_make_id(storage::node::view::LexicalFormLiteralBackendView{
-                        .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(any.datatype),
-                        .lexical_form = str,
-                        .language_tag = ""});
+                // target node storage is also specialized for this datatype, directly send it over
+                return node_storage.find_or_make_id(literal_view);
             });
+
+    return Literal{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
+Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+    using datatypes::registry::DatatypeRegistry;
+
+    if (handle_.node_storage_id() == node_storage.id()) {
+        return *this;
+    }
+
+    if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            // special case for rdf:langString because part of it is in the backend
+            auto const literal_view = this->lang_tagged_get_de_inlined().handle_.literal_backend();
+
+            auto const tmp_id = node_storage.find_id(literal_view);
+            if (tmp_id == NodeID{}) {
+                return Literal{};
+            }
+
+            auto const [node_id, inlined] = [tmp_id, &literal_view]() noexcept {
+                if (auto const lang_tag_i = DatatypeRegistry::LangTagInlines::try_tag_to_inlined(literal_view.get_lexical().language_tag);
+                    lang_tag_i.has_value()) {
+
+                    if (auto const inlined_id = DatatypeRegistry::LangTagInlines::try_into_inlined(tmp_id.literal_id(), *lang_tag_i);
+                        inlined_id.has_value()) {
+
+                        return std::make_pair(NodeID{*inlined_id, tmp_id.literal_type()}, true);
+                    }
+                }
+
+                return std::make_pair(tmp_id, false);
+            }();
+
+            return Literal{NodeBackendHandle{node_id,
+                                             storage::node::identifier::RDFNodeType::Literal,
+                                             node_storage.id(),
+                                             inlined}};
+        }
+
+        auto const node_id = this->handle_.node_id();
+        return Literal::make_inlined_typed_unchecked(node_id.literal_id(),
+                                                     node_id.literal_type(),
+                                                     node_storage);
+    }
+
+    auto literal_view = handle_.literal_backend();
+    auto const node_id = literal_view.visit(
+            [&](storage::node::view::LexicalFormLiteralBackendView &lexical_backend) noexcept {
+                if (auto const dt_id = storage::node::identifier::iri_node_id_to_literal_type(lexical_backend.datatype_id);
+                    dt_id.is_fixed() && node_storage.has_specialized_storage_for(dt_id)) {
+
+                    // This node storage doesn't have specialized storage for the given type but the target node storage does.
+                    // Need to send value over.
+                    // This doesn't work for rdf:langString, but it shouldn't have a specialized storage anyway.
+                    assert(!this->datatype_eq<datatypes::rdf::LangString>());
+
+                    auto const from_string = DatatypeRegistry::get_factory(dt_id);
+                    auto value = from_string(lexical_backend.lexical_form);
+
+                    return node_storage.find_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
+                                                                                             .value = std::move(value)});
+
+                }
+
+                // Default case.
+                // This node storage doesn't have specialized storage for the value and the new one also doesn't
+                auto const dtype_iri_view = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
+                                                                                                 storage::node::identifier::RDFNodeType::IRI,
+                                                                                                 handle_.node_storage_id()});
+                lexical_backend.datatype_id = node_storage.find_id(dtype_iri_view);
+                if (lexical_backend.datatype_id == NodeID{}) {
+                    // datatype IRI not present, therefore literal cannot be present
+                    return NodeID{};
+                }
+
+                return node_storage.find_id(literal_view);
+            },
+            [&node_storage, &literal_view](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                // no need to send over datatype IRI, as this having a specialized storage requires
+                // that the datatype is fixed, so it must already be present
+
+                if (!node_storage.has_specialized_storage_for(value_backend.datatype)) {
+                    // target node storage is not specialized for this datatype, need to convert to lexical form
+                    auto const to_string = DatatypeRegistry::get_to_canonical_string(datatypes::registry::DatatypeIDView{value_backend.datatype});
+                    assert(to_string != nullptr);
+                    std::string const str = to_string(value_backend.value);
+
+                    return node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                            .datatype_id = storage::node::identifier::literal_type_to_iri_node_id(value_backend.datatype),
+                            .lexical_form = str,
+                            .language_tag = "",
+                            .needs_escape = false});
+                }
+
+                // target node storage is also specialized for this datatype, directly try to get it
+                return node_storage.find_id(literal_view);
+            });
+
+    if (node_id == NodeID{}) {
+        return Literal{};
+    }
 
     return Literal{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
@@ -253,23 +486,27 @@ IRI Literal::datatype() const noexcept {
 
 util::CowString Literal::lexical_form() const noexcept {
     if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            return this->lang_tagged_get_de_inlined().lexical_form();
+        }
+
         auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
         assert(entry != nullptr);
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
     return handle_.literal_backend().visit(
-            [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                return util::CowString{util::ownership_tag::borrowed, lexical.lexical_form};
+            [](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                return util::CowString{util::ownership_tag::borrowed, lexical_backend.lexical_form};
             },
-            [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(any.datatype);
+            [](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(value_backend.datatype);
                 assert(to_string != nullptr);
 
-                return util::CowString{util::ownership_tag::owned, to_string(any.value)};
+                return util::CowString{util::ownership_tag::owned, to_string(value_backend.value)};
             });
 }
 
@@ -278,7 +515,9 @@ Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->lexical_form(), node_storage);
+    auto const lex = this->lexical_form();
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
 }
 
 util::CowString Literal::simplified_lexical_form() const noexcept {
@@ -288,19 +527,23 @@ util::CowString Literal::simplified_lexical_form() const noexcept {
     }
 
     if (this->is_inlined()) {
+        if (this->datatype_eq<datatypes::rdf::LangString>()) {
+            return this->lang_tagged_get_de_inlined().simplified_lexical_form();
+        }
+
         assert(entry->inlining_ops.has_value());
 
-        auto const inlined_value = handle_.node_id().literal_id().value;
+        auto const inlined_value = handle_.node_id().literal_id();
         return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value))};
     }
 
     return handle_.literal_backend().visit(
-            [entry](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                auto const value = entry->factory_fptr(lexical.lexical_form);
+            [entry](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                auto const value = entry->factory_fptr(lexical_backend.lexical_form);
                 return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(value)};
             },
-            [entry](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(any.value)};
+            [entry](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                return util::CowString{util::ownership_tag::owned, entry->to_simplified_string_fptr(value_backend.value)};
             });
 }
 
@@ -309,11 +552,17 @@ Literal Literal::as_simplified_lexical_form(NodeStorage &node_storage) const noe
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->simplified_lexical_form(), node_storage);
+    auto const lex = this->simplified_lexical_form();
+    auto const needs_escape = lexical_form_needs_escape(lex);
+    return Literal::make_simple_unchecked(lex, needs_escape, node_storage);
 }
 
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
+        if (this->is_inlined()) {
+            auto [tag, _] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(this->handle_.node_id().literal_id());
+            return rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::inlined_to_tag(tag);
+        }
         return handle_.literal_backend().get_lexical().language_tag;
     }
 
@@ -325,7 +574,7 @@ Literal Literal::as_language_tag(Node::NodeStorage &node_storage) const noexcept
         return Literal{};
     }
 
-    return Literal::make_simple_unchecked(this->language_tag(), node_storage);
+    return Literal::make_simple_unchecked(this->language_tag(), false, node_storage);
 }
 
 util::TriBool Literal::language_tag_eq(std::string_view const lang_tag) const noexcept {
@@ -361,74 +610,139 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
 }
 
 Literal::operator std::string() const noexcept {
-    // TODO: escape non-standard chars correctly
-    auto const quoted_lexical_into_stream = [](std::ostream &out, std::string_view const lexical) noexcept {
-        // TODO: escape everything that needs to be escaped in N-Tripels/N-Quads
+    if (this->null()) {
+        return "null";
+    }
 
-        out << "\"";
-        for (auto const character : lexical) {
-            switch (character) {
+    auto const estimated_escaped_size = [](size_t size) noexcept {
+        return static_cast<size_t>(static_cast<double>(size) * 1.2); // TODO tweak factor
+    };
+
+    auto const append_quoted_lexical = [](std::string &out, std::string_view const lexical) noexcept {
+        // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+
+        out.append("\"");
+        for (char const ch : lexical) {
+            switch (ch) {
+                case '"': {
+                    out.append(R"(\")");
+                    break;
+                }
                 case '\\': {
-                    out << R"(\\)";
+                    out.append(R"(\\)");
                     break;
                 }
                 case '\n': {
-                    out << R"(\n)";
+                    out.append(R"(\n)");
                     break;
                 }
                 case '\r': {
-                    out << R"(\r)";
+                    out.append(R"(\r)");
                     break;
                 }
-                case '"': {
-                    out << R"(\")";
-                    break;
-                }
-                [[likely]] default : {
-                    out << character;
+                [[likely]] default: {
+                    out.push_back(ch);
                     break;
                 }
             }
         }
-        out << "\"";
+        out.append("\"");
     };
 
-    std::ostringstream oss;
+    std::string buf;
 
-    if (this->is_inlined()) {
-        quoted_lexical_into_stream(oss, this->lexical_form());
+    if (this->datatype_eq<datatypes::xsd::String>()) {
+        auto const value = this->backend_handle().literal_backend().get_lexical();
 
-        // rdf:langString is not inlined, therefore can only have datatype not lang tag
-        auto const &dtype_iri = NodeStorage::find_iri_backend_view(storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
-
-        oss << "^^" << dtype_iri.n_string();
+        if (value.needs_escape) [[unlikely]] {
+            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + 2);
+            append_quoted_lexical(buf, value.lexical_form);
+        } else {
+            buf.reserve(value.lexical_form.size() + 2);
+            buf.push_back('"');
+            buf.append(value.lexical_form);
+            buf.push_back('"');
+        }
     } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
-        auto const value = this->value<datatypes::rdf::LangString>();
+        auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
 
-        quoted_lexical_into_stream(oss, value.lexical_form);
-        oss << '@' << value.language_tag;
+        if (value.needs_escape) [[unlikely]] {
+            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + value.language_tag.size() + 3);
+            append_quoted_lexical(buf, value.lexical_form);
+        } else {
+            buf.reserve(value.lexical_form.size() + value.language_tag.size() + 3);
+            buf.push_back('"');
+            buf.append(value.lexical_form);
+            buf.push_back('"');
+        }
+
+        buf.push_back('@');
+        buf.append(value.language_tag);
+    } else if (this->is_inlined()) {
+        assert(!this->datatype_eq<datatypes::rdf::LangString>());
+        // Notes:
+        // 1. inlined values are assumed to not require escaping
+        // 2. This is a known datatype because it is inlined => the registry contains the datatype IRI
+
+        auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+        assert(entry != nullptr);
+        assert(entry->inlining_ops.has_value());
+
+        auto const inlined_value = this->backend_handle().node_id().literal_id();
+        auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
+        auto const &datatype_iri = entry->datatype_iri;
+
+        buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
+        buf.push_back('"');
+        buf.append(lexical_form);
+        buf.append("\"^^<");
+        buf.append(datatype_iri);
+        buf.push_back('>');
     } else {
-        handle_.literal_backend().visit(
-                [&](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical.datatype_id,
+        using storage::node::NodeStorage;
+        using storage::node::identifier::NodeBackendHandle;
+
+        this->backend_handle().literal_backend().visit(
+                [&](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
-                                                                                                 handle_.node_storage_id()});
-                    quoted_lexical_into_stream(oss, lexical.lexical_form);
-                    oss << "^^" << dtype_iri.n_string();
+                                                                                                 this->backend_handle().node_storage_id()});
+
+                    if (lexical_backend.needs_escape) [[unlikely]] {
+                        buf.reserve(estimated_escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
+                        append_quoted_lexical(buf, lexical_backend.lexical_form);
+                    } else {
+                        buf.reserve(lexical_backend.lexical_form.size() + dtype_iri.identifier.size() + 4);
+                        buf.push_back('"');
+                        buf.append(lexical_backend.lexical_form);
+                        buf.push_back('"');
+                    }
+
+                    buf.append("^^<");
+                    buf.append(dtype_iri.identifier);
+                    buf.push_back('>');
                 },
-                [&](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                    auto const &dtype_iri = NodeStorage::find_iri_backend_view(
-                            storage::node::identifier::datatype_iri_handle_for_fixed_lit_handle(handle_));
+                [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                    // Notes:
+                    // 1. non-string storage values are assumed to not require escaping
+                    // 2. This is a known datatype because it is stored in a value backend => the registry contains the datatype IRI
 
-                    auto const to_string = datatypes::registry::DatatypeRegistry::get_to_canonical_string(this->datatype_id());
-                    assert(to_string != nullptr);
+                    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+                    assert(entry != nullptr);
 
-                    quoted_lexical_into_stream(oss, to_string(any.value));
-                    oss << "^^" << dtype_iri.n_string();
+                    auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
+                    auto const &datatype_iri = entry->datatype_iri;
+
+                    buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
+                    buf.push_back('"');
+                    buf.append(lexical_form);
+                    buf.append("\"^^<");
+                    buf.append(datatype_iri);
+                    buf.push_back('>');
                 });
     }
 
-    return oss.str();
+    return buf;
 }
 bool Literal::is_literal() const noexcept { return true; }
 bool Literal::is_variable() const noexcept { return false; }
@@ -456,10 +770,14 @@ std::any Literal::value() const noexcept {
     auto const datatype = this->datatype_id();
 
     if (this->is_inlined()) {
+        if (datatype == rdf::LangString::datatype_id) {
+            return this->lang_tagged_get_de_inlined().value();
+        }
+
         auto const ops = registry::DatatypeRegistry::get_inlining_ops(datatype);
         assert(ops != nullptr);
 
-        auto const inlined_value = this->handle_.node_id().literal_id().value;
+        auto const inlined_value = this->handle_.node_id().literal_id();
         return ops->from_inlined_fptr(inlined_value);
     }
 
@@ -479,18 +797,18 @@ std::any Literal::value() const noexcept {
     }
 
     return backend.visit(
-            [&datatype](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+            [&datatype](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                 if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
-                    return factory(lexical.lexical_form);
+                    return factory(lexical_backend.lexical_form);
                 }
 
                 return std::any{};
             },
-            [&datatype](storage::node::view::ValueLiteralBackendView const &any) noexcept {
-                assert(any.datatype == datatype);
+            [&datatype](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
+                assert(value_backend.datatype == datatype);
                 (void)datatype;
 
-                return any.value;
+                return value_backend.value;
             });
 }
 
@@ -513,7 +831,7 @@ Literal Literal::cast(IRI const &target, Node::NodeStorage &node_storage) const 
         // string -> any
         try {
             return Literal::make_typed(this->lexical_form(), target, node_storage);
-        } catch (std::runtime_error const &) {
+        } catch (...) {
             return Literal{};
         }
     }
@@ -964,10 +1282,59 @@ bool Literal::is_string_like() const noexcept {
         return false;
     }
 
+    // TODO: this does not cover custom types deriving from xsd:string or xsd:langString
     return type == datatypes::xsd::String::fixed_id || type == datatypes::rdf::LangString::fixed_id;
 }
 
 Literal Literal::add(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // DayTimeDuration + DayTimeDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = datatypes::registry::util::to_checked(*this_v) + datatypes::registry::util::to_checked(*other_v);
+            if (r.count().is_invalid())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(datatypes::registry::util::from_checked(r));
+        }
+    }
+    // YearMonthDuration + YearMonthDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = datatypes::registry::util::to_checked(*this_v) + datatypes::registry::util::to_checked(*other_v);
+            if (r.count().is_invalid())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(datatypes::registry::util::from_checked(r));
+        }
+    }
+    // DateTime(&Subclasses) + Duration(&Subclasses)
+    {
+        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
+        if (this_dt.has_value() && other_dt.has_value()) {
+            if (this->datatype_eq<datatypes::xsd::Time>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>())
+                return Literal{};
+
+            auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, *other_dt);
+            if (tp.time_since_epoch().count().is_invalid())
+                return Literal{};
+
+            auto r = datatypes::registry::util::from_checked(tp);
+
+            if (this->datatype_eq<datatypes::xsd::Date>())
+                return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second));
+
+            if (this->datatype_eq<datatypes::xsd::Time>())
+                return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second));
+
+            return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second));
+        }
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.add_fptr;
@@ -990,6 +1357,68 @@ Literal &Literal::operator+=(const Literal &other) noexcept {
 }
 
 Literal Literal::sub(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // DateTime(&Subclasses) - DateTime(&Subclasses)
+    if (this->datatype_id() == other.datatype_id()) {
+        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::DateTime>();
+        if (this_dt.has_value() && other_dt.has_value()) {
+            datatypes::registry::util::CheckedZonedTime const this_tp{this_dt->second.has_value() ? *this_dt->second : util::Timezone{},
+                                                                      datatypes::registry::util::to_checked(this_dt->first)};
+
+            datatypes::registry::util::CheckedZonedTime const other_tp{other_dt->second.has_value() ? *other_dt->second : util::Timezone{},
+                                                                       datatypes::registry::util::to_checked(other_dt->first)};
+
+            auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
+            if (d.count().is_invalid())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(datatypes::registry::util::from_checked(d));
+        }
+    }
+    // DateTime(&Subclasses) - Duration(&Subclasses)
+    {
+        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
+        if (this_dt.has_value() && other_dt.has_value()) {
+            auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, std::make_pair(-other_dt->first, -other_dt->second));
+            if (tp.time_since_epoch().count().is_invalid())
+                return Literal{};
+
+            auto r = datatypes::registry::util::from_checked(tp);
+            if (this->datatype_eq<datatypes::xsd::Date>())
+                return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second));
+
+            if (this->datatype_eq<datatypes::xsd::Time>())
+                return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second));
+
+            return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second));
+        }
+    }
+    // DayTimeDuration - DayTimeDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = datatypes::registry::util::to_checked(*this_v) - datatypes::registry::util::to_checked(*other_v);
+            if (r.count().is_invalid())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(datatypes::registry::util::from_checked(r));
+        }
+    }
+    // YearMonthDuration - YearMonthDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = datatypes::registry::util::to_checked(*this_v) - datatypes::registry::util::to_checked(*other_v);
+            if (r.count().is_invalid())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(datatypes::registry::util::from_checked(r));
+        }
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.sub_fptr;
@@ -1012,6 +1441,31 @@ Literal &Literal::operator-=(const Literal &other) noexcept {
 }
 
 Literal Literal::mul(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // YearMonthDuration * double
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = std::round(static_cast<double>(this_v->count()) * *other_v);
+            if (!datatypes::registry::util::fits_into<int64_t>(r))
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{static_cast<int64_t>(r)});
+        }
+    }
+    // DayTimeDuration * double
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = std::round(static_cast<double>(this_v->count()) * *other_v);
+            if (!datatypes::registry::util::fits_into<int64_t>(r))
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{static_cast<int64_t>(r)});
+        }
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.mul_fptr;
@@ -1034,6 +1488,55 @@ Literal &Literal::operator*=(const Literal &other) noexcept {
 }
 
 Literal Literal::div(Literal const &other, Node::NodeStorage &node_storage) const noexcept {
+    // YearMonthDuration / double
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = static_cast<int64_t>(std::round(static_cast<double>(this_v->count()) / *other_v));
+            if (!datatypes::registry::util::fits_into<int64_t>(r))
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r});
+        }
+    }
+    // DayTimeDuration / double
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = static_cast<int64_t>(std::round(static_cast<double>(this_v->count()) / *other_v));
+            if (!datatypes::registry::util::fits_into<int64_t>(r))
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r});
+        }
+    }
+    // YearMonthDuration / YearMonthDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = util::BigDecimal<>{this_v->count(), 0}.div_checked(util::BigDecimal<>{other_v->count(), 0}, 1000);
+            if (!r.has_value())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::Decimal>(*r);
+        }
+    }
+    // DayTimeDuration / DayTimeDuration
+    {
+        auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        auto other_v = other.cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
+        if (this_v.has_value() && other_v.has_value()) {
+            auto r = util::BigDecimal<>{this_v->count(), 0}.div_checked(util::BigDecimal<>{other_v->count(), 0}, 1000);
+            if (!r.has_value())
+                return Literal{};
+
+            return make_typed_from_value<datatypes::xsd::Decimal>(*r);
+        }
+    }
+
     return this->numeric_binop_impl(
             [](auto const &num_ops) noexcept {
                 return num_ops.div_fptr;
@@ -1159,11 +1662,8 @@ std::optional<size_t> Literal::strlen() const noexcept {
     }
 
     auto const lf = this->lexical_form();
-    try {
-        return utf8::distance(lf.begin(), lf.end());
-    } catch (utf8::exception const &) {
-        return std::nullopt;
-    }
+    auto u = lf.view() | una::views::utf8;
+    return std::distance(u.begin(), u.end());
 }
 
 Literal Literal::as_strlen(Node::NodeStorage &node_storage) const noexcept {
@@ -1325,7 +1825,9 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    return s.view().find(needle) != std::string_view::npos;
+
+    auto r = una::casesens::search_utf8(s.view(), needle);
+    return static_cast<bool>(r);
 }
 
 Literal Literal::as_contains(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1346,6 +1848,9 @@ Literal Literal::as_contains(Literal const &needle, Node::NodeStorage &node_stor
         return Literal{};
     }
 
+    if (!needle.is_string_like())
+        return Literal::make_boolean(true, node_storage);
+
     auto const res = this->contains(needle.lexical_form());
     return Literal::make_boolean(res, node_storage);
 }
@@ -1360,18 +1865,22 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     }
 
     auto const s = this->lexical_form();
-    auto const pos = s.view().find(needle);
 
-    if (pos == std::string_view::npos) {
-        return Literal::make_simple_unchecked("", node_storage);
-    }
+    const auto r = una::casesens::search_utf8(s.view(), needle);
 
-    auto const substr = s.view().substr(0, pos);
+    if (!r)
+        return Literal::make_simple_unchecked("", false, node_storage);
+
+    auto substr = static_cast<std::string_view>(s.view()).substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
 Literal Literal::substr_before(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_eq<datatypes::rdf::LangString>() && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    if (!needle.is_string_like()) {
         return Literal{};
     }
 
@@ -1388,18 +1897,23 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     }
 
     auto const s = this->lexical_form();
-    auto const pos = s.view().find(needle);
 
-    if (pos == std::string_view::npos) {
-        return Literal::make_simple_unchecked("", node_storage);
-    }
+    const auto r = una::casesens::search_utf8(s.view(), needle);
 
-    auto const substr = s.view().substr(pos + needle.size());
+    if (!r)
+        return Literal::make_simple_unchecked("", false, node_storage);
+
+    auto substr = s.view().substr(
+            r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
 Literal Literal::substr_after(Literal const &needle, Node::NodeStorage &node_storage) const noexcept {
     if (needle.datatype_eq<datatypes::rdf::LangString>() && this->language_tag() != needle.language_tag()) {
+        return Literal{};
+    }
+
+    if (!needle.is_string_like()) {
         return Literal{};
     }
 
@@ -1412,7 +1926,11 @@ util::TriBool Literal::str_starts_with(std::string_view const needle) const noex
     }
 
     auto const s = this->lexical_form();
-    return s.view().starts_with(needle);
+
+    auto norm_needle = needle | una::ranges::views::utf8;
+    auto len = std::ranges::distance(norm_needle);
+    // TODO use std::ranges::starts_with as soon as c++ 23 arrives
+    return std::ranges::equal(norm_needle, s.view() | una::ranges::views::utf8 | una::views::take(len));
 }
 
 Literal Literal::as_str_starts_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1441,13 +1959,22 @@ Literal Literal::as_str_starts_with(Literal const &needle, Node::NodeStorage &no
     return Literal::make_boolean(res, node_storage);
 }
 
-util::TriBool Literal::str_ends_with(std::string_view const needle) const noexcept {
+util::TriBool Literal::str_ends_with(std::string_view needle) const noexcept {
     if (!this->is_string_like()) {
         return util::TriBool::Err;
     }
 
     auto const s = this->lexical_form();
-    return s.view().ends_with(needle);
+    auto norm_needle = needle | una::views::utf8;
+    auto norm_this = s.view() | una::views::utf8;
+    auto const len_needle = std::ranges::distance(norm_needle);
+    auto const len_this = std::ranges::distance(norm_this);
+
+    // TODO use std::ranges::ends_with as soon as c++ 23 arrives
+    if (len_needle > len_this)
+        return false;
+
+    return std::ranges::equal(norm_needle, norm_this | una::views::drop(len_this - len_needle));
 }
 
 Literal Literal::as_str_ends_with(std::string_view const needle, Node::NodeStorage &node_storage) const noexcept {
@@ -1503,57 +2030,57 @@ Literal Literal::concat(Literal const &other, Node::NodeStorage &node_storage) c
         return Literal{};
     }
 
-    std::ostringstream combined;
-    combined << this->lexical_form() << other.lexical_form();
+    auto const this_lex = this->lexical_form();
+    auto const other_lex = other.lexical_form();
+
+    std::string combined;
+    combined.reserve(this_lex.size() + other_lex.size());
+    combined.append(this_lex);
+    combined.append(other_lex);
+
+    auto const needs_escape = lexical_form_needs_escape(combined); // TODO not optimal
 
     if (this->datatype_eq<datatypes::rdf::LangString>() && other.datatype_eq<datatypes::rdf::LangString>()) {
         if (auto const lang = this->language_tag(); lang == other.language_tag()) {
-            return Literal::make_lang_tagged_unchecked(combined.view(), lang, node_storage);
+            return Literal::make_lang_tagged_unchecked(combined, needs_escape, lang, node_storage);
         }
     }
 
-    return Literal::make_simple_unchecked(combined.view(), node_storage);
+    return Literal::make_simple_unchecked(combined, needs_escape, node_storage);
 }
 
 Literal Literal::encode_for_uri(std::string_view string, NodeStorage &node_storage) {
-    try {
-        std::stringstream stream{};
-        auto it = utf8::iterator(string.begin(), string.begin(), string.end());
-        const auto end = utf8::iterator(string.end(), string.begin(), string.end());
-        // note that ASCII is a subset of UTF-8
-        auto is_valid = [](const uint32_t cp) {
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
-                return true;
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
-                return true;
-            if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
-                return true;
-            if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
-                cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
-                return true;
-            return false;
-        };
-        while (it != end) {
-            const uint32_t cp = *it;
-            if (is_valid(cp)) {
-                stream << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
-            } else {
-                char utf[4]{};
-                const char *utf_end = utf8::append(cp, utf);  // at maximum outputs 4 chars
-                char *utf_it = utf;
-                while (utf_it != utf_end) {
-                    char buff[3]{};                                                                                         // biggest char is FF\0
-                    std::snprintf(buff, sizeof(buff), "%.2X", static_cast<uint32_t>(static_cast<unsigned char>(*utf_it)));  // make sure we 0-extend instead of sign-extend
-                    stream << '%' << buff;
-                    ++utf_it;
-                }
-            }
-            ++it;
-        }
-        return make_simple_unchecked(stream.view(), node_storage);
-    } catch (const utf8::exception &e) {  // anything invalid UTF-8 related
+    if (!una::is_valid_utf8(string))
         return Literal{};
+
+    std::stringstream stream{};
+    stream << std::hex << std::setfill('0');
+    // note that ASCII is a subset of UTF-8
+    auto is_valid = [](const uint32_t cp) {
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('A')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('Z')))
+            return true;
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('a')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('z')))
+            return true;
+        if (cp >= static_cast<uint32_t>(static_cast<unsigned char>('0')) && cp <= static_cast<uint32_t>(static_cast<unsigned char>('9')))
+            return true;
+        if (cp == static_cast<uint32_t>(static_cast<unsigned char>('-')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('_')) ||
+            cp == static_cast<uint32_t>(static_cast<unsigned char>('.')) || cp == static_cast<uint32_t>(static_cast<unsigned char>('~')))
+            return true;
+        return false;
+    };
+    for (const uint32_t cp : string | una::views::utf8) {
+        if (is_valid(cp)) {
+            stream << std::nouppercase << static_cast<char>(static_cast<unsigned char>(cp));  // all URI allowed characters are ASCII, so this cast is valid
+        } else {
+            const std::array<uint32_t, 1> data{cp};
+            const auto r = data | una::ranges::to_utf8<std::string>();  // at maximum 4 bytes + zero, guaranteed to fit into small string optimization
+            for (const char c : r) {
+                stream << '%';
+                stream << std::uppercase << std::setw(2) << static_cast<unsigned int>(static_cast<unsigned char>(c));
+            }
+        }
     }
+    return make_simple_unchecked(stream.view(), false, node_storage);
 }
 
 Literal Literal::encode_for_uri(NodeStorage &node_storage) const {
@@ -1570,11 +2097,8 @@ Literal Literal::substr(size_t start, size_t len, Node::NodeStorage &node_storag
 
     auto const s = this->lexical_form();
 
-    if (start > s.size()) {
-        return Literal::make_string_like_copy_lang_tag("", *this, node_storage);
-    }
+    auto substr = s.view() | una::ranges::views::utf8 | una::views::drop(start) | una::views::take(len) | una::ranges::to_utf8<std::string>();
 
-    auto const substr = s.view().substr(start, len);
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -1656,6 +2180,156 @@ Literal Literal::sha384(NodeStorage &node_storage) const {
 
 Literal Literal::sha512(NodeStorage &node_storage) const {
     return this->hash_with("SHA2-512", node_storage);
+}
+
+Literal Literal::now(NodeStorage &node_storage) noexcept {
+    auto n = std::chrono::floor<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    util::Timezone tz{};
+    rdf::util::TimePoint t = tz.to_local(n);
+    rdf::util::OptionalTimezone opt = std::nullopt;
+    return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
+}
+
+std::optional<std::chrono::year> Literal::year() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Date>()
+            && !datatype_eq<datatypes::xsd::GYearMonth>() && !datatype_eq<datatypes::xsd::GYear>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    return std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(casted->first)}.year();
+}
+
+Literal Literal::as_year(NodeStorage &node_storage) const noexcept {
+    auto r = this->year();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<int>(*r), node_storage);
+}
+
+std::optional<std::chrono::month> Literal::month() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Date>()
+        && !datatype_eq<datatypes::xsd::GYearMonth>() && !datatype_eq<datatypes::xsd::GMonthDay>() && !datatype_eq<datatypes::xsd::GMonth>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    return std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(casted->first)}.month();
+}
+
+Literal Literal::as_month(NodeStorage &node_storage) const noexcept {
+    auto r = this->month();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(*r), node_storage);
+}
+
+std::optional<std::chrono::day> Literal::day() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Date>()
+        && !datatype_eq<datatypes::xsd::GMonthDay>() && !datatype_eq<datatypes::xsd::GDay>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    return std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(casted->first)}.day();
+}
+
+Literal Literal::as_day(NodeStorage &node_storage) const noexcept {
+    auto r = this->day();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(static_cast<unsigned int>(*r), node_storage);
+}
+
+std::optional<std::chrono::hours> Literal::hours() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Time>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    auto day = std::chrono::floor<std::chrono::days>(casted->first);
+    auto time = (casted->first - day);
+    return std::chrono::hh_mm_ss{time}.hours();
+}
+
+Literal Literal::as_hours(NodeStorage &node_storage) const noexcept {
+    auto r = this->hours();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(r->count(), node_storage);
+}
+
+std::optional<std::chrono::minutes> Literal::minutes() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Time>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    auto day = std::chrono::floor<std::chrono::days>(casted->first);
+    auto time = (casted->first - day);
+    return std::chrono::hh_mm_ss{time}.minutes();
+}
+
+Literal Literal::as_minutes(NodeStorage &node_storage) const noexcept {
+    auto r = this->minutes();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(r->count(), node_storage);
+}
+
+std::optional<std::chrono::milliseconds> Literal::seconds() const noexcept {
+    if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Time>())
+        return std::nullopt;
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    auto day = std::chrono::floor<std::chrono::days>(casted->first);
+    auto time = std::chrono::hh_mm_ss{casted->first - day};
+    return time.seconds() + time.subseconds();
+}
+
+Literal Literal::as_seconds(NodeStorage &node_storage) const noexcept {
+    auto r = this->seconds();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf::util::BigDecimal<>{r->count(), 3}, node_storage);
+}
+
+std::optional<util::Timezone> Literal::timezone() const noexcept {
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    auto tz = casted->second;
+    if (!tz.has_value())
+        return std::nullopt;
+    return *tz;
+}
+
+Literal Literal::as_timezone(NodeStorage &node_storage) const noexcept {
+    auto r = this->timezone();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_typed_from_value<datatypes::xsd::DayTimeDuration>(r->offset, node_storage);
+}
+
+std::optional<std::string> Literal::tz() const noexcept {
+    auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
+    if (!casted.has_value())
+        return std::nullopt;
+    auto tz = casted->second;
+    if (!tz.has_value())
+        return "";
+    return tz->to_canonical_string();
+}
+Literal Literal::as_tz(NodeStorage &node_storage) const noexcept {
+    auto r = this->tz();
+    if (!r.has_value())
+        return Literal{};
+    return Literal::make_simple_unchecked(*r, false, node_storage);
+}
+
+std::string normalize_unicode(std::string_view utf8) {
+    return una::norm::to_nfc_utf8(utf8);
 }
 
 bool lang_matches(std::string_view const lang_tag, std::string_view const lang_range) noexcept {

@@ -72,6 +72,20 @@ decltype(auto) ReferenceNodeStorageBackend::visit_specialized(S &&container, ide
             return f(std::get<9>(std::forward<S>(container)));
         case xsd::HexBinary::fixed_id.to_underlying():
             return f(std::get<10>(std::forward<S>(container)));
+        case xsd::Date::fixed_id.to_underlying():
+            return f(std::get<11>(std::forward<S>(container)));
+        case xsd::DateTime::fixed_id.to_underlying():
+            return f(std::get<12>(std::forward<S>(container)));
+        case xsd::DateTimeStamp::fixed_id.to_underlying():
+            return f(std::get<13>(std::forward<S>(container)));
+        case xsd::GYearMonth::fixed_id.to_underlying():
+            return f(std::get<14>(std::forward<S>(container)));
+        case xsd::Duration::fixed_id.to_underlying():
+            return f(std::get<15>(std::forward<S>(container)));
+        case xsd::DayTimeDuration::fixed_id.to_underlying():
+            return f(std::get<16>(std::forward<S>(container)));
+        case xsd::YearMonthDuration::fixed_id.to_underlying():
+            return f(std::get<17>(std::forward<S>(container)));
         default:
             assert(false);
             __builtin_unreachable();
@@ -88,7 +102,7 @@ ReferenceNodeStorageBackend::ReferenceNodeStorageBackend() noexcept {
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
         auto const id = literal_type.to_underlying();
 
-        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(iri));
+        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(view::IRIBackendView{.identifier = iri}));
         assert(inserted);
         iri_storage_.data2id.emplace(it->second.get(), id);
     }
@@ -238,6 +252,8 @@ identifier::NodeID ReferenceNodeStorageBackend::find_id(view::LiteralBackendView
             [this](view::ValueLiteralBackendView const &any) {
                 return visit_specialized(specialized_literal_storage_, any.datatype, [this, &any](auto const &storage) {
                     assert(this->has_specialized_storage_for(any.datatype));
+                    (void) this;
+
                     return lookup_or_insert_impl<false>(any, storage);
                 });
             });

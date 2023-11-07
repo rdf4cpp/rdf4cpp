@@ -27,10 +27,10 @@ template<>
 bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) noexcept;
 
 template<>
-std::optional<uint64_t> capabilities::Inlineable<xsd_boolean>::try_into_inlined(cpp_type const &value) noexcept;
+std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_boolean>::try_into_inlined(cpp_type const &value) noexcept;
 
 template<>
-capabilities::Inlineable<xsd_boolean>::cpp_type capabilities::Inlineable<xsd_boolean>::from_inlined(uint64_t inlined) noexcept;
+capabilities::Inlineable<xsd_boolean>::cpp_type capabilities::Inlineable<xsd_boolean>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
 
 extern template struct LiteralDatatypeImpl<xsd_boolean,
                                            capabilities::Logical,

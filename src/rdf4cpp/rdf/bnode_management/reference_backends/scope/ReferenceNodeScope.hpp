@@ -3,8 +3,9 @@
 
 #include <rdf4cpp/rdf/bnode_management/INodeScope.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
-#include <rdf4cpp/rdf/storage/util/robin-hood-hashing/robin_hood_hash.hpp>
-#include <rdf4cpp/rdf/storage/util/tsl/sparse_map.h>
+
+#include <dice/sparse-map/sparse_map.hpp>
+#include <dice/hash.hpp>
 
 #include <memory>
 #include <shared_mutex>
@@ -44,14 +45,13 @@ private:
 private:
     std::shared_mutex mutable mutex; // protects label_to_storage and storage_to_label
 
-    storage::util::tsl::sparse_map<PinnedString,
-                                   storage::node::identifier::NodeBackendHandle,
-                                   storage::util::robin_hood::hash<std::string_view>,
-                                   std::equal_to<>> label_to_storage;
+    dice::sparse_map::sparse_map<PinnedString,
+                                 storage::node::identifier::NodeBackendHandle,
+                                 dice::hash::DiceHashwyhash<std::string_view>,
+                                 std::equal_to<>> label_to_storage;
 
-    storage::util::tsl::sparse_map<storage::node::identifier::NodeBackendHandle,
-                                   std::string_view,
-                                   storage::util::robin_hood::hash<storage::node::identifier::NodeBackendHandle>> storage_to_label;
+    dice::sparse_map::sparse_map<storage::node::identifier::NodeBackendHandle,
+                                 std::string_view> storage_to_label;
 
     ReferenceNodeScope(ReferenceNodeScope const &other);
 public:

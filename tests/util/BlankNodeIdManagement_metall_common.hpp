@@ -9,6 +9,8 @@
 #include <metall/container/string.hpp>
 #include <metall/container/unordered_map.hpp>
 
+#include <dice/hash.hpp>
+
 template<typename T>
 using allocator_type = metall::manager::allocator_type<T>;
 
@@ -57,13 +59,13 @@ private:
 
     metall::container::unordered_map<metall_string,
                        storage::node::identifier::NodeBackendHandle,
-                       storage::util::robin_hood::hash<std::string_view>,
+                       dice::hash::DiceHashwyhash<std::string_view>,
                        std::equal_to<>,
                        allocator_type<std::pair<metall_string const, storage::node::identifier::NodeBackendHandle>>> label_to_storage;
 
     metall::container::unordered_map<storage::node::identifier::NodeBackendHandle,
                        typename allocator_type<char>::const_pointer,
-                       storage::util::robin_hood::hash<storage::node::identifier::NodeBackendHandle>,
+                       dice::hash::DiceHashwyhash<storage::node::identifier::NodeBackendHandle>,
                        std::equal_to<>,
                        allocator_type<std::pair<storage::node::identifier::NodeBackendHandle const, typename allocator_type<char>::const_pointer>>> storage_to_label;
 public:

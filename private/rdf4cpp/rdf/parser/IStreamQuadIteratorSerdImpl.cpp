@@ -328,7 +328,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
 
 IStreamQuadIterator::Impl::Impl(std::istream &istream, flags_type flags, state_type *initial_state) noexcept
     : istream{std::ref(istream)},
-      reader{serd_reader_new(SerdSyntax::SERD_TURTLE, this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
+      reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       state{initial_state},
       state_is_owned{false},
       no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)},
@@ -369,7 +369,7 @@ std::optional<nonstd::expected<IStreamQuadIterator::ok_type, IStreamQuadIterator
                     return std::nullopt;  // eof reached
                 }
 
-                serd_reader_skip_error(this->reader.get());
+                serd_reader_skip_until_byte(this->reader.get(), '\n');
                 return nonstd::make_unexpected(*this->last_error);
             } else if (this->last_error.has_value()) {
                 // non-fatal, artificially inserted error
