@@ -3,6 +3,7 @@
 
 #include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
+#include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/SingleNodeScopeManager.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
 #include <dice/hash.hpp>

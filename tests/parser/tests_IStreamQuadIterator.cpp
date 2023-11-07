@@ -480,7 +480,7 @@ TEST_CASE("bnode management") {
     }
 
     SUBCASE("skolem iris") {
-        auto scope_mng = util::ReferenceNodeScopeManager::new_instance();
+        auto scope_mng = util::ReferenceNodeScopeManager{};
         auto generator = util::NodeGenerator::new_instance_with_factory<util::SkolemIRIFactory>("http://skolem-iris.org#");
 
         IStreamQuadIterator::state_type state{.blank_node_generator = &generator,

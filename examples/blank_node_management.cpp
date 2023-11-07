@@ -34,7 +34,7 @@ void blank_nodes() {
 
         {
             // subscopes for e.g. multiple graphs in one file
-            util::ReferenceNodeScopeManager mng = util::ReferenceNodeScopeManager::new_instance();
+            util::ReferenceNodeScopeManager mng;
             util::NodeScope subscope_1 = mng.scope("http://some-graph.com");
             util::NodeScope subscope_2 = mng.scope("http://other-graph.com");
 
