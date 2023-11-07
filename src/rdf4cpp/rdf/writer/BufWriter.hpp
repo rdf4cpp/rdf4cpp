@@ -45,6 +45,8 @@ public:
 
 /**
  * A type that can be used for buffered output.
+ * To write bytes to a BufWriter use write_str(std::string_view, BufWriter &w) below.
+ *
  * Conceptually, it is three things.
  * Some buffer-like object, a cursor into that buffer and a way to flush the buffer somewhere to make some room.
  *
@@ -128,9 +130,9 @@ inline bool write_str(std::string_view str, void *const buffer, Cursor &cursor, 
  * Serializes a string as is
  * See Node::serialize<> for more details on the signature/usage
  */
-template<BufWriter Ser>
-bool write_str(std::string_view str, Ser &ser) {
-    return write_str(str, &ser.buffer(), ser.cursor(), &Ser::flush);
+template<BufWriter W>
+bool write_str(std::string_view str, W &w) {
+    return write_str(str, &w.buffer(), w.cursor(), &W::flush);
 }
 
 /**
