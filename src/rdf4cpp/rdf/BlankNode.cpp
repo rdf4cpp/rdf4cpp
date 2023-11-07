@@ -4,7 +4,7 @@
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
 BlankNode::BlankNode(std::string_view identifier, NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier}),
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier, .scope = nullptr}),
                              storage::node::identifier::RDFNodeType::BNode,
                              node_storage.id()}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
