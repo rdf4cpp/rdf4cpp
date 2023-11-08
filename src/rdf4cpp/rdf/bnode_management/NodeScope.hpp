@@ -48,10 +48,8 @@ inline constexpr identifier::NodeScopeID INVALID_BACKEND_INDEX{static_cast<uint1
 struct WeakNodeScope;
 
 /**
- * A scope for generating Nodes that remembers the nodes it generates.
- * Uses an IIdGenerator and INodeScope internally to perform its function.
- *
- * Instances of this type cannot be constructed directly, use NodeGenerator::scope instead.
+ * A scope for generated nodes. Will remember nodes it generated using the
+ * passed in generator.
  */
 struct NodeScope {
     using NodeStorage = storage::node::NodeStorage;
