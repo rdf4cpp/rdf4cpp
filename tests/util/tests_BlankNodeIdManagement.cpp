@@ -23,9 +23,9 @@ TEST_SUITE("blank node id management") {
 
             auto gen2 = NodeGenerator::new_instance();
 
-            auto const id4 = gen.generate_id();
-            auto const id5 = gen.generate_id();
-            auto const id6 = gen.generate_id();
+            auto const id4 = gen2.generate_id();
+            auto const id5 = gen2.generate_id();
+            auto const id6 = gen2.generate_id();
 
             CHECK(id4 != id5);
             CHECK(id5 != id6);
