@@ -4,13 +4,13 @@
 #include <atomic>
 #include <tuple>
 
-#include "SyncNodeTypeStorage.hpp"
-#include "rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp"
-#include "rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp"
-#include "rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp"
-#include "rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp"
-#include "rdf4cpp/rdf/storage/node/reference_node_storage/SpecializedLiteralBackend.hpp"
-#include "rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp"
+#include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SpecializedLiteralBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/SyncNodeTypeStorage.hpp>
 
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {

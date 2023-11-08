@@ -1,9 +1,9 @@
-#ifndef RDF4CPP_SYNCNODETYPESTORAGE_HPP
-#define RDF4CPP_SYNCNODETYPESTORAGE_HPP
+#ifndef RDF4CPP_UNSYNCNODETYPESTORAGE_HPP
+#define RDF4CPP_UNSYNCNODETYPESTORAGE_HPP
 
-#include "rdf4cpp/rdf/storage/node/identifier/NodeID.hpp"
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <memory>
 #include <shared_mutex>
@@ -16,7 +16,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
  */
 template<class BackendType_t>
-struct SyncNodeTypeStorage {
+struct UnsyncNodeTypeStorage {
     using Backend = BackendType_t;
     using BackendView = typename Backend::View;
 private:
@@ -76,11 +76,10 @@ public:
         }
     };
 
-    std::shared_mutex mutable mutex;
     dice::sparse_map::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
     dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendHash, BackendEqual> data2id;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
-#endif  //RDF4CPP_SYNCNODETYPESTORAGE_HPP
+#endif  //RDF4CPP_UNSYNCNODETYPESTORAGE_HPP

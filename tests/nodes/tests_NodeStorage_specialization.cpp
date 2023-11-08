@@ -2,6 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 #include <array>
@@ -12,6 +13,7 @@ using namespace storage::node;
 using namespace datatypes;
 
 int main(int argc, char **argv) {
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
     doctest::Context{argc, argv}.run();
 
     NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());

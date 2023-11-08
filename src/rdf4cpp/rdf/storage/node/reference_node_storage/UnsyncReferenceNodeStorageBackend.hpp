@@ -4,13 +4,13 @@
 #include <cstdint>
 #include <tuple>
 
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/UnsyncNodeTypeStorage.hpp>
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/SpecializedLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncNodeTypeStorage.hpp>
 
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {

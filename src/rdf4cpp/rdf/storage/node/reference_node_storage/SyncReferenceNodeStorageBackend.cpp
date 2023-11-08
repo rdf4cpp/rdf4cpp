@@ -1,8 +1,5 @@
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SpecializationDetail.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/SpecializationDetail.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
-
-#include <array>
-#include <utility>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
