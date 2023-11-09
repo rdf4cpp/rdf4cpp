@@ -46,17 +46,9 @@ void serialize(std::filesystem::path const &out_path, Dataset const &ds) {
     setbuf(out_file, nullptr);
 
     writer::BufCFileWriter ser{out_file};
-
-    for (auto const &quad : ds) {
-        quad.subject().serialize(ser);
-        write_str(" ", ser);
-        quad.predicate().serialize(ser);
-        write_str(" ", ser);
-        quad.object().serialize(ser);
-        write_str(" .\n", ser);
-    }
-
+    ds.serialize(ser);
     ser.finalize();
+
     fclose(out_file);
 }
 
