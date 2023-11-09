@@ -1,6 +1,6 @@
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
 #include <cassert>
 #include <cstddef>

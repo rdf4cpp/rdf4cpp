@@ -1,10 +1,10 @@
 #ifndef RDF4CPP_SINGLESCOPEMANAGER_HPP
 #define RDF4CPP_SINGLESCOPEMANAGER_HPP
 
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
-#include <rdf4cpp/rdf/bnode_management/INodeScopeManager.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/INodeScopeManager.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * A scope manager that always gives you the same scope.
@@ -20,6 +20,6 @@ struct SingleNodeScopeManager : INodeScopeManager {
     }
 };
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_SINGLESCOPEMANAGER_HPP

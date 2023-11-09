@@ -2,12 +2,12 @@
 #define RDF4CPP_INODESCOPE_HPP
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
-#include <rdf4cpp/rdf/bnode_management/INodeFactory.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/INodeFactory.hpp>
 
 #include <optional>
 #include <string_view>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * Base backend interface for NodeScopes.
@@ -44,6 +44,6 @@ struct INodeScope {
     virtual void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) = 0;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_INODESCOPE_HPP

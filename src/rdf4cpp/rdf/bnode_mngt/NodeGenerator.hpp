@@ -2,17 +2,17 @@
 #define RDF4CPP_RDF_UTIL_BLANKNODEMANAGER_HPP
 
 #include <rdf4cpp/rdf/Node.hpp>
-#include <rdf4cpp/rdf/bnode_management/IIdGenerator.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/factory/BNodeFactory.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/factory/SkolemIRIFactory.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/generator/IncreasingIdGenerator.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/generator/RandomIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/factory/BNodeFactory.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/factory/SkolemIRIFactory.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/generator/RandomIdGenerator.hpp>
 
 #include <memory>
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 struct NodeScope;
 
@@ -135,6 +135,6 @@ public:
     [[nodiscard]] Node generate_node(NodeStorage &node_storage = NodeStorage::default_instance());
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_UTIL_BLANKNODEMANAGER_HPP

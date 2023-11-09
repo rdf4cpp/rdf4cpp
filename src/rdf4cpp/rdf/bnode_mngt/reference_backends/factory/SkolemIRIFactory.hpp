@@ -1,11 +1,11 @@
 #ifndef RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_FACTORY_IRINODEFACTORY_HPP
 #define RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_FACTORY_IRINODEFACTORY_HPP
 
-#include <rdf4cpp/rdf/bnode_management/INodeFactory.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/INodeFactory.hpp>
 
 #include <string>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * A factory that created Skolem IRIs.
@@ -23,6 +23,6 @@ public:
                                                                          storage::node::NodeStorage &node_storage) noexcept override;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_FACTORY_IRINODEFACTORY_HPP

@@ -1,8 +1,8 @@
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceNodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * For general correctness reasoning, see NodeStorage. This implementation is very similar.
@@ -232,13 +232,13 @@ NodeScope WeakNodeScope::upgrade() const {
     throw std::runtime_error{"WeakNodeScope lifetime error: referenced backend is no longer alive"};
 }
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
-size_t std::hash<rdf4cpp::rdf::util::NodeScope>::operator()(rdf4cpp::rdf::util::NodeScope const &scope) const noexcept {
+size_t std::hash<rdf4cpp::rdf::bnode_mngt::NodeScope>::operator()(rdf4cpp::rdf::bnode_mngt::NodeScope const &scope) const noexcept {
     return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(scope.backend_index_.to_underlying());
 }
 
-size_t std::hash<rdf4cpp::rdf::util::WeakNodeScope>::operator()(rdf4cpp::rdf::util::WeakNodeScope const &scope) const noexcept {
+size_t std::hash<rdf4cpp::rdf::bnode_mngt::WeakNodeScope>::operator()(rdf4cpp::rdf::bnode_mngt::WeakNodeScope const &scope) const noexcept {
     return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(
             std::make_pair(scope.backend_index_.to_underlying(), scope.generation_));
 }

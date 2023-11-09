@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * A generator for identifiers.
@@ -32,6 +32,6 @@ struct IIdGenerator {
     virtual char *generate_to_buf(char *buf) = 0;
 };
 
-}  // namespace rdf4cpp::rdf::util
+}  // namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_UTIL_IBLANKNODEIDGENERATORBACKEND

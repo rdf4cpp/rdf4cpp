@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_RANDOMBLANKNODEIDGENERATOR_HPP
 #define RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_RANDOMBLANKNODEIDGENERATOR_HPP
 
-#include <rdf4cpp/rdf/bnode_management/IIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
 
 #include <random>
 #include <mutex>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * Generates 32-char long random ids consisting of [0-9a-z]
@@ -34,6 +34,6 @@ public:
     char *generate_to_buf(char *buf) override;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_RANDOMBLANKNODEIDGENERATOR_HPP

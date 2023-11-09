@@ -1,10 +1,10 @@
 #ifndef RDF4CPP_RDF_BNODEMANAGEMENT_INODEFACADE
 #define RDF4CPP_RDF_BNODEMANAGEMENT_INODEFACADE
 
-#include <rdf4cpp/rdf/bnode_management/IIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 struct NodeScope;
 
@@ -20,6 +20,6 @@ struct INodeFactory {
                                                                                  storage::node::NodeStorage &node_storage) noexcept = 0;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_INODEFACADE

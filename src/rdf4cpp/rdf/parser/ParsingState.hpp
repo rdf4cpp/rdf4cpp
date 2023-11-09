@@ -1,9 +1,9 @@
 #ifndef RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 #define RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/SingleNodeScopeManager.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/SingleNodeScopeManager.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
 #include <dice/hash.hpp>
@@ -42,10 +42,10 @@ struct ParsingState {
             dice::hash::DiceHashwyhash<std::string_view>,
             std::equal_to<>>;
 
-    using blank_node_generator_type = util::NodeGenerator;
-    using blank_node_scope_type = util::NodeScope;
+    using blank_node_generator_type = bnode_mngt::NodeGenerator;
+    using blank_node_scope_type = bnode_mngt::NodeScope;
     using node_storage_type = storage::node::NodeStorage;
-    using blank_node_scope_manager_type = util::INodeScopeManager;
+    using blank_node_scope_manager_type = bnode_mngt::INodeScopeManager;
 
     /**
      * The initial prefixes the parser has knowledge of
@@ -58,8 +58,8 @@ struct ParsingState {
      */
     node_storage_type node_storage = storage::node::NodeStorage::default_instance();
 
-    blank_node_generator_type *blank_node_generator = &util::NodeGenerator::default_instance();
-    blank_node_scope_manager_type *blank_node_scope_manager = &util::ReferenceNodeScopeManager::default_instance();
+    blank_node_generator_type *blank_node_generator = &bnode_mngt::NodeGenerator::default_instance();
+    blank_node_scope_manager_type *blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance();
 };
 
 }  //namespace rdf4cpp::rdf::parser

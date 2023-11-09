@@ -441,8 +441,8 @@ TEST_CASE("bnode management") {
 
     SUBCASE("bnodes") {
         IStreamQuadIterator::state_type state{
-                .blank_node_generator = &util::NodeGenerator::default_instance(),
-                .blank_node_scope_manager = &util::ReferenceNodeScopeManager::default_instance()};
+                .blank_node_generator = &bnode_mngt::NodeGenerator::default_instance(),
+                .blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance()};
 
         std::istringstream iss{triples};
         IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
@@ -480,8 +480,8 @@ TEST_CASE("bnode management") {
     }
 
     SUBCASE("skolem iris") {
-        auto scope_mng = util::ReferenceNodeScopeManager{};
-        auto generator = util::NodeGenerator::new_instance_with_factory<util::SkolemIRIFactory>("http://skolem-iris.org#");
+        auto scope_mng = bnode_mngt::ReferenceNodeScopeManager{};
+        auto generator = bnode_mngt::NodeGenerator::new_instance_with_factory<bnode_mngt::SkolemIRIFactory>("http://skolem-iris.org#");
 
         IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
                                               .blank_node_scope_manager = &scope_mng};

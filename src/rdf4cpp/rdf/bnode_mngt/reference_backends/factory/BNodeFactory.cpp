@@ -1,8 +1,8 @@
-#include <rdf4cpp/rdf/bnode_management/reference_backends/factory/BNodeFactory.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/factory/BNodeFactory.hpp>
 
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 BNodeFactory &BNodeFactory::default_instance() noexcept {
     static BNodeFactory instance;
@@ -32,4 +32,4 @@ storage::node::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerato
     return storage::node::identifier::NodeBackendHandle{id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()};
 }
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt

@@ -1,9 +1,9 @@
-#include <rdf4cpp/rdf/bnode_management/reference_backends/generator/RandomIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/generator/RandomIdGenerator.hpp>
 
 #include <array>
 #include <algorithm>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 namespace generator_detail {
 
@@ -37,4 +37,4 @@ char RandomIdGenerator::next_char() {
 }
 
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt

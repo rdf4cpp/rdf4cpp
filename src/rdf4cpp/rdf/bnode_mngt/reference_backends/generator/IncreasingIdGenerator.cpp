@@ -1,11 +1,11 @@
-#include "IncreasingIdGenerator.hpp"
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.hpp>
 
 #include <algorithm>
 #include <cassert>
 #include <charconv>
 #include <limits>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 namespace generator_detail {
 static constexpr size_t max_generated_id_size = std::numeric_limits<size_t>::digits10;
@@ -27,4 +27,4 @@ char *IncreasingIdGenerator::generate_to_buf(char *buf) {
     return res.ptr;
 }
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt

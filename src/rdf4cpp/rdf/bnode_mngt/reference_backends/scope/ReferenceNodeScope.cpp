@@ -1,6 +1,6 @@
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceNodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 ReferenceNodeScope::ReferenceNodeScope(ReferenceNodeScope const &other) : label_to_handle_{other.label_to_handle_} {}
 
@@ -40,4 +40,4 @@ void ReferenceNodeScope::label_node(std::string_view label, storage::node::ident
     assert(inserted2);
 }
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::rdf::bnode_mngt

@@ -1,8 +1,8 @@
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
 
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 ReferenceNodeScopeManager &ReferenceNodeScopeManager::default_instance() noexcept {
     static ReferenceNodeScopeManager instance_;
@@ -14,9 +14,9 @@ NodeScope &ReferenceNodeScopeManager::scope(std::string_view name) noexcept {
         return it.value();
     }
 
-    auto [it, inserted] = scopes.emplace(name, util::NodeScope::new_instance());
+    auto [it, inserted] = scopes.emplace(name, NodeScope::new_instance());
     assert(inserted);
     return it.value();
 }
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::rdf::bnode_mngt

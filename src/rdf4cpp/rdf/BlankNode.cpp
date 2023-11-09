@@ -1,5 +1,5 @@
 #include "BlankNode.hpp"
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}

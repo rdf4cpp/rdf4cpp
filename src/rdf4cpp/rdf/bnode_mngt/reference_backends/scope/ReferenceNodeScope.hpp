@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_SCOPE_REFERENCESCOPEBASE_HPP
 #define RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_SCOPE_REFERENCESCOPEBASE_HPP
 
-#include <rdf4cpp/rdf/bnode_management/INodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/INodeScope.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
@@ -10,7 +10,7 @@
 #include <memory>
 #include <shared_mutex>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 struct ReferenceNodeScope : INodeScope {
 private:
@@ -65,6 +65,6 @@ public:
     void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) override;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_SCOPE_REFERENCESCOPEBASE_HPP

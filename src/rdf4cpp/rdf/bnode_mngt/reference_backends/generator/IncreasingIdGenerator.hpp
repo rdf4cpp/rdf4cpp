@@ -1,12 +1,12 @@
 #ifndef RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_INCREASINGBLANKNODEIDGENERATOR_HPP
 #define RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_INCREASINGBLANKNODEIDGENERATOR_HPP
 
-#include <rdf4cpp/rdf/bnode_management/IIdGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
 
 #include <atomic>
 #include <string>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 /**
  * Generates identifiers consisting of a optional prefix and an integer in increasing value.
@@ -29,6 +29,6 @@ public:
     char *generate_to_buf(char *buf) override;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_INCREASINGBLANKNODEIDGENERATOR_HPP

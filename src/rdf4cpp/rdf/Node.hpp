@@ -21,10 +21,10 @@ namespace query {
 class Variable;
 }
 
-namespace util {
+namespace bnode_mngt {
 struct NodeScope;
 struct NodeGenerator;
-}
+} // namespace bnode_mngt
 
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
@@ -35,8 +35,8 @@ struct NodeGenerator;
  * @warning This type is a POD.
  */
 class Node {
-    friend struct util::NodeScope;
-    friend struct util::NodeGenerator;
+    friend struct bnode_mngt::NodeScope;
+    friend struct bnode_mngt::NodeGenerator;
 
 protected:
     using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;

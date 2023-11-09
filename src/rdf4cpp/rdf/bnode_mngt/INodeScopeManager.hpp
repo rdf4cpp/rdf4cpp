@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 struct NodeScope;
 
@@ -15,10 +15,9 @@ struct NodeScope;
  * You can think of this as a map<std::string, NodeScope>.
  */
 struct INodeScopeManager {
-    using node_scope_type = util::NodeScope;
-    [[nodiscard]] virtual node_scope_type &scope(std::string_view name) noexcept = 0;
+    [[nodiscard]] virtual NodeScope &scope(std::string_view name) noexcept = 0;
 };
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::rdf::bnode_mngt
 
 #endif  //RDF4CPP_INODESCOPEMANAGER_HPP

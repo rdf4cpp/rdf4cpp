@@ -22,7 +22,7 @@ inline constexpr auto scope_name = "scope";
 inline constexpr auto scope_id_name = "id";
 
 using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::util;
+using namespace rdf4cpp::rdf::bnode_mngt;
 
 struct PersistableGenerator {
     size_t number = 0;

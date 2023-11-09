@@ -2,7 +2,7 @@
 #define RDF4CPP_BNODEBACKEND_HPP
 
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
-#include <rdf4cpp/rdf/bnode_management/NodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
 #include <string>
 
@@ -13,7 +13,7 @@ struct BNodeBackend {
 
     size_t hash;
     std::string identifier;
-    std::optional<rdf4cpp::rdf::util::WeakNodeScope> scope;
+    std::optional<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> scope;
 
     explicit BNodeBackend(View const &view) noexcept : hash{view.hash()},
                                                        identifier{view.identifier},

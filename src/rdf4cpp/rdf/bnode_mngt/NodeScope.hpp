@@ -1,14 +1,14 @@
 #ifndef RDF4CPP_RDF_UTIL_BLANKNODEIDSCOPE_HPP
 #define RDF4CPP_RDF_UTIL_BLANKNODEIDSCOPE_HPP
 
-#include <rdf4cpp/rdf/bnode_management/INodeScope.hpp>
-#include <rdf4cpp/rdf/bnode_management/NodeGenerator.hpp>
-#include <rdf4cpp/rdf/bnode_management/reference_backends/scope/ReferenceNodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/INodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/NodeGenerator.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::rdf::bnode_mngt {
 
 namespace identifier {
 
@@ -257,16 +257,16 @@ public:
     bool operator!=(WeakNodeScope const &other) const noexcept = default;
 };
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::rdf::bnode_mngt
 
 template<>
-struct std::hash<rdf4cpp::rdf::util::NodeScope> {
-    size_t operator()(rdf4cpp::rdf::util::NodeScope const &scope) const noexcept;
+struct std::hash<rdf4cpp::rdf::bnode_mngt::NodeScope> {
+    size_t operator()(rdf4cpp::rdf::bnode_mngt::NodeScope const &scope) const noexcept;
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::util::WeakNodeScope> {
-    size_t operator()(rdf4cpp::rdf::util::WeakNodeScope const &scope) const noexcept;
+struct std::hash<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> {
+    size_t operator()(rdf4cpp::rdf::bnode_mngt::WeakNodeScope const &scope) const noexcept;
 };
 
 #endif  //RDF4CPP_RDF_UTIL_BLANKNODEIDSCOPE_HPP
