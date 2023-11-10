@@ -91,6 +91,13 @@ std::string_view IRIView::fragment() const noexcept {
     return data.substr(f);
 }
 
+std::string_view IRIView::to_absolute() const noexcept {
+    auto f = get_fragment_offset();
+    if (f != std::string_view::npos)
+        --f;
+    return data.substr(0, f);
+}
+
 IRIFactoryError IRIView::valid() const noexcept {
     if (is_relative())
         return IRIFactoryError::Relative;
@@ -135,6 +142,78 @@ void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expande
 }
 void IRIFactory::clear_prefix(std::string_view prefix) {
     prefixes.erase(prefix);
+}
+
+std::string IRIFactory::remove_dot_segments(std::string_view path) const {
+    std::string r{};
+    std::string in{path};
+    while (!in.empty()) {
+        if (in.starts_with("./")) {
+            in.erase(0, 2);
+            continue;
+        }
+        if (in.starts_with("../")) {
+            in.erase(0, 3);
+            continue;
+        }
+
+        if (in.starts_with("/./")) {
+            in.erase(0, 2);
+            continue;
+        }
+        auto seg = first_path_segment(in);
+        if (seg == "/.") {
+            in.erase(1, 1);
+            continue;
+        }
+
+        if (in.starts_with("/../")) {
+            in.erase(0, 3);
+            remove_last_path_segment(r);
+            continue;
+        }
+        if (seg == "/..") {
+            in.erase(1, 2);
+            remove_last_path_segment(r);
+            continue;
+        }
+
+        if (in == "." || in == "..") {
+            break;
+        }
+
+        r.append(seg);
+        in.erase(0, seg.length());
+    }
+
+    return r;
+}
+std::string_view IRIFactory::first_path_segment(std::string_view path) const {
+    size_t off = 0;
+    if (path.starts_with('/'))
+        off = 1;
+    auto e = path.find('/', off);
+    return path.substr(0, e);
+}
+
+void IRIFactory::remove_last_path_segment(std::string &path) const {
+    auto e = path.find_last_of('/');
+    if (e == std::string::npos)
+        return;
+    path.resize(e);
+}
+
+std::string IRIFactory::merge_paths(IRIView base, std::string_view path) const {
+    if (!base.is_relative() && base.path().empty()) {
+        std::string r = "/";
+        r.append(path);
+        return r;
+    }
+    std::string r {base.path()};
+    remove_last_path_segment(r);
+    r.append(1, '/');
+    r.append(path);
+    return r;
 }
 
 }  // namespace rdf4cpp::rdf

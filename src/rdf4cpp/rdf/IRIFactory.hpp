@@ -67,6 +67,12 @@ public:
     [[nodiscard]] std::string_view fragment() const noexcept;
 
     /**
+     * everything except the fragment part of the IRI.
+     * @return
+     */
+    [[nodiscard]] std::string_view to_absolute() const noexcept;
+
+    /**
      * checks if the IRI is valid according to the IRI specification (not the schemes specification).
      * (does not accept relative references)
      * @return
@@ -88,8 +94,14 @@ public:
     void assign_prefix(std::string_view prefix, std::string_view expanded);
     void clear_prefix(std::string_view prefix);
 
+    [[nodiscard]] std::string remove_dot_segments(std::string_view path) const; // TODO private
+
 private:
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept;
+
+    [[nodiscard]] std::string_view first_path_segment(std::string_view path) const;
+    void remove_last_path_segment(std::string& path) const;
+    [[nodiscard]] std::string merge_paths(IRIView base, std::string_view path) const;
 };
 }  // namespace rdf4cpp::rdf
 

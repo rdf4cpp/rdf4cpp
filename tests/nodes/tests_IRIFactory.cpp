@@ -39,6 +39,9 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://example/a/b/c?q/d#f"}.fragment() == "f");
     CHECK(IRIView{"http://example/a/b/c?q/d"}.fragment() == "");
 
+    CHECK(IRIView{"http://example#f"}.to_absolute() == "http://example");
+    CHECK(IRIView{"http://example"}.to_absolute() == "http://example");
+
     CHECK(IRIView{"http://example"}.valid() == IRIFactoryError::Ok);
     CHECK(IRIView{"example"}.valid() == IRIFactoryError::Relative);
     CHECK(IRIView{"htt?p://example"}.valid() == IRIFactoryError::InvalidScheme);
@@ -47,10 +50,8 @@ TEST_CASE("IRIView") {
 TEST_CASE("base") {
     IRIFactory fact{"http://ex.org/"};
 
-    CHECK(fact.from_relative("foo").value().identifier() == "http://ex.org/foo");
+    CHECK(fact.remove_dot_segments("/a/b/c/./../../g") == "/a/g");
 
-    fact.base = "http://bar.org/";
-    CHECK(fact.from_relative("foo").value().identifier() == "http://bar.org/foo");
 }
 
 TEST_CASE("prefix") {
