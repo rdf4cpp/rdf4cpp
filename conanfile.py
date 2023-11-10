@@ -9,35 +9,42 @@ from conan.tools.files import load, copy, rmdir
 
 
 class Recipe(ConanFile):
-    name = "rdf4cpp"
-    version = None
-
     author = "https://github.com/rdf4cpp"
     url = "https://github.com/rdf4cpp/rdf4cpp"
     description = "rdf4cpp aims to be a stable, modern RDF library for C++."
-    topics = ("rdf", "semantic-web", "sparql", "knowledge-graphs", "C++20")
-
-    # Binary configuration
+    topics = "rdf", "semantic-web", "sparql", "knowledge-graphs", "C++20"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False], "with_test_deps": [True, False]}
-    default_options = {"shared": False, "fPIC": True, "with_test_deps": False}
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False],
+        "with_test_deps": [True, False],
+    }
+    default_options = {
+        "shared": False,
+        "fPIC": True,
+        "with_test_deps": False,
+    }
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
 
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
-        self.requires("boost/1.81.0")
-        self.requires("expected-lite/0.6.2")
+        self.requires("boost/1.83.0", transitive_headers=True)
+        self.requires("expected-lite/0.6.2", transitive_headers=True)
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
         self.requires("uni-algo/0.7.1")
-        self.requires("dice-hash/0.4.3")
-        self.requires("dice-sparse-map/0.2.4")
+        self.requires("dice-hash/0.4.3@dice-group/feature-conan2", transitive_headers=True)
+        self.requires("dice-sparse-map/0.2.4@dice-group/feature-conan2", transitive_headers=True)
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")
 
+    def set_name(self):
+        if not hasattr(self, 'name') or self.version is None:
+            cmake_file = load(self, os.path.join(self.recipe_folder, "CMakeLists.txt"))
+            self.name = re.search(r"project\(\s*([a-z0-9\-]+)\s+VERSION", cmake_file).group(1)
 
     def set_version(self):
         if not hasattr(self, 'version') or self.version is None:
@@ -70,3 +77,6 @@ class Recipe(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["rdf4cpp"]
+        self.cpp_info.set_property("cmake_find_mode", "both")
+        self.cpp_info.set_property("cmake_target_name", "rdf4cpp::rdf4cpp")
+        self.cpp_info.set_property("cmake_file_name", "rdf4cpp")
