@@ -23,7 +23,6 @@ class Recipe(ConanFile):
     default_options = {"shared": False, "fPIC": True, "with_test_deps": False}
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
-
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
@@ -37,6 +36,7 @@ class Recipe(ConanFile):
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")
+            self.requires("metall/0.26")
 
 
     def set_version(self):

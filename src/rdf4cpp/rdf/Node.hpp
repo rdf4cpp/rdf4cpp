@@ -19,7 +19,13 @@ class BlankNode;
 class IRI;
 namespace query {
 class Variable;
-};
+}
+
+namespace bnode_mngt {
+struct NodeScope;
+struct NodeGenerator;
+} // namespace bnode_mngt
+
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
@@ -29,6 +35,9 @@ class Variable;
  * @warning This type is a POD.
  */
 class Node {
+    friend struct bnode_mngt::NodeScope;
+    friend struct bnode_mngt::NodeGenerator;
+
 protected:
     using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
     using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;

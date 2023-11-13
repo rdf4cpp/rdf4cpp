@@ -1,19 +1,17 @@
 #include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
 
 namespace rdf4cpp::rdf::parser {
-RDFFileParser::RDFFileParser(const std::string &file_path, ParsingFlags flags,
-                                                   rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : file_path_(file_path), flags_(flags), node_storage_(std::move(node_storage)) {
+RDFFileParser::RDFFileParser(const std::string &file_path, flags_type flags, state_type *state)
+    : file_path_(file_path), flags_(flags), state_(state) {
 }
-RDFFileParser::RDFFileParser(std::string &&file_path, ParsingFlags flags,
-                                                   rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : file_path_(std::move(file_path)), flags_(flags), node_storage_(std::move(node_storage)) {
+RDFFileParser::RDFFileParser(std::string &&file_path, flags_type flags, state_type *state)
+    : file_path_(std::move(file_path)), flags_(flags), state_(state) {
 }
 RDFFileParser::Iterator RDFFileParser::begin() const {
     std::ifstream stream{file_path_};
     if (!stream.is_open())
         return {};
-    return {std::move(stream), flags_, node_storage_};
+    return {std::move(stream), flags_, state_};
 }
 std::default_sentinel_t RDFFileParser::end() const noexcept {
     return {};
@@ -22,10 +20,9 @@ std::default_sentinel_t RDFFileParser::end() const noexcept {
 RDFFileParser::Iterator::Iterator()
     : stream_(nullptr), iter_(nullptr) {
 }
-RDFFileParser::Iterator::Iterator(std::ifstream &&stream, ParsingFlags flags,
-                                                        const rdf4cpp::rdf::storage::node::NodeStorage &node_storage)
+RDFFileParser::Iterator::Iterator(std::ifstream &&stream, flags_type flags, state_type *state)
     : stream_(std::make_unique<std::ifstream>(std::move(stream))),
-      iter_(std::make_unique<IStreamQuadIterator>(*stream_, flags, IStreamQuadIterator::prefix_storage_type{}, node_storage)) {
+      iter_(std::make_unique<IStreamQuadIterator>(*stream_, flags, state)) {
 }
 RDFFileParser::Iterator::reference RDFFileParser::Iterator::operator*() const noexcept {
     return (*iter_).operator*();

@@ -1,17 +1,17 @@
 #ifndef RDF4CPP_BLANKNODE_HPP
 #define RDF4CPP_BLANKNODE_HPP
 
-#include <optional>
-
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
+
+namespace rdf4cpp::rdf::util  {
+struct NodeGenerator;
+}
 
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
-
-private:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
-
 public:
     /**
      * Constructs the null-bnode
@@ -43,6 +43,9 @@ public:
     [[nodiscard]] std::string_view identifier() const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
+
+    [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
+    [[nodiscard]] util::TriBool union_eq(BlankNode const &other) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
     [[nodiscard]] bool is_literal() const noexcept;
