@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/Month.hpp>
+#include "Month.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 

@@ -129,7 +129,8 @@ jobs:
       - name: Run examples
         working-directory: build_dir
         run: |
-          for example in examples/*_example; do 
+          cd examples
+          for example in *_example; do 
             echo "executing ${example}"
             ./${example}
           done

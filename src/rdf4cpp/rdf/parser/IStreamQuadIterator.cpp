@@ -1,7 +1,35 @@
-#include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
+#include "IStreamQuadIterator.hpp"
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
 namespace rdf4cpp::rdf::parser {
+
+/**
+ * Adaptor function so that serd can read from std::istreams.
+ * Matches the interface of SerdSource/fread
+ *
+ * @param buf pointer to buffer to be written to
+ * @param elem_size sizeof each element being written, guaranteed to always be 1
+ * @param count number of elements to write
+ * @param voided_self pointer to std::istream cast to void *
+ */
+static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
+    assert(elem_size == 1);
+
+    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    self->read(static_cast<char *>(buf), static_cast<std::streamsize>(count));
+    return self->gcount();
+}
+
+/**
+ * Adaptor function for serd to check if an std::istream is ok
+ * Matches the interface of SerdStreamErrorFunc
+ *
+ * @param voided_self pointer to std::istream cast to void *
+ */
+static int istream_error(void *voided_self) noexcept {
+    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    return *self ? 0 : 1;
+}
 
 bool IStreamQuadIterator::is_at_end() const noexcept {
     return this->impl == nullptr || this->impl->is_at_end();
@@ -15,9 +43,21 @@ IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
     : impl{nullptr} {
 }
 
-IStreamQuadIterator::IStreamQuadIterator(istream_type &istream, flags_type flags, state_type *initial_state) noexcept
-    : impl{std::make_unique<Impl>(istream, flags, initial_state)} {
+IStreamQuadIterator::IStreamQuadIterator(void *stream,
+                                         ReadFunc read,
+                                         ErrorFunc error,
+                                         flags_type flags,
+                                         state_type *state,
+                                         storage::node::NodeStorage node_storage) noexcept
+    : impl{std::make_unique<Impl>(stream, read, error, flags, state, std::move(node_storage))} {
     ++*this;
+}
+
+IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
+                                         flags_type flags,
+                                         state_type *state,
+                                         storage::node::NodeStorage node_storage) noexcept
+    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state, std::move(node_storage)} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
@@ -47,6 +87,14 @@ bool IStreamQuadIterator::operator==(IStreamQuadIterator const &other) const noe
 
 bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noexcept {
     return !(*this == other);
+}
+
+bool IStreamQuadIterator::operator==(std::default_sentinel_t) const noexcept {
+    return this->is_at_end();
+}
+
+bool IStreamQuadIterator::operator!=(std::default_sentinel_t) const noexcept {
+    return !this->is_at_end();
 }
 
 }  // namespace rdf4cpp::rdf::parser

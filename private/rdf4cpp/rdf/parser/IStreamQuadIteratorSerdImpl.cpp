@@ -1,36 +1,9 @@
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
-#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
-
 #include <cassert>
 #include <cstddef>
 
 namespace rdf4cpp::rdf::parser {
-
-namespace util {
-
-/**
- * Adaptor function so that serd can read from std::istreams.
- * Matches the interface of SerdSource
- */
-static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
-    assert(elem_size == 1);
-
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
-    self->read(static_cast<char *>(buf), static_cast<std::streamsize>(count));
-    return self->gcount();
-}
-
-/**
- * Adaptor function for serd to check if an std::istream is ok
- * Matches the interface of SerdStreamErrorFunc
- */
-static int istream_is_ok(void *voided_self) noexcept {
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
-    return *self ? 0 : 1;
-}
-
-}  // namespace util
 
 std::string_view IStreamQuadIterator::Impl::node_into_string_view(SerdNode const *node) noexcept {
     return std::string_view{reinterpret_cast<char const *>(node->buf), static_cast<size_t>(node->n_bytes)};
@@ -326,8 +299,13 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     return SERD_SUCCESS;
 }
 
-IStreamQuadIterator::Impl::Impl(std::istream &istream, flags_type flags, state_type *initial_state) noexcept
-    : istream{std::ref(istream)},
+IStreamQuadIterator::Impl::Impl(void *stream,
+                                ReadFunc read,
+                                ErrorFunc error,
+                                flags_type flags,
+                                state_type *initial_state,
+                                storage::node::NodeStorage node_storage) noexcept
+    : node_storage{std::move(node_storage)},
       reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       state{initial_state},
       state_is_owned{false},
@@ -341,7 +319,7 @@ IStreamQuadIterator::Impl::Impl(std::istream &istream, flags_type flags, state_t
 
     serd_reader_set_strict(this->reader.get(), flags.contains(ParsingFlag::Strict));
     serd_reader_set_error_sink(this->reader.get(), &Impl::on_error, this);
-    serd_reader_start_source_stream(this->reader.get(), &util::istream_read, &util::istream_is_ok, &this->istream.get(), nullptr, 4096);
+    serd_reader_start_source_stream(this->reader.get(), read, error, stream, nullptr, 4096);
 }
 
 IStreamQuadIterator::Impl::~Impl() noexcept {

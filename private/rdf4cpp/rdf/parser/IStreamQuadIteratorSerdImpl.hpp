@@ -32,7 +32,8 @@ private:
 
     using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
 
-    std::reference_wrapper<std::istream> istream;
+    mutable storage::node::NodeStorage node_storage;
+
     OwnedSerdReader reader;
 
     state_type *state;
@@ -74,7 +75,13 @@ private:
     }
 
 public:
-    Impl(std::istream &istream, flags_type flags, state_type *initial_state) noexcept;
+    Impl(void *stream,
+         ReadFunc read,
+         ErrorFunc,
+         flags_type flags,
+         state_type *state,
+         storage::node::NodeStorage node_storage) noexcept;
+
     ~Impl() noexcept;
 
     /**

@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/rdf/LangString.hpp>
+#include "LangString.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

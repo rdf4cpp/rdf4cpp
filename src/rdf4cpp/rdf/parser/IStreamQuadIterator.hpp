@@ -7,6 +7,7 @@
 #include <nonstd/expected.hpp>
 
 #include <rdf4cpp/rdf/Quad.hpp>
+
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 #include <rdf4cpp/rdf/parser/ParsingState.hpp>
@@ -15,6 +16,26 @@
 #include <dice/sparse-map/sparse_map.hpp>
 
 namespace rdf4cpp::rdf::parser {
+
+/**
+ * Identical semantics to fread.
+ * Uses stream to read at most count elements of size element_size into buffer.
+ *
+ * @param buffer pointer to buffer with at least count elements of size elem_size
+ * @param elem_size sizeof each element
+ * @param count number of elements to read
+ * @param stream pointer to any object.
+ * @return number of elements read
+ */
+using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream) noexcept;
+
+/**
+ * Identical semantics to ferror.
+ *
+ * @param stream pointer to any object
+ * @return nonzero value if there is an error in stream, zero value otherwise
+ */
+using ErrorFunc = int (*)(void *stream) noexcept;
 
 /**
  * Similar to std::istream_iterator<>.
@@ -67,10 +88,36 @@ public:
     /**
      * Constructs the end-of-stream iterator
      */
-    IStreamQuadIterator(std::default_sentinel_t) noexcept;
+    explicit IStreamQuadIterator(std::default_sentinel_t) noexcept;
+
+    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
+
+    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
 
     /**
-     * Constructs an IStreamQuad iterator to parse an input stream in turtle syntax to quads
+     * Constructs a IStreamQuadIterator from a C-like io api. That is something similar to
+     * the triple (FILE *, fread, ferror) (parameters are called (stream, read, error) here).
+     *
+     * @param stream Pointer to a voided object, could be a FILE * cast to void * or anything else.
+     * @param read see ReadFunc docs, elem_size is guaranteed to be always set to 1
+     * @param error see ErrorFunc docs
+     * @param flags flags to pass to the parser
+     * @param initial_state optionally specifies the initial state of the parser,
+     *          providing nullptr as the initial state results in the parser creating its own,fresh state
+     *          instead of writing to the provided state.
+     * @param node_storage where to place the resulting nodes
+     */
+    IStreamQuadIterator(void *stream,
+                        ReadFunc read,
+                        ErrorFunc error,
+                        flags_type flags = ParsingFlags::none(),
+                        state_type *initial_state = nullptr,
+                        storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+
+    /**
+     * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
      *
      * @param istream turtle input stream
      * @param flags specifies the parser behaviour
@@ -78,14 +125,10 @@ public:
      *          providing nullptr as the initial state results in the parser creating its own,fresh state
      *          instead of writing to the provided state.
      */
-    explicit IStreamQuadIterator(istream_type &istream,
-                                 flags_type flags = flags_type::none(),
-                                 state_type *initial_state = nullptr) noexcept;
-
-    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
-
-    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
-    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
+    explicit IStreamQuadIterator(std::istream &istream,
+                                 flags_type flags = ParsingFlags::none(),
+                                 state_type *initial_state = nullptr,
+                                 storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
     ~IStreamQuadIterator() noexcept;
 
@@ -95,6 +138,9 @@ public:
 
     bool operator==(IStreamQuadIterator const &) const noexcept;
     bool operator!=(IStreamQuadIterator const &) const noexcept;
+
+    bool operator==(std::default_sentinel_t) const noexcept;
+    bool operator!=(std::default_sentinel_t) const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::parser

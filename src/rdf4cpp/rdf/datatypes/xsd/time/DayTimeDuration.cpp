@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.hpp>
+#include "DayTimeDuration.hpp"
 
 #include <ranges>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>

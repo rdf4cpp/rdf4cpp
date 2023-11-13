@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/owl/Rational.hpp>
+#include "Rational.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

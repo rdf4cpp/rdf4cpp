@@ -66,8 +66,17 @@ public:
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
-    [[nodiscard]] explicit operator std::string() const noexcept;
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
 
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
+    }
+
+    [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const IRI &iri);
 
     [[nodiscard]] bool is_literal() const noexcept;

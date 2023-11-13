@@ -37,7 +37,7 @@ class Recipe(ConanFile):
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")
             self.requires("metall/0.26")
-
+            self.requires("nanobench/4.3.11")
 
     def set_version(self):
         if not hasattr(self, 'version') or self.version is None:

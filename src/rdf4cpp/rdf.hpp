@@ -11,9 +11,6 @@
 #include <rdf4cpp/rdf/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
 #include <rdf4cpp/rdf/version.hpp>
-#include <rdf4cpp/rdf/writer/NNodeWriter.hpp>
-#include <rdf4cpp/rdf/writer/NQuadsWriter.hpp>
-#include <rdf4cpp/rdf/writer/NTriplesWriter.hpp>
 
 
 /**

@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Base64Binary.hpp>
+#include "Base64Binary.hpp"
 
 #include <array>
 #include <algorithm>
