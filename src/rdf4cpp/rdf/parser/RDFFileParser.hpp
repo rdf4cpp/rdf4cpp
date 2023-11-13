@@ -24,15 +24,27 @@ namespace rdf4cpp::rdf::parser {
      * @endcode
      */
 class RDFFileParser {
+public:
+    using value_type = Quad;
+    using state_type = IStreamQuadIterator::state_type;
+    using flags_type = IStreamQuadIterator::flags_type;
+
+private:
     std::string file_path_;
-    ParsingFlags flags_;
-    storage::node::NodeStorage node_storage_;
+    flags_type flags_;
+    state_type *state_;
+    storage::node::NodeStorage *node_storage_;
 
 public:
-    explicit RDFFileParser(const std::string &file_path, ParsingFlags flags = ParsingFlags::none(),
-                           storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance());
-    explicit RDFFileParser(std::string &&file_path, ParsingFlags flags = ParsingFlags::none(),
-                           storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance());
+    explicit RDFFileParser(const std::string &file_path,
+                           flags_type flags = flags_type::none(),
+                           state_type *state = nullptr,
+                           storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance());
+
+    explicit RDFFileParser(std::string &&file_path,
+                           flags_type flags = flags_type::none(),
+                           state_type *state = nullptr,
+                           storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance());
 
     class iterator {
         friend class RDFFileParser;
@@ -44,7 +56,7 @@ public:
         /**
          * Constructs an iterator by taking ownership of the given file
          */
-        iterator(FILE *&&stream, ParsingFlags flags, const storage::node::NodeStorage &node_storage);
+        iterator(FILE *&&stream, flags_type flags, state_type *state, storage::node::NodeStorage &node_storage);
 
     public:
         ~iterator() noexcept;

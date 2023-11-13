@@ -46,18 +46,22 @@ IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
 IStreamQuadIterator::IStreamQuadIterator(void *stream,
                                          ReadFunc read,
                                          ErrorFunc error,
-                                         ParsingFlags flags,
-                                         prefix_storage_type prefixes,
+                                         flags_type flags,
+                                         state_type *state,
                                          storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(stream, read, error, flags, std::move(prefixes), std::move(node_storage))} {
+    : impl{std::make_unique<Impl>(stream, read, error, flags, state, std::move(node_storage))} {
     ++*this;
 }
 
-IStreamQuadIterator::IStreamQuadIterator(std::istream &istream, ParsingFlags flags, prefix_storage_type prefixes, storage::node::NodeStorage node_storage) noexcept
-    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, std::move(prefixes), std::move(node_storage)} {
+IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
+                                         flags_type flags,
+                                         state_type *state,
+                                         storage::node::NodeStorage node_storage) noexcept
+    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state, std::move(node_storage)} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
+IStreamQuadIterator &IStreamQuadIterator::operator=(IStreamQuadIterator &&) noexcept = default;
 
 IStreamQuadIterator::~IStreamQuadIterator() noexcept = default;
 

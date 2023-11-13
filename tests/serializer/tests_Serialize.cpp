@@ -88,7 +88,7 @@ TEST_SUITE("Serialize") {
         writer::StringWriter ser{4096};
 
         std::istringstream iss{triples};
-        for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
+        for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
             REQUIRE(qit->has_value());
             (*qit)->subject().serialize(ser);
             write_str(" ", ser);
@@ -116,7 +116,7 @@ TEST_SUITE("Serialize") {
             writer::BufCFileWriter ser{out_file};
 
             std::istringstream iss{triples};
-            for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
+            for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
                 REQUIRE(qit->has_value());
                 (*qit)->subject().serialize(ser);
                 write_str(" ", ser);
@@ -155,7 +155,7 @@ TEST_SUITE("Serialize") {
             writer::BufOStreamWriter ser{ofs};
 
             std::istringstream iss{triples};
-            for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
+            for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
                 REQUIRE(qit->has_value());
                 (*qit)->subject().serialize(ser);
                 write_str(" ", ser);

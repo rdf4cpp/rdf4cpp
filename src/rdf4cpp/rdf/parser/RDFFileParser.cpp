@@ -1,20 +1,18 @@
 #include "RDFFileParser.hpp"
 
 namespace rdf4cpp::rdf::parser {
-RDFFileParser::RDFFileParser(const std::string &file_path, ParsingFlags flags,
-                                                   rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : file_path_(file_path), flags_(flags), node_storage_(std::move(node_storage)) {
+RDFFileParser::RDFFileParser(const std::string &file_path, flags_type flags, state_type *state, storage::node::NodeStorage &node_storage)
+    : file_path_(file_path), flags_(flags), state_(state), node_storage_{&node_storage} {
 }
-RDFFileParser::RDFFileParser(std::string &&file_path, ParsingFlags flags,
-                                                   rdf4cpp::rdf::storage::node::NodeStorage node_storage)
-    : file_path_(std::move(file_path)), flags_(flags), node_storage_(std::move(node_storage)) {
+RDFFileParser::RDFFileParser(std::string &&file_path, flags_type flags, state_type *state, storage::node::NodeStorage &node_storage)
+    : file_path_(std::move(file_path)), flags_(flags), state_(state), node_storage_{&node_storage} {
 }
 RDFFileParser::iterator RDFFileParser::begin() const {
     FILE *stream = fopen(file_path_.c_str(), "r");
     if (stream == nullptr) {
         throw std::system_error{errno, std::system_category()};
     }
-    return {std::move(stream), flags_, node_storage_};
+    return {std::move(stream), flags_, state_, *node_storage_};
 }
 std::default_sentinel_t RDFFileParser::end() const noexcept {
     return {};
@@ -23,11 +21,13 @@ std::default_sentinel_t RDFFileParser::end() const noexcept {
 RDFFileParser::iterator::iterator()
     : stream_(nullptr), iter_(nullptr) {
 }
-RDFFileParser::iterator::iterator(FILE *&&stream, ParsingFlags flags,
-                                  const rdf4cpp::rdf::storage::node::NodeStorage &node_storage)
+RDFFileParser::iterator::iterator(FILE *&&stream,
+                                  flags_type flags,
+                                  state_type *state,
+                                  rdf4cpp::rdf::storage::node::NodeStorage &node_storage)
     : stream_(stream),
       iter_(std::make_unique<IStreamQuadIterator>(stream_, reinterpret_cast<ReadFunc>(&fread), reinterpret_cast<ErrorFunc>(&ferror),
-                                                  flags, IStreamQuadIterator::prefix_storage_type{}, node_storage)) {
+                                                  flags, state, node_storage)) {
 }
 RDFFileParser::iterator::~iterator() noexcept {
     fclose(stream_);

@@ -241,6 +241,42 @@ target_link_libraries(tests_CowString
 set_property(TARGET tests_CowString PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_CowString COMMAND tests_CowString)
 
+add_executable(tests_BlankNodeIdManagement util/tests_BlankNodeIdManagement.cpp)
+target_link_libraries(tests_BlankNodeIdManagement
+        doctest::doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_BlankNodeIdManagement PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BlankNodeIdManagement COMMAND tests_BlankNodeIdManagement)
+
+find_package(Metall REQUIRED)
+
+add_executable(BlankNodeIdManagement_metall_phase1 util/BlankNodeIdManagement_metall_phase1.cpp)
+target_link_libraries(BlankNodeIdManagement_metall_phase1
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET BlankNodeIdManagement_metall_phase1 PROPERTY CXX_STANDARD 20)
+
+add_executable(BlankNodeIdManagement_metall_phase2 util/BlankNodeIdManagement_metall_phase2.cpp)
+target_link_libraries(BlankNodeIdManagement_metall_phase2
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET BlankNodeIdManagement_metall_phase2 PROPERTY CXX_STANDARD 20)
+
+add_executable(tests_BlankNodeIdManagement_metall util/tests_BlankNodeIdManagement_metall.cpp)
+add_dependencies(tests_BlankNodeIdManagement_metall BlankNodeIdManagement_metall_phase1 BlankNodeIdManagement_metall_phase2)
+target_link_libraries(tests_BlankNodeIdManagement_metall
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET tests_BlankNodeIdManagement_metall PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BlankNodeIdManagement_metall COMMAND tests_BlankNodeIdManagement_metall)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest::doctest

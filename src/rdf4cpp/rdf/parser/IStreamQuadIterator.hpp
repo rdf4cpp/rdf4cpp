@@ -10,6 +10,7 @@
 
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
+#include <rdf4cpp/rdf/parser/ParsingState.hpp>
 
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
@@ -58,23 +59,23 @@ using ErrorFunc = int (*)(void *stream) noexcept;
  * @endcode
  */
 struct IStreamQuadIterator {
-    using value_type = nonstd::expected<Quad, ParsingError>;
+    using flags_type = ParsingFlags;
+    using state_type = ParsingState;
+    using ok_type = Quad;
+    using error_type = ParsingError;
+
+    using value_type = nonstd::expected<ok_type, error_type>;
     using reference = value_type const &;
     using pointer = value_type const *;
     using difference_type = std::ptrdiff_t;
     using iterator_category = std::input_iterator_tag;
     using istream_type = std::istream;
 
-    using prefix_storage_type = dice::sparse_map::sparse_map<std::string,
-                                                             std::string,
-                                                             dice::hash::DiceHashwyhash<std::string_view>,
-                                                             std::equal_to<>>;
-
 private:
     struct Impl;
 
     std::unique_ptr<Impl> impl;
-    nonstd::expected<Quad, ParsingError> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
+    nonstd::expected<ok_type, error_type> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
 
     [[nodiscard]] bool is_at_end() const noexcept;
 
@@ -92,7 +93,8 @@ public:
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
 
-    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept = default;
+    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
 
     /**
      * Constructs a IStreamQuadIterator from a C-like io api. That is something similar to
@@ -102,19 +104,30 @@ public:
      * @param read see ReadFunc docs, elem_size is guaranteed to be always set to 1
      * @param error see ErrorFunc docs
      * @param flags flags to pass to the parser
-     * @param prefixes predefined prefixes
+     * @param initial_state optionally specifies the initial state of the parser,
+     *          providing nullptr as the initial state results in the parser creating its own,fresh state
+     *          instead of writing to the provided state.
      * @param node_storage where to place the resulting nodes
      */
     IStreamQuadIterator(void *stream,
                         ReadFunc read,
                         ErrorFunc error,
-                        ParsingFlags flags = ParsingFlags::none(),
-                        prefix_storage_type prefixes = {},
+                        flags_type flags = ParsingFlags::none(),
+                        state_type *initial_state = nullptr,
                         storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
+    /**
+     * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
+     *
+     * @param istream turtle input stream
+     * @param flags specifies the parser behaviour
+     * @param initial_state optionally specifies the initial state of the parser,
+     *          providing nullptr as the initial state results in the parser creating its own,fresh state
+     *          instead of writing to the provided state.
+     */
     explicit IStreamQuadIterator(std::istream &istream,
-                                 ParsingFlags flags = ParsingFlags::none(),
-                                 prefix_storage_type prefixes = {},
+                                 flags_type flags = ParsingFlags::none(),
+                                 state_type *initial_state = nullptr,
                                  storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
 
     ~IStreamQuadIterator() noexcept;

@@ -1,15 +1,9 @@
 #ifndef RDF4CPP_NODE_HPP
 #define RDF4CPP_NODE_HPP
 
-/** @file
- * @brief RDFNode
- * Long
- */
-
-
-#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 #include <memory>
 #include <optional>
@@ -21,7 +15,12 @@ class BlankNode;
 class IRI;
 namespace query {
 class Variable;
-};
+}
+
+namespace bnode_mngt {
+struct NodeScope;
+struct NodeGenerator;
+} // namespace bnode_mngt
 
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
@@ -32,6 +31,9 @@ class Variable;
  * @warning This type is a POD.
  */
 class Node {
+    friend struct bnode_mngt::NodeScope;
+    friend struct bnode_mngt::NodeGenerator;
+
 protected:
     using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
     using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;

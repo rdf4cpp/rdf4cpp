@@ -142,7 +142,7 @@ TEST_SUITE("IStreamQuadIterator") {
                                         "  ] .";
 
         std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss};
+        IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds};
 
         CHECK_NE(qit, IStreamQuadIterator{});
         CHECK(qit->value() == Quad{IRI{"http://www.w3.org/TR/rdf-syntax-grammar"},
@@ -234,7 +234,10 @@ TEST_SUITE("IStreamQuadIterator") {
         constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> prefix:predicate \"search\"^^<http://www.w3.org/2001/XMLSchema#string> .\n";
 
         std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss, ParsingFlags::none(), { {"prefix", "https://hello.com#"} }};
+        IStreamQuadIterator::state_type state{
+                .prefixes = { {"prefix", "https://hello.com#"} }};
+
+        IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
 
         CHECK_NE(qit, IStreamQuadIterator{});
         CHECK(qit->has_value());
@@ -428,5 +431,93 @@ TEST_CASE("TriG") {
 
         ++it;
         CHECK_EQ(it, IStreamQuadIterator{});
+    }
+}
+
+TEST_CASE("bnode management") {
+    constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
+                                    "<http://data.semanticweb.org/workshop/admire/2012/paper/13> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
+                                    "_:b2 <http://purl.org/dc/elements/1.1/subject> \"Some Subject\" .\n";
+
+    SUBCASE("bnodes") {
+        IStreamQuadIterator::state_type state{
+                .blank_node_generator = &bnode_mngt::NodeGenerator::default_instance(),
+                .blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance()};
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->has_value());
+        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+        auto b1_1 = qit->value().object();
+        CHECK(b1_1.is_blank_node());
+        std::cout << qit->value().object() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+        auto b1_2 = qit->value().object();
+        CHECK(b1_1.is_blank_node());
+        std::cout << qit->value().object() << std::endl;
+        CHECK(b1_1 == b1_2);
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        auto b2_1 = qit->value().subject();
+        CHECK(b2_1.is_blank_node());
+        CHECK(b2_1 != b1_1);
+        std::cout << b2_1 << std::endl;
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+        CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
+    }
+
+    SUBCASE("skolem iris") {
+        auto scope_mng = bnode_mngt::ReferenceNodeScopeManager{};
+        auto generator = bnode_mngt::NodeGenerator::new_instance_with_factory<bnode_mngt::SkolemIRIFactory>("http://skolem-iris.org#");
+
+        IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
+                                              .blank_node_scope_manager = &scope_mng};
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
+
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->has_value());
+        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+        auto b1_1 = qit->value().object();
+        CHECK(b1_1.is_iri());
+        std::cout << qit->value().object() << std::endl;
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+        auto b1_2 = qit->value().object();
+        CHECK(b1_1.is_iri());
+        std::cout << qit->value().object() << std::endl;
+        CHECK(b1_1 == b1_2);
+
+        ++qit;
+        CHECK(qit != IStreamQuadIterator{});
+        auto b2_1 = qit->value().subject();
+        CHECK(b2_1.is_iri());
+        CHECK(b2_1 != b1_1);
+        std::cout << b2_1 << std::endl;
+        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+        CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator{});
     }
 }

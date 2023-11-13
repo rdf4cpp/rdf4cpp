@@ -12,12 +12,14 @@ namespace rdf4cpp::rdf::parser {
  * If more than one is used accidentally at the same time, TriG is likely the result (even if it does never get specified).
  */
 enum struct ParsingFlag : uint8_t {
-    Strict = 1 << 0,
-    NoParsePrefix = 1 << 1,
-    Turtle = 0,
-    NTriples = 1 << 2,
-    NQuads = 2 << 2,
-    TriG = 3 << 2,
+    Strict           = 1 << 0,
+    NoParsePrefix    = 1 << 1,
+    KeepBlankNodeIds = 1 << 2,
+
+    Turtle   = 0b00 << 3, // default
+    NTriples = 0b01 << 3,
+    NQuads   = 0b10 << 3,
+    TriG     = 0b11 << 3,
 };
 
 struct ParsingFlags {
