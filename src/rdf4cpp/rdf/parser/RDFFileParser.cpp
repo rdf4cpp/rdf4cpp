@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
+#include "RDFFileParser.hpp"
 
 namespace rdf4cpp::rdf::parser {
 RDFFileParser::RDFFileParser(const std::string &file_path, ParsingFlags flags,

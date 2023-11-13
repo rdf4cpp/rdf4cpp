@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
+#include "IRIBackendView.hpp"
 
 #include <dice/hash.hpp>
 

@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/Node.hpp>
+#include "Node.hpp"
 
 #include <cassert>
 #include <rdf4cpp/rdf/BlankNode.hpp>

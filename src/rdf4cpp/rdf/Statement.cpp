@@ -1,4 +1,5 @@
-#include <rdf4cpp/rdf/Statement.hpp>
+#include "Statement.hpp"
+
 namespace rdf4cpp::rdf {
 Statement::Statement(Node subject, Node predicate, Node object) : query::TriplePattern(subject, predicate, object) {}
 bool Statement::valid() const {

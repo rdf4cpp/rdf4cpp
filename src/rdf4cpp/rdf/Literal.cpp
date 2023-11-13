@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/Literal.hpp>
+#include "Literal.hpp"
 
 #include <algorithm>
 #include <execution>

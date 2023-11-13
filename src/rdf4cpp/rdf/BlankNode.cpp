@@ -1,5 +1,6 @@
+#include "BlankNode.hpp"
+
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
-#include <rdf4cpp/rdf/BlankNode.hpp>
 
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}

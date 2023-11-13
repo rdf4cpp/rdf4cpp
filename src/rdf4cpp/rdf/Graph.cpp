@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/Graph.hpp>
+#include "Graph.hpp"
 #include <rdf4cpp/rdf/Dataset.hpp>
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
 

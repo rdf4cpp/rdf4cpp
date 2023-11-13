@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/query/SolutionSequence.hpp>
+#include "SolutionSequence.hpp"
 
 #include <rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.hpp>
 

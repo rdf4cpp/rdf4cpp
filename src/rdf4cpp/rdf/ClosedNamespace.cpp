@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/ClosedNamespace.hpp>
+#include "ClosedNamespace.hpp"
 
 namespace rdf4cpp::rdf {
 

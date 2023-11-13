@@ -1,5 +1,6 @@
+#include "Variable.hpp"
+
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
-#include <rdf4cpp/rdf/query/Variable.hpp>
 
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}

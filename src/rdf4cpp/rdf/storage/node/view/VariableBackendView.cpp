@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/storage/node/view/VariableBackendView.hpp>
+#include "VariableBackendView.hpp"
 
 #include <dice/hash.hpp>
 

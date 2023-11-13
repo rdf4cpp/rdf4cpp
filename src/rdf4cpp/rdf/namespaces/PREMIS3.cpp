@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/namespaces/PREMIS3.hpp>
+#include "PREMIS3.hpp"
 
 namespace rdf4cpp::rdf::namespaces {
 

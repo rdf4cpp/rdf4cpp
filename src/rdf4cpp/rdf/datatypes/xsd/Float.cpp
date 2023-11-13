@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include "Float.hpp"
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 #include <cmath>

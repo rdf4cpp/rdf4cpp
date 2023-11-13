@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
+#include "NodeBackendHandle.hpp"
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 

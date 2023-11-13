@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/storage/tuple/IDatasetBackend.hpp>
+#include "IDatasetBackend.hpp"
 
 #include <utility>
 

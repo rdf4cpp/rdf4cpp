@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/namespaces/FOAF.hpp>
+#include "FOAF.hpp"
 
 namespace rdf4cpp::rdf::namespaces {
 

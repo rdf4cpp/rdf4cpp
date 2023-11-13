@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
+#include "DatatypeRegistry.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
