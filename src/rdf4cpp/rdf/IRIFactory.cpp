@@ -118,7 +118,9 @@ IRIFactoryError IRIView::valid() const noexcept {
     return IRIFactoryError::Ok;
 }
 
-IRIFactory::IRIFactory(std::string_view base) noexcept  : base(base) {
+IRIFactory::IRIFactory(std::string_view base) {
+    if (set_base(base) != IRIFactoryError::Ok)
+        throw std::invalid_argument{"invalid base"};
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
@@ -132,21 +134,15 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_vie
     auto r_frag = r.fragment();
     if (r_scheme.has_value()) {
         iri = construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    } else if (r_auth.has_value()) {
+        iri = construct(*b.scheme(), r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    } else if (r_path.empty()) {
+        iri = construct(*b.scheme(), b.authority(), b.path(), r_query.has_value() ? r_query : b.query(), r_frag);
+    } else if (r_path.starts_with('/')) {
+        iri = construct(*b.scheme(), b.authority(), remove_dot_segments(r_path), r_query, r_frag);
     } else {
-        if (r_auth.has_value()) {
-            iri = construct(*b.scheme(), r_auth, remove_dot_segments(r_path), r_query, r_frag);
-        } else {
-            if (r_path.empty()) {
-                iri = construct(*b.scheme(), b.authority(), b.path(), r_query.has_value() ? r_query : b.query(), r_frag);
-            } else {
-                if (r_path.starts_with('/')) {
-                    iri = construct(*b.scheme(), b.authority(), remove_dot_segments(r_path), r_query, r_frag);
-                } else {
-                    auto m = merge_paths(IRIView{base}, r_path);
-                    iri = construct(*b.scheme(), b.authority(), remove_dot_segments(m), r_query, r_frag);
-                }
-            }
-        }
+        auto m = merge_paths(IRIView{base}, r_path);
+        iri = construct(*b.scheme(), b.authority(), remove_dot_segments(m), r_query, r_frag);
     }
 
     return create_and_validate(iri, storage);
@@ -265,6 +261,18 @@ std::string IRIFactory::construct(std::string_view scheme, std::optional<std::st
     if (frag.has_value())
         str << '#' << *frag;
     return str.str();
+}
+
+std::string_view IRIFactory::get_base() const noexcept {
+    return base;
+}
+
+IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
+    auto e = IRIView{b}.valid();
+    if (e != IRIFactoryError::Ok)
+        return e;
+    base = b;
+    return IRIFactoryError::Ok;
 }
 
 }  // namespace rdf4cpp::rdf

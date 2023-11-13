@@ -89,16 +89,19 @@ public:
 class IRIFactory {
     dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>> prefixes;
 
-public:
     std::string base;
 
-    explicit IRIFactory(std::string_view base = "http://example.org/") noexcept;
+public:
+    explicit IRIFactory(std::string_view base = "http://example.org/");
 
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_relative(std::string_view rel, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const;
 
     void assign_prefix(std::string_view prefix, std::string_view expanded);
     void clear_prefix(std::string_view prefix);
+
+    [[nodiscard]] std::string_view get_base() const noexcept;
+    [[nodiscard]] IRIFactoryError set_base(std::string_view b) noexcept;
 
 private:
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept;

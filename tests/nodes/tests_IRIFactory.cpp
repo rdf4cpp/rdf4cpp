@@ -107,6 +107,24 @@ TEST_CASE("base") {
     CHECK(fact.from_relative("g#y/../x").value().identifier() == "http://a/b/c/g#y/../x");
 }
 
+TEST_CASE("base reassign") {
+    IRIFactory fact{"http://example/foo"};
+
+    CHECK(fact.from_relative("bar").value().identifier() == "http://example/bar");
+
+    CHECK(fact.get_base() == "http://example/foo");
+
+    CHECK(fact.set_base("/bar") == IRIFactoryError::Relative);
+
+    CHECK(fact.get_base() == "http://example/foo");
+
+    CHECK(fact.set_base("http://example/bar") == IRIFactoryError::Ok);
+
+    CHECK(fact.get_base() == "http://example/bar");
+
+    CHECK(fact.from_relative("foo").value().identifier() == "http://example/foo");
+}
+
 TEST_CASE("prefix") {
     IRIFactory fact{};
 
