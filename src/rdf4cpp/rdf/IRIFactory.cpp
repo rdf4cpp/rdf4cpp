@@ -7,95 +7,104 @@ namespace rdf4cpp::rdf {
 IRIView::IRIView(std::string_view iri) noexcept : data(iri) {
 }
 
-size_t IRIView::get_scheme_len() const noexcept {
+std::pair<size_t, bool> IRIView::get_scheme_len() const noexcept {
     auto c = data.find(':');
     if (c == std::string_view::npos)
-        return 0;
+        return {0, false};
     auto s = data.find('/');
     if (c > s)
-        return 0;
-    return c;
+        return {0, false};
+    return {c, true};
 }
-std::string_view IRIView::scheme() const noexcept {
-    return data.substr(0, get_scheme_len());
+std::optional<std::string_view> IRIView::scheme() const noexcept {
+    auto s = get_scheme_len();
+    if (!s.second)
+        return std::nullopt;
+    return data.substr(0, s.first);
 }
 bool IRIView::is_relative() const noexcept {
-    return get_scheme_len() == 0;
+    return !get_scheme_len().second;
 }
 
-std::pair<size_t, size_t> IRIView::get_authority_len() const noexcept {
+std::tuple<size_t, size_t, bool> IRIView::get_authority_len() const noexcept {
     auto d = data;
-    auto s = get_scheme_len();
+    auto s = get_scheme_len().first;
     if (s > 0) {
         ++s;
         d = d.substr(s);
     }
     if (!d.starts_with("//"))
-        return std::make_pair(s, 0);
+        return {s, 0, false};
     d = d.substr(2);
     s += 2;
     auto e = d.find_first_of("/#?");
     if (e == std::string_view::npos)
         e = d.length();
-    return std::make_pair(s, e);
+    return {s, e, true};
 }
-std::string_view IRIView::authority() const noexcept {
+std::optional<std::string_view> IRIView::authority() const noexcept {
     auto a = get_authority_len();
-    return data.substr(a.first, a.second);
+    if (!std::get<2>(a))
+        return std::nullopt;
+    return data.substr(std::get<0>(a), std::get<1>(a));
 }
 
 std::pair<size_t, size_t> IRIView::get_path_len() const noexcept {
     auto a = get_authority_len();
-    auto b = a.first + a.second;
+    auto b = std::get<0>(a) + std::get<1>(a);
     auto d = data.substr(b);
-    if (a.second > 0 && !d.starts_with('/'))
-        return std::make_pair(b, 0);
+    if (std::get<1>(a) > 0 && !d.starts_with('/'))
+        return {b, 0};
     auto e = d.find_first_of("#?");
     if (e == std::string_view::npos)
         e = d.length();
-    return std::make_pair(b, e);
+    return {b, e};
 }
 std::string_view IRIView::path() const noexcept {
     auto a = get_path_len();
     return data.substr(a.first, a.second);
 }
 
-std::pair<size_t, size_t> IRIView::get_query_len() const noexcept {
+std::tuple<size_t, size_t, bool> IRIView::get_query_len() const noexcept {
     auto a = get_path_len();
     auto b = a.first + a.second;
     auto d = data.substr(b);
     if (!d.starts_with('?'))
-        return std::make_pair(b, 0);
+        return {b, 0, false};
+    d = d.substr(1);
+    ++b;
     auto e = d.find_first_of('#');
     if (e == std::string_view::npos)
         e = d.length();
-    return std::make_pair(b, e);
+    return {b, e, true};
 }
-std::string_view IRIView::query() const noexcept {
+std::optional<std::string_view> IRIView::query() const noexcept {
     auto a = get_query_len();
-    return data.substr(a.first, a.second);
+    if (!std::get<2>(a))
+        return std::nullopt;
+    return data.substr(std::get<0>(a), std::get<1>(a));
 }
 
-size_t IRIView::get_fragment_offset() const noexcept {
+std::pair<size_t, bool> IRIView::get_fragment_offset() const noexcept {
     auto a = get_query_len();
-    auto b = a.first + a.second;
+    auto b = std::get<0>(a) + std::get<1>(a);
     auto d = data.substr(b);
     if (!d.starts_with('#'))
-        return std::string_view::npos;
-    return b + 1;
+        return {b, false};
+    return {b + 1, true};
 }
-std::string_view IRIView::fragment() const noexcept {
+std::optional<std::string_view> IRIView::fragment() const noexcept {
     auto f = get_fragment_offset();
-    if (f == std::string_view::npos)
-        return data.substr(0, 0);
-    return data.substr(f);
+    if (!f.second)
+        return std::nullopt;
+    return data.substr(f.first);
 }
 
 std::string_view IRIView::to_absolute() const noexcept {
     auto f = get_fragment_offset();
-    if (f != std::string_view::npos)
-        --f;
-    return data.substr(0, f);
+    if (!f.second)
+        return data;
+    return data.substr(0, f.first - 1);
 }
 
 IRIFactoryError IRIView::valid() const noexcept {
@@ -103,7 +112,7 @@ IRIFactoryError IRIView::valid() const noexcept {
         return IRIFactoryError::Relative;
     auto s = scheme();
     static regex::Regex scheme_reg{"[[:alpha:]][[:alnum:]+-.]*"};
-    if (!scheme_reg.regex_match(s))
+    if (!scheme_reg.regex_match(*s))
         return IRIFactoryError::InvalidScheme;
     // TODO
     return IRIFactoryError::Ok;
@@ -113,8 +122,33 @@ IRIFactory::IRIFactory(std::string_view base) noexcept  : base(base) {
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    std::string iri = base;
-    iri.append(rel);
+    IRIView r{rel};
+    IRIView b{base};
+    std::string iri{};
+    auto r_scheme = r.scheme();
+    auto r_auth = r.authority();
+    auto r_path = r.path();
+    auto r_query = r.query();
+    auto r_frag = r.fragment();
+    if (r_scheme.has_value()) {
+        iri = construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    } else {
+        if (r_auth.has_value()) {
+            iri = construct(*b.scheme(), r_auth, remove_dot_segments(r_path), r_query, r_frag);
+        } else {
+            if (r_path.empty()) {
+                iri = construct(*b.scheme(), b.authority(), b.path(), r_query.has_value() ? r_query : b.query(), r_frag);
+            } else {
+                if (r_path.starts_with('/')) {
+                    iri = construct(*b.scheme(), b.authority(), remove_dot_segments(r_path), r_query, r_frag);
+                } else {
+                    auto m = merge_paths(IRIView{base}, r_path);
+                    iri = construct(*b.scheme(), b.authority(), remove_dot_segments(m), r_query, r_frag);
+                }
+            }
+        }
+    }
+
     return create_and_validate(iri, storage);
 }
 
@@ -144,7 +178,7 @@ void IRIFactory::clear_prefix(std::string_view prefix) {
     prefixes.erase(prefix);
 }
 
-std::string IRIFactory::remove_dot_segments(std::string_view path) const {
+std::string IRIFactory::remove_dot_segments(std::string_view path) noexcept {
     std::string r{};
     std::string in{path};
     while (!in.empty()) {
@@ -188,7 +222,8 @@ std::string IRIFactory::remove_dot_segments(std::string_view path) const {
 
     return r;
 }
-std::string_view IRIFactory::first_path_segment(std::string_view path) const {
+
+std::string_view IRIFactory::first_path_segment(std::string_view path) noexcept {
     size_t off = 0;
     if (path.starts_with('/'))
         off = 1;
@@ -196,14 +231,14 @@ std::string_view IRIFactory::first_path_segment(std::string_view path) const {
     return path.substr(0, e);
 }
 
-void IRIFactory::remove_last_path_segment(std::string &path) const {
+void IRIFactory::remove_last_path_segment(std::string &path) noexcept {
     auto e = path.find_last_of('/');
     if (e == std::string::npos)
         return;
     path.resize(e);
 }
 
-std::string IRIFactory::merge_paths(IRIView base, std::string_view path) const {
+std::string IRIFactory::merge_paths(IRIView base, std::string_view path) noexcept {
     if (!base.is_relative() && base.path().empty()) {
         std::string r = "/";
         r.append(path);
@@ -214,6 +249,22 @@ std::string IRIFactory::merge_paths(IRIView base, std::string_view path) const {
     r.append(1, '/');
     r.append(path);
     return r;
+}
+
+std::string IRIFactory::construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
+                                  std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
+    std::stringstream str{};
+    str << scheme << ':';
+    if (auth.has_value())
+        str << "//" << *auth;
+    if (!path.empty() && !path.starts_with('/') && auth.has_value())
+        str << '/';
+    str << path;
+    if (query.has_value())
+        str << '?' << *query;
+    if (frag.has_value())
+        str << '#' << *frag;
+    return str.str();
 }
 
 }  // namespace rdf4cpp::rdf

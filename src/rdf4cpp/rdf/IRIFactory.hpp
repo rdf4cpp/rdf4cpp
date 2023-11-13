@@ -2,6 +2,7 @@
 #define RDF4CPP_IRIFACTORY_HPP
 
 #include <nonstd/expected.hpp>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -27,11 +28,16 @@ public:
     explicit IRIView(std::string_view iri) noexcept;
 
 private:
-    [[nodiscard]] size_t get_scheme_len() const noexcept;
-    [[nodiscard]] std::pair<size_t, size_t> get_authority_len() const noexcept;
+    // -> length, defined
+    [[nodiscard]] std::pair<size_t, bool> get_scheme_len() const noexcept;
+    // -> start, length, defined
+    [[nodiscard]] std::tuple<size_t, size_t, bool> get_authority_len() const noexcept;
+    // -> start, length
     [[nodiscard]] std::pair<size_t, size_t> get_path_len() const noexcept;
-    [[nodiscard]] std::pair<size_t, size_t> get_query_len() const noexcept;
-    [[nodiscard]] size_t get_fragment_offset() const noexcept;
+    // -> start, length, defined
+    [[nodiscard]] std::tuple<size_t, size_t, bool> get_query_len() const noexcept;
+    // -> start, defined
+    [[nodiscard]] std::pair<size_t, bool> get_fragment_offset() const noexcept;
 
 public:
     /**
@@ -44,12 +50,12 @@ public:
      * the scheme part of the IRI
      * @return
      */
-    [[nodiscard]] std::string_view scheme() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> scheme() const noexcept;
     /**
      * the authority part of the IRI
      * @return
      */
-    [[nodiscard]] std::string_view authority() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> authority() const noexcept;
     /**
      * the path of the IRI
      * @return
@@ -59,12 +65,12 @@ public:
      * the query part of the IRI
      * @return
      */
-    [[nodiscard]] std::string_view query() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> query() const noexcept;
     /**
      * the fragment part of the IRI
      * @return
      */
-    [[nodiscard]] std::string_view fragment() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> fragment() const noexcept;
 
     /**
      * everything except the fragment part of the IRI.
@@ -94,14 +100,15 @@ public:
     void assign_prefix(std::string_view prefix, std::string_view expanded);
     void clear_prefix(std::string_view prefix);
 
-    [[nodiscard]] std::string remove_dot_segments(std::string_view path) const; // TODO private
-
 private:
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept;
 
-    [[nodiscard]] std::string_view first_path_segment(std::string_view path) const;
-    void remove_last_path_segment(std::string& path) const;
-    [[nodiscard]] std::string merge_paths(IRIView base, std::string_view path) const;
+    [[nodiscard]] static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
+                                               std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept;
+    [[nodiscard]] static std::string remove_dot_segments(std::string_view path) noexcept;
+    [[nodiscard]] static std::string_view first_path_segment(std::string_view path) noexcept;
+    static void remove_last_path_segment(std::string &path) noexcept;
+    [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
 };
 }  // namespace rdf4cpp::rdf
 
