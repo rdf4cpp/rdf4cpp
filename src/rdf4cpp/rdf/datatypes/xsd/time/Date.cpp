@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
+#include "Date.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 

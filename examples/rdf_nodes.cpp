@@ -30,7 +30,6 @@ int main() {
     auto print_literal_info = [](Literal lit) {
         std::cout << "---" << std::endl;
         std::cout << "operator<<: " << lit << std::endl;
-        std::cout << "NNodeWriter: " << writer::NNodeWriter(lit) << std::endl;
         std::cout << "lexical_form: " << lit.lexical_form() << std::endl;
         std::cout << "datatype: " << lit.datatype() << std::endl;
         std::cout << "language_tag: " << lit.language_tag() << std::endl;

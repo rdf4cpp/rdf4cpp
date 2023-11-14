@@ -158,10 +158,11 @@ private:
      *      which prevents the template version of datatype_eq from using IRIs
      */
     [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
-protected:
+
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
+
     /**
      * Constructs the null-literal
      */
@@ -640,6 +641,15 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
+    }
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);

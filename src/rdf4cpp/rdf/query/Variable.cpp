@@ -1,5 +1,7 @@
 #include "Variable.hpp"
 
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
+
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
 Variable::Variable(std::string_view name, bool anonymous, NodeStorage &node_storage)
@@ -45,6 +47,20 @@ bool Variable::is_anonymous() const {
 std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
+
+bool Variable::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+    auto const backend = handle_.variable_backend();
+
+    if (backend.is_anonymous) {
+        RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
+    } else {
+        RDF4CPP_DETAIL_TRY_WRITE_STR("?");
+    }
+
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.name);
+    return true;
+}
+
 Variable::operator std::string() const {
     return handle_.variable_backend().n_string();
 }
@@ -57,6 +73,5 @@ std::ostream &operator<<(std::ostream &os, const Variable &variable) {
     os << static_cast<std::string>(variable);
     return os;
 }
-
 
 }  // namespace rdf4cpp::rdf::query

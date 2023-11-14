@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.hpp>
+#include "Integer.hpp"
 
 #include <stdexcept>
 

@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_DATATYPEREGISTRY_HPP
 #define RDF4CPP_DATATYPEREGISTRY_HPP
 
-#include "rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp"
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>

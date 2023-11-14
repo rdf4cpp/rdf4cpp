@@ -1,4 +1,5 @@
 #include "ISolutionSequenceBackend.hpp"
+
 namespace rdf4cpp::rdf::storage::tuple {
 ISolutionSequenceBackend::ISolutionSequenceBackend(ISolutionSequenceBackend::QuadPattern pattern) : pattern_(pattern) {
 }

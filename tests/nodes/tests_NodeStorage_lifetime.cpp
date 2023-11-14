@@ -3,6 +3,8 @@
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
 
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
+
 #include <atomic>
 #include <shared_mutex>
 #include <mutex>

@@ -26,7 +26,6 @@ class Recipe(ConanFile):
     }
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
-
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
@@ -40,6 +39,8 @@ class Recipe(ConanFile):
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")
+            self.requires("metall/0.26")
+            self.requires("nanobench/4.3.11")
 
     def set_name(self):
         if not hasattr(self, 'name') or self.version is None:

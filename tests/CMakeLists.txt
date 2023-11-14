@@ -1,6 +1,7 @@
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(doctest REQUIRED)
+find_package(nanobench REQUIRED)
 
 # add the executable for all tests
 add_executable(tests_Variable query/tests_Variable.cpp)
@@ -240,6 +241,42 @@ target_link_libraries(tests_CowString
 set_property(TARGET tests_CowString PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_CowString COMMAND tests_CowString)
 
+add_executable(tests_BlankNodeIdManagement util/tests_BlankNodeIdManagement.cpp)
+target_link_libraries(tests_BlankNodeIdManagement
+        doctest::doctest
+        rdf4cpp
+        )
+set_property(TARGET tests_BlankNodeIdManagement PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BlankNodeIdManagement COMMAND tests_BlankNodeIdManagement)
+
+find_package(Metall REQUIRED)
+
+add_executable(BlankNodeIdManagement_metall_phase1 util/BlankNodeIdManagement_metall_phase1.cpp)
+target_link_libraries(BlankNodeIdManagement_metall_phase1
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET BlankNodeIdManagement_metall_phase1 PROPERTY CXX_STANDARD 20)
+
+add_executable(BlankNodeIdManagement_metall_phase2 util/BlankNodeIdManagement_metall_phase2.cpp)
+target_link_libraries(BlankNodeIdManagement_metall_phase2
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET BlankNodeIdManagement_metall_phase2 PROPERTY CXX_STANDARD 20)
+
+add_executable(tests_BlankNodeIdManagement_metall util/tests_BlankNodeIdManagement_metall.cpp)
+add_dependencies(tests_BlankNodeIdManagement_metall BlankNodeIdManagement_metall_phase1 BlankNodeIdManagement_metall_phase2)
+target_link_libraries(tests_BlankNodeIdManagement_metall
+        doctest::doctest
+        rdf4cpp
+        Metall::Metall
+        )
+set_property(TARGET tests_BlankNodeIdManagement_metall PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_BlankNodeIdManagement_metall COMMAND tests_BlankNodeIdManagement_metall)
+
 add_executable(tests_TriBool util/tests_TriBool.cpp)
 target_link_libraries(tests_TriBool
         doctest::doctest
@@ -288,6 +325,13 @@ target_link_libraries(tests_IStreamQuadIterator
 set_property(TARGET tests_IStreamQuadIterator PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
+add_executable(bench_SerDe bench_SerDe.cpp)
+target_link_libraries(bench_SerDe
+        nanobench::nanobench
+        rdf4cpp
+)
+set_property(TARGET bench_SerDe PROPERTY CXX_STANDARD 20)
+
 add_executable(tests_RDFFileParser parser/tests_RDFFileParser.cpp)
 target_link_libraries(tests_RDFFileParser
         doctest::doctest
@@ -295,6 +339,14 @@ target_link_libraries(tests_RDFFileParser
         )
 set_property(TARGET tests_RDFFileParser PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_RDFFileParser COMMAND tests_RDFFileParser)
+
+add_executable(tests_Serialize serializer/tests_Serialize.cpp)
+target_link_libraries(tests_Serialize
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_Serialize PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Serialize COMMAND tests_Serialize)
 
 add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
 target_link_libraries(tests_Namespace_life_cycle

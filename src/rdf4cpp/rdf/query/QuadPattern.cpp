@@ -1,4 +1,5 @@
 #include "QuadPattern.hpp"
+
 namespace rdf4cpp::rdf::query {
 QuadPattern::operator std::string() const {
 
