@@ -80,7 +80,7 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
-bool IRI::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+bool IRI::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.iri_backend();
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("<");

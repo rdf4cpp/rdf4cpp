@@ -43,7 +43,7 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-bool BlankNode::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+bool BlankNode::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.bnode_backend();
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
