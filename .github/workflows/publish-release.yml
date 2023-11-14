@@ -14,9 +14,9 @@ jobs:
       os: ubuntu-22.04
       compiler: clang-16
       cmake-version: 3.22.6
-      conan-version: 1.60.2
+      conan-version: 2.0.13
       use-tag: true
-      conan-options: -o boost:header_only=True
+      conan-options: -o boost/*:header_only=True
     secrets:
       CONAN_USER: ${{ secrets.CONAN_USER }}
       CONAN_PW: ${{ secrets.CONAN_PW }}
