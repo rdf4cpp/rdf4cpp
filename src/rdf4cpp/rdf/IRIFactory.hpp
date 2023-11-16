@@ -115,12 +115,17 @@ public:
 };
 
 class IRIFactory {
-    dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>> prefixes;
+public:
+    using PrefixMap = dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>>;
+private:
+    PrefixMap prefixes;
 
     std::string base;
 
 public:
-    explicit IRIFactory(std::string_view base = "http://example.org/");
+    constexpr static std::string_view default_base = "http://example.org/";
+    explicit IRIFactory(std::string_view base = default_base);
+    explicit IRIFactory(PrefixMap&& prefixes, std::string_view base = default_base);
 
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_relative(std::string_view rel, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const noexcept;
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const;
@@ -142,5 +147,30 @@ private:
     [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
 };
 }  // namespace rdf4cpp::rdf
+
+template<>
+struct std::formatter<rdf4cpp::rdf::IRIFactoryError> : std::formatter<string_view> {
+    auto format(rdf4cpp::rdf::IRIFactoryError p, format_context& ctx) const {
+        std::string_view s{};
+        switch (p) {
+            case rdf4cpp::rdf::IRIFactoryError::Ok:
+                s = "Ok";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::UnknownPrefix:
+                s = "UnknownPrefix";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::Relative:
+                s = "Relative";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidScheme:
+                s = "InvalidScheme";
+                break;
+            default:
+                s = "Unknown";
+                break;
+        }
+        return std::formatter<std::string_view>::format(s, ctx);
+    }
+};
 
 #endif  //RDF4CPP_IRIFACTORY_HPP

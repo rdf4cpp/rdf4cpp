@@ -177,6 +177,11 @@ IRIFactory::IRIFactory(std::string_view base) {
         throw std::invalid_argument{"invalid base"};
 }
 
+IRIFactory::IRIFactory(IRIFactory::PrefixMap &&prefixes, std::string_view base) : prefixes(std::move(prefixes)) {
+    if (set_base(base) != IRIFactoryError::Ok)
+        throw std::invalid_argument{"invalid base"};
+}
+
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
     std::string iri{};
     auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();

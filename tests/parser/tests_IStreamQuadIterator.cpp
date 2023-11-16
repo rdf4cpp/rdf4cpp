@@ -279,6 +279,34 @@ TEST_SUITE("IStreamQuadIterator") {
         ++qit;
         CHECK_EQ(qit, IStreamQuadIterator{});
     }
+
+    TEST_CASE("relative IRIs") {
+        // more complex test cases in tests_IRIFactory
+        constexpr char const *triples = "@base <http://invalid-url.org> .\n"
+                                        "@prefix xsd: </foo/> .\n"
+                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> </bar> .\n"
+                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss};
+
+        CHECK(qit != IStreamQuadIterator());
+        CHECK(qit->has_value());
+        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                   IRI{"http://purl.org/dc/elements/1.1/subject"},
+                                   IRI{"http://invalid-url.org/bar"}});
+
+        ++qit;
+
+        CHECK(qit != IStreamQuadIterator());
+        CHECK(qit->has_value());
+        CHECK(qit->value() == Quad{IRI{"http://invalid-url.org/foo/subject"},
+                                   IRI{"http://invalid-url.org/foo/predicate"},
+                                   Literal::make_simple("aaaaa")});
+
+        ++qit;
+        CHECK(qit == IStreamQuadIterator());
+    }
 }
 
 TEST_CASE("N-Triple") {

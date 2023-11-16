@@ -9,6 +9,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
+#include <rdf4cpp/rdf/IRIFactory.hpp>
 
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
@@ -44,10 +45,7 @@ struct IStreamQuadIterator {
     using iterator_category = std::input_iterator_tag;
     using istream_type = std::istream;
 
-    using prefix_storage_type = dice::sparse_map::sparse_map<std::string,
-                                                             std::string,
-                                                             dice::hash::DiceHashwyhash<std::string_view>,
-                                                             std::equal_to<>>;
+    using prefix_storage_type = IRIFactory::PrefixMap;
 
 private:
     struct Impl;

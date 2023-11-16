@@ -66,19 +66,20 @@ nonstd::expected<BlankNode, SerdStatus> IStreamQuadIterator::Impl::get_bnode(Ser
 }
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode const *node) noexcept {
-    try {
-        return IRI{node_into_string_view(node), this->node_storage};
-    } catch (std::runtime_error const &e) {
-        // TODO: check when actual iri validation implemented
-        // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
+
+    auto iri = iri_factory.from_relative(node_into_string_view(node), this->node_storage);
+    if (!iri.has_value()) {
+        IRIFactoryError err = iri.error();
         this->last_error = ParsingError{
                 .error_type = ParsingError::Type::BadIri,
                 .line = serd_reader_get_current_line(this->reader.get()),
                 .col = serd_reader_get_current_col(this->reader.get()),
-                .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
+                .message = std::format("invalid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
 
         return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_SYNTAX);
     }
+
+    return *iri;
 }
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(SerdNode const *node) noexcept {
@@ -92,33 +93,30 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(Se
     auto const prefix = uri_node_view.substr(0, sep_pos);
     auto const suffix = uri_node_view.substr(sep_pos + 1);
 
-    if (auto const prefix_it = this->prefixes.find(prefix); prefix_it != this->prefixes.end()) {
-        std::ostringstream oss;
-        oss << prefix_it->second << suffix;
-
-        try {
-            return IRI{oss.view(), this->node_storage};
-        } catch (std::runtime_error const &e) {
-            // TODO: check when actual iri validation implemented
+    auto iri = iri_factory.from_prefix(prefix, suffix, node_storage);
+    if (!iri.has_value()) {
+        IRIFactoryError err = iri.error();
+        if (err == IRIFactoryError::UnknownPrefix) {
             // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
+            this->last_error = ParsingError{
+                    .error_type = ParsingError::Type::BadCurie,
+                    .line = serd_reader_get_current_line(this->reader.get()),
+                    .col = serd_reader_get_current_col(this->reader.get()),
+                    .message = "unknown prefix. note: position may not be accurate and instead point to the end of the triple."};
+
+            return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_CURIE);
+        } else {
             this->last_error = ParsingError{
                     .error_type = ParsingError::Type::BadIri,
                     .line = serd_reader_get_current_line(this->reader.get()),
-                    .col = serd_reader_get_current_col(this->reader.get()),
-                    .message = std::string{"unable to expand curie into valid iri. "} + e.what() + ". note: position may not be accurate and instead point to the end of the triple."};
+                .col = serd_reader_get_current_col(this->reader.get()),
+                    .message = std::format("unable to expand curie into valid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
 
             return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_SYNTAX);
         }
-    } else {
-        // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-        this->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadCurie,
-                .line = serd_reader_get_current_line(this->reader.get()),
-                .col = serd_reader_get_current_col(this->reader.get()),
-                .message = "unknown prefix. note: position may not be accurate and instead point to the end of the triple."};
-
-        return nonstd::make_unexpected(SerdStatus::SERD_ERR_BAD_CURIE);
     }
+
+    return *iri;
 }
 
 nonstd::expected<Literal, SerdStatus> IStreamQuadIterator::Impl::get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) noexcept {
@@ -193,7 +191,7 @@ SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode 
                 .col = serd_reader_get_current_col(self->reader.get()),
                 .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
     } else {
-        self->prefixes.emplace("", node_into_string_view(uri));
+        self->iri_factory.set_base(node_into_string_view(uri));
     }
 
     return SERD_SUCCESS;
@@ -209,7 +207,7 @@ SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode cons
                 .col = serd_reader_get_current_col(self->reader.get()),
                 .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
     } else {
-        self->prefixes.emplace(node_into_string_view(name), node_into_string_view(uri));
+        self->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
     }
 
     return SERD_SUCCESS;
@@ -305,7 +303,7 @@ IStreamQuadIterator::Impl::Impl(std::istream &istream, ParsingFlags flags, Prefi
     : istream{std::ref(istream)},
       node_storage{std::move(node_storage)},
       reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
-      prefixes{std::move(prefixes)},
+      iri_factory{std::move(prefixes)},
       no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)} {
 
     serd_reader_set_strict(this->reader.get(), flags.contains(ParsingFlag::Strict));

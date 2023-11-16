@@ -34,7 +34,7 @@ private:
 
     OwnedSerdReader reader;
 
-    PrefixMap prefixes;
+    IRIFactory iri_factory;
     std::deque<Quad> quad_buffer;
     std::optional<ParsingError> last_error;
     bool end_flag = false;
