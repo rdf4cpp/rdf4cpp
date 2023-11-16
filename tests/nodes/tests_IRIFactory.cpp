@@ -66,8 +66,14 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://user@example/foo"}.host() == "example");
     CHECK(IRIView{"http://example/foo"}.host() == "example");
     CHECK(IRIView{"http://user@example:1234/foo"}.port() == "1234");
-    CHECK(IRIView{"http://user@example:/foo"}.port() == "");
+    CHECK(IRIView{"http://user@example:/foo#:"}.port() == "");
     CHECK(IRIView{"http://user@example/foo"}.port() == std::nullopt);
+
+    // from https://datatracker.ietf.org/doc/html/rfc2732#section-2
+    CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html"}.host() == "[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]");
+    CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html"}.port() == "80");
+    CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]/index.html"}.host() == "[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]");
+    CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]/index.html"}.port() == std::nullopt);
 }
 
 TEST_CASE("base") {

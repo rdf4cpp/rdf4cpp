@@ -131,13 +131,15 @@ IRIView::IRIPart IRIView::get_host_part(const IRIView::IRIPart &auth, const IRIV
     if (!auth.defined)
         return {0, 0, false};
     auto d = apply(auth);
-    if (uinfo.defined)
+    auto b = uinfo.start + uinfo.len;
+    if (uinfo.defined) {
         d = d.substr(uinfo.len + 1);
-    auto b = uinfo.start + uinfo.len + 1;
-    auto e = d.find(':');
-    if (e == std::string_view::npos)
-        return {b, auth.len - uinfo.len, true};
-    return {b, e, true};
+        ++b;
+    }
+    auto e = d.find_last_of(':');
+    if (e == std::string_view::npos || d.find(']', e) != std::string_view::npos)
+        return {b, d.length(), true}; // :] or no : at all
+    return {b, e, true}; // ]: or :
 }
 std::string_view IRIView::host() const noexcept {
     auto a = get_authority_part(get_scheme_part());
@@ -156,15 +158,15 @@ IRIView::IRIPart IRIView::get_port_part(const IRIView::IRIPart &auth, const IRIV
 }
 std::optional<std::string_view> IRIView::port() const noexcept {
     auto a = get_authority_part(get_scheme_part());
-    return apply(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
+    return apply_opt(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
 }
 
 IRIFactoryError IRIView::valid() const noexcept {
-    if (is_relative())
+    auto [scheme, auth, path, query, frag] = all_parts();
+    if (!scheme.has_value())
         return IRIFactoryError::Relative;
-    auto s = scheme();
     static regex::Regex scheme_reg{"[[:alpha:]][[:alnum:]+-.]*"};
-    if (!scheme_reg.regex_match(*s))
+    if (!scheme_reg.regex_match(*scheme))
         return IRIFactoryError::InvalidScheme;
     // TODO
     return IRIFactoryError::Ok;

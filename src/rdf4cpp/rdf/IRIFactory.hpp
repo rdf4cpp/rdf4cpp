@@ -28,6 +28,10 @@ public:
     explicit IRIView(std::string_view iri) noexcept;
 
 private:
+    /**
+     * note that even if defined = false, start and len are valid.
+     * they refer to a 0 length location where the relevant part could have been and where the next part should be searched.
+     */
     struct IRIPart {
         size_t start, len;
         bool defined;
