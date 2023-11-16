@@ -28,16 +28,23 @@ public:
     explicit IRIView(std::string_view iri) noexcept;
 
 private:
-    // -> length, defined
-    [[nodiscard]] std::pair<size_t, bool> get_scheme_len() const noexcept;
-    // -> start, length, defined
-    [[nodiscard]] std::tuple<size_t, size_t, bool> get_authority_len() const noexcept;
-    // -> start, length
-    [[nodiscard]] std::pair<size_t, size_t> get_path_len() const noexcept;
-    // -> start, length, defined
-    [[nodiscard]] std::tuple<size_t, size_t, bool> get_query_len() const noexcept;
-    // -> start, defined
-    [[nodiscard]] std::pair<size_t, bool> get_fragment_offset() const noexcept;
+    struct IRIPart {
+        size_t start, len;
+        bool defined;
+    };
+
+    [[nodiscard]] IRIPart get_scheme_part() const noexcept;
+    [[nodiscard]] IRIPart get_authority_part(const IRIPart &scheme) const noexcept;
+    [[nodiscard]] IRIPart get_path_part(const IRIPart &auth) const noexcept;
+    [[nodiscard]] IRIPart get_query_part(const IRIPart &path) const noexcept;
+    [[nodiscard]] IRIPart get_fragment_part(const IRIPart &query) const noexcept;
+
+    [[nodiscard]] IRIPart get_userinfo_part(const IRIPart& auth) const noexcept;
+    [[nodiscard]] IRIPart get_host_part(const IRIPart& auth, const IRIPart& uinfo) const noexcept;
+    [[nodiscard]] IRIPart get_port_part(const IRIPart& auth, const IRIPart& host) const noexcept;
+
+    [[nodiscard]] std::string_view apply(const IRIPart &r) const noexcept;
+    [[nodiscard]] std::optional<std::string_view> apply_opt(const IRIPart &r) const noexcept;
 
 public:
     /**
@@ -73,10 +80,27 @@ public:
     [[nodiscard]] std::optional<std::string_view> fragment() const noexcept;
 
     /**
+     * all parts of the IRI. intended to be used with structured bindings:
+     * auto [scheme, auth, path, query, frag] = iri_view.all_parts();
+     * more efficient than querying each part individually via its method.
+     * @return
+     */
+    [[nodiscard]] std::tuple<std::optional<std::string_view>,
+                             std::optional<std::string_view>,
+                             std::string_view,
+                             std::optional<std::string_view>,
+                             std::optional<std::string_view>>
+    all_parts() const noexcept;
+
+    /**
      * everything except the fragment part of the IRI.
      * @return
      */
     [[nodiscard]] std::string_view to_absolute() const noexcept;
+
+    [[nodiscard]] std::optional<std::string_view> userinfo() const noexcept;
+    [[nodiscard]] std::string_view host() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> port() const noexcept;
 
     /**
      * checks if the IRI is valid according to the IRI specification (not the schemes specification).

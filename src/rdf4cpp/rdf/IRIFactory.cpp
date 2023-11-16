@@ -7,28 +7,34 @@ namespace rdf4cpp::rdf {
 IRIView::IRIView(std::string_view iri) noexcept : data(iri) {
 }
 
-std::pair<size_t, bool> IRIView::get_scheme_len() const noexcept {
-    auto c = data.find(':');
-    if (c == std::string_view::npos)
-        return {0, false};
-    auto s = data.find('/');
-    if (c > s)
-        return {0, false};
-    return {c, true};
+std::string_view IRIView::apply(const IRIView::IRIPart &r) const noexcept {
+    return data.substr(r.start, r.len);
 }
-std::optional<std::string_view> IRIView::scheme() const noexcept {
-    auto s = get_scheme_len();
-    if (!s.second)
-        return std::nullopt;
-    return data.substr(0, s.first);
-}
-bool IRIView::is_relative() const noexcept {
-    return !get_scheme_len().second;
+std::optional<std::string_view> IRIView::apply_opt(const IRIView::IRIPart &r) const noexcept {
+    if (r.defined)
+        return apply(r);
+    return std::nullopt;
 }
 
-std::tuple<size_t, size_t, bool> IRIView::get_authority_len() const noexcept {
+IRIView::IRIPart IRIView::get_scheme_part() const noexcept {
+    auto c = data.find(':');
+    if (c == std::string_view::npos)
+        return {0, 0, false};
+    auto s = data.find('/');
+    if (c > s)
+        return {0, 0, false};
+    return {0, c, true};
+}
+std::optional<std::string_view> IRIView::scheme() const noexcept {
+    return apply_opt(get_scheme_part());
+}
+bool IRIView::is_relative() const noexcept {
+    return !get_scheme_part().defined;
+}
+
+IRIView::IRIPart IRIView::get_authority_part(const IRIPart &scheme) const noexcept {
     auto d = data;
-    auto s = get_scheme_len().first;
+    auto s = scheme.start + scheme.len;
     if (s > 0) {
         ++s;
         d = d.substr(s);
@@ -43,31 +49,25 @@ std::tuple<size_t, size_t, bool> IRIView::get_authority_len() const noexcept {
     return {s, e, true};
 }
 std::optional<std::string_view> IRIView::authority() const noexcept {
-    auto a = get_authority_len();
-    if (!std::get<2>(a))
-        return std::nullopt;
-    return data.substr(std::get<0>(a), std::get<1>(a));
+    return apply_opt(get_authority_part(get_scheme_part()));
 }
 
-std::pair<size_t, size_t> IRIView::get_path_len() const noexcept {
-    auto a = get_authority_len();
-    auto b = std::get<0>(a) + std::get<1>(a);
+IRIView::IRIPart IRIView::get_path_part(const IRIPart &auth) const noexcept {
+    auto b = auth.start + auth.len;
     auto d = data.substr(b);
-    if (std::get<1>(a) > 0 && !d.starts_with('/'))
-        return {b, 0};
+    if (auth.len > 0 && !d.starts_with('/'))
+        return {b, 0, true};
     auto e = d.find_first_of("#?");
     if (e == std::string_view::npos)
         e = d.length();
-    return {b, e};
+    return {b, e, true};
 }
 std::string_view IRIView::path() const noexcept {
-    auto a = get_path_len();
-    return data.substr(a.first, a.second);
+    return apply(get_path_part(get_authority_part(get_scheme_part())));
 }
 
-std::tuple<size_t, size_t, bool> IRIView::get_query_len() const noexcept {
-    auto a = get_path_len();
-    auto b = a.first + a.second;
+IRIView::IRIPart IRIView::get_query_part(const IRIPart &path) const noexcept {
+    auto b = path.start + path.len;
     auto d = data.substr(b);
     if (!d.starts_with('?'))
         return {b, 0, false};
@@ -79,32 +79,84 @@ std::tuple<size_t, size_t, bool> IRIView::get_query_len() const noexcept {
     return {b, e, true};
 }
 std::optional<std::string_view> IRIView::query() const noexcept {
-    auto a = get_query_len();
-    if (!std::get<2>(a))
-        return std::nullopt;
-    return data.substr(std::get<0>(a), std::get<1>(a));
+    return apply_opt(get_query_part(get_path_part(get_authority_part(get_scheme_part()))));
 }
 
-std::pair<size_t, bool> IRIView::get_fragment_offset() const noexcept {
-    auto a = get_query_len();
-    auto b = std::get<0>(a) + std::get<1>(a);
+IRIView::IRIPart IRIView::get_fragment_part(const IRIPart &query) const noexcept {
+    auto b = query.start + query.len;
     auto d = data.substr(b);
     if (!d.starts_with('#'))
-        return {b, false};
-    return {b + 1, true};
+        return {b, d.length(), false};
+    return {b + 1, d.length() - 1, true};
 }
 std::optional<std::string_view> IRIView::fragment() const noexcept {
-    auto f = get_fragment_offset();
-    if (!f.second)
-        return std::nullopt;
-    return data.substr(f.first);
+    return apply_opt(get_fragment_part(get_query_part(get_path_part(get_authority_part(get_scheme_part())))));
+}
+
+std::tuple<std::optional<std::string_view>,
+           std::optional<std::string_view>,
+           std::string_view,
+           std::optional<std::string_view>,
+           std::optional<std::string_view>>
+IRIView::all_parts() const noexcept {
+    auto s = get_scheme_part();
+    auto a = get_authority_part(s);
+    auto p = get_path_part(a);
+    auto q = get_query_part(p);
+    auto f = get_fragment_part(q);
+    return {apply_opt(s), apply_opt(a), apply(p), apply_opt(q), apply_opt(f)};
 }
 
 std::string_view IRIView::to_absolute() const noexcept {
-    auto f = get_fragment_offset();
-    if (!f.second)
+    auto f = get_fragment_part(get_query_part(get_path_part(get_authority_part(get_scheme_part()))));
+    if (!f.defined)
         return data;
-    return data.substr(0, f.first - 1);
+    return data.substr(0, f.start - 1);
+}
+
+IRIView::IRIPart IRIView::get_userinfo_part(const IRIView::IRIPart &auth) const noexcept {
+    if (!auth.defined)
+        return {0, 0, false};
+    auto d = apply(auth);
+    auto e = d.find('@');
+    if (e == std::string_view::npos)
+        return {auth.start, 0, false};
+    return {auth.start, e, true};
+}
+std::optional<std::string_view> IRIView::userinfo() const noexcept {
+    return apply_opt(get_userinfo_part(get_authority_part(get_scheme_part())));
+}
+
+IRIView::IRIPart IRIView::get_host_part(const IRIView::IRIPart &auth, const IRIView::IRIPart &uinfo) const noexcept {
+    if (!auth.defined)
+        return {0, 0, false};
+    auto d = apply(auth);
+    if (uinfo.defined)
+        d = d.substr(uinfo.len + 1);
+    auto b = uinfo.start + uinfo.len + 1;
+    auto e = d.find(':');
+    if (e == std::string_view::npos)
+        return {b, auth.len - uinfo.len, true};
+    return {b, e, true};
+}
+std::string_view IRIView::host() const noexcept {
+    auto a = get_authority_part(get_scheme_part());
+    return apply(get_host_part(a, get_userinfo_part(a)));
+}
+
+IRIView::IRIPart IRIView::get_port_part(const IRIView::IRIPart &auth, const IRIView::IRIPart &host) const noexcept {
+    if (!auth.defined)
+        return {0, 0, false};
+    auto d = apply(auth);
+    d = d.substr(host.start - auth.start + host.len);
+    auto b = host.start + host.len;
+    if (d.starts_with(':'))
+        return {b + 1, d.length() - 1, true};
+    return {b, 0, false};
+}
+std::optional<std::string_view> IRIView::port() const noexcept {
+    auto a = get_authority_part(get_scheme_part());
+    return apply(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
 }
 
 IRIFactoryError IRIView::valid() const noexcept {
@@ -124,25 +176,20 @@ IRIFactory::IRIFactory(std::string_view base) {
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    IRIView r{rel};
-    IRIView b{base};
     std::string iri{};
-    auto r_scheme = r.scheme();
-    auto r_auth = r.authority();
-    auto r_path = r.path();
-    auto r_query = r.query();
-    auto r_frag = r.fragment();
+    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
+    auto [b_scheme, b_auth, b_path, b_query, b_frag] = IRIView{base}.all_parts();
     if (r_scheme.has_value()) {
         iri = construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
     } else if (r_auth.has_value()) {
-        iri = construct(*b.scheme(), r_auth, remove_dot_segments(r_path), r_query, r_frag);
+        iri = construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
     } else if (r_path.empty()) {
-        iri = construct(*b.scheme(), b.authority(), b.path(), r_query.has_value() ? r_query : b.query(), r_frag);
+        iri = construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
     } else if (r_path.starts_with('/')) {
-        iri = construct(*b.scheme(), b.authority(), remove_dot_segments(r_path), r_query, r_frag);
+        iri = construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
     } else {
         auto m = merge_paths(IRIView{base}, r_path);
-        iri = construct(*b.scheme(), b.authority(), remove_dot_segments(m), r_query, r_frag);
+        iri = construct(*b_scheme, b_auth, remove_dot_segments(m), r_query, r_frag);
     }
 
     return create_and_validate(iri, storage);

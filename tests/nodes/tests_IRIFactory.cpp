@@ -49,6 +49,25 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://example"}.valid() == IRIFactoryError::Ok);
     CHECK(IRIView{"example"}.valid() == IRIFactoryError::Relative);
     CHECK(IRIView{"htt?p://example"}.valid() == IRIFactoryError::InvalidScheme);
+
+    // from https://datatracker.ietf.org/doc/html/rfc3986#section-3
+    auto [scheme, auth, path, query, frag] = IRIView{"foo://example.com:8042/over/there?name=ferret#nose"}.all_parts();
+    CHECK(scheme == "foo");
+    CHECK(auth == "example.com:8042");
+    CHECK(path == "/over/there");
+    CHECK(query == "name=ferret");
+    CHECK(frag == "nose");
+
+    CHECK(IRIView{"http://user@example:1234/foo"}.userinfo() == "user");
+    CHECK(IRIView{"http://@example:1234/foo"}.userinfo() == "");
+    CHECK(IRIView{"http://example:1234/foo"}.userinfo() == std::nullopt);
+    CHECK(IRIView{"http://user@example:1234/foo"}.host() == "example");
+    CHECK(IRIView{"http://example:1234/foo"}.host() == "example");
+    CHECK(IRIView{"http://user@example/foo"}.host() == "example");
+    CHECK(IRIView{"http://example/foo"}.host() == "example");
+    CHECK(IRIView{"http://user@example:1234/foo"}.port() == "1234");
+    CHECK(IRIView{"http://user@example:/foo"}.port() == "");
+    CHECK(IRIView{"http://user@example/foo"}.port() == std::nullopt);
 }
 
 TEST_CASE("base") {
