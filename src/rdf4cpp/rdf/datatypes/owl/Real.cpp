@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/owl/Real.hpp>
+#include "Real.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

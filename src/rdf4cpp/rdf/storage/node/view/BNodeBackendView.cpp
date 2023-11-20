@@ -1,4 +1,5 @@
 #include "BNodeBackendView.hpp"
+#include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 
 #include <dice/hash.hpp>
 

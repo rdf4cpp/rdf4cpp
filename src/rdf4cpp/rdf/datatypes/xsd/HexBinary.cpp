@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/HexBinary.hpp>
+#include "HexBinary.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

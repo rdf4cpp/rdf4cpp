@@ -1,6 +1,6 @@
 #include "NodeStorage.hpp"
 
-#include <algorithm>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 
 namespace rdf4cpp::rdf::storage::node {
 
@@ -64,8 +64,8 @@ NodeStorage NodeStorage::new_instance() {
 }
 
 NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
-    if (backend_instance == nullptr) {
-        throw std::runtime_error("Backend instance must not be null.");
+    if (backend_instance == nullptr) [[unlikely]] {
+        throw std::invalid_argument{"Backend instance must not be null."};
     }
 
     /**
@@ -98,7 +98,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
         INodeStorageBackend *old_value = nullptr;
         if (slot.backend.compare_exchange_strong(old_value, backend_instance, std::memory_order_release, std::memory_order_acquire)) {
             // found slot
-            slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade
+            slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade/lookup_instance
             slot.refcount.store(1, std::memory_order_relaxed);
 
             return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}, backend_instance};
@@ -107,10 +107,31 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
         }
     }
 
-    throw std::runtime_error{"Maximum number of backend instances exceeded"};
+    delete backend_instance;
+    throw std::length_error{"Maximum number of backend instances exceeded"};
 }
 
-std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) {
+NodeStorage NodeStorage::register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance) {
+    if (backend_instance == nullptr) [[unlikely]] {
+        throw std::invalid_argument{"Backend instance must not be null."};
+    }
+
+    auto &slot = NodeStorage::node_context_instances[id.value];
+
+    INodeStorageBackend *old_value = nullptr;
+    if (slot.backend.compare_exchange_strong(old_value, backend_instance, std::memory_order_release, std::memory_order_acquire)) [[likely]] {
+        // found slot
+        slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade/lookup_instance
+        slot.refcount.store(1, std::memory_order_relaxed);
+
+        return NodeStorage{id, backend_instance};
+    }
+
+    delete backend_instance;
+    throw std::logic_error{"The node storage ID is already in use"};
+}
+
+std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) noexcept {
     auto &slot = get_slot(id);
 
     /**
@@ -174,9 +195,7 @@ NodeStorage &NodeStorage::operator=(NodeStorage const &other) noexcept {
 
         this->backend_index = other.backend_index;
         this->cached_backend_ptr = other.cached_backend_ptr;
-        if (this->backend_index != node_storage_detail::INVALID_BACKEND_INDEX) {
-            this->increase_refcount();
-        }
+        this->increase_refcount();
     }
 
     return *this;
@@ -327,6 +346,13 @@ bool NodeStorage::erase_variable(identifier::NodeBackendHandle handle) {
     return ns.value().erase_literal(handle.node_id());
 }
 
+bool NodeStorage::operator==(NodeStorage const &other) const noexcept {
+    return this->backend_index == other.backend_index;
+}
+
+bool NodeStorage::operator!=(NodeStorage const &other) const noexcept {
+    return this->backend_index != other.backend_index;
+}
 
 
 WeakNodeStorage::WeakNodeStorage(identifier::NodeStorageID backend_index, size_t generation) noexcept : backend_index{backend_index},

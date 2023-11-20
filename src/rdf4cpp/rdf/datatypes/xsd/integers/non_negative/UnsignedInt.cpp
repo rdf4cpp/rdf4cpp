@@ -1,4 +1,5 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedInt.hpp>
+#include "UnsignedInt.hpp"
+
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {

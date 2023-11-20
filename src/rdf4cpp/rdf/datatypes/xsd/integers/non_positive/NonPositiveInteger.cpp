@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.hpp>
+#include "NonPositiveInteger.hpp"
 
 #include <stdexcept>
 

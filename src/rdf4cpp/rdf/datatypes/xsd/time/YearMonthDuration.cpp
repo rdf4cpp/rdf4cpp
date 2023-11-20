@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.hpp>
+#include "YearMonthDuration.hpp"
 
 #include <ranges>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>

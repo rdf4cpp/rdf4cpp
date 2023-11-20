@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Decimal.hpp>
+#include "Decimal.hpp"
 
 #include <cmath>
 #include <sstream>

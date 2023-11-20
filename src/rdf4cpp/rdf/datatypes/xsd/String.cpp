@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/String.hpp>
+#include "String.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 

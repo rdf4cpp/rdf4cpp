@@ -1,4 +1,5 @@
 #include "Solution.hpp"
+
 namespace rdf4cpp::rdf::query {
 std::vector<Variable> Solution::extract_variables(const QuadPattern &quad) {
     std::vector<Variable> variables;

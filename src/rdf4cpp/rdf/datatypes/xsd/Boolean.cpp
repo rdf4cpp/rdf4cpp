@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
+#include "Boolean.hpp"
 
 #include <stdexcept>
 

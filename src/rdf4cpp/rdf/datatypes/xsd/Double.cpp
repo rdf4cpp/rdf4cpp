@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Double.hpp>
+#include "Double.hpp"
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 #include <cmath>

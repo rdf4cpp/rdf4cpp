@@ -12,6 +12,8 @@
 
 #include <uni_algo/all.h>
 
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
@@ -100,7 +102,7 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::no
     return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
                                              .datatype = fixed_id,
                                              .value = std::move(value)}),
-                              storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+                                     storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept {
@@ -111,9 +113,9 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool 
             .needs_escape = needs_escape});
 
     bool inlined = false;
-    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang); // check if the lang_tag can be inlined
+    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
-        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value()); // check if we have enough space
+        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
         if (inlined_id.has_value()) {
             node_id = NodeID{inlined_id.value(), node_id.literal_type()};
             inlined = true;
@@ -302,7 +304,6 @@ Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {
 
                     return node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
                                                                                                      .value = std::move(value)});
-
                 }
 
                 // send over IRI corresponding to this datatype
@@ -397,7 +398,6 @@ Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const 
 
                     return node_storage.find_id(storage::node::view::ValueLiteralBackendView{.datatype = dt_id,
                                                                                              .value = std::move(value)});
-
                 }
 
                 // Default case.
@@ -609,75 +609,67 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     return Literal::make_boolean(this->language_tag_eq(other), node_storage);
 }
 
-Literal::operator std::string() const noexcept {
+// https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+#define RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(lexical) \
+    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");                \
+    for (char const ch : lexical) {                    \
+        switch (ch) {                                  \
+            case '"': {                                \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\")"); \
+                break;                                 \
+            }                                          \
+            case '\\': {                               \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\\)"); \
+                break;                                 \
+            }                                          \
+            case '\n': {                               \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\n)"); \
+                break;                                 \
+            }                                          \
+            case '\r': {                               \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(R"(\r)"); \
+                break;                                 \
+            }                                          \
+            [[likely]] default: {                      \
+                RDF4CPP_DETAIL_TRY_WRITE_STR(&ch, 1);  \
+                break;                                 \
+            }                                          \
+        }                                              \
+    }                                                  \
+    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+
+bool Literal::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
     if (this->null()) {
-        return "null";
+        RDF4CPP_DETAIL_TRY_WRITE_STR("null");
+        return true;
     }
-
-    auto const estimated_escaped_size = [](size_t size) noexcept {
-        return static_cast<size_t>(static_cast<double>(size) * 1.2); // TODO tweak factor
-    };
-
-    auto const append_quoted_lexical = [](std::string &out, std::string_view const lexical) noexcept {
-        // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-
-        out.append("\"");
-        for (char const ch : lexical) {
-            switch (ch) {
-                case '"': {
-                    out.append(R"(\")");
-                    break;
-                }
-                case '\\': {
-                    out.append(R"(\\)");
-                    break;
-                }
-                case '\n': {
-                    out.append(R"(\n)");
-                    break;
-                }
-                case '\r': {
-                    out.append(R"(\r)");
-                    break;
-                }
-                [[likely]] default: {
-                    out.push_back(ch);
-                    break;
-                }
-            }
-        }
-        out.append("\"");
-    };
-
-    std::string buf;
 
     if (this->datatype_eq<datatypes::xsd::String>()) {
         auto const value = this->backend_handle().literal_backend().get_lexical();
 
         if (value.needs_escape) [[unlikely]] {
-            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + 2);
-            append_quoted_lexical(buf, value.lexical_form);
+            RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(value.lexical_form);
         } else {
-            buf.reserve(value.lexical_form.size() + 2);
-            buf.push_back('"');
-            buf.append(value.lexical_form);
-            buf.push_back('"');
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR(value.lexical_form);
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         }
+
+        return true;
     } else if (this->datatype_eq<datatypes::rdf::LangString>()) {
         auto const value = this->lang_tagged_get_de_inlined().backend_handle().literal_backend().get_lexical();
 
         if (value.needs_escape) [[unlikely]] {
-            buf.reserve(estimated_escaped_size(value.lexical_form.size()) + value.language_tag.size() + 3);
-            append_quoted_lexical(buf, value.lexical_form);
+            RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(value.lexical_form);
         } else {
-            buf.reserve(value.lexical_form.size() + value.language_tag.size() + 3);
-            buf.push_back('"');
-            buf.append(value.lexical_form);
-            buf.push_back('"');
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+            RDF4CPP_DETAIL_TRY_WRITE_STR(value.lexical_form);
+            RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         }
 
-        buf.push_back('@');
-        buf.append(value.language_tag);
+        RDF4CPP_DETAIL_TRY_WRITE_STR("@");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
+        return true;
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
         // Notes:
@@ -692,35 +684,34 @@ Literal::operator std::string() const noexcept {
         auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
         auto const &datatype_iri = entry->datatype_iri;
 
-        buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
-        buf.push_back('"');
-        buf.append(lexical_form);
-        buf.append("\"^^<");
-        buf.append(datatype_iri);
-        buf.push_back('>');
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
+        RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
+        RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+        return true;
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
 
-        this->backend_handle().literal_backend().visit(
+        return this->backend_handle().literal_backend().visit(
                 [&](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                     auto const &dtype_iri = NodeStorage::find_iri_backend_view(NodeBackendHandle{lexical_backend.datatype_id,
                                                                                                  storage::node::identifier::RDFNodeType::IRI,
                                                                                                  this->backend_handle().node_storage_id()});
 
                     if (lexical_backend.needs_escape) [[unlikely]] {
-                        buf.reserve(estimated_escaped_size(lexical_backend.lexical_form.size()) + dtype_iri.identifier.size() + 4);
-                        append_quoted_lexical(buf, lexical_backend.lexical_form);
+                        RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(lexical_backend.lexical_form);
                     } else {
-                        buf.reserve(lexical_backend.lexical_form.size() + dtype_iri.identifier.size() + 4);
-                        buf.push_back('"');
-                        buf.append(lexical_backend.lexical_form);
-                        buf.push_back('"');
+                        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+                        RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_backend.lexical_form);
+                        RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     }
 
-                    buf.append("^^<");
-                    buf.append(dtype_iri.identifier);
-                    buf.push_back('>');
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^<");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(dtype_iri.identifier);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+                    return true;
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
                     // Notes:
@@ -733,17 +724,24 @@ Literal::operator std::string() const noexcept {
                     auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
                     auto const &datatype_iri = entry->datatype_iri;
 
-                    buf.reserve(lexical_form.size() + datatype_iri.size() + 6);
-                    buf.push_back('"');
-                    buf.append(lexical_form);
-                    buf.append("\"^^<");
-                    buf.append(datatype_iri);
-                    buf.push_back('>');
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+                    return true;
                 });
     }
-
-    return buf;
 }
+
+#undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
+
+Literal::operator std::string() const noexcept {
+    writer::StringWriter ser;
+    serialize(ser);
+    return ser.finalize();
+}
+
 bool Literal::is_literal() const noexcept { return true; }
 bool Literal::is_variable() const noexcept { return false; }
 bool Literal::is_blank_node() const noexcept { return false; }

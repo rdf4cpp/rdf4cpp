@@ -1,4 +1,5 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.hpp>
+#include "Byte.hpp"
+
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {

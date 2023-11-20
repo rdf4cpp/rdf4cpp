@@ -1,4 +1,5 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.hpp>
+#include "Int.hpp"
+
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/Inlining.hpp>
 

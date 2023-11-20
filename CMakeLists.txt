@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.18)
+project(rdf4cpp VERSION 0.0.19)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -13,7 +13,7 @@ if (IS_TOP_LEVEL AND USE_CONAN)
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
     endif()
     set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost:header_only=True")
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost/*:header_only=True")
 endif ()
 
 # find packages
@@ -135,6 +135,14 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/bnode_mngt/NodeGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/NodeScope.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/SkolemIRIFactory.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/BNodeFactory.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
         src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp
@@ -200,9 +208,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
-        src/rdf4cpp/rdf/writer/NNodeWriter.cpp
-        src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
-        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
         private/rdf4cpp/rdf/regex/RegexImpl.cpp
         private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
