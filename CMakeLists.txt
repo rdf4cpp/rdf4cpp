@@ -1,13 +1,13 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.22)
 project(rdf4cpp VERSION 0.0.19)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
 OPTION(USE_CONAN "If available, use conan to retrieve dependencies." ON)
-if (IS_TOP_LEVEL AND USE_CONAN)
+if (PROJECT_IS_TOP_LEVEL AND USE_CONAN)
     include(cmake/conan_cmake.cmake)
-    if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+    if (BUILD_TESTING)
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "True")
     else()
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
@@ -246,12 +246,12 @@ set_target_properties(rdf4cpp PROPERTIES
         CXX_STANDARD_REQUIRED ON
 )
 
-if (IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
     install_cpp_library(rdf4cpp src)
 endif ()
 
-if (BUILD_TESTING AND IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
     message("Tests are configured to be build.")
     include(CTest)
     enable_testing()
@@ -259,7 +259,7 @@ if (BUILD_TESTING AND IS_TOP_LEVEL)
 endif ()
 
 OPTION(BUILD_EXAMPLES "Build the examples for rdf4cpp." OFF)
-if (BUILD_EXAMPLES AND IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL AND BUILD_EXAMPLES)
     message("Examples are configured to be build.")
     add_subdirectory(examples)
 endif ()
