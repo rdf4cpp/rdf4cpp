@@ -40,9 +40,14 @@ jobs:
           # gcc-13
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           
-          # clang-17
           source /etc/os-release
+
+          # clang-16
+          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
+
+          # clang-17
           echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main" | sudo tee /etc/apt/sources.list.d/llvm-17.list
+          
           curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg > /dev/null
 
       - name: Ensure stdlib version
@@ -94,7 +99,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.conan/data
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan${{ fromJSON('["", "-coverage"]')[inputs.with-coverage] }}${{ fromJSON('["", "-sanitizer"]')[inputs.with-sanitizer] }}${{ fromJSON('["", "-avx"]')[inputs.with-avx] }}
 
       - name: Check out sources
         uses: actions/checkout@v3

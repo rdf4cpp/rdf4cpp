@@ -21,14 +21,19 @@ jobs:
         shell: bash
 
     steps:
-      - name: Add Repos for for gcc-13 and clang-17
+      - name: Add Repos for for gcc-13 and clang-16,17
         run: |
           # gcc-13
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
 
-          # clang-17
           source /etc/os-release
+
+          # clang-16
+          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
+
+          # clang-17
           echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main" | sudo tee /etc/apt/sources.list.d/llvm-17.list
+          
           curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg > /dev/null
 
       - name: Ensure stdlib version
