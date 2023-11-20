@@ -4,7 +4,7 @@
 #include <iterator>
 #include <memory>
 
-#include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 #include <rdf4cpp/rdf/Quad.hpp>
 

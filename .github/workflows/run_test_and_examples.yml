@@ -9,9 +9,9 @@ jobs:
             compiler: gcc-13
 
           - os: ubuntu-22.04
-            compiler: clang-15
-          - os: ubuntu-22.04
             compiler: clang-16
+          - os: ubuntu-22.04
+            compiler: clang-17
 
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
@@ -21,6 +21,6 @@ jobs:
       compiler: ${{ matrix.cppenv.compiler }}
       cmake-version: 3.22.6
       with-coverage: false
-      with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-16' }}
-      with-Werror: ${{ matrix.cppenv.compiler == 'clang-16' || matrix.cppenv.compiler == 'gcc-13' }}
-      with-AVX: ${{ matrix.cppenv.compiler == 'clang-16' }}
+      with-sanitizer: ${{ matrix.cppenv.compiler == 'clang-17' }}
+      with-Werror: ${{ matrix.cppenv.compiler == 'clang-17' || matrix.cppenv.compiler == 'gcc-13' }}
+      with-AVX: ${{ matrix.cppenv.compiler == 'clang-17' }}
