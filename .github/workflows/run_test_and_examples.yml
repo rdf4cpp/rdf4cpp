@@ -9,8 +9,6 @@ jobs:
             compiler: gcc-13
 
           - os: ubuntu-22.04
-            compiler: clang-16
-          - os: ubuntu-22.04
             compiler: clang-17
 
       fail-fast: false
