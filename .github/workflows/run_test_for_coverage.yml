@@ -7,8 +7,8 @@ jobs:
     strategy:
       matrix:
         cppenv:
-          - os: ubuntu-22.04,
-            compiler: gcc-13,
+          - os: ubuntu-22.04
+            compiler: gcc-13
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
     uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
