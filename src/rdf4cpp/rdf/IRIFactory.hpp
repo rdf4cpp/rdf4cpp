@@ -16,6 +16,7 @@ enum class IRIFactoryError {
     UnknownPrefix,
     Relative,
     InvalidScheme,
+    InvalidPort,
 };
 
 /**
@@ -102,8 +103,20 @@ public:
      */
     [[nodiscard]] std::string_view to_absolute() const noexcept;
 
+    /**
+     * the userinfo part of the authority.
+     * @return
+     */
     [[nodiscard]] std::optional<std::string_view> userinfo() const noexcept;
+    /**
+     * the host part of the authority.
+     * @return
+     */
     [[nodiscard]] std::string_view host() const noexcept;
+    /**
+     * the port part of the authority.
+     * @return
+     */
     [[nodiscard]] std::optional<std::string_view> port() const noexcept;
 
     /**
@@ -111,9 +124,19 @@ public:
      * (does not accept relative references)
      * @return
      */
-    [[nodiscard]] IRIFactoryError valid() const noexcept;
+    [[nodiscard]] IRIFactoryError fully_validate() const noexcept;
+    /**
+     * quickly checks if the IRI is valid according to the IRI specification (not the schemes specification).
+     * (does not accept relative references)
+     * (may miss invalid IRIs)
+     * @return
+     */
+    [[nodiscard]] IRIFactoryError quick_validate() const noexcept;
 };
 
+/**
+ * Stores a base IRI and a prefix map and allows to create IRIs by possibly applying both.
+ */
 class IRIFactory {
 public:
     using PrefixMap = dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>>;
@@ -124,16 +147,56 @@ private:
 
 public:
     constexpr static std::string_view default_base = "http://example.org/";
+    /**
+     * Creates a IRIFactory with empty prefix map and a given base IRI. Throws if base is invalid.
+     * @param base
+     */
     explicit IRIFactory(std::string_view base = default_base);
+    /**
+     * Creates a IRIFactory with a given prefix map and a given base IRI. Throws if base is invalid.
+     * @param prefixes
+     * @param base
+     */
     explicit IRIFactory(PrefixMap&& prefixes, std::string_view base = default_base);
 
+    /**
+     * Creates a IRI from a possibly relative IRI.
+     * @param rel
+     * @param storage
+     * @return
+     */
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_relative(std::string_view rel, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const noexcept;
+    /**
+     * Creates a IRI by looking up a prefix in the prefix map and possibly resolving a relative IRI.
+     * @param prefix
+     * @param local
+     * @param storage
+     * @return
+     */
     [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) const;
 
+    /**
+     * Creates or changes a prefix.
+     * @param prefix
+     * @param expanded
+     */
     void assign_prefix(std::string_view prefix, std::string_view expanded);
+    /**
+     * Removes a prefix.
+     * @param prefix
+     */
     void clear_prefix(std::string_view prefix);
 
+    /**
+     * The base IRI.
+     * @return
+     */
     [[nodiscard]] std::string_view get_base() const noexcept;
+    /**
+     * Changes the base IRI. Validates the new base IRI before setting.
+     * @param b
+     * @return
+     */
     [[nodiscard]] IRIFactoryError set_base(std::string_view b) noexcept;
 
 private:
@@ -164,6 +227,9 @@ struct std::formatter<rdf4cpp::rdf::IRIFactoryError> : std::formatter<string_vie
                 break;
             case rdf4cpp::rdf::IRIFactoryError::InvalidScheme:
                 s = "InvalidScheme";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidPort:
+                s = "InvalidPort";
                 break;
             default:
                 s = "Unknown";

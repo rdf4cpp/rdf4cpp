@@ -46,9 +46,11 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://example#f"}.to_absolute() == "http://example");
     CHECK(IRIView{"http://example"}.to_absolute() == "http://example");
 
-    CHECK(IRIView{"http://example"}.valid() == IRIFactoryError::Ok);
-    CHECK(IRIView{"example"}.valid() == IRIFactoryError::Relative);
-    CHECK(IRIView{"htt?p://example"}.valid() == IRIFactoryError::InvalidScheme);
+    CHECK(IRIView{"http://example"}.quick_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"example"}.quick_validate() == IRIFactoryError::Relative);
+    CHECK(IRIView{"htt?p://example"}.fully_validate() == IRIFactoryError::InvalidScheme);
+    CHECK(IRIView{"http://example:123"}.fully_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"http://example:12a3"}.fully_validate() == IRIFactoryError::InvalidPort);
 
     // from https://datatracker.ietf.org/doc/html/rfc3986#section-3
     auto [scheme, auth, path, query, frag] = IRIView{"foo://example.com:8042/over/there?name=ferret#nose"}.all_parts();

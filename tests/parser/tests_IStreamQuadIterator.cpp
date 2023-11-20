@@ -285,7 +285,8 @@ TEST_SUITE("IStreamQuadIterator") {
         constexpr char const *triples = "@base <http://invalid-url.org> .\n"
                                         "@prefix xsd: </foo/> .\n"
                                         "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> </bar> .\n"
-                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
+                                        "xsd:subject xsd:predicate \"aaaaa\" .\n"
+                                        "@base </definitely-relative> . \n";
 
         std::istringstream iss{triples};
         IStreamQuadIterator qit{iss};
@@ -303,6 +304,12 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK(qit->value() == Quad{IRI{"http://invalid-url.org/foo/subject"},
                                    IRI{"http://invalid-url.org/foo/predicate"},
                                    Literal::make_simple("aaaaa")});
+
+        ++qit;
+
+        CHECK(qit != IStreamQuadIterator());
+        CHECK(!qit->has_value());
+        std::cout << qit->error() << std::endl;
 
         ++qit;
         CHECK(qit == IStreamQuadIterator());

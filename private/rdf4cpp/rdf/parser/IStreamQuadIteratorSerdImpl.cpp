@@ -191,7 +191,15 @@ SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode 
                 .col = serd_reader_get_current_col(self->reader.get()),
                 .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
     } else {
-        self->iri_factory.set_base(node_into_string_view(uri));
+        auto e = self->iri_factory.set_base(node_into_string_view(uri));
+        if (e != IRIFactoryError::Ok) {
+            self->last_error = ParsingError{
+                    .error_type = ParsingError::Type::BadSyntax,
+                    .line = serd_reader_get_current_line(self->reader.get()),
+                    .col = serd_reader_get_current_col(self->reader.get()),
+                    .message = std::format("Error setting base: {}. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line.", e)};
+            return SERD_ERR_BAD_SYNTAX;
+        }
     }
 
     return SERD_SUCCESS;

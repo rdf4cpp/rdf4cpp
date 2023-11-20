@@ -161,12 +161,25 @@ std::optional<std::string_view> IRIView::port() const noexcept {
     return apply_opt(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
 }
 
-IRIFactoryError IRIView::valid() const noexcept {
+IRIFactoryError IRIView::fully_validate() const noexcept {
     auto [scheme, auth, path, query, frag] = all_parts();
     if (!scheme.has_value())
         return IRIFactoryError::Relative;
-    static regex::Regex scheme_reg{"[[:alpha:]][[:alnum:]+-.]*"};
+    static regex::Regex scheme_reg{"[[:alnum:]+-.]*"};
     if (!scheme_reg.regex_match(*scheme))
+        return IRIFactoryError::InvalidScheme;
+    auto p = port();
+    static regex::Regex port_reg{"[[:digit:]]*"};
+    if (p.has_value() && !port_reg.regex_match((*p)))
+        return IRIFactoryError::InvalidPort;
+    // TODO
+    return IRIFactoryError::Ok;
+}
+IRIFactoryError IRIView::quick_validate() const noexcept {
+    auto [scheme, auth, path, query, frag] = all_parts();
+    if (!scheme.has_value())
+        return IRIFactoryError::Relative;
+    if (scheme->empty())
         return IRIFactoryError::InvalidScheme;
     // TODO
     return IRIFactoryError::Ok;
@@ -214,7 +227,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept {
-    auto e = IRIView{iri}.valid();
+    auto e = IRIView{iri}.quick_validate();
     if (e != IRIFactoryError::Ok)
         return nonstd::make_unexpected(e);
     return IRI{iri, storage};
@@ -322,7 +335,7 @@ std::string_view IRIFactory::get_base() const noexcept {
 }
 
 IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
-    auto e = IRIView{b}.valid();
+    auto e = IRIView{b}.quick_validate();
     if (e != IRIFactoryError::Ok)
         return e;
     base = b;
