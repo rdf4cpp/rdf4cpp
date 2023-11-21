@@ -7,8 +7,9 @@
 #include <string_view>
 
 #include <boost/multiprecision/cpp_int.hpp>
-#include <nonstd/expected.hpp>
 #include <dice/hash.hpp>
+
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 namespace rdf4cpp::rdf::util {
 enum class RoundingMode {

@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>

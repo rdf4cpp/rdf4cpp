@@ -1,15 +1,14 @@
 name: Run unit tests and examples
-on: [ 'push' ]
+on: [ 'pull_request' ]
 
 
 jobs:
   tests_and_example_matrix:
     strategy:
       matrix:
-        cppenv: [ {
-          os: ubuntu-22.04,
-          compiler: "gcc-13",
-        } ]
+        cppenv:
+          - os: ubuntu-22.04
+            compiler: gcc-13
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
     uses: ./.github/workflows/reusable_run_test_and_examples_by_linking_type.yml
