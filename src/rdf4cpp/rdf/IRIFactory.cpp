@@ -1,6 +1,6 @@
 #include "IRIFactory.hpp"
 
-#include <rdf4cpp/rdf/regex/Regex.hpp>
+#include <uni_algo/all.h>
 
 namespace rdf4cpp::rdf {
 
@@ -141,9 +141,9 @@ IRIView::IRIPart IRIView::get_host_part(const IRIView::IRIPart &auth, const IRIV
         return {b, d.length(), true}; // :] or no : at all
     return {b, e, true}; // ]: or :
 }
-std::string_view IRIView::host() const noexcept {
+std::optional<std::string_view> IRIView::host() const noexcept {
     auto a = get_authority_part(get_scheme_part());
-    return apply(get_host_part(a, get_userinfo_part(a)));
+    return apply_opt(get_host_part(a, get_userinfo_part(a)));
 }
 
 IRIView::IRIPart IRIView::get_port_part(const IRIView::IRIPart &auth, const IRIView::IRIPart &host) const noexcept {
@@ -161,27 +161,39 @@ std::optional<std::string_view> IRIView::port() const noexcept {
     return apply_opt(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
 }
 
-IRIFactoryError IRIView::fully_validate() const noexcept {
-    auto [scheme, auth, path, query, frag] = all_parts();
-    if (!scheme.has_value())
-        return IRIFactoryError::Relative;
-    static regex::Regex scheme_reg{"[[:alnum:]+-.]*"};
-    if (!scheme_reg.regex_match(*scheme))
-        return IRIFactoryError::InvalidScheme;
-    auto p = port();
-    static regex::Regex port_reg{"[[:digit:]]*"};
-    if (p.has_value() && !port_reg.regex_match((*p)))
-        return IRIFactoryError::InvalidPort;
-    // TODO
-    return IRIFactoryError::Ok;
+std::tuple<std::optional<std::string_view>, std::optional<std::string_view>, std::optional<std::string_view>> IRIView::all_authority_parts() const noexcept {
+    auto a = get_authority_part(get_scheme_part());
+    auto ui = get_userinfo_part(a);
+    auto ho = get_host_part(a, ui);
+    auto po = get_port_part(a, ho);
+    return {apply_opt(ui), apply_opt(ho), apply_opt(po)};
 }
+
 IRIFactoryError IRIView::quick_validate() const noexcept {
     auto [scheme, auth, path, query, frag] = all_parts();
     if (!scheme.has_value())
         return IRIFactoryError::Relative;
-    if (scheme->empty())
+    static constexpr auto scheme_pattern = detail::ascii_alphanum_matcher | detail::ASCIIPatternMatcher{"+-."};
+    if (!detail::match(scheme_pattern, *scheme)) // scheme is ascii only, no need to utf8-decode
         return IRIFactoryError::InvalidScheme;
-    // TODO
+    auto [userinfo, host, port] = all_authority_parts();
+    static constexpr auto userinfo_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%"};
+    if (userinfo.has_value() && !detail::match(userinfo_pattern, *userinfo | una::views::utf8))
+        return IRIFactoryError::InvalidUserinfo;
+    static constexpr auto host_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%[]"};
+    if (host.has_value() && !detail::match(host_pattern, *host | una::views::utf8))
+        return IRIFactoryError::InvalidHost;
+    if (port.has_value() && !detail::match(detail::ASCIINumMatcher{}, *port)) // scheme is ascii numbers only, no need to utf8-decode
+        return IRIFactoryError::InvalidPort;
+    static constexpr auto path_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%:@/"};
+    if (!detail::match(path_pattern, path | una::views::utf8))
+        return IRIFactoryError::InvalidPath;
+    static constexpr auto query_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::IPrivateMatcher{} | detail::ASCIIPatternMatcher{"%:@/?"};
+    if (query.has_value() && !detail::match(query_pattern, *query | una::views::utf8))
+        return IRIFactoryError::InvalidQuery;
+    static constexpr auto frag_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%:@/?"};
+    if (frag.has_value() && !detail::match(frag_pattern, *frag | una::views::utf8))
+        return IRIFactoryError::InvalidFragment;
     return IRIFactoryError::Ok;
 }
 

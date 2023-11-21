@@ -46,11 +46,18 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://example#f"}.to_absolute() == "http://example");
     CHECK(IRIView{"http://example"}.to_absolute() == "http://example");
 
-    CHECK(IRIView{"http://example"}.quick_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"htt-p://example/path?query#frag"}.quick_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"htt-p:foo/bar"}.quick_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"htt-p:#frag"}.quick_validate() == IRIFactoryError::Ok);
     CHECK(IRIView{"example"}.quick_validate() == IRIFactoryError::Relative);
-    CHECK(IRIView{"htt?p://example"}.fully_validate() == IRIFactoryError::InvalidScheme);
-    CHECK(IRIView{"http://example:123"}.fully_validate() == IRIFactoryError::Ok);
-    CHECK(IRIView{"http://example:12a3"}.fully_validate() == IRIFactoryError::InvalidPort);
+    CHECK(IRIView{"htt?p://example"}.quick_validate() == IRIFactoryError::InvalidScheme);
+    CHECK(IRIView{"http://user@example:123"}.quick_validate() == IRIFactoryError::Ok);
+    CHECK(IRIView{"http://user@exa@mple:123"}.quick_validate() == IRIFactoryError::InvalidHost);
+    CHECK(IRIView{"http://us]er@example:123"}.quick_validate() == IRIFactoryError::InvalidUserinfo);
+    CHECK(IRIView{"http://user@example:12a3"}.quick_validate() == IRIFactoryError::InvalidPort);
+    CHECK(IRIView{"htt-p://example/pat[h"}.quick_validate() == IRIFactoryError::InvalidPath);
+    CHECK(IRIView{"htt-p://example/path?que]ry#frag"}.quick_validate() == IRIFactoryError::InvalidQuery);
+    CHECK(IRIView{"htt-p://example/path?query#fra]g"}.quick_validate() == IRIFactoryError::InvalidFragment);
 
     // from https://datatracker.ietf.org/doc/html/rfc3986#section-3
     auto [scheme, auth, path, query, frag] = IRIView{"foo://example.com:8042/over/there?name=ferret#nose"}.all_parts();
@@ -70,6 +77,14 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://user@example:1234/foo"}.port() == "1234");
     CHECK(IRIView{"http://user@example:/foo#:"}.port() == "");
     CHECK(IRIView{"http://user@example/foo"}.port() == std::nullopt);
+    CHECK(IRIView{"http:foo"}.userinfo() == std::nullopt);
+    CHECK(IRIView{"http:foo"}.host() == std::nullopt);
+    CHECK(IRIView{"http:foo"}.port() == std::nullopt);
+
+    auto [userinfo, host, port] = IRIView{"http://user@example:1234/foo"}.all_authority_parts();
+    CHECK(userinfo == "user");
+    CHECK(host == "example");
+    CHECK(port == "1234");
 
     // from https://datatracker.ietf.org/doc/html/rfc2732#section-2
     CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html"}.host() == "[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]");

@@ -16,7 +16,12 @@ enum class IRIFactoryError {
     UnknownPrefix,
     Relative,
     InvalidScheme,
+    InvalidUserinfo,
+    InvalidHost,
     InvalidPort,
+    InvalidPath,
+    InvalidQuery,
+    InvalidFragment,
 };
 
 /**
@@ -112,7 +117,7 @@ public:
      * the host part of the authority.
      * @return
      */
-    [[nodiscard]] std::string_view host() const noexcept;
+    [[nodiscard]] std::optional<std::string_view> host() const noexcept;
     /**
      * the port part of the authority.
      * @return
@@ -120,11 +125,13 @@ public:
     [[nodiscard]] std::optional<std::string_view> port() const noexcept;
 
     /**
-     * checks if the IRI is valid according to the IRI specification (not the schemes specification).
-     * (does not accept relative references)
+     * all authority parts of the IRI. intended to be used with structured bindings:
+     * auto [userinfo, host, port] = iri_view.all_authority_parts();
+     * more efficient than querying each part individually via its method.
      * @return
      */
-    [[nodiscard]] IRIFactoryError fully_validate() const noexcept;
+    [[nodiscard]] std::tuple<std::optional<std::string_view>, std::optional<std::string_view>, std::optional<std::string_view>> all_authority_parts() const noexcept;
+
     /**
      * quickly checks if the IRI is valid according to the IRI specification (not the schemes specification).
      * (does not accept relative references)
@@ -209,6 +216,101 @@ private:
     static void remove_last_path_segment(std::string &path) noexcept;
     [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
 };
+
+namespace detail {
+template<class T>
+concept CharMatcher = requires(const T a, int c) {{a.match(c)} -> std::same_as<bool>; };
+
+struct ASCIIPatternMatcher {
+    std::string_view pattern;
+
+    [[nodiscard]] constexpr bool match(int c) const noexcept {
+        auto ch = static_cast<char>(c);
+        if (c != static_cast<int>(ch))  // not asciii
+            return false;
+        return pattern.find(ch) != std::string_view::npos;
+    }
+};
+
+struct ASCIINumMatcher {
+    [[nodiscard]] static constexpr bool match(int c) noexcept {
+        auto ch = static_cast<char>(c);
+        if (c != static_cast<int>(ch))  // not asciii
+            return false;
+        return c >= '0' && c <= '9';
+    }
+};
+struct ASCIIAlphaMatcher {
+    [[nodiscard]] static constexpr bool match(int c) noexcept {
+        auto ch = static_cast<char>(c);
+        if (c != static_cast<int>(ch))  // not asciii
+            return false;
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+};
+
+template<CharMatcher A, CharMatcher B>
+struct OrMatcher {
+    A a;
+    B b;
+
+    constexpr OrMatcher(A a, B b) : a(a), b(b) {}
+    constexpr OrMatcher() = default;
+
+    [[nodiscard]] constexpr bool match(int c) const noexcept {
+        return a.match(c) || b.match(c);
+    }
+};
+
+template<CharMatcher A, CharMatcher B>
+constexpr OrMatcher<A, B> operator|(A a, B b) {
+    return OrMatcher{a, b};
+}
+
+constexpr auto ascii_alphanum_matcher = ASCIIAlphaMatcher{} | ASCIINumMatcher{};
+
+struct UCSCharMatcher {
+    [[nodiscard]] static constexpr bool match(int c) noexcept {
+        return (c >= 0xA0 && c <= 0xD7FF) ||
+               (c >= 0xF900 && c <= 0xFDCF) ||
+               (c >= 0xFDF0 && c <= 0xFFEF) ||
+               (c >= 0x10000 && c <= 0x1FFFD) ||
+               (c >= 0x20000 && c <= 0x2FFFD) ||
+               (c >= 0x30000 && c <= 0x3FFFD) ||
+               (c >= 0x40000 && c <= 0x4FFFD) ||
+               (c >= 0x50000 && c <= 0x5FFFD) ||
+               (c >= 0x60000 && c <= 0x6FFFD) ||
+               (c >= 0x70000 && c <= 0x7FFFD) ||
+               (c >= 0x80000 && c <= 0x8FFFD) ||
+               (c >= 0x90000 && c <= 0x9FFFD) ||
+               (c >= 0xA0000 && c <= 0xAFFFD) ||
+               (c >= 0xB0000 && c <= 0xBFFFD) ||
+               (c >= 0xC0000 && c <= 0xCFFFD) ||
+               (c >= 0xD0000 && c <= 0xDFFFD) ||
+               (c >= 0xE0000 && c <= 0xEFFFD);
+    }
+};
+
+constexpr auto i_unreserved_matcher = ascii_alphanum_matcher | ASCIIPatternMatcher{"-._~"} | UCSCharMatcher{};
+constexpr auto sub_delims_matcher = ASCIIPatternMatcher{"!$&'()*+,;="};
+
+struct IPrivateMatcher {
+    [[nodiscard]] static constexpr bool match(int c) noexcept {
+        return (c >= 0xE000 && c <= 0xF8FF) ||
+               (c >= 0xF0000 && c <= 0xFFFFD) ||
+               (c >= 0x100000 && c <= 0x10FFFD);
+    }
+};
+
+template<CharMatcher M, class S>
+bool match(const M &m, S s) noexcept {
+    for (int c : s) {
+        if (!m.match(c))
+            return false;
+    }
+    return true;
+}
+}  // namespace detail
 }  // namespace rdf4cpp::rdf
 
 template<>
@@ -228,8 +330,23 @@ struct std::formatter<rdf4cpp::rdf::IRIFactoryError> : std::formatter<string_vie
             case rdf4cpp::rdf::IRIFactoryError::InvalidScheme:
                 s = "InvalidScheme";
                 break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidUserinfo:
+                s = "InvalidUserinfo";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidHost:
+                s = "InvalidHost";
+                break;
             case rdf4cpp::rdf::IRIFactoryError::InvalidPort:
                 s = "InvalidPort";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidPath:
+                s = "InvalidPath";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidQuery:
+                s = "InvalidQuery";
+                break;
+            case rdf4cpp::rdf::IRIFactoryError::InvalidFragment:
+                s = "InvalidFragment";
                 break;
             default:
                 s = "Unknown";
