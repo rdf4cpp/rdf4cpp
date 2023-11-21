@@ -5,6 +5,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::from_string(std::string_view s) {
     return util::from_chars<cpp_type, identifier>(s);
@@ -64,6 +65,7 @@ template<>
 capabilities::Inlineable<xsd_double>::cpp_type capabilities::Inlineable<xsd_double>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     return util::unpack<cpp_type>(inlined.value << (64 - storage::node::identifier::LiteralID::width));
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_double,
                                     capabilities::Logical,

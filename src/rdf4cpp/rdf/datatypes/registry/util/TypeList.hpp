@@ -132,7 +132,7 @@ constexpr auto type_list_map(MapF f) noexcept(noexcept(type_list_detail::type_li
 /**
  * Tries to find the index in the tuple where the type matches the predicated pred.
  *
- * @note Pred will be called as pred.template operator()<Element>() on each element of the tuple and is expected to
+ * @note Pred will be called as `pred.template operator()<Element>()` on each element of the tuple and is expected to
  *      return a boolean indicating if the predicate matched.
  * @return the index of the first type matching the predicate if there is one, else std::nullopt
  *
@@ -155,7 +155,7 @@ constexpr std::optional<size_t> type_list_find_if(Pred pred) noexcept(noexcept(t
 
 /**
  * Fold all elements in a type list into a single object.
- * The provided function f will be repeatedly called as f.template operator()<Element>(acc) for each type in the
+ * The provided function f will be repeatedly called as `f.template operator()<Element>(acc)` for each type in the
  * list and is expected to return the acc for the next invocation.
  *
  * @tparam List the type list to fold over
@@ -187,7 +187,7 @@ constexpr void type_list_for_each_with(Init init, FoldF f) noexcept(noexcept(typ
 }
 
 /**
- * Generates a type list of count by repeatedly calling f.template operator()<ix>() for
+ * Generates a type list of count by repeatedly calling `f.template operator()<ix>()` for
  * all indices in [0, count).
  *
  * @param f a value template callable function that generates the types

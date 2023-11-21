@@ -4,6 +4,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_integer>::from_string(std::string_view s) {
     if (s.starts_with('+')) {
@@ -77,6 +78,7 @@ template<>
 capabilities::Inlineable<xsd_integer>::cpp_type capabilities::Inlineable<xsd_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     return cpp_type{util::unpack_integral<int64_t>(inlined)};
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_integer,
                                     capabilities::Logical,

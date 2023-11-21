@@ -19,6 +19,7 @@ struct LangStringRepr {
     auto operator<=>(LangStringRepr const &other) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<rdf_lang_string> {
     using cpp_datatype = LangStringRepr;
@@ -52,6 +53,7 @@ inline capabilities::Inlineable<rdf_lang_string>::cpp_type capabilities::Inlinea
     assert(false);
     __builtin_unreachable();
 }
+#endif
 
 extern template struct LiteralDatatypeImpl<rdf_lang_string,
                                            capabilities::Comparable,
@@ -75,6 +77,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
     static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) noexcept {
@@ -88,5 +91,6 @@ struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
         return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x);
     }
 };
+#endif
 
 #endif  //RDF4CPP_RDF_LANGSTRING_HPP

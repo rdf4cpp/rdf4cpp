@@ -8,6 +8,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_float> {
     using cpp_datatype = float;
@@ -47,6 +48,7 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_float,
                                            capabilities::Logical,

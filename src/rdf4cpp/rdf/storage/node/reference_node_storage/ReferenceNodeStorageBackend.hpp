@@ -62,7 +62,7 @@ private:
     /**
      * Calls the given function f with the specialized object for the given datatype
      *
-     * @param self any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
+     * @param container any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
      * @param datatype the datatype of the specialized object
      * @param f the function to call with the corresponding specialized object
      * @return whatever f returns
