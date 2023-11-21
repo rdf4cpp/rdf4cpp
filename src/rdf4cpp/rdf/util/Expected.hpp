@@ -2,7 +2,7 @@
 #define RDF4CPP_EXPECTED_HPP
 
 /**
- * Workaround for buggy detection std::expected detection logic in <nonstd/expected.hpp>
+ * Workaround for buggy std::expected detection logic in <nonstd/expected.hpp>
  * (std::expected does not work on clang yet, nonstd/expected.hpp does not honor feature test macro)
  *
  * Additionally the API of std::expected is different from nonstd::expected so it is not a drop in replacement.
