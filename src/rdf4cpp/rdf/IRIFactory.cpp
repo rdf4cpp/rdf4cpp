@@ -2,6 +2,8 @@
 
 #include <uni_algo/all.h>
 
+#include <rdf4cpp/rdf/util/CharMatcher.hpp>
+
 namespace rdf4cpp::rdf {
 
 IRIView::IRIView(std::string_view iri) noexcept : data(iri) {
@@ -170,29 +172,30 @@ std::tuple<std::optional<std::string_view>, std::optional<std::string_view>, std
 }
 
 IRIFactoryError IRIView::quick_validate() const noexcept {
+    using namespace util::char_matcher_detail;
     auto [scheme, auth, path, query, frag] = all_parts();
     if (!scheme.has_value())
         return IRIFactoryError::Relative;
-    static constexpr auto scheme_pattern = detail::ascii_alphanum_matcher | detail::ASCIIPatternMatcher{"+-."};
-    if (!detail::match(scheme_pattern, *scheme)) // scheme is ascii only, no need to utf8-decode
+    static constexpr auto scheme_pattern = ascii_alphanum_matcher | ASCIIPatternMatcher{"+-."};
+    if (!match(scheme_pattern, *scheme)) // scheme is ascii only, no need to utf8-decode
         return IRIFactoryError::InvalidScheme;
     auto [userinfo, host, port] = all_authority_parts();
-    static constexpr auto userinfo_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%"};
-    if (userinfo.has_value() && !detail::match(userinfo_pattern, *userinfo | una::views::utf8))
+    static constexpr auto userinfo_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%"};
+    if (userinfo.has_value() && !match(userinfo_pattern, *userinfo | una::views::utf8))
         return IRIFactoryError::InvalidUserinfo;
-    static constexpr auto host_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%[]"};
-    if (host.has_value() && !detail::match(host_pattern, *host | una::views::utf8))
+    static constexpr auto host_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%[]"};
+    if (host.has_value() && !match(host_pattern, *host | una::views::utf8))
         return IRIFactoryError::InvalidHost;
-    if (port.has_value() && !detail::match(detail::ASCIINumMatcher{}, *port)) // scheme is ascii numbers only, no need to utf8-decode
+    if (port.has_value() && !match(ASCIINumMatcher{}, *port)) // scheme is ascii numbers only, no need to utf8-decode
         return IRIFactoryError::InvalidPort;
-    static constexpr auto path_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%:@/"};
-    if (!detail::match(path_pattern, path | una::views::utf8))
+    static constexpr auto path_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:@/"};
+    if (!match(path_pattern, path | una::views::utf8))
         return IRIFactoryError::InvalidPath;
-    static constexpr auto query_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::IPrivateMatcher{} | detail::ASCIIPatternMatcher{"%:@/?"};
-    if (query.has_value() && !detail::match(query_pattern, *query | una::views::utf8))
+    static constexpr auto query_pattern = i_unreserved_matcher | sub_delims_matcher | IPrivateMatcher{} | ASCIIPatternMatcher{"%:@/?"};
+    if (query.has_value() && !match(query_pattern, *query | una::views::utf8))
         return IRIFactoryError::InvalidQuery;
-    static constexpr auto frag_pattern = detail::i_unreserved_matcher | detail::sub_delims_matcher | detail::ASCIIPatternMatcher{"%:@/?"};
-    if (frag.has_value() && !detail::match(frag_pattern, *frag | una::views::utf8))
+    static constexpr auto frag_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:@/?"};
+    if (frag.has_value() && !match(frag_pattern, *frag | una::views::utf8))
         return IRIFactoryError::InvalidFragment;
     return IRIFactoryError::Ok;
 }
@@ -238,7 +241,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
     return create_and_validate(deref, storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
     auto e = IRIView{iri}.quick_validate();
     if (e != IRIFactoryError::Ok)
         return nonstd::make_unexpected(e);

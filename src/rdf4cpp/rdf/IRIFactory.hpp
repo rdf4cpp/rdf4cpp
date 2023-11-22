@@ -11,6 +11,9 @@
 #include <rdf4cpp/rdf/IRI.hpp>
 
 namespace rdf4cpp::rdf {
+/**
+ * std::format gets you a printable string.
+ */
 enum class IRIFactoryError {
     Ok,
     UnknownPrefix,
@@ -43,17 +46,68 @@ private:
         bool defined;
     };
 
+    /**
+     * ->scheme
+     * @return
+     */
     [[nodiscard]] IRIPart get_scheme_part() const noexcept;
+    /**
+     * scheme->authority
+     * @param scheme
+     * @return
+     */
     [[nodiscard]] IRIPart get_authority_part(const IRIPart &scheme) const noexcept;
+    /**
+     * authority->path
+     * @param auth
+     * @return
+     */
     [[nodiscard]] IRIPart get_path_part(const IRIPart &auth) const noexcept;
+    /**
+     * path->query
+     * @param path
+     * @return
+     */
     [[nodiscard]] IRIPart get_query_part(const IRIPart &path) const noexcept;
+    /**
+     * query->fragment
+     * @param query
+     * @return
+     */
     [[nodiscard]] IRIPart get_fragment_part(const IRIPart &query) const noexcept;
 
+    /**
+     * authority->userinfo
+     * @param auth
+     * @return
+     */
     [[nodiscard]] IRIPart get_userinfo_part(const IRIPart& auth) const noexcept;
+    /**
+     * authority,userinfo->host
+     * @param auth
+     * @param uinfo
+     * @return
+     */
     [[nodiscard]] IRIPart get_host_part(const IRIPart& auth, const IRIPart& uinfo) const noexcept;
+    /**
+     * authority,host->port
+     * @param auth
+     * @param host
+     * @return
+     */
     [[nodiscard]] IRIPart get_port_part(const IRIPart& auth, const IRIPart& host) const noexcept;
 
+    /**
+     * gets the string_view representing the part (empty on undefined)
+     * @param r
+     * @return
+     */
     [[nodiscard]] std::string_view apply(const IRIPart &r) const noexcept;
+    /**
+     * gets the string_view representing the part or std::nullopt if undefined.
+     * @param r
+     * @return
+     */
     [[nodiscard]] std::optional<std::string_view> apply_opt(const IRIPart &r) const noexcept;
 
 public:
@@ -168,6 +222,7 @@ public:
 
     /**
      * Creates a IRI from a possibly relative IRI.
+     * Implements https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.
      * @param rel
      * @param storage
      * @return
@@ -206,111 +261,51 @@ public:
      */
     [[nodiscard]] IRIFactoryError set_base(std::string_view b) noexcept;
 
-private:
-    [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) const noexcept;
+    /**
+     * validates the given IRI and creates it in the given node storage, if valid.
+     * @param iri
+     * @param storage
+     * @return
+     */
+    [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) noexcept;
 
+private:
+    /**
+     * turns the parts of a IRI back into a full IRI.
+     * @param scheme
+     * @param auth
+     * @param path
+     * @param query
+     * @param frag
+     * @return
+     */
     [[nodiscard]] static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
                                                std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept;
+    /**
+     * removes ./ and ../ segments from path.
+     * @param path
+     * @return
+     */
     [[nodiscard]] static std::string remove_dot_segments(std::string_view path) noexcept;
+    /**
+     * gets the first segment of path.
+     * @param path
+     * @return
+     */
     [[nodiscard]] static std::string_view first_path_segment(std::string_view path) noexcept;
+    /**
+     * removes the last segment of path.
+     * @param path
+     */
     static void remove_last_path_segment(std::string &path) noexcept;
+    /**
+     * merges the path of base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
+     * @param base
+     * @param path
+     * @return
+     */
     [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
 };
-
-namespace detail {
-template<class T>
-concept CharMatcher = requires(const T a, int c) {{a.match(c)} -> std::same_as<bool>; };
-
-struct ASCIIPatternMatcher {
-    std::string_view pattern;
-
-    [[nodiscard]] constexpr bool match(int c) const noexcept {
-        auto ch = static_cast<char>(c);
-        if (c != static_cast<int>(ch))  // not asciii
-            return false;
-        return pattern.find(ch) != std::string_view::npos;
-    }
-};
-
-struct ASCIINumMatcher {
-    [[nodiscard]] static constexpr bool match(int c) noexcept {
-        auto ch = static_cast<char>(c);
-        if (c != static_cast<int>(ch))  // not asciii
-            return false;
-        return c >= '0' && c <= '9';
-    }
-};
-struct ASCIIAlphaMatcher {
-    [[nodiscard]] static constexpr bool match(int c) noexcept {
-        auto ch = static_cast<char>(c);
-        if (c != static_cast<int>(ch))  // not asciii
-            return false;
-        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-    }
-};
-
-template<CharMatcher A, CharMatcher B>
-struct OrMatcher {
-    A a;
-    B b;
-
-    constexpr OrMatcher(A a, B b) : a(a), b(b) {}
-    constexpr OrMatcher() = default;
-
-    [[nodiscard]] constexpr bool match(int c) const noexcept {
-        return a.match(c) || b.match(c);
-    }
-};
-
-template<CharMatcher A, CharMatcher B>
-constexpr OrMatcher<A, B> operator|(A a, B b) {
-    return OrMatcher{a, b};
-}
-
-constexpr auto ascii_alphanum_matcher = ASCIIAlphaMatcher{} | ASCIINumMatcher{};
-
-struct UCSCharMatcher {
-    [[nodiscard]] static constexpr bool match(int c) noexcept {
-        return (c >= 0xA0 && c <= 0xD7FF) ||
-               (c >= 0xF900 && c <= 0xFDCF) ||
-               (c >= 0xFDF0 && c <= 0xFFEF) ||
-               (c >= 0x10000 && c <= 0x1FFFD) ||
-               (c >= 0x20000 && c <= 0x2FFFD) ||
-               (c >= 0x30000 && c <= 0x3FFFD) ||
-               (c >= 0x40000 && c <= 0x4FFFD) ||
-               (c >= 0x50000 && c <= 0x5FFFD) ||
-               (c >= 0x60000 && c <= 0x6FFFD) ||
-               (c >= 0x70000 && c <= 0x7FFFD) ||
-               (c >= 0x80000 && c <= 0x8FFFD) ||
-               (c >= 0x90000 && c <= 0x9FFFD) ||
-               (c >= 0xA0000 && c <= 0xAFFFD) ||
-               (c >= 0xB0000 && c <= 0xBFFFD) ||
-               (c >= 0xC0000 && c <= 0xCFFFD) ||
-               (c >= 0xD0000 && c <= 0xDFFFD) ||
-               (c >= 0xE0000 && c <= 0xEFFFD);
-    }
-};
-
-constexpr auto i_unreserved_matcher = ascii_alphanum_matcher | ASCIIPatternMatcher{"-._~"} | UCSCharMatcher{};
-constexpr auto sub_delims_matcher = ASCIIPatternMatcher{"!$&'()*+,;="};
-
-struct IPrivateMatcher {
-    [[nodiscard]] static constexpr bool match(int c) noexcept {
-        return (c >= 0xE000 && c <= 0xF8FF) ||
-               (c >= 0xF0000 && c <= 0xFFFFD) ||
-               (c >= 0x100000 && c <= 0x10FFFD);
-    }
-};
-
-template<CharMatcher M, class S>
-bool match(const M &m, S s) noexcept {
-    for (int c : s) {
-        if (!m.match(c))
-            return false;
-    }
-    return true;
-}
-}  // namespace detail
 }  // namespace rdf4cpp::rdf
 
 template<>
