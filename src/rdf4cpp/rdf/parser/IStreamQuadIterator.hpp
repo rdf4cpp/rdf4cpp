@@ -72,8 +72,6 @@ struct IStreamQuadIterator {
     using iterator_category = std::input_iterator_tag;
     using istream_type = std::istream;
 
-    using prefix_storage_type = IRIFactory::PrefixMap;
-
 private:
     struct Impl;
 

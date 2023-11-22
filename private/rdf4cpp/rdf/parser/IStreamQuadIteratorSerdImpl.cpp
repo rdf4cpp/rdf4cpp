@@ -65,7 +65,7 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode const *node) noexcept {
 
-    auto iri = iri_factory.from_relative(node_into_string_view(node), this->state->node_storage);
+    auto iri = state->iri_factory.from_relative(node_into_string_view(node), this->state->node_storage);
     if (!iri.has_value()) {
         IRIFactoryError err = iri.error();
         this->last_error = ParsingError{
@@ -91,7 +91,7 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(Se
     auto const prefix = uri_node_view.substr(0, sep_pos);
     auto const suffix = uri_node_view.substr(sep_pos + 1);
 
-    auto iri = iri_factory.from_prefix(prefix, suffix, this->state->node_storage);
+    auto iri = state->iri_factory.from_prefix(prefix, suffix, state->node_storage);
     if (!iri.has_value()) {
         IRIFactoryError err = iri.error();
         if (err == IRIFactoryError::UnknownPrefix) {
@@ -189,7 +189,7 @@ SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode 
                 .col = serd_reader_get_current_col(self->reader.get()),
                 .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
     } else {
-        auto e = self->iri_factory.set_base(node_into_string_view(uri));
+        auto e = self->state->iri_factory.set_base(node_into_string_view(uri));
         if (e != IRIFactoryError::Ok) {
             self->last_error = ParsingError{
                     .error_type = ParsingError::Type::BadSyntax,
@@ -213,7 +213,7 @@ SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode cons
                 .col = serd_reader_get_current_col(self->reader.get()),
                 .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
     } else {
-        self->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
+        self->state->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
     }
 
     return SERD_SUCCESS;

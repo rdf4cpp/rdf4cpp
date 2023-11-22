@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/SingleNodeScopeManager.hpp>
+#include <rdf4cpp/rdf/IRIFactory.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
 #include <dice/hash.hpp>
@@ -36,12 +37,6 @@ namespace rdf4cpp::rdf::parser {
  * @endcode
  */
 struct ParsingState {
-    using prefix_storage_type = dice::sparse_map::sparse_map<
-            std::string,
-            std::string,
-            dice::hash::DiceHashwyhash<std::string_view>,
-            std::equal_to<>>;
-
     using blank_node_generator_type = bnode_mngt::NodeGenerator;
     using blank_node_scope_type = bnode_mngt::NodeScope;
     using node_storage_type = storage::node::NodeStorage;
@@ -51,7 +46,7 @@ struct ParsingState {
      * The initial prefixes the parser has knowledge of
      * @note default value is an empty map
      */
-    prefix_storage_type prefixes{};
+    IRIFactory iri_factory{};
 
     /**
      * The node storage to put the parsed quads into

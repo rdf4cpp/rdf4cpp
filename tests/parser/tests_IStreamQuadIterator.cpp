@@ -235,7 +235,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
         std::istringstream iss{triples};
         IStreamQuadIterator::state_type state{
-                .prefixes = { {"prefix", "https://hello.com#"} }};
+                .iri_factory = IRIFactory{ IRIFactory::PrefixMap {{"prefix", "https://hello.com#"}} }};
 
         IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
 
