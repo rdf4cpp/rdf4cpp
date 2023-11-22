@@ -1,4 +1,5 @@
 #include "IRI.hpp"
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 
 #include <sstream>
 
@@ -79,7 +80,18 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
-IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
+bool IRI::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+    auto const backend = handle_.iri_backend();
+
+    RDF4CPP_DETAIL_TRY_WRITE_STR("<");
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.identifier);
+    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+    return true;
+}
+
+IRI::operator std::string() const noexcept {
+    return handle_.iri_backend().n_string();
+}
 
 bool IRI::is_literal() const noexcept { return false; }
 bool IRI::is_variable() const noexcept { return false; }
@@ -91,7 +103,7 @@ IRI IRI::default_graph(NodeStorage &node_storage) {
     return IRI{"", node_storage};
 }
 std::ostream &operator<<(std::ostream &os, const IRI &iri) {
-    os << static_cast<std::string>(iri);
+    os << std::string{iri};
     return os;
 }
 std::string_view IRI::identifier() const noexcept {

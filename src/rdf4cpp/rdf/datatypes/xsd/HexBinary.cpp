@@ -1,7 +1,8 @@
-#include <rdf4cpp/rdf/datatypes/xsd/HexBinary.hpp>
+#include "HexBinary.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 namespace encode_decode_detail {
 
 // integer value -> hexadecimal ascii representation (e.g 0 => '0', 10 => 'A')
@@ -120,6 +121,7 @@ template<>
 std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept {
     return value.to_encoded();
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_hex_binary,
                                     capabilities::FixedId>;

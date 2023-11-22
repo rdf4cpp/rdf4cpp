@@ -1,19 +1,19 @@
-cmake_minimum_required(VERSION 3.17)
-project(rdf4cpp VERSION 0.0.18)
+cmake_minimum_required(VERSION 3.22)
+project(rdf4cpp VERSION 0.0.19)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
 OPTION(USE_CONAN "If available, use conan to retrieve dependencies." ON)
-if (IS_TOP_LEVEL AND USE_CONAN)
+if (PROJECT_IS_TOP_LEVEL AND USE_CONAN)
     include(cmake/conan_cmake.cmake)
-    if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
+    if (BUILD_TESTING)
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "True")
     else()
         set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
     endif()
     set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost:header_only=True")
+    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost/*:header_only=True")
 endif ()
 
 # find packages
@@ -135,6 +135,14 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/Node.cpp
         src/rdf4cpp/rdf/Quad.cpp
         src/rdf4cpp/rdf/Statement.cpp
+        src/rdf4cpp/rdf/bnode_mngt/NodeGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/NodeScope.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/SkolemIRIFactory.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/BNodeFactory.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.cpp
+        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
         src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
         src/rdf4cpp/rdf/datatypes/owl/Real.cpp
@@ -200,9 +208,6 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
-        src/rdf4cpp/rdf/writer/NNodeWriter.cpp
-        src/rdf4cpp/rdf/writer/NQuadsWriter.cpp
-        src/rdf4cpp/rdf/writer/NTriplesWriter.cpp
         src/rdf4cpp/rdf/IRIFactory.cpp
         private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
         private/rdf4cpp/rdf/regex/RegexImpl.cpp
@@ -242,12 +247,12 @@ set_target_properties(rdf4cpp PROPERTIES
         CXX_STANDARD_REQUIRED ON
 )
 
-if (IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
     install_cpp_library(rdf4cpp src)
 endif ()
 
-if (BUILD_TESTING AND IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
     message("Tests are configured to be build.")
     include(CTest)
     enable_testing()
@@ -255,7 +260,7 @@ if (BUILD_TESTING AND IS_TOP_LEVEL)
 endif ()
 
 OPTION(BUILD_EXAMPLES "Build the examples for rdf4cpp." OFF)
-if (BUILD_EXAMPLES AND IS_TOP_LEVEL)
+if (PROJECT_IS_TOP_LEVEL AND BUILD_EXAMPLES)
     message("Examples are configured to be build.")
     add_subdirectory(examples)
 endif ()

@@ -6,7 +6,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversionTyping.hpp>
@@ -31,7 +31,7 @@ namespace conversion_detail {
  * @tparam Conversion a common interface to carry out a conversion (see adaptor namespace)
  * @tparam HasConversion check if a LiteralDatatype has a next conversion, e.g. if it is promotable
  * @tparam RankRule a boolean predicate to check if the defined conversion is valid
- * @param table_acc accumulator for ConversionEntries that will eventually be returned
+ * @tparam LayerAcc accumulator for ConversionEntries that will eventually be returned
  * @return a std::tuple<ConversionEntry, ...> containing all linear conversions reachable from BaseType
  */
 template<LiteralDatatype BaseType,

@@ -25,8 +25,17 @@ public:
 
     [[nodiscard]] std::string_view name() const;
 
-    [[nodiscard]] explicit operator std::string() const;
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
 
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
+    }
+
+    [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);
 
     [[nodiscard]] bool is_blank_node() const;
@@ -39,6 +48,7 @@ public:
 
     // todo unbound()
 };
+
 }  // namespace rdf4cpp::rdf::query
 
 template<>

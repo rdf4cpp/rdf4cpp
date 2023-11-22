@@ -1,4 +1,5 @@
 #include "DefaultSolutionSequenceBackend.hpp"
+
 namespace rdf4cpp::rdf::storage::tuple {
 
 DefaultSolutionSequenceBackend::DefaultSolutionSequenceBackend(DefaultSolutionSequenceBackend::QuadPattern pattern,

@@ -7,6 +7,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_string> {
     using cpp_datatype = std::string_view;
@@ -28,6 +29,7 @@ inline std::string capabilities::Default<xsd_string>::to_canonical_string(cpp_ty
 
 template<>
 bool capabilities::Logical<xsd_string>::effective_boolean_value(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_string,
                                            capabilities::Logical,

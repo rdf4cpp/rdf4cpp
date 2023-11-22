@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
+#include "Date.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
@@ -67,6 +68,7 @@ template<>
 std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return rdf::datatypes::registry::util::compare_time_points(date_to_tp(lhs.first), lhs.second, date_to_tp(rhs.first), rhs.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_date,
                                     capabilities::Comparable,

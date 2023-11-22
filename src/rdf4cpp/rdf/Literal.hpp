@@ -158,10 +158,11 @@ private:
      *      which prevents the template version of datatype_eq from using IRIs
      */
     [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
-protected:
+
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
+
     /**
      * Constructs the null-literal
      */
@@ -191,7 +192,7 @@ public:
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode
      */
@@ -202,7 +203,7 @@ public:
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * normalizes lexical_form to UTF-8 NFC.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
     [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
@@ -219,8 +220,8 @@ public:
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
-     * @tparam lexical_form the lexical form
-     * @param T the datatype
+     * @tparam T the datatype
+     * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
@@ -570,7 +571,9 @@ public:
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
+     * \verbatim embed:rst:leading-asterisk
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
+     * \endverbatim
      * @return lexical form
      */
     [[nodiscard]] util::CowString lexical_form() const noexcept;
@@ -640,6 +643,15 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), w.cursor(), &W::flush);
+    }
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
@@ -865,7 +877,6 @@ public:
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
      *
      * @param pattern xsd:string containing a regex to match against
-     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
      * @return whether this' lexical form matches the regex or the null literal if
      *      - this is not string-like
      *
@@ -892,8 +903,7 @@ public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace
      *
-     * @param pattern regex (as string) to match against
-     * @param replacement string to replace the matched pattern
+     * @param replacer replacement regex
      * @return the new string with the matches substring replaced by replacement
      */
     [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;

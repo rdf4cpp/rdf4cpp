@@ -10,6 +10,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_positive_integer> {
     using cpp_datatype = boost::multiprecision::cpp_int;
@@ -43,6 +44,7 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
 
 template<>
 capabilities::Inlineable<xsd_positive_integer>::cpp_type capabilities::Inlineable<xsd_positive_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_positive_integer,
                                            capabilities::Logical,

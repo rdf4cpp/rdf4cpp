@@ -56,14 +56,14 @@ struct IsConversionTable<mz::type_list<Ts...>>
 
 /**
  * A tuple of ConversionEntries
- * where all elements have the same associated ::source_type defined
+ * where all elements have the same associated source_type defined
  */
 template<typename T>
 concept ConversionLayer = conversion_typing_detail::IsConversionLayer<T>::value;
 
 /**
  * A tuple of ConversionLayers
- * where all all ConversionEntries in all ConversionLayers have the same associated ::source_type defined.
+ * where all all ConversionEntries in all ConversionLayers have the same associated source_type defined.
  */
 template<typename T>
 concept ConversionTable = conversion_typing_detail::IsConversionTable<T>::value;
@@ -180,7 +180,7 @@ public:
     }
 
     /**
-     * @param subtype_level how many subtype substitutions up to calculate the promotion rank
+     * @param subtype_offset how many subtype substitutions up to calculate the promotion rank
      * @return the type's promotion rank at a given subtype offset
      */
     [[nodiscard]] inline size_t promotion_rank_at_level(size_t const subtype_offset) const noexcept {

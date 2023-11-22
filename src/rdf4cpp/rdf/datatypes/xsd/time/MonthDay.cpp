@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/MonthDay.hpp>
+#include "MonthDay.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthDay>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -69,6 +70,7 @@ template<>
 nonstd::expected<capabilities::Subtype<xsd_gMonthDay>::cpp_type, DynamicError> capabilities::Subtype<xsd_gMonthDay>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(value.first.month() / value.first.day(), value.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_gMonthDay,
                                     capabilities::Comparable,

@@ -1,10 +1,11 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.hpp>
+#include "DayTimeDuration.hpp"
 
 #include <ranges>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_dayTimeDuration>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -112,6 +113,7 @@ nonstd::expected<capabilities::Subtype<xsd_dayTimeDuration>::cpp_type, DynamicEr
         return value.second;
     return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_dayTimeDuration,
                                     capabilities::Comparable,

@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_DATATYPEREGISTRY_HPP
 #define RDF4CPP_DATATYPEREGISTRY_HPP
 
-#include "rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp"
+#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
@@ -169,7 +169,7 @@ private:
      * Tries to find the datatype corresponding to datatype_id
      * if found `f` is applied to it to form the function result.
      *
-     * @param datatype_iri the datatype to search
+     * @param datatype_id the datatype to search
      * @param f function that maps a DatatypeEntry to (typically) a member of it
      * @return the result of `f` applied to the DatatypeEntry, if it exists, else nullopt
      */

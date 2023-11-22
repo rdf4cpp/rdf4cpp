@@ -7,8 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
-
-#include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
 

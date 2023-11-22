@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.hpp>
+#include "DateTimeStamp.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dateTimeStamp>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
@@ -82,6 +83,7 @@ nonstd::expected<capabilities::Subtype<xsd_dateTimeStamp>::cpp_type, DynamicErro
         return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
     return rdf::util::ZonedTime{*value.second, value.first};
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_dateTimeStamp,
                                     capabilities::Comparable,

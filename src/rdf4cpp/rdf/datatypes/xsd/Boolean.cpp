@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Boolean.hpp>
+#include "Boolean.hpp"
 
 #include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>::from_string(std::string_view s) {
     if (s == "true" || s == "1") {
@@ -38,6 +39,7 @@ template<>
 capabilities::Inlineable<xsd_boolean>::cpp_type capabilities::Inlineable<xsd_boolean>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     return util::unpack<cpp_type>(inlined);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_boolean,
                                     capabilities::Logical,

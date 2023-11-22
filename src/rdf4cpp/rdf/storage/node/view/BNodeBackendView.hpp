@@ -4,10 +4,15 @@
 #include <string>
 #include <string_view>
 
+namespace rdf4cpp::rdf::bnode_mngt {
+struct WeakNodeScope;
+} // namespace rdf4cpp::rdf::bnode_mngt
+
 namespace rdf4cpp::rdf::storage::node::view {
 
 struct BNodeBackendView {
     std::string_view identifier;
+    rdf4cpp::rdf::bnode_mngt::WeakNodeScope const *scope;
 
     /**
      * N-Triples conform string representation.

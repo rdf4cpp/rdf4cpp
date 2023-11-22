@@ -3,7 +3,6 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
@@ -65,7 +64,7 @@ class NodeStorage {
      * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
      * The last value of a identifier::NodeStorageID (i.e. 1023) is reserved as the invalid index.
      */
-    static inline std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
+    static inline constinit std::array<node_storage_detail::ControlBlock, 1023> node_context_instances{};
     /**
      * Makes sure the default_instance_ is initialized only once
      */
@@ -113,7 +112,7 @@ class NodeStorage {
      * @param id id of the slot
      * @return the corresponding control block
      */
-    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) {
+    [[nodiscard]] inline static node_storage_detail::ControlBlock &get_slot(identifier::NodeStorageID id) noexcept {
         assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
         return NodeStorage::node_context_instances[static_cast<size_t>(id.value)];
     }
@@ -159,7 +158,19 @@ public:
      */
     template<typename BackendImpl, typename... Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
     static NodeStorage new_instance(Args &&...args) {
-        return register_backend(new BackendImpl(std::forward<Args>(args)...));
+        return register_backend(new BackendImpl{std::forward<Args>(args)...});
+    }
+
+    /**
+     * Attempt to create a NodeStorage with a custom Backend at a specific id
+     * @tparam BackendImpl Class deriving from INodeStorage
+     * @param id id to assign the node storage
+     * @param args arguments to construct BackendImpl
+     * @return NodeStorage referring to the instance.
+     */
+    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
+    static NodeStorage new_instance_at(identifier::NodeStorageID id, Args &&...args) {
+        return register_backend_at(id, new BackendImpl{std::forward<Args>(args)...});
     }
 
     /**
@@ -173,18 +184,32 @@ public:
      * @param id NodeStorage id
      * @return optional NodeStorage
      */
-    static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id);
+    static std::optional<NodeStorage> lookup_instance(identifier::NodeStorageID id) noexcept;
 
     /**
-     * Registers a INodeStorageBackend at the identifier::NodeStorageID provided by the instance.
+     * Registers a INodeStorageBackend.
      *
      * @param backend_instance instance to be registered
      * @return an NodeStorage encapsulating backend_instance
-     * @throws std::runtime_error if a nullptr is provided
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::length_error if the maximum number of backend instances has been exceeded
      * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
      *      after calling this function.
      */
     static NodeStorage register_backend(INodeStorageBackend *&&backend_instance);
+
+    /**
+     * Attempts to register a INodeStorageBackend at a specific id
+     *
+     * @param id id to assign the instance
+     * @param backend_instance instance to be registered
+     * @return an NodeStorage encapsulating backend_instance
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::logic_error if the given id is already in use
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
+     */
+     static NodeStorage register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance);
 
 public:
     NodeStorage(NodeStorage &&other) noexcept;
@@ -195,10 +220,10 @@ public:
     ~NodeStorage();
 
     /**
-     * NodeStorage does instance counting. If no instances if a NodeStorage exist anymore its backend_instance_ is destructed.
-     * For the default_instance an additional instance is kept so that its not even then destructed if the there are no application held instance left.
+     * NodeStorage does instance reference counting. If no instances of a NodeStorage exist anymore its backend is destroyed.
+     * For the default_instance an additional instance is kept so that its not even then destroyed if the there are no application held instances left.
      * @return current number of instances of this NodeStorage
-     * @safey this function is inherently racy as the reference count can even change between fetching it and looking at the value
+     * @safety this function is inherently racy as the reference count can even change between fetching it and looking at the value
      *      do _not_ use it to check the reference count for _any_ kind of synchronization.
      */
     [[nodiscard]] size_t ref_count() const noexcept;
@@ -464,12 +489,12 @@ public:
     /**
      * @return whether this and other are referring to the same backend
      */
-    bool operator==(NodeStorage const &other) const noexcept = default;
+    bool operator==(NodeStorage const &other) const noexcept;
 
     /**
      * @return whether this and other are _not_ referring to the same backend
      */
-    bool operator!=(NodeStorage const &other) const noexcept = default;
+    bool operator!=(NodeStorage const &other) const noexcept;
 };
 
 /**

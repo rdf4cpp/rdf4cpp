@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_unsigned_short> {
     using cpp_datatype = uint16_t;
@@ -34,6 +35,7 @@ std::string capabilities::Default<xsd_unsigned_short>::to_canonical_string(cpp_t
 
 template<>
 bool capabilities::Logical<xsd_unsigned_short>::effective_boolean_value(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_unsigned_short,
                                            capabilities::Logical,

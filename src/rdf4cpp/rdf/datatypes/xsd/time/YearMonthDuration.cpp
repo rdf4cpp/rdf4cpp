@@ -1,10 +1,11 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.hpp>
+#include "YearMonthDuration.hpp"
 
 #include <ranges>
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd_yearMonthDuration>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -86,6 +87,7 @@ nonstd::expected<capabilities::Subtype<xsd_yearMonthDuration>::cpp_type, Dynamic
         return value.first;
     return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_yearMonthDuration,
                                     capabilities::Comparable,

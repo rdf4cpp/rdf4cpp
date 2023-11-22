@@ -12,6 +12,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTimeStamp> {
     using cpp_datatype = rdf::util::ZonedTime;
@@ -44,6 +45,7 @@ capabilities::Subtype<xsd_dateTimeStamp>::super_cpp_type<0> capabilities::Subtyp
 template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_dateTimeStamp>::cpp_type, DynamicError> capabilities::Subtype<xsd_dateTimeStamp>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_dateTimeStamp,
                                            capabilities::Comparable,
@@ -77,6 +79,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::ZonedTime> {
     static size_t dice_hash(rdf4cpp::rdf::util::ZonedTime const &x) noexcept {
@@ -85,5 +88,6 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::ZonedTime> {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(tp, off));
     }
 };
+#endif
 
 #endif  //RDF4CPP_DATETIMESTAMP_HPP
