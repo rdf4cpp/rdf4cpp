@@ -201,12 +201,12 @@ TEST_CASE("IRI UUID") {
     CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
 }
 
-TEST_CASE("IRI::find") {
+TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
     static constexpr std::string_view t = "http://foo/bar";
 
-    CHECK(IRI::find(t) == IRI{});
-    IRI i{t};
-    CHECK(IRI::find(t) == i);
-    CHECK(IRI::find(t).backend_handle() == i.backend_handle());
-    CHECK(IRI::find("http://foo/bar/x") == IRI{});
+    CHECK(T::find(t) == T{});
+    T i{t};
+    CHECK(T::find(t) == i);
+    CHECK(T::find(t).backend_handle() == i.backend_handle());
+    CHECK(T::find("http://foo/bar/x") == T{});
 }
