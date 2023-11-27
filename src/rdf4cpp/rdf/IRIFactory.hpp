@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_IRIFACTORY_HPP
 #define RDF4CPP_IRIFACTORY_HPP
 
-#include <nonstd/expected.hpp>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -9,6 +8,7 @@
 #include <dice/sparse-map/sparse_map.hpp>
 
 #include <rdf4cpp/rdf/IRI.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 namespace rdf4cpp::rdf {
 /**
