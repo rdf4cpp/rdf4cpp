@@ -139,18 +139,20 @@ public:
      */
     [[nodiscard]] std::optional<std::string_view> fragment() const noexcept;
 
+    struct AllParts {
+        std::optional<std::string_view> scheme;
+        std::optional<std::string_view> authority;
+        std::string_view path;
+        std::optional<std::string_view> query;
+        std::optional<std::string_view> fragment;
+    };
     /**
      * all parts of the IRI. intended to be used with structured bindings:
      * auto [scheme, auth, path, query, frag] = iri_view.all_parts();
      * more efficient than querying each part individually via its method.
      * @return
      */
-    [[nodiscard]] std::tuple<std::optional<std::string_view>,
-                             std::optional<std::string_view>,
-                             std::string_view,
-                             std::optional<std::string_view>,
-                             std::optional<std::string_view>>
-    all_parts() const noexcept;
+    [[nodiscard]] AllParts all_parts() const noexcept;
 
     /**
      * everything except the fragment part of the IRI.
@@ -174,13 +176,16 @@ public:
      */
     [[nodiscard]] std::optional<std::string_view> port() const noexcept;
 
+    struct AuthorityParts {
+        std::optional<std::string_view> userinfo, host, port;
+    };
     /**
      * all authority parts of the IRI. intended to be used with structured bindings:
      * auto [userinfo, host, port] = iri_view.all_authority_parts();
      * more efficient than querying each part individually via its method.
      * @return
      */
-    [[nodiscard]] std::tuple<std::optional<std::string_view>, std::optional<std::string_view>, std::optional<std::string_view>> all_authority_parts() const noexcept;
+    [[nodiscard]] AuthorityParts all_authority_parts() const noexcept;
 
     /**
      * quickly checks if the IRI is valid according to the IRI specification (not the schemes specification).

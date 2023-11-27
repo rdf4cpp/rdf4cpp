@@ -136,18 +136,37 @@ std::string IRIFactory::merge_paths(IRIView base, std::string_view path) noexcep
 
 std::string IRIFactory::construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
                                   std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
-    std::stringstream str{};
-    str << scheme << ':';
-    if (auth.has_value())
-        str << "//" << *auth;
-    if (!path.empty() && !path.starts_with('/') && auth.has_value())
-        str << '/';
-    str << path;
-    if (query.has_value())
-        str << '?' << *query;
-    if (frag.has_value())
-        str << '#' << *frag;
-    return str.str();
+    size_t l = scheme.length() + 1 + path.length();
+    if (auth.has_value()) {
+        l += auth->length() + 2;
+    }
+    if (query.has_value()) {
+        l += query->length() + 1;
+    }
+    if (frag.has_value()) {
+        l += frag->length() + 1;
+    }
+    std::string str{};
+    str.reserve(l);
+    str.append(scheme);
+    str.append(1, ':');
+    if (auth.has_value()) {
+        str.append(2, '/');
+        str.append(*auth);
+    }
+    if (!path.empty() && !path.starts_with('/') && auth.has_value()) {
+        str.append(1, '/');
+    }
+    str.append(path);
+    if (query.has_value()) {
+        str.append(1, '?');
+        str.append(*query);
+    }
+    if (frag.has_value()) {
+        str.append(1, '#');
+        str.append(*frag);
+    }
+    return str;
 }
 
 std::string_view IRIFactory::get_base() const noexcept {

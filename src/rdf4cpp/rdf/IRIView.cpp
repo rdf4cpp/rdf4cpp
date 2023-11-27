@@ -94,12 +94,7 @@ std::optional<std::string_view> IRIView::fragment() const noexcept {
     return apply_opt(get_fragment_part(get_query_part(get_path_part(get_authority_part(get_scheme_part())))));
 }
 
-std::tuple<std::optional<std::string_view>,
-           std::optional<std::string_view>,
-           std::string_view,
-           std::optional<std::string_view>,
-           std::optional<std::string_view>>
-IRIView::all_parts() const noexcept {
+IRIView::AllParts IRIView::all_parts() const noexcept {
     auto s = get_scheme_part();
     auto a = get_authority_part(s);
     auto p = get_path_part(a);
@@ -162,7 +157,7 @@ std::optional<std::string_view> IRIView::port() const noexcept {
     return apply_opt(get_port_part(a, get_host_part(a, get_userinfo_part(a))));
 }
 
-std::tuple<std::optional<std::string_view>, std::optional<std::string_view>, std::optional<std::string_view>> IRIView::all_authority_parts() const noexcept {
+IRIView::AuthorityParts IRIView::all_authority_parts() const noexcept {
     auto a = get_authority_part(get_scheme_part());
     auto ui = get_userinfo_part(a);
     auto ho = get_host_part(a, ui);
