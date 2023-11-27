@@ -200,3 +200,13 @@ TEST_CASE("IRI UUID") {
     CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
     CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
 }
+
+TEST_CASE("IRI::find") {
+    static constexpr std::string_view t = "http://foo/bar";
+
+    CHECK(IRI::find(t) == IRI{});
+    IRI i{t};
+    CHECK(IRI::find(t) == i);
+    CHECK(IRI::find(t).backend_handle() == i.backend_handle());
+    CHECK(IRI::find("http://foo/bar/x") == IRI{});
+}

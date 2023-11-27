@@ -61,6 +61,15 @@ public:
     [[nodiscard]] IRI try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
+     * searches for a IRI in the specified node storage and returns it.
+     * returns a null IRI, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static IRI find(std::string_view iri, const NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
      * Get the IRI string of this.
      * @return IRI string
      */
