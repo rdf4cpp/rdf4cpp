@@ -11,6 +11,7 @@
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 #include <rdf4cpp/rdf/parser/ParsingState.hpp>
+#include <rdf4cpp/rdf/IRIFactory.hpp>
 
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>

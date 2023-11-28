@@ -208,6 +208,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
         src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
+        src/rdf4cpp/rdf/IRIView.cpp
+        src/rdf4cpp/rdf/IRIFactory.cpp
         private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
         private/rdf4cpp/rdf/regex/RegexImpl.cpp
         private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
