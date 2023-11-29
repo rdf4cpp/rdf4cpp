@@ -1,6 +1,6 @@
 ⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
 
-⚠️ rdf4cpp uses Conan 1 and is not compatible with Conan 2. ⚠️
+⚠️ Conan 2 only works when consuming the rdf4cpp conan package. Other usecases (e.g. development) still require Conan 1. ⚠️
 
 # rdf4cpp
 
