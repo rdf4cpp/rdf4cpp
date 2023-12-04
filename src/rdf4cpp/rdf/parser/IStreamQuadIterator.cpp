@@ -109,8 +109,8 @@ FILE *fopen_fastseq(char const *path, char const *mode) noexcept {
         return fd;
     }
 
-#if _POSIX_C_SOURCE >= 200112L
-    (void) posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_FADV_NOREUSE);
+#if __has_include(<fcntl.h>) && _POSIX_C_SOURCE >= 200112L
+    (void) posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_FADV_NOREUSE | POSIX_FADV_WILLNEED);
 #endif
 
     return fd;
