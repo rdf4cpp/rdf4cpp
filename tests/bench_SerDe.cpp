@@ -16,7 +16,7 @@ void download_swdf(std::filesystem::path const &base) {
 using namespace rdf4cpp::rdf;
 
 void deserialize(std::filesystem::path const &in_path, Dataset &ds, storage::node::NodeStorage &node_storage) {
-    FILE *in_file = fopen(in_path.c_str(), "r");
+    FILE *in_file = parser::fopen_fastseq(in_path.c_str(), "r");
     if (in_file == nullptr) {
         throw std::system_error{std::error_code{errno, std::system_category()}};
     }
@@ -39,7 +39,7 @@ void deserialize(std::filesystem::path const &in_path, Dataset &ds, storage::nod
 }
 
 void serialize(std::filesystem::path const &out_path, Dataset const &ds) {
-    FILE *out_file = fopen(out_path.c_str(), "w");
+    FILE *out_file = parser::fopen_fastseq(out_path.c_str(), "w");
     if (out_file == nullptr) {
         throw std::system_error{std::error_code{errno, std::system_category()}};
     }

@@ -1,5 +1,8 @@
 #include "RDFFileParser.hpp"
 
+
+#include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
+
 namespace rdf4cpp::rdf::parser {
 RDFFileParser::RDFFileParser(const std::string &file_path, flags_type flags, state_type *state)
     : file_path_(file_path), flags_(flags), state_(state) {
@@ -8,10 +11,11 @@ RDFFileParser::RDFFileParser(std::string &&file_path, flags_type flags, state_ty
     : file_path_(std::move(file_path)), flags_(flags), state_(state) {
 }
 RDFFileParser::iterator RDFFileParser::begin() const {
-    FILE *stream = fopen(file_path_.c_str(), "r");
+    FILE *stream = fopen_fastseq(file_path_.c_str(), "r");
     if (stream == nullptr) {
         throw std::system_error{errno, std::system_category()};
     }
+
     return {std::move(stream), flags_, state_};
 }
 std::default_sentinel_t RDFFileParser::end() const noexcept {

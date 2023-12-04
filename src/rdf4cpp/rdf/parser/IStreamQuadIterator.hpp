@@ -139,6 +139,13 @@ public:
     bool operator!=(std::default_sentinel_t) const noexcept;
 };
 
+/**
+ * Opens a file for fast sequential access.
+ * Otherwise behaves the same as fopen.
+ * Inspired by serd_fopen.
+ */
+FILE *fopen_fastseq(char const *path, char const *mode) noexcept;
+
 }  // namespace rdf4cpp::rdf::parser
 
 #endif  //RDF4CPP_PARSER_ISTREAMQUADITERATOR_HPP

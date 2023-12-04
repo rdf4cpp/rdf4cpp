@@ -1,6 +1,12 @@
 #include "IStreamQuadIterator.hpp"
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
+#include <cstdio>
+
+#if __has_include(<fcntl.h>)
+#include <fcntl.h>
+#endif //__has_include
+
 namespace rdf4cpp::rdf::parser {
 
 /**
@@ -93,6 +99,21 @@ bool IStreamQuadIterator::operator==(std::default_sentinel_t) const noexcept {
 
 bool IStreamQuadIterator::operator!=(std::default_sentinel_t) const noexcept {
     return !this->is_at_end();
+}
+
+FILE *fopen_fastseq(char const *path, char const *mode) noexcept {
+    // inspired by <serd/system.c> (serd_fopen)
+
+    FILE *fd = fopen(path, mode);
+    if (fd == nullptr) {
+        return fd;
+    }
+
+#if _POSIX_C_SOURCE >= 200112L
+    (void) posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_FADV_NOREUSE);
+#endif
+
+    return fd;
 }
 
 }  // namespace rdf4cpp::rdf::parser
