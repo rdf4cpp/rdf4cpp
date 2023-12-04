@@ -126,6 +126,8 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept;
 
+    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, const Node::NodeStorage &node_storage, storage::node::identifier::NodeID node_id) noexcept;
+
     /**
      * Creates a string like type with contents of str.
      * Will either create
@@ -333,6 +335,85 @@ public:
 
     Literal to_node_storage(NodeStorage &node_storage) const noexcept;
     [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
+
+private:
+    [[nodiscard]] static NodeID find_datatype_iri(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept;
+
+public:
+    /**
+     * searches for a xsd::String Literal in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static Literal find_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * searches for a rdf::LangString Literal in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static Literal find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * searches for a Literal of type T in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * if T is inlineable (and not rdf::LangString) always returns the inlined Literal.
+     * @tparam T
+     * @param compatible_value
+     * @param node_storage
+     * @return
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] static Literal find(typename T::cpp_type const &compatible_value,
+                                      NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            return find_lang_tagged(compatible_value.lexical_form,
+                                    compatible_value.language_tag,
+                                    node_storage);
+        }
+
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return find_simple(compatible_value, node_storage);
+        }
+
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+            }
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                        .datatype = T::fixed_id,
+                        .value = std::any{compatible_value}});
+                if (nid.null())
+                    return Literal{};
+                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+            }
+        }
+
+        auto dty = find_datatype_iri(T::datatype_id, node_storage);
+        if (dty.null())
+            return Literal{};
+
+        auto const lex = T::to_canonical_string(compatible_value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+
+        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                .datatype_id = dty,
+                .lexical_form = lex,
+                .language_tag = "",
+                .needs_escape = needs_escape});
+
+        if (nid.null())
+            return Literal{};
+        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+    }
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype

@@ -68,7 +68,17 @@ public:
      * @return
      */
     [[nodiscard]] static IRI find(std::string_view iri, const NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+private:
+    /**
+     * searches for a IRI in the specified node storage and returns it.
+     * returns a null IRI, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static IRI find(datatypes::registry::DatatypeIDView id, const NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
 
+public:
     /**
      * Get the IRI string of this.
      * @return IRI string
