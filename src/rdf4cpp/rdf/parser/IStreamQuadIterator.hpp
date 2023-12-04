@@ -13,9 +13,6 @@
 #include <rdf4cpp/rdf/parser/ParsingState.hpp>
 #include <rdf4cpp/rdf/IRIFactory.hpp>
 
-#include <dice/hash.hpp>
-#include <dice/sparse-map/sparse_map.hpp>
-
 namespace rdf4cpp::rdf::parser {
 
 /**
@@ -114,8 +111,7 @@ public:
                         ReadFunc read,
                         ErrorFunc error,
                         flags_type flags = ParsingFlags::none(),
-                        state_type *initial_state = nullptr,
-                        storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+                        state_type *initial_state = nullptr) noexcept;
 
     /**
      * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
@@ -128,8 +124,7 @@ public:
      */
     explicit IStreamQuadIterator(std::istream &istream,
                                  flags_type flags = ParsingFlags::none(),
-                                 state_type *initial_state = nullptr,
-                                 storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+                                 state_type *initial_state = nullptr) noexcept;
 
     ~IStreamQuadIterator() noexcept;
 

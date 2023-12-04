@@ -15,7 +15,7 @@ namespace rdf4cpp::rdf::parser {
 static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
     assert(elem_size == 1);
 
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    auto *self = static_cast<std::istream *>(voided_self);
     self->read(static_cast<char *>(buf), static_cast<std::streamsize>(count));
     return self->gcount();
 }
@@ -27,7 +27,7 @@ static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t 
  * @param voided_self pointer to std::istream cast to void *
  */
 static int istream_error(void *voided_self) noexcept {
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    auto *self = static_cast<std::istream *>(voided_self);
     return *self ? 0 : 1;
 }
 
@@ -47,17 +47,15 @@ IStreamQuadIterator::IStreamQuadIterator(void *stream,
                                          ReadFunc read,
                                          ErrorFunc error,
                                          flags_type flags,
-                                         state_type *state,
-                                         storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(stream, read, error, flags, state, std::move(node_storage))} {
+                                         state_type *state) noexcept
+    : impl{std::make_unique<Impl>(stream, read, error, flags, state)} {
     ++*this;
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
                                          flags_type flags,
-                                         state_type *state,
-                                         storage::node::NodeStorage node_storage) noexcept
-    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state, std::move(node_storage)} {
+                                         state_type *state) noexcept
+    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;

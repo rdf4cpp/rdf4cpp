@@ -32,8 +32,6 @@ private:
 
     using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
 
-    mutable storage::node::NodeStorage node_storage;
-
     OwnedSerdReader reader;
 
     state_type *state;
@@ -79,8 +77,7 @@ public:
          ReadFunc read,
          ErrorFunc,
          flags_type flags,
-         state_type *state,
-         storage::node::NodeStorage node_storage) noexcept;
+         state_type *state) noexcept;
 
     ~Impl() noexcept;
 

@@ -33,18 +33,15 @@ private:
     std::string file_path_;
     flags_type flags_;
     state_type *state_;
-    storage::node::NodeStorage *node_storage_;
 
 public:
     explicit RDFFileParser(const std::string &file_path,
                            flags_type flags = flags_type::none(),
-                           state_type *state = nullptr,
-                           storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance());
+                           state_type *state = nullptr);
 
     explicit RDFFileParser(std::string &&file_path,
                            flags_type flags = flags_type::none(),
-                           state_type *state = nullptr,
-                           storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance());
+                           state_type *state = nullptr);
 
     class iterator {
         friend class RDFFileParser;
@@ -56,7 +53,7 @@ public:
         /**
          * Constructs an iterator by taking ownership of the given file
          */
-        iterator(FILE *&&stream, flags_type flags, state_type *state, storage::node::NodeStorage &node_storage);
+        iterator(FILE *&&stream, flags_type flags, state_type *state);
 
     public:
         ~iterator() noexcept;

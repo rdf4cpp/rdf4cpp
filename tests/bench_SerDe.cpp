@@ -22,12 +22,12 @@ void deserialize(std::filesystem::path const &in_path, Dataset &ds, storage::nod
     }
     setbuf(in_file, nullptr);
 
+    parser::IStreamQuadIterator::state_type state{.node_storage = node_storage};
     parser::IStreamQuadIterator qit{in_file,
                                     reinterpret_cast<parser::ReadFunc>(&fread),
                                     reinterpret_cast<parser::ErrorFunc>(&ferror),
                                     parser::ParsingFlags::none(),
-                                    {},
-                                    node_storage};
+                                    &state};
 
     for (; qit != std::default_sentinel; ++qit) {
         if (qit->has_value()) {
