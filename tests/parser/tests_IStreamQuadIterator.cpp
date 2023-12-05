@@ -27,6 +27,31 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK_EQ(n, 4);
     }
 
+    TEST_CASE("parse to different node storage") {
+        constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
+                                       "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/ontology/bibo/authorList> <http://data.semanticweb.org/workshop/admire/2012/paper/12/authorlist> .\n"
+                                       "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"web applications\" .\n"
+                                       "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://xmlns.com/foaf/0.1/maker> <http://data.semanticweb.org/person/ichiro-fujinaga> .\n";
+
+        std::istringstream iss{triples};
+
+        size_t n = 0;
+
+        storage::node::NodeStorage ns = storage::node::NodeStorage::new_instance();
+        IStreamQuadIterator::state_type state{.node_storage = ns};
+        for (auto qit = IStreamQuadIterator{iss, ParsingFlags::none(), &state}; qit != IStreamQuadIterator{}; ++qit) {
+            CHECK(qit->has_value());
+
+            for (auto const term : **qit) {
+                CHECK_EQ(term.backend_handle().node_storage_id(), ns.id());
+            }
+
+            n += 1;
+        }
+
+        CHECK_EQ(n, 4);
+    }
+
     TEST_CASE("correct data with prefix") {
         constexpr char const *triples = "@prefix ex: <http://www.example.org/> ."
                                         "ex:s1 ex:p1 ex:o1 .\n"

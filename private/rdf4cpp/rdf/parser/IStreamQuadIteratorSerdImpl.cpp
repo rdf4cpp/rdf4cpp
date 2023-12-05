@@ -309,10 +309,8 @@ IStreamQuadIterator::Impl::Impl(void *stream,
                                 ReadFunc read,
                                 ErrorFunc error,
                                 flags_type flags,
-                                state_type *initial_state,
-                                storage::node::NodeStorage node_storage) noexcept
-    : node_storage{std::move(node_storage)},
-      reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
+                                state_type *initial_state) noexcept
+    : reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       state{initial_state},
       state_is_owned{false},
       no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)},

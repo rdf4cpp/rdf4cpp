@@ -2,12 +2,10 @@
 #define RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 
 #include <deque>
-#include <istream>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include <serd/serd.h>
 
@@ -31,8 +29,6 @@ private:
     };
 
     using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
-
-    mutable storage::node::NodeStorage node_storage;
 
     OwnedSerdReader reader;
 
@@ -79,8 +75,7 @@ public:
          ReadFunc read,
          ErrorFunc,
          flags_type flags,
-         state_type *state,
-         storage::node::NodeStorage node_storage) noexcept;
+         state_type *state) noexcept;
 
     ~Impl() noexcept;
 
@@ -88,11 +83,11 @@ public:
      * @return true if this will no longer yield values
      * @note one sided implication, could be false and still not yield another value
      */
-    [[nodiscard]] inline bool is_at_end() const noexcept {
+    [[nodiscard]] bool is_at_end() const noexcept {
         return this->end_flag && quad_buffer.empty();
     }
 
-    inline bool operator==(Impl const &other) const noexcept {
+    bool operator==(Impl const &other) const noexcept {
         return this->reader == other.reader;
     }
 
