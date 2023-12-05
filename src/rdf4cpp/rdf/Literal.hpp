@@ -368,8 +368,8 @@ public:
      * @return
      */
     template<datatypes::LiteralDatatype T>
-    [[nodiscard]] static Literal find(typename T::cpp_type const &compatible_value,
-                                      NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+    [[nodiscard]] static Literal find_typed_from_value(typename T::cpp_type const &compatible_value,
+                                                       NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return find_lang_tagged(compatible_value.lexical_form,
                                     compatible_value.language_tag,
@@ -407,6 +407,59 @@ public:
         auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
                 .datatype_id = dty,
                 .lexical_form = lex,
+                .language_tag = "",
+                .needs_escape = needs_escape});
+
+        if (nid.null())
+            return Literal{};
+        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+    }
+
+    /**
+     * searches for a Literal of type T in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * if T is inlineable, always returns the inlined Literal.
+     * @tparam T
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    template<datatypes::LiteralDatatype T>
+        requires(!std::same_as<T, datatypes::rdf::LangString>)
+    [[nodiscard]] static Literal find_typed(std::string_view lexical_form,
+                                            NodeStorage &node_storage = NodeStorage::default_instance()) {
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return find_simple(lexical_form, node_storage);
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            auto value = T::from_string(lexical_form);
+
+            if constexpr (datatypes::IsInlineable<T>) {
+                if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
+                    return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+                }
+            }
+
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                        .datatype = T::fixed_id,
+                        .value = std::any{value}});
+                if (nid.null())
+                    return Literal{};
+                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+            }
+        }
+
+        auto dty = find_datatype_iri(T::datatype_id, node_storage);
+        if (dty.null())
+            return Literal{};
+
+        auto const needs_escape = lexical_form_needs_escape(lexical_form);
+
+        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                .datatype_id = dty,
+                .lexical_form = lexical_form,
                 .language_tag = "",
                 .needs_escape = needs_escape});
 

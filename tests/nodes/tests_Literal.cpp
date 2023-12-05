@@ -1003,6 +1003,7 @@ struct get_find_values {};
 template<>
 struct get_find_values<datatypes::xsd::String> {
     static constexpr std::string_view av = "foo", bv = "bar";
+    static constexpr std::string_view as = "foo", bs = "bar";
 };
 template<>
 struct get_find_values<datatypes::rdf::LangString> {
@@ -1011,16 +1012,21 @@ struct get_find_values<datatypes::rdf::LangString> {
 template<>
 struct get_find_values<datatypes::xsd::Int> {  // always inlined
     static constexpr int32_t inl = 42;
+    static constexpr std::string_view inls = "42";
 };
 template<>
 struct get_find_values<datatypes::xsd::Date> {  // inlined == has timezone
     static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
     static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
     static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
+    static constexpr std::string_view as = "1342-5-4+1:0";
+    static constexpr std::string_view bs = "1342-5-5+1:0";
+    static constexpr std::string_view inls = "1342-5-6";
 };
 template<>
 struct get_find_values<FakeDatatype> { // no fixed id
     static constexpr int av = 42, bv = 4242;
+    static constexpr std::string_view as = "42", bs = "4242";
 };
 
 
@@ -1030,15 +1036,31 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         static constexpr auto bv = get_find_values<T>::bv;
         auto nst = storage::node::NodeStorage::new_instance();
 
-        CHECK(Literal::find<T>(av, nst) == Literal{});
+        CHECK(Literal::find_typed_from_value<T>(av, nst) == Literal{});
         Literal l = Literal::make_typed_from_value<T>(av, nst);
-        CHECK(Literal::find<T>(av, nst) == l);
-        CHECK(Literal::find<T>(av, nst).backend_handle() == l.backend_handle());
-        CHECK(Literal::find<T>(bv, nst) == Literal{});
+        CHECK(Literal::find_typed_from_value<T>(av, nst) == l);
+        CHECK(Literal::find_typed_from_value<T>(av, nst).backend_handle() == l.backend_handle());
+        CHECK(Literal::find_typed_from_value<T>(bv, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inl; }) {
         auto nst = storage::node::NodeStorage::new_instance();
-        auto l = Literal::find<T>(get_find_values<T>::inl, nst);
+        auto l = Literal::find_typed_from_value<T>(get_find_values<T>::inl, nst);
         CHECK(l == Literal::make_typed_from_value<T>(get_find_values<T>::inl));
+    }
+    if constexpr (requires { get_find_values<T>::as; }) {
+        static constexpr auto as = get_find_values<T>::as;
+        static constexpr auto bs = get_find_values<T>::bs;
+        auto nst = storage::node::NodeStorage::new_instance();
+
+        CHECK(Literal::find_typed<T>(as, nst) == Literal{});
+        Literal l = Literal::make_typed<T>(as, nst);
+        CHECK(Literal::find_typed<T>(as, nst) == l);
+        CHECK(Literal::find_typed<T>(as, nst).backend_handle() == l.backend_handle());
+        CHECK(Literal::find_typed<T>(bs, nst) == Literal{});
+    }
+    if constexpr (requires { get_find_values<T>::inls; }) {
+        auto nst = storage::node::NodeStorage::new_instance();
+        auto l = Literal::find_typed<T>(get_find_values<T>::inls, nst);
+        CHECK(l == Literal::make_typed<T>(get_find_values<T>::inls));
     }
 }

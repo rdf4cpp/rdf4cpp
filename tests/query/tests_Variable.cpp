@@ -43,3 +43,21 @@ TEST_CASE("Variable - Check for single node with anonymous false") {
     CHECK(variable.name() == "x");
     CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
 }
+
+TEST_CASE("Variable::find") {
+    auto nst = storage::node::NodeStorage::new_instance();
+    static constexpr std::string_view v = "var";
+    static constexpr std::string_view v2 = "var2";
+
+    CHECK(query::Variable::find_named(v, nst) == query::Variable{});
+    auto qv = query::Variable::make_named(v, nst);
+    CHECK(query::Variable::find_named(v, nst) == qv);
+    CHECK(query::Variable::find_named(v, nst).backend_handle() == qv.backend_handle());
+    CHECK(query::Variable::find_named(v2, nst) == query::Variable{});
+
+    CHECK(query::Variable::find_anonymous(v, nst) == query::Variable{});
+    qv = query::Variable::make_anonymous(v, nst);
+    CHECK(query::Variable::find_anonymous(v, nst) == qv);
+    CHECK(query::Variable::find_anonymous(v, nst).backend_handle() == qv.backend_handle());
+    CHECK(query::Variable::find_anonymous(v2, nst) == query::Variable{});
+}
