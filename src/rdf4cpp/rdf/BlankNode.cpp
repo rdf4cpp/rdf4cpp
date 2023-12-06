@@ -41,6 +41,13 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
     return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
 }
 
+BlankNode BlankNode::find(std::string_view identifier, const NodeStorage& node_storage) noexcept {
+    auto nid = node_storage.find_id(storage::node::view::BNodeBackendView{identifier, nullptr});
+    if (nid.null())
+        return BlankNode{};
+    return BlankNode{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
+}
+
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
 bool BlankNode::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {

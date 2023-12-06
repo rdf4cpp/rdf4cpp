@@ -40,6 +40,21 @@ Variable Variable::try_get_in_node_storage(NodeStorage const &node_storage) cons
     return Variable{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
 }
 
+Variable Variable::find(std::string_view name, bool anonymous, NodeStorage& node_storage) noexcept {
+    auto nid = node_storage.find_id(storage::node::view::VariableBackendView{.name = name, .is_anonymous = anonymous});
+
+    if (nid.null())
+        return Variable{};
+
+    return Variable{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
+}
+Variable Variable::find_named(std::string_view name, NodeStorage& node_storage) noexcept {
+    return find(name, false, node_storage);
+}
+Variable Variable::find_anonymous(std::string_view name, NodeStorage& node_storage) noexcept {
+    return find(name, true, node_storage);
+}
+
 bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID
     return this->handle_.variable_backend().is_anonymous;
