@@ -7,7 +7,7 @@ concurrency:
 
 jobs:
   publish-release:
-    uses: dice-group/cpp-conan-release-reusable-workflow/.github/workflows/publish-conan-branch-package.yml@feature/lowercase
+    uses: dice-group/cpp-conan-release-reusable-workflow/.github/workflows/publish-conan-branch-package.yml@main
     with:
       public_artifactory: true
       os: ubuntu-22.04
@@ -18,4 +18,3 @@ jobs:
     secrets:
       CONAN_USER: ${{ secrets.CONAN_USER }}
       CONAN_PW: ${{ secrets.CONAN_PW }}
-
