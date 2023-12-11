@@ -3,6 +3,7 @@
 #include <uni_algo/all.h>
 
 #include <rdf4cpp/rdf/util/CharMatcher.hpp>
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
 
 namespace rdf4cpp::rdf {
 IRIFactory::IRIFactory(std::string_view base) {
@@ -47,9 +48,11 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
-    auto e = IRIView{iri}.quick_validate();
-    if (e != IRIFactoryError::Ok)
-        return nonstd::make_unexpected(e);
+    if (!rdf4cpp::rdf::datatypes::registry::dbpedia_mode) {
+        auto e = IRIView{iri}.quick_validate();
+        if (e != IRIFactoryError::Ok)
+            return nonstd::make_unexpected(e);
+    }
     return IRI{iri, storage};
 }
 
@@ -174,9 +177,11 @@ std::string_view IRIFactory::get_base() const noexcept {
 }
 
 IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
-    auto e = IRIView{b}.quick_validate();
-    if (e != IRIFactoryError::Ok)
-        return e;
+    if (!rdf4cpp::rdf::datatypes::registry::dbpedia_mode) {
+        auto e = IRIView{b}.quick_validate();
+        if (e != IRIFactoryError::Ok)
+            return e;
+    }
     base = b;
     return IRIFactoryError::Ok;
 }

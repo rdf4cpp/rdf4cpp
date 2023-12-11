@@ -17,6 +17,12 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifdef RDF4CPP_DBPEDIA_MODE
+static constexpr bool dbpedia_mode = RDF4CPP_DBPEDIA_MODE;
+#else
+extern bool dbpedia_mode;
+#endif
+
 /**
  * Registry for LiteralDatatype implementations.
  * Data types are registered by defining, implementing and specializing members of LiteralDatatype.

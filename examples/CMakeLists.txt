@@ -35,3 +35,8 @@ add_executable(getting_started getting_started.cpp)
 target_link_libraries(getting_started PRIVATE
         rdf4cpp::rdf4cpp
 )
+
+add_executable(rdf_format_checker rdf_format_checker.cpp)
+target_link_libraries(rdf_format_checker PRIVATE
+        rdf4cpp::rdf4cpp
+)

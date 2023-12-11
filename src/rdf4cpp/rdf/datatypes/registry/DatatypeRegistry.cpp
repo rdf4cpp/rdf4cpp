@@ -2,6 +2,10 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef RDF4CPP_DBPEDIA_MODE
+bool dbpedia_mode = false;
+#endif
+
 DatatypeRegistry::registered_datatypes_t &DatatypeRegistry::get_mutable() noexcept {
     static registered_datatypes_t registry_ = []() {
         registered_datatypes_t r;
