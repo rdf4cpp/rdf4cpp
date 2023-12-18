@@ -16,31 +16,24 @@ int main(int argc, char *argv[]) {
     rdf4cpp::rdf::datatypes::registry::dbpedia_mode = true;
 
     std::ifstream in{argv[1]};
-    std::string line{};
     auto nst = storage::node::NodeStorage::new_instance();
     int c = 0;
-    while (std::getline(in, line)) {
-        std::stringstream p{line};
-        IStreamQuadIterator::state_type state{.node_storage = nst};
-        IStreamQuadIterator i{p, ParsingFlag::NTriples, &state};
-        bool lineerr = false;
-        while (i != IStreamQuadIterator{}) {
-            if (!i->has_value()) {
-                lineerr = true;
-                std::cerr << i->error() << '\n';
-            }
-            ++i;
+
+    IStreamQuadIterator::state_type state{.node_storage = nst};
+    IStreamQuadIterator i{in, ParsingFlag::NTriples, &state};
+    while (i != IStreamQuadIterator{}) {
+        if (!i->has_value()) {
+            std::cout << i->error() << '\n';
         }
-        if (lineerr) {
-            std::cout << line << '\n';
-            std::cerr << line << '\n';
-        }
+        ++i;
         ++c;
         if (c >= 1000) {
             nst = storage::node::NodeStorage::new_instance();
+            state.node_storage = nst;
             c = 0;
         }
     }
 
+    std::cout << "done";
     return 0;
 }

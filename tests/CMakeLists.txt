@@ -349,6 +349,14 @@ target_link_libraries(tests_IRIFactory
 set_property(TARGET tests_IRIFactory PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_IRIFactory COMMAND tests_IRIFactory)
 
+add_executable(tests_DBpediaMode nodes/tests_DBpediaMode.cpp)
+target_link_libraries(tests_DBpediaMode
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_DBpediaMode PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_DBpediaMode COMMAND tests_DBpediaMode)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

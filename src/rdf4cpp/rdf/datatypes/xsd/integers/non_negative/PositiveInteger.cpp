@@ -16,7 +16,10 @@ capabilities::Default<xsd_positive_integer>::cpp_type capabilities::Default<xsd_
     }
 
     if (ret < 1) {
-        throw std::runtime_error{"xsd:positiveInteger parsing error: found non-positive value"};
+        if (dbpedia_mode)
+            ret = 1;
+        else
+            throw std::runtime_error{"xsd:positiveInteger parsing error: found non-positive value"};
     }
 
     return ret;
