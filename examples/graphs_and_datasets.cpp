@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        for (parser::IStreamQuadIterator qit{ifs}; qit != parser::IStreamQuadIterator{}; ++qit) {
+        for (parser::IStreamQuadIterator qit{ifs}; qit != std::default_sentinel; ++qit) {
             if (qit->has_value()) {
                 ds2.add(qit->value());
             } else {
