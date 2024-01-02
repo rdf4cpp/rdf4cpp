@@ -33,11 +33,10 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
         } catch (std::runtime_error const &e) {
             // TODO: check when actual blank node validation implemented
             // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-            this->last_error = ParsingError{
-                    .error_type = ParsingError::Type::BadBlankNode,
-                    .line = serd_reader_get_current_line(this->reader),
-                    .col = serd_reader_get_current_col(this->reader),
-                    .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
+            this->last_error = ParsingError{.error_type = ParsingError::Type::BadBlankNode,
+                                            .line = serd_reader_get_current_line(this->reader),
+                                            .col = serd_reader_get_current_col(this->reader),
+                                            .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
 
             return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
         }
@@ -53,11 +52,10 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
     } catch (std::runtime_error const &e) {
         // TODO: check when actual blank node validation implemented
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-        this->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadBlankNode,
-                .line = serd_reader_get_current_line(this->reader),
-                .col = serd_reader_get_current_col(this->reader),
-                .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
+        this->last_error = ParsingError{.error_type = ParsingError::Type::BadBlankNode,
+                                        .line = serd_reader_get_current_line(this->reader),
+                                        .col = serd_reader_get_current_col(this->reader),
+                                        .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
 
         return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
     }
@@ -68,11 +66,10 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode co
     auto iri = state->iri_factory.from_relative(node_into_string_view(node), this->state->node_storage);
     if (!iri.has_value()) {
         IRIFactoryError err = iri.error();
-        this->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadIri,
-                .line = serd_reader_get_current_line(this->reader),
-                .col = serd_reader_get_current_col(this->reader),
-                .message = std::format("invalid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
+        this->last_error = ParsingError{.error_type = ParsingError::Type::BadIri,
+                                        .line = serd_reader_get_current_line(this->reader),
+                                        .col = serd_reader_get_current_col(this->reader),
+                                        .message = std::format("invalid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
 
         return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
     }
@@ -96,19 +93,17 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(Se
         IRIFactoryError err = iri.error();
         if (err == IRIFactoryError::UnknownPrefix) {
             // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-            this->last_error = ParsingError{
-                    .error_type = ParsingError::Type::BadCurie,
-                    .line = serd_reader_get_current_line(this->reader),
-                    .col = serd_reader_get_current_col(this->reader),
-                    .message = "unknown prefix. note: position may not be accurate and instead point to the end of the triple."};
+            this->last_error = ParsingError{.error_type = ParsingError::Type::BadCurie,
+                                            .line = serd_reader_get_current_line(this->reader),
+                                            .col = serd_reader_get_current_col(this->reader),
+                                            .message = "unknown prefix. note: position may not be accurate and instead point to the end of the triple."};
 
             return nonstd::make_unexpected(SERD_ERR_BAD_CURIE);
         } else {
-            this->last_error = ParsingError{
-                    .error_type = ParsingError::Type::BadIri,
-                    .line = serd_reader_get_current_line(this->reader),
-                    .col = serd_reader_get_current_col(this->reader),
-                    .message = std::format("unable to expand curie into valid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
+            this->last_error = ParsingError{.error_type = ParsingError::Type::BadIri,
+                                            .line = serd_reader_get_current_line(this->reader),
+                                            .col = serd_reader_get_current_col(this->reader),
+                                            .message = std::format("unable to expand curie into valid iri. {}. note: position may not be accurate and instead point to the end of the triple.", err)};
 
             return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
         }
@@ -150,18 +145,17 @@ nonstd::expected<Literal, SerdStatus> IStreamQuadIterator::Impl::get_literal(Ser
         }
     } catch (std::runtime_error const &e) {
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-        this->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadLiteral,
-                .line = serd_reader_get_current_line(this->reader),
-                .col = serd_reader_get_current_col(this->reader),
-                .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
+        this->last_error = ParsingError{.error_type = ParsingError::Type::BadLiteral,
+                                        .line = serd_reader_get_current_line(this->reader),
+                                        .col = serd_reader_get_current_col(this->reader),
+                                        .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
 
         return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
     }
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError const *error) noexcept {
-    auto *self = reinterpret_cast<Impl *>(voided_self);
+    auto *self = static_cast<Impl *>(voided_self);
 
     auto const buf_sz = vsnprintf(nullptr, 0, error->fmt, *error->args);
     std::string message;
@@ -170,55 +164,45 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
     vsnprintf(message.data(), message.size(), error->fmt, *error->args);
     message.resize(buf_sz - 1);  // drop null-terminator from vsnprintf and newline from serd
 
-    self->last_error = ParsingError{
-            .error_type = parsing_error_type_from_serd(error->status),
-            .line = error->line,
-            .col = error->col,
-            .message = message};
+    self->last_error = ParsingError{.error_type = parsing_error_type_from_serd(error->status),
+                                    .line = error->line,
+                                    .col = error->col,
+                                    .message = message};
     self->last_error_requires_skip = true;
 
     return SERD_SUCCESS;
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
-    auto *self = reinterpret_cast<Impl *>(voided_self);
+    auto *self = static_cast<Impl *>(voided_self);
 
     if (self->no_parse_prefixes) {
-        self->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadSyntax,
-                .line = serd_reader_get_current_line(self->reader),
-                .col = serd_reader_get_current_col(self->reader),
-                .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
-
-        return SERD_SUCCESS;
-    }
-
-    auto e = self->state->iri_factory.set_base(node_into_string_view(uri));
-    if (e != IRIFactoryError::Ok) {
-        self->last_error = ParsingError{
-            .error_type = ParsingError::Type::BadSyntax,
-            .line = serd_reader_get_current_line(self->reader),
-            .col = serd_reader_get_current_col(self->reader),
-            .message = std::format("Error setting base: {}. note: position may not be accurate and instead point to the end of the line.", e)};
-        return SERD_SUCCESS;
+        self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                        .line = serd_reader_get_current_line(self->reader),
+                                        .col = serd_reader_get_current_col(self->reader),
+                                        .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+    } else if (auto e = self->state->iri_factory.set_base(node_into_string_view(uri)); e != IRIFactoryError::Ok) {
+        self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                        .line = serd_reader_get_current_line(self->reader),
+                                        .col = serd_reader_get_current_col(self->reader),
+                                        .message = std::format("Error setting base: {}. note: position may not be accurate and instead point to the end of the line.", e)};
     }
 
     return SERD_SUCCESS;
 }
 
 SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
-    auto *self = reinterpret_cast<Impl *>(voided_self);
+    auto *self = static_cast<Impl *>(voided_self);
 
     if (self->no_parse_prefixes) {
-        self->last_error = ParsingError{
-                .error_type = ParsingError::Type::BadSyntax,
-                .line = serd_reader_get_current_line(self->reader),
-                .col = serd_reader_get_current_col(self->reader),
-                .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
-        return SERD_SUCCESS;
+        self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                        .line = serd_reader_get_current_line(self->reader),
+                                        .col = serd_reader_get_current_col(self->reader),
+                                        .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+    } else {
+        self->state->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
     }
 
-    self->state->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
     return SERD_SUCCESS;
 }
 
@@ -231,7 +215,7 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
                                               SerdNode const *obj_datatype,
                                               SerdNode const *obj_lang) noexcept {
 
-    auto *self = reinterpret_cast<Impl *>(voided_self);
+    auto *self = static_cast<Impl *>(voided_self);
 
     auto const graph_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         if (graph != nullptr) {
