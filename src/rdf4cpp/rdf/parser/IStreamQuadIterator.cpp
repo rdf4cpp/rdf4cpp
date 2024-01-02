@@ -31,10 +31,11 @@ static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t 
  * Matches the interface of SerdStreamErrorFunc
  *
  * @param voided_self pointer to std::istream cast to void *
+ * @return whether the given istream encountered an error (cast to int)
  */
 static int istream_error(void *voided_self) noexcept {
     auto *self = static_cast<std::istream *>(voided_self);
-    return *self ? 0 : 1;
+    return static_cast<int>(self->fail() && !self->eof());
 }
 
 IStreamQuadIterator::IStreamQuadIterator(void *stream,

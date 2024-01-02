@@ -342,254 +342,282 @@ TEST_SUITE("IStreamQuadIterator") {
         ++qit;
         CHECK(qit == std::default_sentinel);
     }
-}
 
-TEST_CASE("N-Triple") {
-    SUBCASE("simple") {
-        std::stringstream str{"<http://example/s> <http://example/p> \"string\" ."};
+    TEST_CASE("garbage input") {
+        std::istringstream iss{"}; SELECT * WHERE { ?s ?p ?o "};
 
-        IStreamQuadIterator it{str, ParsingFlag::NTriples};
+        size_t count = 0;
+        for (IStreamQuadIterator qit{iss, ParsingFlag::NoParsePrefix | ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
+            CHECK_FALSE(qit->has_value());
+            ++count;
+        }
 
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK(it->value() == Quad{IRI{"http://example/s"},
-                                  IRI{"http://example/p"},
-                                  Literal::make_simple("string")});
-
-        ++it;
-        CHECK_EQ(it, std::default_sentinel);
-    }
-    SUBCASE("Turtle") {
-        constexpr char const *triples = "@base <http://invalid-url.org> .\n"
-                                        "@prefix xsd: <http://some-random-url.de#> .\n"
-                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
-                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
-
-        std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
-
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(qit->has_value());
-        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
-                                   IRI{"http://purl.org/dc/elements/1.1/subject"},
-                                   Literal::make_simple("search")});
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_EQ(qit, std::default_sentinel);
-    }
-}
-
-TEST_CASE("N-Quads") {
-    SUBCASE("simple") {
-        std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> .\n"
-                              "<http://example/s> <http://example/p> <http://example/o>."};
-
-        IStreamQuadIterator it{str, ParsingFlag::NQuads};
-
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK(it->value() == Quad{IRI{"http://example/g"},
-                                  IRI{"http://example/s"},
-                                  IRI{"http://example/p"},
-                                  IRI{"http://example/o"}});
-
-        ++it;
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK(it->value() == Quad{IRI{"http://example/s"},
-                                  IRI{"http://example/p"},
-                                  IRI{"http://example/o"}});
-
-        ++it;
-        CHECK_EQ(it, std::default_sentinel);
-    }
-    SUBCASE("Turtle") {
-        constexpr char const *triples = "@base <http://invalid-url.org> .\n"
-                                        "@prefix xsd: <http://some-random-url.de#> .\n"
-                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
-                                        "xsd:subject xsd:predicate \"aaaaa\" .\n";
-
-        std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
-
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(qit->has_value());
-        CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
-                                   IRI{"http://purl.org/dc/elements/1.1/subject"},
-                                   Literal::make_simple("search")});
-
-        ++qit;
-        CHECK_NE(qit, std::default_sentinel);
-        CHECK(!qit->has_value());
-        std::cout << qit->error() << std::endl;
-
-        ++qit;
-        CHECK_EQ(qit, std::default_sentinel);
-    }
-}
-
-TEST_CASE("TriG") {
-    SUBCASE("simple") {
-        std::stringstream str{"<http://example/g> {<http://example/s> <http://example/p> <http://example/o> .}"};
-
-        IStreamQuadIterator it{str, ParsingFlag::TriG};
-
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK_EQ(it->value(), Quad{IRI{"http://example/g"},
-                                   IRI{"http://example/s"},
-                                   IRI{"http://example/p"},
-                                   IRI{"http://example/o"}});
-
-        ++it;
-        CHECK_EQ(it, std::default_sentinel);
-    }
-    SUBCASE("mixed") {
-        std::stringstream str{"@prefix p: <http://a.example/>.\n"
-                              "{p:s <http://a.example/p> p:o .}\n"
-                              "<http://example/graph> {<http://a.example/s> <http://a.example/p> <http://a.example/o> .}"};
-
-        IStreamQuadIterator it{str, ParsingFlag::TriG};
-
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK_EQ(it->value(), Quad{IRI{"http://a.example/s"},
-                                   IRI{"http://a.example/p"},
-                                   IRI{"http://a.example/o"}});
-        ++it;
-        CHECK_NE(it, std::default_sentinel);
-        CHECK(it->has_value());
-        CHECK_EQ(it->value(), Quad{IRI{"http://example/graph"},
-                                   IRI{"http://a.example/s"},
-                                   IRI{"http://a.example/p"},
-                                   IRI{"http://a.example/o"}});
-
-        ++it;
-        CHECK_EQ(it, std::default_sentinel);
-    }
-}
-
-TEST_CASE("bnode management") {
-    constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
-                                    "<http://data.semanticweb.org/workshop/admire/2012/paper/13> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
-                                    "_:b2 <http://purl.org/dc/elements/1.1/subject> \"Some Subject\" .\n";
-
-    SUBCASE("bnodes") {
-        IStreamQuadIterator::state_type state{
-                .blank_node_generator = &bnode_mngt::NodeGenerator::default_instance(),
-                .blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance()};
-
-        std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
-
-        CHECK(qit != std::default_sentinel);
-        CHECK(qit->has_value());
-        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-
-        auto b1_1 = qit->value().object();
-        CHECK(b1_1.is_blank_node());
-        std::cout << qit->value().object() << std::endl;
-
-        ++qit;
-        CHECK(qit != std::default_sentinel);
-        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-
-        auto b1_2 = qit->value().object();
-        CHECK(b1_1.is_blank_node());
-        std::cout << qit->value().object() << std::endl;
-        CHECK(b1_1 == b1_2);
-
-        ++qit;
-        CHECK(qit != std::default_sentinel);
-        auto b2_1 = qit->value().subject();
-        CHECK(b2_1.is_blank_node());
-        CHECK(b2_1 != b1_1);
-        std::cout << b2_1 << std::endl;
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-        CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
-
-        ++qit;
-        CHECK(qit == std::default_sentinel);
+        CHECK_EQ(count, 1);
     }
 
-    SUBCASE("skolem iris") {
-        auto scope_mng = bnode_mngt::ReferenceNodeScopeManager{};
-        auto generator = bnode_mngt::NodeGenerator::new_instance_with_factory<bnode_mngt::SkolemIRIFactory>("http://skolem-iris.org#");
+    TEST_CASE("empty input") {
+        SUBCASE("istream") {
+            std::istringstream iss{""};
 
-        IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
-                                              .blank_node_scope_manager = &scope_mng};
+            for (IStreamQuadIterator qit{iss}; qit != std::default_sentinel; ++qit) {
+                FAIL("not empty");
+            }
+        }
 
-        std::istringstream iss{triples};
-        IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
+        SUBCASE("fopen") {
+            static constexpr char const *path = "/tmp/rdf4cpp-istreamquad-iter-empty";
 
-        CHECK(qit != std::default_sentinel);
-        CHECK(qit->has_value());
-        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+            {
+                auto *f = fopen(path, "w");
+                fclose(f);
+            }
 
-        auto b1_1 = qit->value().object();
-        CHECK(b1_1.is_iri());
-        std::cout << qit->value().object() << std::endl;
+            auto *f = fopen(path, "r");
+            for (IStreamQuadIterator qit{f, reinterpret_cast<ReadFunc>(fread), reinterpret_cast<ErrorFunc>(ferror)}; qit != std::default_sentinel; ++qit) {
+                FAIL("not empty");
+            }
 
-        ++qit;
-        CHECK(qit != std::default_sentinel);
-        CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-
-        auto b1_2 = qit->value().object();
-        CHECK(b1_1.is_iri());
-        std::cout << qit->value().object() << std::endl;
-        CHECK(b1_1 == b1_2);
-
-        ++qit;
-        CHECK(qit != std::default_sentinel);
-        auto b2_1 = qit->value().subject();
-        CHECK(b2_1.is_iri());
-        CHECK(b2_1 != b1_1);
-        std::cout << b2_1 << std::endl;
-        CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-        CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
-
-        ++qit;
-        CHECK(qit == std::default_sentinel);
-    }
-}
-
-TEST_CASE("garbage input") {
-    std::istringstream iss{"}; SELECT * WHERE { ?s ?p ?o "};
-
-    size_t count = 0;
-    for (IStreamQuadIterator qit{iss, ParsingFlag::NoParsePrefix | ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
-        CHECK_FALSE(qit->has_value());
-        ++count;
+            fclose(f);
+            remove(path);
+        }
     }
 
-    CHECK_EQ(count, 1);
+    TEST_CASE("N-Triple") {
+        SUBCASE("simple") {
+            std::stringstream str{"<http://example/s> <http://example/p> \"string\" ."};
+
+            IStreamQuadIterator it{str, ParsingFlag::NTriples};
+
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK(it->value() == Quad{IRI{"http://example/s"},
+                                      IRI{"http://example/p"},
+                                      Literal::make_simple("string")});
+
+            ++it;
+            CHECK_EQ(it, std::default_sentinel);
+        }
+        SUBCASE("Turtle") {
+            constexpr char const *triples = "@base <http://invalid-url.org> .\n"
+                                            "@prefix xsd: <http://some-random-url.de#> .\n"
+                                            "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
+                                            "xsd:subject xsd:predicate \"aaaaa\" .\n";
+
+            std::istringstream iss{triples};
+            IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
+
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(qit->has_value());
+            CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                       IRI{"http://purl.org/dc/elements/1.1/subject"},
+                                       Literal::make_simple("search")});
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_EQ(qit, std::default_sentinel);
+        }
+    }
+
+    TEST_CASE("N-Quads") {
+        SUBCASE("simple") {
+            std::stringstream str{"<http://example/s> <http://example/p> <http://example/o> <http://example/g> .\n"
+                                  "<http://example/s> <http://example/p> <http://example/o>."};
+
+            IStreamQuadIterator it{str, ParsingFlag::NQuads};
+
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK(it->value() == Quad{IRI{"http://example/g"},
+                                      IRI{"http://example/s"},
+                                      IRI{"http://example/p"},
+                                      IRI{"http://example/o"}});
+
+            ++it;
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK(it->value() == Quad{IRI{"http://example/s"},
+                                      IRI{"http://example/p"},
+                                      IRI{"http://example/o"}});
+
+            ++it;
+            CHECK_EQ(it, std::default_sentinel);
+        }
+        SUBCASE("Turtle") {
+            constexpr char const *triples = "@base <http://invalid-url.org> .\n"
+                                            "@prefix xsd: <http://some-random-url.de#> .\n"
+                                            "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> \"search\" .\n"
+                                            "xsd:subject xsd:predicate \"aaaaa\" .\n";
+
+            std::istringstream iss{triples};
+            IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
+
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(qit->has_value());
+            CHECK(qit->value() == Quad{IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"},
+                                       IRI{"http://purl.org/dc/elements/1.1/subject"},
+                                       Literal::make_simple("search")});
+
+            ++qit;
+            CHECK_NE(qit, std::default_sentinel);
+            CHECK(!qit->has_value());
+            std::cout << qit->error() << std::endl;
+
+            ++qit;
+            CHECK_EQ(qit, std::default_sentinel);
+        }
+    }
+
+    TEST_CASE("TriG") {
+        SUBCASE("simple") {
+            std::stringstream str{"<http://example/g> {<http://example/s> <http://example/p> <http://example/o> .}"};
+
+            IStreamQuadIterator it{str, ParsingFlag::TriG};
+
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK_EQ(it->value(), Quad{IRI{"http://example/g"},
+                                       IRI{"http://example/s"},
+                                       IRI{"http://example/p"},
+                                       IRI{"http://example/o"}});
+
+            ++it;
+            CHECK_EQ(it, std::default_sentinel);
+        }
+        SUBCASE("mixed") {
+            std::stringstream str{"@prefix p: <http://a.example/>.\n"
+                                  "{p:s <http://a.example/p> p:o .}\n"
+                                  "<http://example/graph> {<http://a.example/s> <http://a.example/p> <http://a.example/o> .}"};
+
+            IStreamQuadIterator it{str, ParsingFlag::TriG};
+
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK_EQ(it->value(), Quad{IRI{"http://a.example/s"},
+                                       IRI{"http://a.example/p"},
+                                       IRI{"http://a.example/o"}});
+            ++it;
+            CHECK_NE(it, std::default_sentinel);
+            CHECK(it->has_value());
+            CHECK_EQ(it->value(), Quad{IRI{"http://example/graph"},
+                                       IRI{"http://a.example/s"},
+                                       IRI{"http://a.example/p"},
+                                       IRI{"http://a.example/o"}});
+
+            ++it;
+            CHECK_EQ(it, std::default_sentinel);
+        }
+    }
+
+    TEST_CASE("bnode management") {
+        constexpr char const *triples = "<http://data.semanticweb.org/workshop/admire/2012/paper/12> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
+                                        "<http://data.semanticweb.org/workshop/admire/2012/paper/13> <http://purl.org/dc/elements/1.1/subject> _:b1 .\n"
+                                        "_:b2 <http://purl.org/dc/elements/1.1/subject> \"Some Subject\" .\n";
+
+        SUBCASE("bnodes") {
+            IStreamQuadIterator::state_type state{
+                    .blank_node_generator = &bnode_mngt::NodeGenerator::default_instance(),
+                    .blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance()};
+
+            std::istringstream iss{triples};
+            IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
+
+            CHECK(qit != std::default_sentinel);
+            CHECK(qit->has_value());
+            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+            auto b1_1 = qit->value().object();
+            CHECK(b1_1.is_blank_node());
+            std::cout << qit->value().object() << std::endl;
+
+            ++qit;
+            CHECK(qit != std::default_sentinel);
+            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+            auto b1_2 = qit->value().object();
+            CHECK(b1_1.is_blank_node());
+            std::cout << qit->value().object() << std::endl;
+            CHECK(b1_1 == b1_2);
+
+            ++qit;
+            CHECK(qit != std::default_sentinel);
+            auto b2_1 = qit->value().subject();
+            CHECK(b2_1.is_blank_node());
+            CHECK(b2_1 != b1_1);
+            std::cout << b2_1 << std::endl;
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+            CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
+
+            ++qit;
+            CHECK(qit == std::default_sentinel);
+        }
+
+        SUBCASE("skolem iris") {
+            auto scope_mng = bnode_mngt::ReferenceNodeScopeManager{};
+            auto generator = bnode_mngt::NodeGenerator::new_instance_with_factory<bnode_mngt::SkolemIRIFactory>("http://skolem-iris.org#");
+
+            IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
+                                                  .blank_node_scope_manager = &scope_mng};
+
+            std::istringstream iss{triples};
+            IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
+
+            CHECK(qit != std::default_sentinel);
+            CHECK(qit->has_value());
+            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+            auto b1_1 = qit->value().object();
+            CHECK(b1_1.is_iri());
+            std::cout << qit->value().object() << std::endl;
+
+            ++qit;
+            CHECK(qit != std::default_sentinel);
+            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+
+            auto b1_2 = qit->value().object();
+            CHECK(b1_1.is_iri());
+            std::cout << qit->value().object() << std::endl;
+            CHECK(b1_1 == b1_2);
+
+            ++qit;
+            CHECK(qit != std::default_sentinel);
+            auto b2_1 = qit->value().subject();
+            CHECK(b2_1.is_iri());
+            CHECK(b2_1 != b1_1);
+            std::cout << b2_1 << std::endl;
+            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
+            CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
+
+            ++qit;
+            CHECK(qit == std::default_sentinel);
+        }
+    }
+
 }
