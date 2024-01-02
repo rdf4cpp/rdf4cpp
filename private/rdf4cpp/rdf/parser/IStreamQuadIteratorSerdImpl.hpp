@@ -31,8 +31,7 @@ private:
     bool last_error_requires_skip = false;
     bool end_flag = false;
 
-    bool no_parse_prefixes;
-    bool keep_bnode_ids;
+    flags_type flags;
 
 private:
     static std::string_view node_into_string_view(SerdNode const *node) noexcept;
@@ -82,6 +81,9 @@ public:
      *      unexpected ParsingError: if there was a next element but it could not be parsed
      */
     [[nodiscard]] std::optional<nonstd::expected<ok_type, error_type>> next() noexcept;
+
+    [[nodiscard]] uint64_t current_line() const noexcept;
+    [[nodiscard]] uint64_t current_column() const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::parser

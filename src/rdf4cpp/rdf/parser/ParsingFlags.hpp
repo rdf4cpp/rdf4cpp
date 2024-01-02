@@ -15,11 +15,12 @@ enum struct ParsingFlag : uint8_t {
     Strict           = 1 << 0,
     NoParsePrefix    = 1 << 1,
     KeepBlankNodeIds = 1 << 2,
+    NoParseBlankNode = 1 << 3,
 
-    Turtle   = 0b00 << 3, // default
-    NTriples = 0b01 << 3,
-    NQuads   = 0b10 << 3,
-    TriG     = 0b11 << 3,
+    Turtle   = 0b00 << 4, // default
+    NTriples = 0b01 << 4,
+    NQuads   = 0b10 << 4,
+    TriG     = 0b11 << 4,
 };
 
 struct ParsingFlags {
