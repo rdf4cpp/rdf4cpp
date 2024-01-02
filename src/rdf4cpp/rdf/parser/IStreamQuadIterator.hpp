@@ -73,27 +73,9 @@ private:
     struct Impl;
 
     std::unique_ptr<Impl> impl;
-    nonstd::expected<ok_type, error_type> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
-
-    [[nodiscard]] bool is_at_end() const noexcept;
+    std::optional<nonstd::expected<ok_type, error_type>> cur;
 
 public:
-    /**
-     * Constructs the end-of-stream iterator
-     */
-    IStreamQuadIterator() noexcept;
-
-    /**
-     * Constructs the end-of-stream iterator
-     */
-    explicit IStreamQuadIterator(std::default_sentinel_t) noexcept;
-
-    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
-
-    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
-
     /**
      * Constructs a IStreamQuadIterator from a C-like io api. That is something similar to
      * the triple (FILE *, fread, ferror) (parameters are called (stream, read, error) here).
@@ -126,14 +108,17 @@ public:
                                  flags_type flags = ParsingFlags::none(),
                                  state_type *initial_state = nullptr) noexcept;
 
+    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
+
+    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
+
     ~IStreamQuadIterator() noexcept;
 
     reference operator*() const noexcept;
     pointer operator->() const noexcept;
     IStreamQuadIterator &operator++();
-
-    bool operator==(IStreamQuadIterator const &) const noexcept;
-    bool operator!=(IStreamQuadIterator const &) const noexcept;
 
     bool operator==(std::default_sentinel_t) const noexcept;
     bool operator!=(std::default_sentinel_t) const noexcept;
