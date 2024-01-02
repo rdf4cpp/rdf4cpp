@@ -316,6 +316,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
         CHECK_NE(qit, std::default_sentinel);
         CHECK(!qit->has_value());
+        CHECK(qit->error().message.find("Encountered blank node while parsing") != std::string::npos);
         std::cout << qit->error() << std::endl;
 
         ++qit;
