@@ -308,6 +308,21 @@ TEST_SUITE("IStreamQuadIterator") {
         CHECK_EQ(qit, std::default_sentinel);
     }
 
+    TEST_CASE("no bnode parsing") {
+        constexpr char const *triples = "<a> <b> _:bnode .\n";
+
+        std::istringstream iss{triples};
+        IStreamQuadIterator qit{iss, ParsingFlag::NoParseBlankNode};
+
+        CHECK_NE(qit, std::default_sentinel);
+        CHECK(!qit->has_value());
+        CHECK(qit->error().message.find("Encountered blank node while parsing") != std::string::npos);
+        std::cout << qit->error() << std::endl;
+
+        ++qit;
+        CHECK_EQ(qit, std::default_sentinel);
+    }
+
     TEST_CASE("relative IRIs") {
         // more complex test cases in tests_IRIFactory
         constexpr char const *triples = "@base <http://invalid-url.org> .\n"

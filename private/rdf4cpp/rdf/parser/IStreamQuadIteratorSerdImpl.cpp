@@ -27,7 +27,16 @@ ParsingError::Type IStreamQuadIterator::Impl::parsing_error_type_from_serd(SerdS
 nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::string &&graph_str, SerdNode const *node) noexcept {
     auto const node_str = node_into_string_view(node);
 
-    if (this->keep_bnode_ids) {
+    if (this->flags.contains(ParsingFlag::NoParseBlankNode)) {
+        this->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                        .line = serd_reader_get_current_line(this->reader),
+                                        .col = serd_reader_get_current_col(this->reader),
+                                        .message = "Encountered blank node while parsing. hint: blank nodes are not allowed in the current document. note: position may not be accurate and instead point to the end of the line."};
+
+        return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
+    }
+
+    if (this->flags.contains(ParsingFlag::KeepBlankNodeIds)) {
         try {
             return BlankNode{node_str, this->state->node_storage};
         } catch (std::runtime_error const &e) {
@@ -176,11 +185,11 @@ SerdStatus IStreamQuadIterator::Impl::on_error(void *voided_self, SerdError cons
 SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode *uri) noexcept {
     auto *self = static_cast<Impl *>(voided_self);
 
-    if (self->no_parse_prefixes) {
+    if (self->flags.contains(ParsingFlag::NoParsePrefix)) {
         self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
                                         .line = serd_reader_get_current_line(self->reader),
                                         .col = serd_reader_get_current_col(self->reader),
-                                        .message = "Encountered base while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+                                        .message = "Encountered base while parsing. hint: bases are not allowed in the current document. note: position may not be accurate and instead point to the end of the line."};
     } else if (auto e = self->state->iri_factory.set_base(node_into_string_view(uri)); e != IRIFactoryError::Ok) {
         self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
                                         .line = serd_reader_get_current_line(self->reader),
@@ -194,11 +203,11 @@ SerdStatus IStreamQuadIterator::Impl::on_base(void *voided_self, const SerdNode 
 SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode const *name, SerdNode const *uri) noexcept {
     auto *self = static_cast<Impl *>(voided_self);
 
-    if (self->no_parse_prefixes) {
+    if (self->flags.contains(ParsingFlag::NoParsePrefix)) {
         self->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
                                         .line = serd_reader_get_current_line(self->reader),
                                         .col = serd_reader_get_current_col(self->reader),
-                                        .message = "Encountered prefix while parsing. hint: prefix parsing is currently deactivated. note: position may not be accurate and instead point to the end of the line."};
+                                        .message = "Encountered prefix while parsing. hint: prefixes are not allowed in the current document. note: position may not be accurate and instead point to the end of the line."};
     } else {
         self->state->iri_factory.assign_prefix(node_into_string_view(name), node_into_string_view(uri));
     }
@@ -300,8 +309,7 @@ IStreamQuadIterator::Impl::Impl(void *stream,
     : reader{serd_reader_new(extract_syntax_from_flags(flags), this, nullptr, &Impl::on_base, &Impl::on_prefix, &Impl::on_stmt, nullptr)},
       state{initial_state},
       state_is_owned{false},
-      no_parse_prefixes{flags.contains(ParsingFlag::NoParsePrefix)},
-      keep_bnode_ids{flags.contains(ParsingFlag::KeepBlankNodeIds)} {
+      flags{flags} {
 
     if (this->state == nullptr) {
         this->state = new state_type{};
@@ -362,6 +370,14 @@ std::optional<nonstd::expected<IStreamQuadIterator::ok_type, IStreamQuadIterator
     auto ret = this->quad_buffer.front();
     this->quad_buffer.pop_front();
     return ret;
+}
+
+uint64_t IStreamQuadIterator::Impl::current_line() const noexcept {
+    return serd_reader_get_current_line(this->reader);
+}
+
+uint64_t IStreamQuadIterator::Impl::current_column() const noexcept {
+    return serd_reader_get_current_col(this->reader);
 }
 
 }  // namespace rdf4cpp::rdf::parser

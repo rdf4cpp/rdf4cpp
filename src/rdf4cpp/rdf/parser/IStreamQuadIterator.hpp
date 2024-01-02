@@ -120,6 +120,9 @@ public:
     pointer operator->() const noexcept;
     IStreamQuadIterator &operator++();
 
+    [[nodiscard]] uint64_t current_line() const noexcept;
+    [[nodiscard]] uint64_t current_column() const noexcept;
+
     bool operator==(std::default_sentinel_t) const noexcept;
     bool operator!=(std::default_sentinel_t) const noexcept;
 };

@@ -71,6 +71,14 @@ IStreamQuadIterator &IStreamQuadIterator::operator++() {
     return *this;
 }
 
+uint64_t IStreamQuadIterator::current_line() const noexcept {
+    return impl->current_line();
+}
+
+uint64_t IStreamQuadIterator::current_column() const noexcept {
+    return impl->current_column();
+}
+
 bool IStreamQuadIterator::operator==(std::default_sentinel_t) const noexcept {
     return !cur.has_value();
 }
