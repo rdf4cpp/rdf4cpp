@@ -271,6 +271,51 @@ public:
     }
 };
 
+inline std::chrono::month clamp_to_valid(std::chrono::month m) {
+    if (m < std::chrono::January)
+        return std::chrono::January;
+    if (m > std::chrono::December)
+        return std::chrono::December;
+    return m;
+}
+inline std::chrono::day clamp_to_valid(std::chrono::day m) {
+    if (m < std::chrono::day{1})
+        return std::chrono::day{1};
+    if (m > std::chrono::day{31})
+        return std::chrono::day{31};
+    return m;
+}
+inline std::chrono::month_day clamp_to_valid(std::chrono::month_day m) {
+    if (m.ok())
+        return m;
+    m = clamp_to_valid(m.month()) / clamp_to_valid(m.day());
+    if (m.ok())
+        return m;
+    auto t = std::chrono::year{2004} / m.month() / std::chrono::last;
+    return t.month() / t.day();
+}
+inline std::chrono::year_month clamp_to_valid(std::chrono::year_month m) {
+    if (m.ok())
+        return m;
+    return m.year() / clamp_to_valid(m.month());
+}
+inline std::chrono::year_month_day clamp_to_valid(std::chrono::year_month_day m) {
+    if (m.ok())
+        return m;
+    m = m.year() / clamp_to_valid(m.month()) / clamp_to_valid(m.day());
+    if (m.ok())
+        return m;
+    return m.year() / m.month() / std::chrono::last;
+}
+template<class T, class V>
+std::chrono::duration<T, V> clamp_duration(std::chrono::duration<T, V> v, std::chrono::duration<T, V> min, std::chrono::duration<T, V> max) {
+    if (v < min)
+        return min;
+    if (v > max)
+        return max;
+    return v;
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry::util
 
 #endif  //RDF4CPP_DATETIMEUTILS_HPP

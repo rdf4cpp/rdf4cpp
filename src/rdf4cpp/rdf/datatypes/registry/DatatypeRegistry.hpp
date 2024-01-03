@@ -21,6 +21,8 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * affected are:
  * - IRI: any validation skipped, will accept malformed IRIs like http//:example:foo/bar
  * - xsd:nonNegativeInteger & xsd:positiveInteger: clamped to their lowest allowed value, if lower
+ * - xsd:Date & anything partial or containing one: clamped to the next allowed value
+ * - xsd:Time & anything containing one: first, overflow happens, then clamped to the next allowed value
  */
 #ifdef RDF4CPP_DBPEDIA_MODE
 static constexpr bool dbpedia_mode = RDF4CPP_DBPEDIA_MODE;

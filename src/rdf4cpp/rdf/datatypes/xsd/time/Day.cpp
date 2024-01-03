@@ -17,7 +17,10 @@ capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     if (!day.ok()) {
-        throw std::runtime_error("invalid day");
+        if (registry::dbpedia_mode)
+            day = clamp_to_valid(day);
+        else
+            throw std::runtime_error("invalid day");
     }
 
     return std::make_pair(day, tz);

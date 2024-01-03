@@ -16,15 +16,23 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     auto tz = rdf::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
-    if (!date.ok())
-        throw std::runtime_error("invalid date");
-    if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
-        throw std::runtime_error{"minutes out of range"};
-    if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
-        throw std::runtime_error{"hours out of range"};
-    if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
-        throw std::runtime_error{"seconds out of range"};
+    if (!date.ok()) {
+        if (registry::dbpedia_mode)
+            date = clamp_to_valid(date);
+        else
+            throw std::runtime_error("invalid date");
+    }
+    if (!registry::dbpedia_mode) {
+        if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
+            throw std::runtime_error{"minutes out of range"};
+        if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
+            throw std::runtime_error{"hours out of range"};
+        if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
+            throw std::runtime_error{"seconds out of range"};
+    }
     auto time = hours + minutes + ms;
+    if (registry::dbpedia_mode)
+        time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
     if (time == std::chrono::hours{24}) {
         date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
         if (!date.ok())
