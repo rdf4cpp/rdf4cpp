@@ -31,22 +31,11 @@ static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t 
  * Matches the interface of SerdStreamErrorFunc
  *
  * @param voided_self pointer to std::istream cast to void *
+ * @return whether the given istream encountered an error (cast to int)
  */
 static int istream_error(void *voided_self) noexcept {
     auto *self = static_cast<std::istream *>(voided_self);
-    return *self ? 0 : 1;
-}
-
-bool IStreamQuadIterator::is_at_end() const noexcept {
-    return this->impl == nullptr || this->impl->is_at_end();
-}
-
-IStreamQuadIterator::IStreamQuadIterator() noexcept
-    : IStreamQuadIterator{std::default_sentinel} {
-}
-
-IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
-    : impl{nullptr} {
+    return static_cast<int>(self->fail() && !self->eof());
 }
 
 IStreamQuadIterator::IStreamQuadIterator(void *stream,
@@ -54,8 +43,8 @@ IStreamQuadIterator::IStreamQuadIterator(void *stream,
                                          ErrorFunc error,
                                          flags_type flags,
                                          state_type *state) noexcept
-    : impl{std::make_unique<Impl>(stream, read, error, flags, state)} {
-    ++*this;
+    : impl{std::make_unique<Impl>(stream, read, error, flags, state)},
+      cur{impl->next()} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
@@ -70,35 +59,32 @@ IStreamQuadIterator &IStreamQuadIterator::operator=(IStreamQuadIterator &&) noex
 IStreamQuadIterator::~IStreamQuadIterator() noexcept = default;
 
 typename IStreamQuadIterator::reference IStreamQuadIterator::operator*() const noexcept {
-    return this->cur;
+    return *cur;
 }
 
 typename IStreamQuadIterator::pointer IStreamQuadIterator::operator->() const noexcept {
-    return &this->cur;
+    return &*cur;
 }
 
 IStreamQuadIterator &IStreamQuadIterator::operator++() {
-    if (auto maybe_value = this->impl->next(); maybe_value.has_value()) {
-        this->cur = std::move(*maybe_value);
-    }
-
+    cur = impl->next();
     return *this;
 }
 
-bool IStreamQuadIterator::operator==(IStreamQuadIterator const &other) const noexcept {
-    return (this->is_at_end() && other.is_at_end()) || this->impl == other.impl;
+uint64_t IStreamQuadIterator::current_line() const noexcept {
+    return impl->current_line();
 }
 
-bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noexcept {
-    return !(*this == other);
+uint64_t IStreamQuadIterator::current_column() const noexcept {
+    return impl->current_column();
 }
 
 bool IStreamQuadIterator::operator==(std::default_sentinel_t) const noexcept {
-    return this->is_at_end();
+    return !cur.has_value();
 }
 
 bool IStreamQuadIterator::operator!=(std::default_sentinel_t) const noexcept {
-    return !this->is_at_end();
+    return cur.has_value();
 }
 
 FILE *fopen_fastseq(char const *path, char const *mode) noexcept {
