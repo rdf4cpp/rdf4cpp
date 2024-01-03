@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     IStreamQuadIterator::state_type state{.node_storage = nst};
     IStreamQuadIterator i{in, ParsingFlag::NTriples, &state};
-    while (i != IStreamQuadIterator{}) {
+    while (i != std::default_sentinel) {
         if (!i->has_value()) {
             std::cout << i->error() << '\n';
         }
