@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_time> {
     using cpp_datatype = std::pair<std::chrono::milliseconds, rdf::util::OptionalTimezone>;
@@ -43,6 +44,7 @@ capabilities::Subtype<xsd_time>::super_cpp_type<0> capabilities::Subtype<xsd_tim
 template<>
 template<>
 nonstd::expected<capabilities::Subtype<xsd_time>::cpp_type, DynamicError> capabilities::Subtype<xsd_time>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_time,
                                            capabilities::Comparable,

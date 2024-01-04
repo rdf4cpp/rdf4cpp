@@ -112,6 +112,9 @@ Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool 
             .language_tag = lang,
             .needs_escape = needs_escape});
 
+    return make_lang_tagged_unchecked_from_node_id(lang, node_storage, node_id);
+}
+Literal Literal::make_lang_tagged_unchecked_from_node_id(std::string_view lang, const Node::NodeStorage &node_storage, storage::node::identifier::NodeID node_id) noexcept {
     bool inlined = false;
     auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
     if (lang_tag_i.has_value()) {
@@ -439,6 +442,29 @@ Literal Literal::try_get_in_node_storage(NodeStorage const &node_storage) const 
     }
 
     return Literal{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
+storage::node::identifier::NodeID Literal::find_datatype_iri(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept {
+    auto nid = IRI::find(id, node_storage);
+    return nid.backend_handle().node_id();
+}
+
+Literal Literal::find_simple(std::string_view lexical_form, NodeStorage &node_storage) noexcept {
+    auto esc = lexical_form_needs_escape(lexical_form);
+    auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+            storage::node::identifier::NodeID::xsd_string_iri.first, lexical_form, "", esc});
+    if (nid.null())
+        return Literal{};
+    return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+}
+
+Literal Literal::find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, rdf4cpp::rdf::Node::NodeStorage &node_storage) noexcept {
+    auto esc = lexical_form_needs_escape(lexical_form);
+    auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+            storage::node::identifier::NodeID::rdf_langstring_iri.first, lexical_form, lang_tag, esc});
+    if (nid.null())
+        return Literal{};
+    return make_lang_tagged_unchecked_from_node_id(lang_tag, node_storage, nid);
 }
 
 bool Literal::datatype_eq(IRI const &datatype) const noexcept {

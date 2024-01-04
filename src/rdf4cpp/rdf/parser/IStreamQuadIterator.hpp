@@ -4,16 +4,14 @@
 #include <iterator>
 #include <memory>
 
-#include <nonstd/expected.hpp>
+#include <rdf4cpp/rdf/util/Expected.hpp>
 
 #include <rdf4cpp/rdf/Quad.hpp>
 
 #include <rdf4cpp/rdf/parser/ParsingError.hpp>
 #include <rdf4cpp/rdf/parser/ParsingFlags.hpp>
 #include <rdf4cpp/rdf/parser/ParsingState.hpp>
-
-#include <dice/hash.hpp>
-#include <dice/sparse-map/sparse_map.hpp>
+#include <rdf4cpp/rdf/IRIFactory.hpp>
 
 namespace rdf4cpp::rdf::parser {
 
@@ -75,27 +73,9 @@ private:
     struct Impl;
 
     std::unique_ptr<Impl> impl;
-    nonstd::expected<ok_type, error_type> cur = nonstd::make_unexpected(ParsingError{.error_type = ParsingError::Type::EofReached, .line = 0, .col = 0, .message = "eof reached"});
-
-    [[nodiscard]] bool is_at_end() const noexcept;
+    std::optional<nonstd::expected<ok_type, error_type>> cur;
 
 public:
-    /**
-     * Constructs the end-of-stream iterator
-     */
-    IStreamQuadIterator() noexcept;
-
-    /**
-     * Constructs the end-of-stream iterator
-     */
-    explicit IStreamQuadIterator(std::default_sentinel_t) noexcept;
-
-    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
-
-    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
-    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
-
     /**
      * Constructs a IStreamQuadIterator from a C-like io api. That is something similar to
      * the triple (FILE *, fread, ferror) (parameters are called (stream, read, error) here).
@@ -113,8 +93,7 @@ public:
                         ReadFunc read,
                         ErrorFunc error,
                         flags_type flags = ParsingFlags::none(),
-                        state_type *initial_state = nullptr,
-                        storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+                        state_type *initial_state = nullptr) noexcept;
 
     /**
      * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
@@ -127,8 +106,13 @@ public:
      */
     explicit IStreamQuadIterator(std::istream &istream,
                                  flags_type flags = ParsingFlags::none(),
-                                 state_type *initial_state = nullptr,
-                                 storage::node::NodeStorage node_storage = storage::node::NodeStorage::default_instance()) noexcept;
+                                 state_type *initial_state = nullptr) noexcept;
+
+    IStreamQuadIterator(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
+
+    IStreamQuadIterator &operator=(IStreamQuadIterator const &) = delete;
+    IStreamQuadIterator &operator=(IStreamQuadIterator &&) noexcept;
 
     ~IStreamQuadIterator() noexcept;
 
@@ -136,12 +120,19 @@ public:
     pointer operator->() const noexcept;
     IStreamQuadIterator &operator++();
 
-    bool operator==(IStreamQuadIterator const &) const noexcept;
-    bool operator!=(IStreamQuadIterator const &) const noexcept;
+    [[nodiscard]] uint64_t current_line() const noexcept;
+    [[nodiscard]] uint64_t current_column() const noexcept;
 
     bool operator==(std::default_sentinel_t) const noexcept;
     bool operator!=(std::default_sentinel_t) const noexcept;
 };
+
+/**
+ * Opens a file for fast sequential access.
+ * Otherwise behaves the same as fopen.
+ * Inspired by serd_fopen.
+ */
+FILE *fopen_fastseq(char const *path, char const *mode) noexcept;
 
 }  // namespace rdf4cpp::rdf::parser
 

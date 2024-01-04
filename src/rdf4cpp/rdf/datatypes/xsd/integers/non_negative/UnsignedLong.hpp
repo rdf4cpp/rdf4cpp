@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_unsigned_long> {
     using cpp_datatype = uint64_t;
@@ -38,6 +39,7 @@ bool capabilities::Logical<xsd_unsigned_long>::effective_boolean_value(cpp_type 
 template<>
 template<>
 nonstd::expected<capabilities::Default<xsd_unsigned_long>::cpp_type, DynamicError> capabilities::Subtype<xsd_unsigned_long>::from_supertype<0>(super_cpp_type<0> const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_unsigned_long,
                                            capabilities::Logical,

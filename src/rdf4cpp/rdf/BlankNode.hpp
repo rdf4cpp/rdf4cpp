@@ -37,6 +37,15 @@ public:
     [[nodiscard]] BlankNode try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
+     * searches for a bnode in the specified node storage and returns it.
+     * returns a null bnode, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static BlankNode find(std::string_view identifier, const NodeStorage& node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */

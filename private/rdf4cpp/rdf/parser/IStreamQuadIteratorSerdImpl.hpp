@@ -2,12 +2,10 @@
 #define RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 
 #include <deque>
-#include <istream>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include <serd/serd.h>
 
@@ -23,28 +21,17 @@ struct IStreamQuadIterator::Impl {
     using error_type = IStreamQuadIterator::error_type;
 
 private:
-    struct SerdReaderDelete {
-        inline void operator()(SerdReader *rdr) const noexcept {
-            serd_reader_end_stream(rdr);
-            serd_reader_free(rdr);
-        }
-    };
-
-    using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
-
-    mutable storage::node::NodeStorage node_storage;
-
-    OwnedSerdReader reader;
+    SerdReader *reader;
 
     state_type *state;
     bool state_is_owned;
 
     std::deque<Quad> quad_buffer;
     std::optional<ParsingError> last_error;
+    bool last_error_requires_skip = false;
     bool end_flag = false;
 
-    bool no_parse_prefixes;
-    bool keep_bnode_ids;
+    flags_type flags;
 
 private:
     static std::string_view node_into_string_view(SerdNode const *node) noexcept;
@@ -79,22 +66,9 @@ public:
          ReadFunc read,
          ErrorFunc,
          flags_type flags,
-         state_type *state,
-         storage::node::NodeStorage node_storage) noexcept;
+         state_type *state) noexcept;
 
     ~Impl() noexcept;
-
-    /**
-     * @return true if this will no longer yield values
-     * @note one sided implication, could be false and still not yield another value
-     */
-    [[nodiscard]] inline bool is_at_end() const noexcept {
-        return this->end_flag && quad_buffer.empty();
-    }
-
-    inline bool operator==(Impl const &other) const noexcept {
-        return this->reader == other.reader;
-    }
 
     /**
      * Tries to extract the next element from the serd backend.
@@ -107,6 +81,9 @@ public:
      *      unexpected ParsingError: if there was a next element but it could not be parsed
      */
     [[nodiscard]] std::optional<nonstd::expected<ok_type, error_type>> next() noexcept;
+
+    [[nodiscard]] uint64_t current_line() const noexcept;
+    [[nodiscard]] uint64_t current_column() const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::parser

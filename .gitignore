@@ -1,6 +1,8 @@
 src/rdf4cpp/rdf/version.hpp
 
-docu
+docs/doxygen_output/*
+docs/build/*
+docs/source/api/*
 
 # Based on https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
 

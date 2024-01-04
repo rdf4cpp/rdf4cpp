@@ -30,7 +30,7 @@ class Recipe(ConanFile):
 
     def requirements(self):
         self.requires("boost/1.83.0", transitive_headers=True)
-        self.requires("expected-lite/0.6.2", transitive_headers=True)
+        self.requires("expected-lite/0.6.3", transitive_headers=True)
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
         self.requires("uni-algo/0.7.1")

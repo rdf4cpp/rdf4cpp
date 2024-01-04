@@ -105,12 +105,18 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
  *      - determine the first iri id that can be dynamically assigned
  *      - determine the size of the static (constant-time-lookup) section of the registry
  */
-inline constexpr uint64_t min_dynamic_datatype_id = reserved_datatype_ids.size() == 0
-                                                            ? 1
-                                                            : 1 + std::ranges::max_element(reserved_datatype_ids, {},
-                                                                                           [](auto const &entry) {
-                                                                                               return entry.second.to_underlying();
-                                                                                           })->second.to_underlying();
+inline constexpr uint64_t min_dynamic_datatype_id =
+#ifndef DOXYGEN_PARSER
+        reserved_datatype_ids.size() == 0
+                ? 1
+                : 1 + std::ranges::max_element(reserved_datatype_ids, {},
+                                               [](auto const &entry) {
+                                                   return entry.second.to_underlying();
+                                               })
+                                  ->second.to_underlying();
+#else
+        48;
+#endif
 
 } // rdf4cpp::rdf::datatypes::registry
 

@@ -63,6 +63,7 @@ struct HexBinaryRepr {
     std::strong_ordering operator<=>(HexBinaryRepr const &) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_hex_binary> {
     using cpp_datatype = HexBinaryRepr;
@@ -73,6 +74,7 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 
 template<>
 std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_hex_binary,
                                            capabilities::FixedId>;
@@ -93,6 +95,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
     static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &x) noexcept {
@@ -106,5 +109,6 @@ struct std::hash<rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
         return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(value);
     }
 };
+#endif
 
 #endif // RDF4CPP_XSD_HEXBINARY_HPP

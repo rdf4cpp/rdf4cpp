@@ -25,40 +25,59 @@ struct ParsingError {
     uint64_t line;
     uint64_t col;
     std::string message;
+};
 
-    inline friend std::ostream &operator<<(std::ostream &os, ParsingError::Type const &err_t) noexcept {
-        switch (err_t) {
-            case Type::Internal:
-                os << "internal error";
-                break;
-            case Type::EofReached:
-                os << "unexpected end of file";
-                break;
-            case Type::BadSyntax:
-                os << "bad syntax";
-                break;
-            case Type::BadIri:
-                os << "bad iri";
-                break;
-            case Type::BadCurie:
-                os << "bad curie";
-                break;
-            case Type::BadLiteral:
-                os << "bad literal";
-                break;
-            case Type::BadBlankNode:
-                os << "bad blank node";
-                break;
+} // namespace rdf4cpp::rdf::parser
+
+namespace std {
+
+template<>
+struct formatter<::rdf4cpp::rdf::parser::ParsingError::Type> : formatter<string_view> {
+    template<typename FmtCtx>
+    auto format(::rdf4cpp::rdf::parser::ParsingError::Type const &err, FmtCtx &ctx) const {
+        using ::rdf4cpp::rdf::parser::ParsingError;
+        switch (err) {
+            case ParsingError::Type::Internal:
+                return format_to(ctx.out(), "internal error");
+            case ParsingError::Type::EofReached:
+                return format_to(ctx.out(), "unexpected end of file");
+            case ParsingError::Type::BadSyntax:
+                return format_to(ctx.out(), "bad syntax");
+            case ParsingError::Type::BadIri:
+                return format_to(ctx.out(), "bad iri");
+            case ParsingError::Type::BadCurie:
+                return format_to(ctx.out(), "bad curie");
+            case ParsingError::Type::BadLiteral:
+                return format_to(ctx.out(), "bad literal");
+            case ParsingError::Type::BadBlankNode:
+                return format_to(ctx.out(), "bad blank node");
+            default:
+                return format_to(ctx.out(), "unknown");
         }
-
-        return os;
-    }
-
-    inline friend std::ostream &operator<<(std::ostream &os, ParsingError const &error) noexcept {
-        os << error.line << ':' << error.col << '(' << error.error_type << "): " << error.message;
-        return os;
     }
 };
+
+template<>
+struct formatter<::rdf4cpp::rdf::parser::ParsingError> : formatter<string_view> {
+    template<typename FmtCtx>
+    auto format(::rdf4cpp::rdf::parser::ParsingError const &err, FmtCtx &ctx) const {
+        return format_to(ctx.out(), "{}:{}({}): {}", err.line, err.col, err.error_type, err.message);
+    }
+};
+
+} // namespace std
+
+namespace rdf4cpp::rdf::parser {
+
+inline std::ostream &operator<<(std::ostream &os, ParsingError::Type const &error_type) {
+    std::format_to(std::ostreambuf_iterator<char>{os}, "{}", error_type);
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, ParsingError const &error) {
+    std::format_to(std::ostreambuf_iterator<char>{os}, "{}", error);
+    return os;
+}
 
 } // namespace rdf4cpp::rdf::parser
 

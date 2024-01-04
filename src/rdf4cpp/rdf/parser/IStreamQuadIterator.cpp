@@ -1,6 +1,12 @@
 #include "IStreamQuadIterator.hpp"
 #include <rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.hpp>
 
+#include <cstdio>
+
+#if __has_include(<fcntl.h>)
+#include <fcntl.h>
+#endif //__has_include
+
 namespace rdf4cpp::rdf::parser {
 
 /**
@@ -15,7 +21,7 @@ namespace rdf4cpp::rdf::parser {
 static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t count, void *voided_self) noexcept {
     assert(elem_size == 1);
 
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
+    auto *self = static_cast<std::istream *>(voided_self);
     self->read(static_cast<char *>(buf), static_cast<std::streamsize>(count));
     return self->gcount();
 }
@@ -25,39 +31,26 @@ static size_t istream_read(void *buf, [[maybe_unused]] size_t elem_size, size_t 
  * Matches the interface of SerdStreamErrorFunc
  *
  * @param voided_self pointer to std::istream cast to void *
+ * @return whether the given istream encountered an error (cast to int)
  */
 static int istream_error(void *voided_self) noexcept {
-    auto *self = reinterpret_cast<std::istream *>(voided_self);
-    return *self ? 0 : 1;
-}
-
-bool IStreamQuadIterator::is_at_end() const noexcept {
-    return this->impl == nullptr || this->impl->is_at_end();
-}
-
-IStreamQuadIterator::IStreamQuadIterator() noexcept
-    : IStreamQuadIterator{std::default_sentinel} {
-}
-
-IStreamQuadIterator::IStreamQuadIterator(std::default_sentinel_t) noexcept
-    : impl{nullptr} {
+    auto *self = static_cast<std::istream *>(voided_self);
+    return static_cast<int>(self->fail() && !self->eof());
 }
 
 IStreamQuadIterator::IStreamQuadIterator(void *stream,
                                          ReadFunc read,
                                          ErrorFunc error,
                                          flags_type flags,
-                                         state_type *state,
-                                         storage::node::NodeStorage node_storage) noexcept
-    : impl{std::make_unique<Impl>(stream, read, error, flags, state, std::move(node_storage))} {
-    ++*this;
+                                         state_type *state) noexcept
+    : impl{std::make_unique<Impl>(stream, read, error, flags, state)},
+      cur{impl->next()} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
                                          flags_type flags,
-                                         state_type *state,
-                                         storage::node::NodeStorage node_storage) noexcept
-    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state, std::move(node_storage)} {
+                                         state_type *state) noexcept
+    : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(IStreamQuadIterator &&other) noexcept = default;
@@ -66,35 +59,47 @@ IStreamQuadIterator &IStreamQuadIterator::operator=(IStreamQuadIterator &&) noex
 IStreamQuadIterator::~IStreamQuadIterator() noexcept = default;
 
 typename IStreamQuadIterator::reference IStreamQuadIterator::operator*() const noexcept {
-    return this->cur;
+    return *cur;
 }
 
 typename IStreamQuadIterator::pointer IStreamQuadIterator::operator->() const noexcept {
-    return &this->cur;
+    return &*cur;
 }
 
 IStreamQuadIterator &IStreamQuadIterator::operator++() {
-    if (auto maybe_value = this->impl->next(); maybe_value.has_value()) {
-        this->cur = std::move(*maybe_value);
-    }
-
+    cur = impl->next();
     return *this;
 }
 
-bool IStreamQuadIterator::operator==(IStreamQuadIterator const &other) const noexcept {
-    return (this->is_at_end() && other.is_at_end()) || this->impl == other.impl;
+uint64_t IStreamQuadIterator::current_line() const noexcept {
+    return impl->current_line();
 }
 
-bool IStreamQuadIterator::operator!=(IStreamQuadIterator const &other) const noexcept {
-    return !(*this == other);
+uint64_t IStreamQuadIterator::current_column() const noexcept {
+    return impl->current_column();
 }
 
 bool IStreamQuadIterator::operator==(std::default_sentinel_t) const noexcept {
-    return this->is_at_end();
+    return !cur.has_value();
 }
 
 bool IStreamQuadIterator::operator!=(std::default_sentinel_t) const noexcept {
-    return !this->is_at_end();
+    return cur.has_value();
+}
+
+FILE *fopen_fastseq(char const *path, char const *mode) noexcept {
+    // inspired by <serd/system.c> (serd_fopen)
+
+    FILE *fd = fopen(path, mode);
+    if (fd == nullptr) {
+        return fd;
+    }
+
+#if __has_include(<fcntl.h>) && _POSIX_C_SOURCE >= 200112L
+    (void) posix_fadvise(fileno(fd), 0, 0, POSIX_FADV_SEQUENTIAL | POSIX_FADV_NOREUSE | POSIX_FADV_WILLNEED);
+#endif
+
+    return fd;
 }
 
 }  // namespace rdf4cpp::rdf::parser

@@ -1,10 +1,12 @@
 ⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
 
-⚠️ rdf4cpp uses Conan 1 and is not compatible with Conan 2. ⚠️
+⚠️ Conan 2 only works when consuming the rdf4cpp conan package. Other usecases (e.g. development) still require Conan 1. ⚠️
 
 # rdf4cpp
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
+
+Current documentation: https://rdf4cpp.readthedocs.io/en/latest/
 
 ## Usage 
 check out the [examples](./examples) directory. 
@@ -21,8 +23,12 @@ conan remote add dice-group https://conan.dice-research.org/artifactory/api/cona
 To use rdf4cpp, add it to your `conanfile.txt`:
 ```
 [requires]
-rdf4cpp/0.0.19
+rdf4cpp/0.0.23
 ```
+
+Note:
+
+If you want to include rdf4cpp without using conan, make sure you also include its dependencies exposed via the rdf4cpp API.
 
 ### With FetchContent
 Use
@@ -31,7 +37,7 @@ include(FetchContent)
 FetchContent_Declare(
         rdf4cpp
         GIT_REPOSITORY "${CMAKE_CURRENT_SOURCE_DIR}/../"
-        GIT_TAG v0.0.19
+        GIT_TAG v0.0.23
         GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(rdf4cpp)
@@ -46,7 +52,7 @@ Beware: Conan will not be used for dependency retrieval if you include rdf4cpp v
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{11,12,13}, clang-{14,15,16} with libstdc++-11 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{13}, clang-{15,16} with libstdc++-13 on ubuntu 22.04. 
 
 ### Dependencies
 
@@ -56,7 +62,7 @@ sudo apt install python3-pip
 pip3 install --user "conan<2"
 conan user
 conan profile new --detect default
-conan profile update settings.compiler.libcxx=libstdc++11 default
+conan profile update settings.compiler.libcxx=libstdc++13 default
 conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 ```
 

@@ -1,5 +1,6 @@
 /**
-* @file Types for identifying entries in the registry and their helpers
+* @file
+* Types for identifying entries in the registry and their helpers
 */
 
 #ifndef RDF4CPP_REGISTRY_DATATYPEIRI_HPP
