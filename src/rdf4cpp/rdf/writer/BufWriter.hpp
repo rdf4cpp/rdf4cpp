@@ -181,7 +181,7 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
         return buffer();
     }
 
-    static void flush_impl(Buffer &buffer, Cursor cursor, size_t additional_cap) noexcept {
+    static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {
         auto const bytes_filled = cursor.data() - buffer.data();
 
         buffer.resize(std::bit_ceil(buffer.size() + additional_cap));
