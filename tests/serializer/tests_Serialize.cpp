@@ -82,102 +82,138 @@ TEST_SUITE("Serialize") {
                                     "<http://url.com/subj#6> <http://url.com#pred> \"Spherical Cow\"@jk .\n" // rdf:langString, non-inlined language
                                     "<http://url.com/subj#7> <http://url.com#pred> \"Spherical Cow\"^^<http://unknow-datatype.org#dt> .\n"; // unknown datatype
 
-    TEST_CASE("Reserialize NTriples StringWriter") {
-        using namespace rdf4cpp::rdf::parser;
-
-        writer::StringWriter ser{4096};
-
-        std::istringstream iss{triples};
-        for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
-            REQUIRE(qit->has_value());
-            (*qit)->subject().serialize(ser);
-            write_str(" ", ser);
-            (*qit)->predicate().serialize(ser);
-            write_str(" ", ser);
-            (*qit)->object().serialize(ser);
-            write_str(" .\n", ser);
+    static auto long_lit_triples = []() {
+        std::string long_lit;
+        for (size_t ix = 0; ix < 2000; ++ix) {
+            long_lit.push_back('a');
         }
 
-        auto result = ser.finalize();
+        return std::format("<http://website.com#subj> <http://website.com#pred> \"{}\" .\n", long_lit);
+    }();
 
-        CHECK_EQ(result, std::string_view{triples});
+    TEST_CASE("Reserialize NTriples StringWriter") {
+        auto do_test = [](auto triples) {
+            using namespace rdf4cpp::rdf::parser;
+            writer::StringWriter ser{256};
+
+            std::istringstream iss{triples};
+            for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
+                REQUIRE(qit->has_value());
+                (*qit)->subject().serialize(ser);
+                write_str(" ", ser);
+                (*qit)->predicate().serialize(ser);
+                write_str(" ", ser);
+                (*qit)->object().serialize(ser);
+                write_str(" .\n", ser);
+            }
+
+            auto result = ser.finalize();
+
+            CHECK_EQ(result, std::string_view{triples});
+        };
+
+        SUBCASE("variants") {
+            do_test(triples);
+        }
+
+        SUBCASE("long input") {
+            do_test(long_lit_triples);
+        }
     }
 
     TEST_CASE("Reserialize NTriples BufCFileWriter") {
-        using namespace rdf4cpp::rdf::parser;
+        auto do_test = [](auto triples) {
+            using namespace rdf4cpp::rdf::parser;
+            std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-cfile-{}", std::random_device{}());
 
-        std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-cfile-{}", std::random_device{}());
+            {
+                FILE *out_file = fopen(path.c_str(), "w");
+                REQUIRE(out_file != nullptr);
+                setbuf(out_file, nullptr);
 
-        {
-            FILE *out_file = fopen(path.c_str(), "w");
-            REQUIRE(out_file != nullptr);
-            setbuf(out_file, nullptr);
+                writer::BufCFileWriter ser{out_file};
 
-            writer::BufCFileWriter ser{out_file};
+                std::istringstream iss{triples};
+                for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
+                    REQUIRE(qit->has_value());
+                    (*qit)->subject().serialize(ser);
+                    write_str(" ", ser);
+                    (*qit)->predicate().serialize(ser);
+                    write_str(" ", ser);
+                    (*qit)->object().serialize(ser);
+                    write_str(" .\n", ser);
+                }
 
-            std::istringstream iss{triples};
-            for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
-                REQUIRE(qit->has_value());
-                (*qit)->subject().serialize(ser);
-                write_str(" ", ser);
-                (*qit)->predicate().serialize(ser);
-                write_str(" ", ser);
-                (*qit)->object().serialize(ser);
-                write_str(" .\n", ser);
+                ser.finalize();
+                fclose(out_file);
             }
 
-            ser.finalize();
-            fclose(out_file);
+            {
+                std::ifstream ifs{path};
+                REQUIRE(ifs.is_open());
+
+                std::string result;
+                std::copy(std::istreambuf_iterator<char>{ifs}, std::istreambuf_iterator<char>{}, std::back_inserter(result));
+
+                CHECK_EQ(result, std::string_view{triples});
+            }
+
+            std::filesystem::remove(path);
+        };
+
+        SUBCASE("variants") {
+            do_test(triples);
         }
 
-        {
-            std::ifstream ifs{path};
-            REQUIRE(ifs.is_open());
-
-            std::string result;
-            std::copy(std::istreambuf_iterator<char>{ifs}, std::istreambuf_iterator<char>{}, std::back_inserter(result));
-
-            CHECK_EQ(result, std::string_view{triples});
+        SUBCASE("long input") {
+            do_test(long_lit_triples);
         }
-
-        std::filesystem::remove(path);
     }
 
     TEST_CASE("Reserialize NTriples BufOStreamWriter") {
-        using namespace rdf4cpp::rdf::parser;
+        auto do_test = [](auto triples) {
+            using namespace rdf4cpp::rdf::parser;
+            std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-ostream-{}", std::random_device{}());
 
-        std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-ostream-{}", std::random_device{}());
+            {
+                std::ofstream ofs{path};
+                REQUIRE(ofs.is_open());
 
-        {
-            std::ofstream ofs{path};
-            REQUIRE(ofs.is_open());
+                writer::BufOStreamWriter ser{ofs};
 
-            writer::BufOStreamWriter ser{ofs};
+                std::istringstream iss{triples};
+                for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
+                    REQUIRE(qit->has_value());
+                    (*qit)->subject().serialize(ser);
+                    write_str(" ", ser);
+                    (*qit)->predicate().serialize(ser);
+                    write_str(" ", ser);
+                    (*qit)->object().serialize(ser);
+                    write_str(" .\n", ser);
+                }
 
-            std::istringstream iss{triples};
-            for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
-                REQUIRE(qit->has_value());
-                (*qit)->subject().serialize(ser);
-                write_str(" ", ser);
-                (*qit)->predicate().serialize(ser);
-                write_str(" ", ser);
-                (*qit)->object().serialize(ser);
-                write_str(" .\n", ser);
+                ser.finalize();
             }
 
-            ser.finalize();
+            {
+                std::ifstream ifs{path};
+                REQUIRE(ifs.is_open());
+
+                std::string result;
+                std::copy(std::istreambuf_iterator<char>{ifs}, std::istreambuf_iterator<char>{}, std::back_inserter(result));
+
+                CHECK_EQ(result, std::string_view{triples});
+            }
+
+            std::filesystem::remove(path);
+        };
+
+        SUBCASE("variants") {
+            do_test(triples);
         }
 
-        {
-            std::ifstream ifs{path};
-            REQUIRE(ifs.is_open());
-
-            std::string result;
-            std::copy(std::istreambuf_iterator<char>{ifs}, std::istreambuf_iterator<char>{}, std::back_inserter(result));
-
-            CHECK_EQ(result, std::string_view{triples});
+        SUBCASE("long input") {
+            do_test(long_lit_triples);
         }
-
-        std::filesystem::remove(path);
     }
 }
