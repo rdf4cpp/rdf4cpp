@@ -48,6 +48,7 @@ Relaxed Parsing Mode
 --------------------
 
 The setting :var:`rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode` disables IRI validity checks and allows rdf4cpp to automatically try to correct some faulty Literals.
+See the linked relaxed_parsing_mode for a full list of changes.
 Currently aimed at reducing loading errors with DBPedia, more might be added in future versions.
 
 (since rdf4cpp v0.0.24)
