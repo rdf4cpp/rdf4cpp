@@ -36,8 +36,6 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     }
     auto time = hours + minutes + ms;
     if (!registry::relaxed_parsing_mode) {
-        if (registry::relaxed_parsing_mode)
-            time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
         if (time == std::chrono::hours{24}) {
             date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
             if (!date.ok())
