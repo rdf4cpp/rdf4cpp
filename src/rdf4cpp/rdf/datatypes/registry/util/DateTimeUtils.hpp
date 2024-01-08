@@ -307,6 +307,11 @@ inline std::chrono::year_month_day clamp_to_valid(std::chrono::year_month_day m)
         return m;
     return m.year() / m.month() / std::chrono::last;
 }
+inline std::chrono::year_month_day normalize(std::chrono::year_month_day i) {
+    // normalize
+    // see https://en.cppreference.com/w/cpp/chrono/year_month_day/operator_days
+    return static_cast<std::chrono::year_month_day>(static_cast<std::chrono::sys_days>(i + std::chrono::months{0}));
+}
 template<class T, class V>
 std::chrono::duration<T, V> clamp_duration(std::chrono::duration<T, V> v, std::chrono::duration<T, V> min, std::chrono::duration<T, V> max) {
     if (v < min)

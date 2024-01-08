@@ -16,11 +16,10 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     auto tz = rdf::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
+    if (registry::relaxed_parsing_mode && !date.ok())
+        date = normalize(date);
     if (!date.ok()) {
-        if (registry::relaxed_parsing_mode)
-            date = clamp_to_valid(date);
-        else
-            throw std::runtime_error("invalid date");
+        throw std::runtime_error("invalid date");
     }
     if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
@@ -31,15 +30,15 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
             throw std::runtime_error{"seconds out of range"};
     }
     auto time = hours + minutes + ms;
-    if (registry::relaxed_parsing_mode)
-        time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
-    if (time == std::chrono::hours{24}) {
-        date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
-        if (!date.ok())
-            throw std::runtime_error("invalid date");
-        time = std::chrono::hours{0};
-    } else if (time > std::chrono::hours{24}) {
-        throw std::runtime_error{"invalid time of day"};
+    if (!registry::relaxed_parsing_mode) {
+        if (time == std::chrono::hours{24}) {
+            date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
+            if (!date.ok())
+                throw std::runtime_error("invalid date");
+            time = std::chrono::hours{0};
+        } else if (time > std::chrono::hours{24}) {
+            throw std::runtime_error{"invalid time of day"};
+        }
     }
 
     return std::make_pair(rdf::util::construct(date, time), tz);

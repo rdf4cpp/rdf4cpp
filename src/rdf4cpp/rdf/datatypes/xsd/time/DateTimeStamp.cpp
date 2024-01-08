@@ -21,11 +21,10 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     auto tz = rdf::util::Timezone::parse(s.substr(p));
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s.substr(0, p));
     auto date = year / month / day;
+    if (registry::relaxed_parsing_mode && !date.ok())
+        date = normalize(date);
     if (!date.ok()) {
-        if (registry::relaxed_parsing_mode)
-            date = clamp_to_valid(date);
-        else
-            throw std::runtime_error("invalid date");
+        throw std::runtime_error("invalid date");
     }
     if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
@@ -36,15 +35,17 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
             throw std::runtime_error{"seconds out of range"};
     }
     auto time = hours + minutes + ms;
-    if (registry::relaxed_parsing_mode)
-        time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
-    if (time == std::chrono::hours{24}) {
-        date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
-        if (!date.ok())
-            throw std::runtime_error("invalid date");
-        time = std::chrono::hours{0};
-    } else if (time > std::chrono::hours{24}) {
-        throw std::runtime_error{"invalid time of day"};
+    if (!registry::relaxed_parsing_mode) {
+        if (registry::relaxed_parsing_mode)
+            time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
+        if (time == std::chrono::hours{24}) {
+            date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
+            if (!date.ok())
+                throw std::runtime_error("invalid date");
+            time = std::chrono::hours{0};
+        } else if (time > std::chrono::hours{24}) {
+            throw std::runtime_error{"invalid time of day"};
+        }
     }
 
     return rdf::util::ZonedTime{tz, rdf::util::construct(date, time)};

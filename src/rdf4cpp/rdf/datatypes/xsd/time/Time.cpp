@@ -22,10 +22,7 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
     }
     auto time = hours + minutes + ms;
     if (time > std::chrono::hours{24}) {
-        if (registry::relaxed_parsing_mode)
-            time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::hours{24}-std::chrono::milliseconds{1});
-        else
-            throw std::runtime_error{"invalid time of day"};
+        throw std::runtime_error{"invalid time of day"};
     }
 
     return std::make_pair(time, tz);

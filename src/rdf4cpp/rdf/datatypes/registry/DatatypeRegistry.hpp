@@ -20,9 +20,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * if true, parsing some invalid things does not result in an error. instead rdf4cpp tries to silently correct the data.
  * affected are:
  * - IRI: any validation skipped, will accept malformed IRIs like http//:example:foo/bar
- * - xsd:nonNegativeInteger & xsd:positiveInteger: clamped to their lowest allowed value, if lower
- * - xsd:Date & anything partial or containing one: clamped to the next allowed value
- * - xsd:Time & anything containing one: first, overflow happens, then clamped to the next allowed value
+ * - xsd:Date & xsd:Time & anything containing one: let values over or underflow, if outside of bounds. (ex: 1742-2-40 becomes 1742-3-12)
  */
 extern bool relaxed_parsing_mode;
 

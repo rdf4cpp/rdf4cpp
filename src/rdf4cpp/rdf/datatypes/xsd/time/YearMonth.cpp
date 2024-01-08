@@ -13,10 +13,7 @@ capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearM
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     auto date = year / month;
     if (!date.ok()) {
-        if (registry::relaxed_parsing_mode)
-            date = clamp_to_valid(date);
-        else
-            throw std::runtime_error("invalid date");
+        throw std::runtime_error("invalid date");
     }
 
     return std::make_pair(date, tz);
