@@ -14,7 +14,7 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
     if (!date.ok()) {
-        if (registry::dbpedia_mode)
+        if (registry::relaxed_parsing_mode)
             date = clamp_to_valid(date);
         else
             throw std::runtime_error("invalid date");

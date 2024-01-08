@@ -48,7 +48,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
-    if (!rdf4cpp::rdf::datatypes::registry::dbpedia_mode) {
+    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
         auto e = IRIView{iri}.quick_validate();
         if (e != IRIFactoryError::Ok)
             return nonstd::make_unexpected(e);
@@ -177,7 +177,7 @@ std::string_view IRIFactory::get_base() const noexcept {
 }
 
 IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
-    if (!rdf4cpp::rdf::datatypes::registry::dbpedia_mode) {
+    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
         auto e = IRIView{b}.quick_validate();
         if (e != IRIFactoryError::Ok)
             return e;

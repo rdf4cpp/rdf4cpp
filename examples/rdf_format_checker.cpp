@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    rdf4cpp::rdf::datatypes::registry::dbpedia_mode = true;
+    rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
     auto nst = storage::node::NodeStorage::new_instance();

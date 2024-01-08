@@ -248,19 +248,6 @@ set_target_properties(rdf4cpp PROPERTIES
         CXX_STANDARD_REQUIRED ON
 )
 
-option(DBPEDIA_MODE "relaxed parsing for dbpedia" OFF)
-if (PROJECT_IS_TOP_LEVEL AND BUILD_TESTING)
-    message("dbpedia mode set to runtime (required by test cases)")
-elseif (DBPEDIA_MODE EQUAL RUNTIME)
-    message("dbpedia mode set to runtime")
-elseif (DBPEDIA_MODE)
-    message("dbpedia mode on")
-    add_compile_definitions(RDF4CPP_DBPEDIA_MODE=true)
-else ()
-    message("dbpedia mode off")
-    add_compile_definitions(RDF4CPP_DBPEDIA_MODE=false)
-endif ()
-
 if (PROJECT_IS_TOP_LEVEL)
     include(cmake/install_library.cmake)
     install_cpp_library(rdf4cpp src)

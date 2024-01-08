@@ -24,11 +24,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * - xsd:Date & anything partial or containing one: clamped to the next allowed value
  * - xsd:Time & anything containing one: first, overflow happens, then clamped to the next allowed value
  */
-#ifdef RDF4CPP_DBPEDIA_MODE
-static constexpr bool dbpedia_mode = RDF4CPP_DBPEDIA_MODE;
-#else
-extern bool dbpedia_mode;
-#endif
+extern bool relaxed_parsing_mode;
 
 /**
  * Registry for LiteralDatatype implementations.

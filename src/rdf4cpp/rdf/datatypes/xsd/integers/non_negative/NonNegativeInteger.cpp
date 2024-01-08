@@ -16,7 +16,7 @@ capabilities::Default<xsd_non_negative_integer>::cpp_type capabilities::Default<
     }
 
     if (ret < 0) {
-        if (dbpedia_mode)
+        if (relaxed_parsing_mode)
             ret = 0;
         else
             throw std::runtime_error{"xsd:nonNegativeInteger parsing error: found negative value"};

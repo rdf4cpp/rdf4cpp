@@ -17,12 +17,12 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
     if (!date.ok()) {
-        if (registry::dbpedia_mode)
+        if (registry::relaxed_parsing_mode)
             date = clamp_to_valid(date);
         else
             throw std::runtime_error("invalid date");
     }
-    if (!registry::dbpedia_mode) {
+    if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
             throw std::runtime_error{"minutes out of range"};
         if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
@@ -31,7 +31,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
             throw std::runtime_error{"seconds out of range"};
     }
     auto time = hours + minutes + ms;
-    if (registry::dbpedia_mode)
+    if (registry::relaxed_parsing_mode)
         time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::milliseconds{std::chrono::hours{24}});
     if (time == std::chrono::hours{24}) {
         date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};

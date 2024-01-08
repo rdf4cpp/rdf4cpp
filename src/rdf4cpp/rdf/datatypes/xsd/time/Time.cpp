@@ -12,7 +12,7 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
-    if (!registry::dbpedia_mode) {
+    if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
             throw std::runtime_error{"minutes out of range"};
         if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
@@ -22,7 +22,7 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
     }
     auto time = hours + minutes + ms;
     if (time > std::chrono::hours{24}) {
-        if (registry::dbpedia_mode)
+        if (registry::relaxed_parsing_mode)
             time = clamp_duration(time, std::chrono::milliseconds{0}, std::chrono::hours{24}-std::chrono::milliseconds{1});
         else
             throw std::runtime_error{"invalid time of day"};
