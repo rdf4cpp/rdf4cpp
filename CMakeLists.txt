@@ -24,7 +24,7 @@ find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
-find_package(unordered_dense REQUIRED)
+find_package(unordered_dense QUIET)
 
 include(FetchContent)
 
@@ -77,6 +77,16 @@ if (NOT dice-sparse-map_FOUND)
             fetchdice-sparse-map
             GIT_REPOSITORY https://github.com/dice-group/dice-sparse-map.git
             GIT_TAG v0.2.4
+            GIT_SHALLOW TRUE)
+
+    FetchContent_MakeAvailable(fetchdice-sparse-map)
+endif ()
+
+if (NOT unordered_dense_FOUND)
+    FetchContent_Declare(
+            fetchunordered_dense
+            GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
+            GIT_TAG v4.4.0
             GIT_SHALLOW TRUE)
 
     FetchContent_MakeAvailable(fetchdice-sparse-map)
