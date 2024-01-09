@@ -5,8 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include <dice/sparse-map/sparse_map.hpp>
-
+#include <ankerl/unordered_dense.h>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/util/Expected.hpp>
 #include <rdf4cpp/rdf/IRIView.hpp>
@@ -15,13 +14,23 @@ namespace rdf4cpp::rdf {
 /**
  * Stores a base IRI and a prefix map and allows to create IRIs by possibly applying both.
  */
-class IRIFactory {
-public:
-    using PrefixMap = dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>>;
+struct IRIFactory {
+    struct prefix_hasher {
+        using is_avalanching = void;
+        using is_transparent = void;
+
+        size_t operator()(std::string_view s) const noexcept {
+            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(s);
+        }
+    };
+
+    using prefix_map_type = ::ankerl::unordered_dense::map<std::string, std::string, prefix_hasher, std::equal_to<>>;
+
 private:
-    PrefixMap prefixes;
+    prefix_map_type prefixes;
 
     std::string base;
+    IRIView::AllParts base_parts_cache;
 
 public:
     constexpr static std::string_view default_base = "http://example.org/";
@@ -35,7 +44,10 @@ public:
      * @param prefixes
      * @param base
      */
-    explicit IRIFactory(PrefixMap&& prefixes, std::string_view base = default_base);
+    explicit IRIFactory(prefix_map_type &&prefixes, std::string_view base = default_base);
+
+    IRIFactory(IRIFactory &&) noexcept = default;
+    IRIFactory &operator=(IRIFactory &&) noexcept = default;
 
     /**
      * Creates a IRI from a possibly relative IRI.

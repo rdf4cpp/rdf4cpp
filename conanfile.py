@@ -36,6 +36,7 @@ class Recipe(ConanFile):
         self.requires("uni-algo/0.7.1")
         self.requires("dice-hash/0.4.4", transitive_headers=True)
         self.requires("dice-sparse-map/0.2.5", transitive_headers=True)
+        self.requires("unordered_dense/4.4.0", transitive_headers=True)
 
         if self.options.with_test_deps:
             self.requires("doctest/2.4.11")

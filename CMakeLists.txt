@@ -24,6 +24,7 @@ find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
+find_package(unordered_dense REQUIRED)
 
 include(FetchContent)
 
@@ -234,6 +235,7 @@ target_link_libraries(rdf4cpp
         Boost::headers
         dice-hash::dice-hash
         dice-sparse-map::dice-sparse-map
+        unordered_dense::unordered_dense
         PRIVATE
         re2::re2
         OpenSSL::Crypto

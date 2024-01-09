@@ -6,7 +6,7 @@
 namespace rdf4cpp::rdf::parser {
 
 std::string_view IStreamQuadIterator::Impl::node_into_string_view(SerdNode const *node) noexcept {
-    return std::string_view{reinterpret_cast<char const *>(node->buf), static_cast<size_t>(node->n_bytes)};
+    return std::string_view{reinterpret_cast<char const *>(node->buf), node->n_bytes};
 }
 
 ParsingError::Type IStreamQuadIterator::Impl::parsing_error_type_from_serd(SerdStatus const st) noexcept {
@@ -71,8 +71,16 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
 }
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode const *node) noexcept {
+    auto const iri = [this, node]() noexcept {
+        auto s = node_into_string_view(node);
 
-    auto iri = state->iri_factory.from_relative(node_into_string_view(node), this->state->node_storage);
+        if (flags.contains(ParsingFlag::NoParsePrefix)) {
+            return this->state->iri_factory.create_and_validate(s, this->state->node_storage);
+        } else {
+            return this->state->iri_factory.from_relative(s, this->state->node_storage);
+        }
+    }();
+
     if (!iri.has_value()) {
         IRIFactoryError err = iri.error();
         this->last_error = ParsingError{.error_type = ParsingError::Type::BadIri,
@@ -87,6 +95,15 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode co
 }
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(SerdNode const *node) noexcept {
+    if (flags.contains(ParsingFlag::NoParsePrefix)) [[unlikely]] {
+        this->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                        .line = serd_reader_get_current_line(this->reader),
+                                        .col = serd_reader_get_current_col(this->reader),
+                                        .message = "Encountered prefix while parsing. hint: prefixes are not allowed in the current document. note: position may not be accurate and instead point to the end of the line."};
+
+        return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
+    }
+
     auto const uri_node_view = node_into_string_view(node);
 
     auto const sep_pos = uri_node_view.find(':');
@@ -310,6 +327,10 @@ IStreamQuadIterator::Impl::Impl(void *stream,
       state{initial_state},
       state_is_owned{false},
       flags{flags} {
+
+    if (auto const syn = flags.get_syntax(); syn == ParsingFlag::NTriples || syn == ParsingFlag::NQuads) {
+        this->flags |= ParsingFlag::NoParsePrefix;
+    }
 
     if (this->state == nullptr) {
         this->state = new state_type{};
