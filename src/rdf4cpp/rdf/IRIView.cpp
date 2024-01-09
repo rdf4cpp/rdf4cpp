@@ -174,10 +174,10 @@ IRIFactoryError IRIView::quick_validate() const noexcept {
     if (!match(scheme_pattern, *scheme)) // scheme is ascii only, no need to utf8-decode
         return IRIFactoryError::InvalidScheme;
     auto [userinfo, host, port] = all_authority_parts();
-    static constexpr auto userinfo_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%"};
+    static constexpr auto userinfo_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:"};
     if (userinfo.has_value() && !match(userinfo_pattern, *userinfo | una::views::utf8))
         return IRIFactoryError::InvalidUserinfo;
-    static constexpr auto host_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%[]"};
+    static constexpr auto host_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%[]:"};
     if (host.has_value() && !match(host_pattern, *host | una::views::utf8))
         return IRIFactoryError::InvalidHost;
     if (port.has_value() && !match(ASCIINumMatcher{}, *port)) // scheme is ascii numbers only, no need to utf8-decode

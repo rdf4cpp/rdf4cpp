@@ -56,12 +56,14 @@ TEST_CASE("IRIView") {
     CHECK(IRIView{"http://user@example:123"}.quick_validate() == IRIFactoryError::Ok);
     CHECK(IRIView{"http://user@exa@mple:123"}.quick_validate() == IRIFactoryError::InvalidHost);
     CHECK(IRIView{"http://us]er@example:123"}.quick_validate() == IRIFactoryError::InvalidUserinfo);
+    CHECK(IRIView{"http://us:er@example:123"}.quick_validate() == IRIFactoryError::Ok);
     CHECK(IRIView{"http://user@example:12a3"}.quick_validate() == IRIFactoryError::InvalidPort);
     CHECK(IRIView{"htt-p://example/pat[h"}.quick_validate() == IRIFactoryError::InvalidPath);
     CHECK(IRIView{"htt-p://example/path?que]ry#frag"}.quick_validate() == IRIFactoryError::InvalidQuery);
     CHECK(IRIView{"htt-p://example/path?query#fra]g"}.quick_validate() == IRIFactoryError::InvalidFragment);
     CHECK(IRIView{"htt-p://exa\U0001f34cmple/pa\U0001f34cth?que\U0001f34cry#fra\U0001f34cg"}.quick_validate() == IRIFactoryError::Ok);
     CHECK(IRIView{"htt\U0001f34cp://example"}.quick_validate() == IRIFactoryError::InvalidScheme);
+    CHECK(IRIView{"http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html"}.quick_validate() == IRIFactoryError::Ok);
 
     // from https://datatracker.ietf.org/doc/html/rfc3986#section-3
     auto [scheme, auth, path, query, frag] = IRIView{"foo://example.com:8042/over/there?name=ferret#nose"}.all_parts();
