@@ -89,7 +89,7 @@ if (NOT unordered_dense_FOUND)
             GIT_TAG v4.4.0
             GIT_SHALLOW TRUE)
 
-    FetchContent_MakeAvailable(fetchdice-sparse-map)
+    FetchContent_MakeAvailable(fetchunordered_dense)
 endif ()
 
 
