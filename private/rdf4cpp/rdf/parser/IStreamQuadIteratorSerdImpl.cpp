@@ -74,10 +74,10 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode co
     auto const iri = [this, node]() noexcept {
         auto s = node_into_string_view(node);
 
-        if (flags.contains(ParsingFlag::NoParsePrefix)) {
-            return this->state->iri_factory.create_and_validate(s, this->state->node_storage);
-        } else {
+        if (flags.syntax_allows_prefixes()) {
             return this->state->iri_factory.from_relative(s, this->state->node_storage);
+        } else {
+            return this->state->iri_factory.create_and_validate(s, this->state->node_storage);
         }
     }();
 
@@ -95,7 +95,7 @@ nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode co
 }
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_prefixed_iri(SerdNode const *node) noexcept {
-    if (flags.contains(ParsingFlag::NoParsePrefix)) [[unlikely]] {
+    if (!flags.syntax_allows_prefixes()) [[unlikely]] {
         this->last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
                                         .line = serd_reader_get_current_line(this->reader),
                                         .col = serd_reader_get_current_col(this->reader),
@@ -327,10 +327,6 @@ IStreamQuadIterator::Impl::Impl(void *stream,
       state{initial_state},
       state_is_owned{false},
       flags{flags} {
-
-    if (auto const syn = flags.get_syntax(); syn == ParsingFlag::NTriples || syn == ParsingFlag::NQuads) {
-        this->flags |= ParsingFlag::NoParsePrefix;
-    }
 
     if (this->state == nullptr) {
         this->state = new state_type{};
