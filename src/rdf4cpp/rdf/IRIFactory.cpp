@@ -1,9 +1,5 @@
 #include "IRIFactory.hpp"
 
-#include <uni_algo/all.h>
-
-#include <rdf4cpp/rdf/util/CharMatcher.hpp>
-
 namespace rdf4cpp::rdf {
 IRIFactory::IRIFactory(std::string_view base) {
     if (set_base(base) != IRIFactoryError::Ok) {
