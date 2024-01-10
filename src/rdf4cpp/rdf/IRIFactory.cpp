@@ -1,87 +1,66 @@
 #include "IRIFactory.hpp"
 
 namespace rdf4cpp::rdf {
-IRIFactory::IRIFactory(std::string_view base) {
-    if (set_base(base) != IRIFactoryError::Ok) {
-        throw std::invalid_argument{"invalid base"};
+
+/**
+* turns the parts of a IRI back into a full IRI.
+*/
+static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
+                             std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
+    std::string str;
+    str.reserve(std::bit_ceil(scheme.size() + 1 + path.size()));
+    str.append(scheme);
+    str.push_back(':');
+
+    if (auth.has_value()) {
+        str.append("//");
+        str.append(*auth);
     }
+
+    if (!path.empty() && !path.starts_with('/') && auth.has_value()) {
+        str.push_back('/');
+    }
+
+    str.append(path);
+
+    if (query.has_value()) {
+        str.push_back('?');
+        str.append(*query);
+    }
+
+    if (frag.has_value()) {
+        str.push_back('#');
+        str.append(*frag);
+    }
+
+    return str;
 }
 
-IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : prefixes(std::move(prefixes)) {
-    if (set_base(base) != IRIFactoryError::Ok) {
-        throw std::invalid_argument{"invalid base"};
-    }
+/**
+* gets the first segment of path
+*/
+static std::string_view first_path_segment(std::string_view path) noexcept {
+    size_t off = 0;
+    if (path.starts_with('/'))
+        off = 1;
+    auto e = path.find('/', off);
+    return path.substr(0, e);
 }
 
-std::string IRIFactory::to_absolute(std::string_view rel) const noexcept {
-    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
-
-    if (r_scheme.has_value()) {
-        return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-
-    auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base_parts_cache;
-
-    if (r_auth.has_value()) {
-        return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-    if (r_path.empty()) {
-        return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
-    }
-    if (r_path.starts_with('/')) {
-        return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-
-    auto const merged = merge_paths(base_parts_cache, r_path);
-    return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
-}
-
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    std::string const iri = to_absolute(rel);
-    return create_and_validate(iri, storage);
-}
-
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
-    auto i = prefixes.find(prefix);
-    if (i == prefixes.end()) {
-        return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
-    }
-
-    static thread_local std::string deref;
-    deref.clear();
-    deref.reserve(i->second.size() + local.size());
-    deref.append(i->second);
-    deref.append(local);
-
-    if (IRIView{deref}.is_relative()) {
-        return from_relative(deref, storage);
-    }
-
-    return create_and_validate(deref, storage);
-}
-
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
-    if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
-        return nonstd::make_unexpected(e);
-    }
-
-    return IRI{iri, storage};
-}
-
-void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expanded) {
-    std::string pre{prefix};
-    prefixes[pre] = expanded;
-}
-void IRIFactory::clear_prefix(std::string_view prefix) {
-    auto it = prefixes.find(prefix);
-    if (it == prefixes.end()) [[unlikely]] {
+/**
+ * removes the last segment of path
+ */
+static void remove_last_path_segment(std::string &path) noexcept {
+    auto e = path.find_last_of('/');
+    if (e == std::string::npos)
         return;
-    }
-
-    prefixes.erase(it);
+    path.resize(e);
 }
 
-std::string_view IRIFactory::remove_dot_segments(std::string_view path) noexcept {
+/**
+* removes ./ and ../ segments from path.
+*/
+static std::string_view remove_dot_segments(std::string_view path) noexcept {
     static thread_local std::string r;
     static thread_local std::string in;
 
@@ -131,23 +110,43 @@ std::string_view IRIFactory::remove_dot_segments(std::string_view path) noexcept
     return r;
 }
 
-std::string_view IRIFactory::first_path_segment(std::string_view path) noexcept {
-    size_t off = 0;
-    if (path.starts_with('/'))
-        off = 1;
-    auto e = path.find('/', off);
-    return path.substr(0, e);
+IRIFactory::IRIFactory(std::string_view base) {
+    if (set_base(base) != IRIFactoryError::Ok) {
+        throw std::invalid_argument{"invalid base"};
+    }
 }
 
-void IRIFactory::remove_last_path_segment(std::string &path) noexcept {
-    auto e = path.find_last_of('/');
-    if (e == std::string::npos)
-        return;
-    path.resize(e);
+IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : prefixes(std::move(prefixes)) {
+    if (set_base(base) != IRIFactoryError::Ok) {
+        throw std::invalid_argument{"invalid base"};
+    }
 }
 
-std::string IRIFactory::merge_paths(IRIView::AllParts const &base, std::string_view path) noexcept {
-    if (base.scheme.has_value() && base.path.empty()) {
+std::string IRIFactory::to_absolute(std::string_view rel) const noexcept {
+    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
+
+    if (r_scheme.has_value()) {
+        return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base_parts_cache;
+
+    if (r_auth.has_value()) {
+        return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+    if (r_path.empty()) {
+        return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
+    }
+    if (r_path.starts_with('/')) {
+        return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const merged = merge_path_with_base(r_path);
+    return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
+}
+
+std::string IRIFactory::merge_path_with_base(std::string_view path) const noexcept {
+    if (base_parts_cache.scheme.has_value() && base_parts_cache.path.empty()) {
         std::string r;
         r.reserve(path.size() + 1);
         r.push_back('/');
@@ -155,7 +154,7 @@ std::string IRIFactory::merge_paths(IRIView::AllParts const &base, std::string_v
         return r;
     }
 
-    auto const base_path = base.path;
+    auto const base_path = base_parts_cache.path;
 
     std::string r;
     r.reserve(base_path.size() + path.size() + 1);
@@ -166,35 +165,49 @@ std::string IRIFactory::merge_paths(IRIView::AllParts const &base, std::string_v
     return r;
 }
 
-std::string IRIFactory::construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
-                                  std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
-    std::string str;
-    str.reserve(std::bit_ceil(scheme.size() + 1 + path.size()));
-    str.append(scheme);
-    str.push_back(':');
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
+    std::string const iri = to_absolute(rel);
+    return create_and_validate(iri, storage);
+}
 
-    if (auth.has_value()) {
-        str.append("//");
-        str.append(*auth);
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
+    auto i = prefixes.find(prefix);
+    if (i == prefixes.end()) {
+        return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
     }
 
-    if (!path.empty() && !path.starts_with('/') && auth.has_value()) {
-        str.push_back('/');
+    static thread_local std::string deref;
+    deref.clear();
+    deref.reserve(i->second.size() + local.size());
+    deref.append(i->second);
+    deref.append(local);
+
+    if (IRIView{deref}.is_relative()) {
+        return from_relative(deref, storage);
     }
 
-    str.append(path);
+    return create_and_validate(deref, storage);
+}
 
-    if (query.has_value()) {
-        str.push_back('?');
-        str.append(*query);
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
+    if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
+        return nonstd::make_unexpected(e);
     }
 
-    if (frag.has_value()) {
-        str.push_back('#');
-        str.append(*frag);
+    return IRI{iri, storage};
+}
+
+void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expanded) {
+    std::string pre{prefix};
+    prefixes[pre] = expanded;
+}
+void IRIFactory::clear_prefix(std::string_view prefix) {
+    auto it = prefixes.find(prefix);
+    if (it == prefixes.end()) [[unlikely]] {
+        return;
     }
 
-    return str;
+    prefixes.erase(it);
 }
 
 std::string_view IRIFactory::get_base() const noexcept {

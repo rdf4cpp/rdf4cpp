@@ -90,43 +90,18 @@ public:
     [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) noexcept;
 
 private:
+    /**
+     * Converts rel to an absolute IRI by merging it with the current base
+     */
     [[nodiscard]] std::string to_absolute(std::string_view rel) const noexcept;
 
     /**
-     * turns the parts of a IRI back into a full IRI.
-     * @param scheme
-     * @param auth
-     * @param path
-     * @param query
-     * @param frag
-     * @return
-     */
-    [[nodiscard]] static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
-                                               std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept;
-    /**
-     * removes ./ and ../ segments from path.
+     * merges the path of the current base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
      * @param path
      * @return
      */
-    [[nodiscard]] static std::string_view remove_dot_segments(std::string_view path) noexcept;
-    /**
-     * gets the first segment of path.
-     * @param path
-     * @return
-     */
-    [[nodiscard]] static std::string_view first_path_segment(std::string_view path) noexcept;
-    /**
-     * removes the last segment of path.
-     * @param path
-     */
-    static void remove_last_path_segment(std::string &path) noexcept;
-    /**
-     * merges the path of base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
-     * @param base
-     * @param path
-     * @return
-     */
-    [[nodiscard]] static std::string merge_paths(IRIView::AllParts const &base, std::string_view path) noexcept;
+    [[nodiscard]] std::string merge_path_with_base(std::string_view path) const noexcept;
 };
+
 }  // namespace rdf4cpp::rdf
 #endif  //RDF4CPP_IRIFACTORY_HPP
