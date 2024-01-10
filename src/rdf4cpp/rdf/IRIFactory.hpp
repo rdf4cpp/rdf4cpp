@@ -4,8 +4,8 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <boost/container/flat_map.hpp>
 
-#include <ankerl/unordered_dense.h>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/util/Expected.hpp>
 #include <rdf4cpp/rdf/IRIView.hpp>
@@ -15,16 +15,7 @@ namespace rdf4cpp::rdf {
  * Stores a base IRI and a prefix map and allows to create IRIs by possibly applying both.
  */
 struct IRIFactory {
-    struct prefix_hasher {
-        using is_avalanching = void;
-        using is_transparent = void;
-
-        size_t operator()(std::string_view s) const noexcept {
-            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(s);
-        }
-    };
-
-    using prefix_map_type = ::ankerl::unordered_dense::map<std::string, std::string, prefix_hasher, std::equal_to<>>;
+    using prefix_map_type = boost::container::flat_map<std::string, std::string, std::less<>>;
 
 private:
     prefix_map_type prefixes;
@@ -99,6 +90,8 @@ public:
     [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) noexcept;
 
 private:
+    [[nodiscard]] std::string to_absolute(std::string_view rel) const noexcept;
+
     /**
      * turns the parts of a IRI back into a full IRI.
      * @param scheme
@@ -115,7 +108,7 @@ private:
      * @param path
      * @return
      */
-    [[nodiscard]] static std::string remove_dot_segments(std::string_view path) noexcept;
+    [[nodiscard]] static std::string_view remove_dot_segments(std::string_view path) noexcept;
     /**
      * gets the first segment of path.
      * @param path

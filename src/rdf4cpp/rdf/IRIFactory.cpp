@@ -13,32 +13,31 @@ IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : pref
     }
 }
 
+std::string IRIFactory::to_absolute(std::string_view rel) const noexcept {
+    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
+
+    if (r_scheme.has_value()) {
+        return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base_parts_cache;
+
+    if (r_auth.has_value()) {
+        return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+    if (r_path.empty()) {
+        return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
+    }
+    if (r_path.starts_with('/')) {
+        return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const merged = merge_paths(base_parts_cache, r_path);
+    return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
+}
+
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    std::string iri = [this, rel]() noexcept {
-        auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
-
-        if (r_scheme.has_value()) {
-            return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-        }
-
-        auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base_parts_cache;
-
-        if (r_auth.has_value()) {
-            return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-        }
-
-        if (r_path.empty()) {
-            return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
-        }
-
-        if (r_path.starts_with('/')) {
-            return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
-        }
-
-        auto const merged = merge_paths(base_parts_cache, r_path);
-        return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
-    }();
-
+    std::string const iri = to_absolute(rel);
     return create_and_validate(iri, storage);
 }
 
@@ -48,7 +47,8 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
         return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
     }
 
-    std::string deref;
+    static thread_local std::string deref;
+    deref.clear();
     deref.reserve(i->second.size() + local.size());
     deref.append(i->second);
     deref.append(local);
@@ -73,12 +73,22 @@ void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expande
     prefixes[pre] = expanded;
 }
 void IRIFactory::clear_prefix(std::string_view prefix) {
-    prefixes.erase(prefix);
+    auto it = prefixes.find(prefix);
+    if (it == prefixes.end()) [[unlikely]] {
+        return;
+    }
+
+    prefixes.erase(it);
 }
 
-std::string IRIFactory::remove_dot_segments(std::string_view path) noexcept {
-    std::string r;
-    std::string in{path};
+std::string_view IRIFactory::remove_dot_segments(std::string_view path) noexcept {
+    static thread_local std::string r;
+    static thread_local std::string in;
+
+    r.clear();
+    in.clear();
+    in.append(path);
+
     while (!in.empty()) {
         if (in.starts_with("./")) {
             in.erase(0, 2);
@@ -158,19 +168,8 @@ std::string IRIFactory::merge_paths(IRIView::AllParts const &base, std::string_v
 
 std::string IRIFactory::construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
                                   std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
-    size_t l = scheme.size() + 1 + path.size();
-    if (auth.has_value()) {
-        l += auth->size() + 2;
-    }
-    if (query.has_value()) {
-        l += query->size() + 1;
-    }
-    if (frag.has_value()) {
-        l += frag->size() + 1;
-    }
-
     std::string str;
-    str.reserve(l);
+    str.reserve(std::bit_ceil(scheme.size() + 1 + path.size()));
     str.append(scheme);
     str.push_back(':');
 

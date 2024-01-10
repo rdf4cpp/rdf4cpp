@@ -24,7 +24,6 @@ find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
-find_package(unordered_dense QUIET)
 
 include(FetchContent)
 
@@ -80,16 +79,6 @@ if (NOT dice-sparse-map_FOUND)
             GIT_SHALLOW TRUE)
 
     FetchContent_MakeAvailable(fetchdice-sparse-map)
-endif ()
-
-if (NOT unordered_dense_FOUND)
-    FetchContent_Declare(
-            fetchunordered_dense
-            GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
-            GIT_TAG v4.4.0
-            GIT_SHALLOW TRUE)
-
-    FetchContent_MakeAvailable(fetchunordered_dense)
 endif ()
 
 
@@ -245,7 +234,6 @@ target_link_libraries(rdf4cpp
         Boost::headers
         dice-hash::dice-hash
         dice-sparse-map::dice-sparse-map
-        unordered_dense::unordered_dense
         PRIVATE
         re2::re2
         OpenSSL::Crypto

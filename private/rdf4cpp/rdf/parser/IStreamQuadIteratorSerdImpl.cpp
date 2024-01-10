@@ -72,7 +72,7 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
 
 nonstd::expected<IRI, SerdStatus> IStreamQuadIterator::Impl::get_iri(SerdNode const *node) noexcept {
     auto const iri = [this, node]() noexcept {
-        auto s = node_into_string_view(node);
+        auto const s = node_into_string_view(node);
 
         if (flags.syntax_allows_prefixes()) {
             return this->state->iri_factory.from_relative(s, this->state->node_storage);
