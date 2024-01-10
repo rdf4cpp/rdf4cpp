@@ -133,7 +133,7 @@ private:
      * @param path
      * @return
      */
-    [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
+    [[nodiscard]] static std::string merge_paths(IRIView::AllParts const &base, std::string_view path) noexcept;
 };
 }  // namespace rdf4cpp::rdf
 #endif  //RDF4CPP_IRIFACTORY_HPP

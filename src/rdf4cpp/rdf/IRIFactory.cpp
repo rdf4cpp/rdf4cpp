@@ -39,7 +39,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_vie
             return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
         }
 
-        auto const merged = merge_paths(IRIView{base}, r_path);
+        auto const merged = merge_paths(base_parts_cache, r_path);
         return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
     }();
 
@@ -140,8 +140,8 @@ void IRIFactory::remove_last_path_segment(std::string &path) noexcept {
     path.resize(e);
 }
 
-std::string IRIFactory::merge_paths(IRIView base, std::string_view path) noexcept {
-    if (!base.is_relative() && base.path().empty()) {
+std::string IRIFactory::merge_paths(IRIView::AllParts const &base, std::string_view path) noexcept {
+    if (base.scheme.has_value() && base.path.empty()) {
         std::string r;
         r.reserve(path.size() + 1);
         r.push_back('/');
@@ -149,7 +149,7 @@ std::string IRIFactory::merge_paths(IRIView base, std::string_view path) noexcep
         return r;
     }
 
-    auto const base_path = base.path();
+    auto const base_path = base.path;
 
     std::string r;
     r.reserve(base_path.size() + path.size() + 1);

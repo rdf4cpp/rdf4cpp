@@ -316,6 +316,10 @@ TEST_SUITE("IStreamQuadIterator") {
         SUBCASE("ntriples") {
             run(ParsingFlag::NTriples);
         }
+
+        SUBCASE("nquads") {
+            run(ParsingFlag::NQuads);
+        }
     }
 
     TEST_CASE("no bnode parsing") {
