@@ -1,7 +1,6 @@
 #ifndef RDF4CPP_IRIFACTORY_HPP
 #define RDF4CPP_IRIFACTORY_HPP
 
-#include <optional>
 #include <string>
 #include <string_view>
 #include <boost/container/flat_map.hpp>
@@ -88,19 +87,6 @@ public:
      * @return
      */
     [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) noexcept;
-
-private:
-    /**
-     * Converts rel to an absolute IRI by merging it with the current base
-     */
-    [[nodiscard]] std::string to_absolute(std::string_view rel) const noexcept;
-
-    /**
-     * merges the path of the current base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
-     * @param path
-     * @return
-     */
-    [[nodiscard]] std::string merge_path_with_base(std::string_view path) const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf

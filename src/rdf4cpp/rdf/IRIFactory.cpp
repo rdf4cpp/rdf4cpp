@@ -5,9 +5,10 @@ namespace rdf4cpp::rdf {
 /**
 * turns the parts of a IRI back into a full IRI.
 */
-static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
-                             std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
-    std::string str;
+static std::string_view construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
+                                  std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept {
+    static thread_local std::string str;
+    str.clear();
     str.reserve(std::bit_ceil(scheme.size() + 1 + path.size()));
     str.append(scheme);
     str.push_back(':');
@@ -110,6 +111,56 @@ static std::string_view remove_dot_segments(std::string_view path) noexcept {
     return r;
 }
 
+/**
+ * merges the path of the current base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
+ */
+static std::string merge_path_with_base(IRIView::AllParts const &base, std::string_view path) noexcept {
+    static thread_local std::string r;
+
+    if (base.scheme.has_value() && base.path.empty()) {
+        r.clear();
+        r.reserve(path.size() + 1);
+        r.push_back('/');
+        r.append(path);
+        return r;
+    }
+
+    r.clear();
+    r.reserve(base.path.size() + path.size() + 1);
+    r.append(base.path);
+    remove_last_path_segment(r);
+    r.push_back('/');
+    r.append(path);
+    return r;
+}
+
+/**
+ * Converts rel to an absolute IRI by merging it with the given base
+ */
+static std::string_view to_absolute(IRIView::AllParts const &base, std::string_view rel) noexcept {
+    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
+
+    if (r_scheme.has_value()) {
+        return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base;
+
+    if (r_auth.has_value()) {
+        return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+    if (r_path.empty()) {
+        return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
+    }
+    if (r_path.starts_with('/')) {
+        return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
+    }
+
+    auto const merged = merge_path_with_base(base, r_path);
+    return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
+}
+
+
 IRIFactory::IRIFactory(std::string_view base) {
     if (set_base(base) != IRIFactoryError::Ok) {
         throw std::invalid_argument{"invalid base"};
@@ -122,52 +173,8 @@ IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : pref
     }
 }
 
-std::string IRIFactory::to_absolute(std::string_view rel) const noexcept {
-    auto [r_scheme, r_auth, r_path, r_query, r_frag] = IRIView{rel}.all_parts();
-
-    if (r_scheme.has_value()) {
-        return construct(*r_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-
-    auto const &[b_scheme, b_auth, b_path, b_query, _b_frag] = base_parts_cache;
-
-    if (r_auth.has_value()) {
-        return construct(*b_scheme, r_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-    if (r_path.empty()) {
-        return construct(*b_scheme, b_auth, b_path, r_query.has_value() ? r_query : b_query, r_frag);
-    }
-    if (r_path.starts_with('/')) {
-        return construct(*b_scheme, b_auth, remove_dot_segments(r_path), r_query, r_frag);
-    }
-
-    auto const merged = merge_path_with_base(r_path);
-    return construct(*b_scheme, b_auth, remove_dot_segments(merged), r_query, r_frag);
-}
-
-std::string IRIFactory::merge_path_with_base(std::string_view path) const noexcept {
-    if (base_parts_cache.scheme.has_value() && base_parts_cache.path.empty()) {
-        std::string r;
-        r.reserve(path.size() + 1);
-        r.push_back('/');
-        r.append(path);
-        return r;
-    }
-
-    auto const base_path = base_parts_cache.path;
-
-    std::string r;
-    r.reserve(base_path.size() + path.size() + 1);
-    r.append(base_path);
-    remove_last_path_segment(r);
-    r.push_back('/');
-    r.append(path);
-    return r;
-}
-
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    std::string const iri = to_absolute(rel);
-    return create_and_validate(iri, storage);
+    return create_and_validate(to_absolute(base_parts_cache, rel), storage);
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
