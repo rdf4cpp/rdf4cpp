@@ -118,9 +118,11 @@ static std::string_view remove_dot_segments(std::string_view src) noexcept {
         }
 
         if (src == ".." || src == ".") {
+            // 2.D
             break;
         }
 
+        // 2.E
         auto const seg = first_path_segment(src);
         buf.append(seg);
         src.remove_prefix(seg.size());
