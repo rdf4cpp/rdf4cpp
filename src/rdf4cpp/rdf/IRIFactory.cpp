@@ -61,72 +61,89 @@ static void remove_last_path_segment(std::string &path) noexcept {
 /**
 * removes ./ and ../ segments from path.
 */
-static std::string_view remove_dot_segments(std::string_view path) noexcept {
-    static thread_local std::string r;
-    static thread_local std::string in;
+static std::string_view remove_dot_segments(std::string_view src) noexcept {
+    // adapted from https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.4
 
-    r.clear();
-    in.clear();
-    in.append(path);
+    thread_local static std::string buf;
+    buf.clear();
+    buf.reserve(std::bit_ceil(src.size()));
 
-    while (!in.empty()) {
-        if (in.starts_with("./")) {
-            in.erase(0, 2);
-            continue;
-        }
-        if (in.starts_with("../")) {
-            in.erase(0, 3);
+    while (!src.empty()) {
+        if (src.starts_with("./")) {
+            // 2.A
+            src.remove_prefix(2);
             continue;
         }
 
-        if (in.starts_with("/./")) {
-            in.erase(0, 2);
-            continue;
-        }
-        auto seg = first_path_segment(in);
-        if (seg == "/.") {
-            in.erase(1, 1);
+        if (src.starts_with("../")) {
+            // 2.A
+            src.remove_prefix(3);
             continue;
         }
 
-        if (in.starts_with("/../")) {
-            in.erase(0, 3);
-            remove_last_path_segment(r);
-            continue;
-        }
-        if (seg == "/..") {
-            in.erase(1, 2);
-            remove_last_path_segment(r);
+        if (src.starts_with("/./")) {
+            // 2.B
+            src.remove_prefix(2);
             continue;
         }
 
-        if (in == "." || in == "..") {
+        if (src == "/.") {
+            // 2.B
+            // '[..] begins with a prefix of [..] "/." where "." is a complete path segment
+            // then replace that prefix with "/" in the input buffer [..]' (and continue)
+
+            // => "." is a complete path segment if either a slash follows (previous branch)
+            //      or the path ends after it (this branch)
+            // => the next iteration would just append the '/' to the output buffer
+            //      because none of the branches will be taken
+            // => therefore appending the slash directly and breaking out of the loop is equivalent
+            //      to the given formulation from RFC 3986
+            buf.push_back('/');
             break;
         }
 
-        r.append(seg);
-        in.erase(0, seg.length());
+        if (src.starts_with("/../")) {
+            // 2.C
+            src.remove_prefix(3);
+            remove_last_path_segment(buf);
+            continue;
+        }
+
+        if (src == "/..") {
+            // 2.C
+            // same reasoning as for 2.B
+            remove_last_path_segment(buf);
+            buf.push_back('/');
+            break;
+        }
+
+        if (src == ".." || src == ".") {
+            break;
+        }
+
+        auto const seg = first_path_segment(src);
+        buf.append(seg);
+        src.remove_prefix(seg.size());
     }
 
-    return r;
+    return buf;
 }
 
 /**
  * merges the path of the current base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
  */
-static std::string merge_path_with_base(IRIView::AllParts const &base, std::string_view path) noexcept {
+static std::string_view merge_path_with_base(IRIView::AllParts const &base, std::string_view path) noexcept {
     static thread_local std::string r;
+    r.clear();
 
     if (base.scheme.has_value() && base.path.empty()) {
-        r.clear();
-        r.reserve(path.size() + 1);
+        r.reserve(std::bit_ceil(path.size() + 1));
         r.push_back('/');
         r.append(path);
         return r;
     }
 
-    r.clear();
-    r.reserve(base.path.size() + path.size() + 1);
+    r.reserve(std::bit_ceil(base.path.size() + path.size() + 1));
     r.append(base.path);
     remove_last_path_segment(r);
     r.push_back('/');
