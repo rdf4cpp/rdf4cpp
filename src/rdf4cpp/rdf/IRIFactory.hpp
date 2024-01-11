@@ -22,11 +22,6 @@ private:
     std::string base;
     IRIView::AllParts base_parts_cache;
 
-    mutable std::string construct_buf;
-
-private:
-
-
 public:
     constexpr static std::string_view default_base = "http://example.org/";
     /**
