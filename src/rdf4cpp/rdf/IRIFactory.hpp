@@ -1,11 +1,9 @@
 #ifndef RDF4CPP_IRIFACTORY_HPP
 #define RDF4CPP_IRIFACTORY_HPP
 
-#include <optional>
 #include <string>
 #include <string_view>
-
-#include <dice/sparse-map/sparse_map.hpp>
+#include <boost/container/flat_map.hpp>
 
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/util/Expected.hpp>
@@ -15,13 +13,14 @@ namespace rdf4cpp::rdf {
 /**
  * Stores a base IRI and a prefix map and allows to create IRIs by possibly applying both.
  */
-class IRIFactory {
-public:
-    using PrefixMap = dice::sparse_map::sparse_map<std::string, std::string, dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>>;
+struct IRIFactory {
+    using prefix_map_type = boost::container::flat_map<std::string, std::string, std::less<>>;
+
 private:
-    PrefixMap prefixes;
+    prefix_map_type prefixes;
 
     std::string base;
+    IRIView::AllParts base_parts_cache;
 
 public:
     constexpr static std::string_view default_base = "http://example.org/";
@@ -35,7 +34,10 @@ public:
      * @param prefixes
      * @param base
      */
-    explicit IRIFactory(PrefixMap&& prefixes, std::string_view base = default_base);
+    explicit IRIFactory(prefix_map_type &&prefixes, std::string_view base = default_base);
+
+    IRIFactory(IRIFactory &&) noexcept = default;
+    IRIFactory &operator=(IRIFactory &&) noexcept = default;
 
     /**
      * Creates a IRI from a possibly relative IRI.
@@ -85,43 +87,7 @@ public:
      * @return
      */
     [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::node::NodeStorage &storage = storage::node::NodeStorage::default_instance()) noexcept;
-
-private:
-    /**
-     * turns the parts of a IRI back into a full IRI.
-     * @param scheme
-     * @param auth
-     * @param path
-     * @param query
-     * @param frag
-     * @return
-     */
-    [[nodiscard]] static std::string construct(std::string_view scheme, std::optional<std::string_view> auth, std::string_view path,
-                                               std::optional<std::string_view> query, std::optional<std::string_view> frag) noexcept;
-    /**
-     * removes ./ and ../ segments from path.
-     * @param path
-     * @return
-     */
-    [[nodiscard]] static std::string remove_dot_segments(std::string_view path) noexcept;
-    /**
-     * gets the first segment of path.
-     * @param path
-     * @return
-     */
-    [[nodiscard]] static std::string_view first_path_segment(std::string_view path) noexcept;
-    /**
-     * removes the last segment of path.
-     * @param path
-     */
-    static void remove_last_path_segment(std::string &path) noexcept;
-    /**
-     * merges the path of base and path, as described in https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.3.
-     * @param base
-     * @param path
-     * @return
-     */
-    [[nodiscard]] static std::string merge_paths(IRIView base, std::string_view path) noexcept;
 };
+
 }  // namespace rdf4cpp::rdf
 #endif  //RDF4CPP_IRIFACTORY_HPP
