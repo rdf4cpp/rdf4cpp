@@ -67,7 +67,7 @@ storage::tuple::DatasetStorage &Graph::backend() {
 const storage::tuple::DatasetStorage &Graph::backend() const {
     return dataset_storage;
 }
-bool Graph::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this

@@ -61,7 +61,7 @@ public:
     /**
      * See Node::serialize for usage details
      */
-    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -71,7 +71,7 @@ public:
      */
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), w.cursor(), &W::flush);
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dataset const &self);

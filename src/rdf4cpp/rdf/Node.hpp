@@ -90,7 +90,7 @@ public:
      * For specific usage examples have a look at StringWriter and
      * how the template Node::serialize<BufWriter> uses Serializers and tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -100,7 +100,7 @@ public:
      */
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), w.cursor(), &W::flush);
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     /**

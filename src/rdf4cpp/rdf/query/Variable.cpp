@@ -63,7 +63,7 @@ std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
 
-bool Variable::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+bool Variable::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {

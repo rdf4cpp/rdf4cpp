@@ -84,7 +84,7 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
      * Flushes bw.buffer() and repoints bw.cursor() to the new free space
      */
-    W::flush(&bw.buffer(), bw.cursor(), additional_cap);
+    W::flush(&bw.buffer(), &bw.cursor(), additional_cap);
 };
 
 /**
@@ -95,7 +95,7 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
  * @param cursor a pointer + size pair into buffer (pointing to the free space)
  * @param additional_cap how much additional space is needed right now
  */
-using FlushFunc = void (*)(void *buffer, Cursor &cursor, size_t additional_cap) noexcept;
+using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) noexcept;
 
 /**
  * Serializes the given string as is
@@ -108,11 +108,11 @@ using FlushFunc = void (*)(void *buffer, Cursor &cursor, size_t additional_cap) 
  *
  * @see Node::serialize for more details on the signature/usage
  */
-inline bool write_str(std::string_view str, void *const buffer, Cursor &cursor, FlushFunc const flush) noexcept {
+inline bool write_str(std::string_view str, void *const buffer, Cursor *cursor, FlushFunc const flush) noexcept {
     while (true) {
-        auto const max_write = std::min(str.size(), cursor.size());
-        memcpy(cursor.data(), str.data(), max_write);
-        cursor.advance(max_write);
+        auto const max_write = std::min(str.size(), cursor->size());
+        memcpy(cursor->data(), str.data(), max_write);
+        cursor->advance(max_write);
 
         if (max_write == str.size()) [[likely]] {
             break;
@@ -120,7 +120,7 @@ inline bool write_str(std::string_view str, void *const buffer, Cursor &cursor, 
 
         str.remove_prefix(max_write);
 
-        if (flush(buffer, cursor, str.size()); cursor.size() == 0) [[unlikely]] {
+        if (flush(buffer, cursor, str.size()); cursor->size() == 0) [[unlikely]] {
             return false;
         }
     }
@@ -133,7 +133,7 @@ inline bool write_str(std::string_view str, void *const buffer, Cursor &cursor, 
  */
 template<BufWriter W>
 bool write_str(std::string_view str, W &w) {
-    return write_str(str, &w.buffer(), w.cursor(), &W::flush);
+    return write_str(str, &w.buffer(), &w.cursor(), &W::flush);
 }
 
 /**
@@ -157,8 +157,8 @@ public:
     [[nodiscard]] constexpr Cursor &cursor() noexcept { return cursor_; }
     [[nodiscard]] constexpr Buffer &buffer() noexcept { return buffer_; }
 
-    static void flush(void *buffer, Cursor &cursor, size_t additional_cap) noexcept {
-        CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), cursor, additional_cap);
+    static void flush(void *buffer, Cursor *cursor, size_t additional_cap) noexcept {
+        CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), *cursor, additional_cap);
     }
 };
 
