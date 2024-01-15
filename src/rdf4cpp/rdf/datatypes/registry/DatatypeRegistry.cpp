@@ -2,6 +2,8 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+bool relaxed_parsing_mode = false;
+
 DatatypeRegistry::registered_datatypes_t &DatatypeRegistry::get_mutable() noexcept {
     static registered_datatypes_t registry_ = []() {
         registered_datatypes_t r;

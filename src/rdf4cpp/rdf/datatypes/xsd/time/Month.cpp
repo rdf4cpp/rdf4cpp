@@ -16,8 +16,9 @@ capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::f
 
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
-    if (!month.ok())
+    if (!month.ok()) {
         throw std::runtime_error("invalid month");
+    }
 
     return std::make_pair(month, tz);
 }

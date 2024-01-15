@@ -13,8 +13,11 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
-    if (!date.ok())
+    if (registry::relaxed_parsing_mode && !date.ok())
+        date = normalize(date);
+    if (!date.ok()) {
         throw std::runtime_error("invalid date");
+    }
 
     return std::make_pair(date, tz);
 }

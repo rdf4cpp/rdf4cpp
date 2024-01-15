@@ -1,5 +1,7 @@
 #include "IRIFactory.hpp"
 
+#include <rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.hpp>
+
 namespace rdf4cpp::rdf {
 
 /**
@@ -216,10 +218,11 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
-    if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
-        return nonstd::make_unexpected(e);
+    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
+        if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
+            return nonstd::make_unexpected(e);
+        }
     }
-
     return IRI{iri, storage};
 }
 
@@ -241,10 +244,11 @@ std::string_view IRIFactory::get_base() const noexcept {
 }
 
 IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
-    if (auto const e = IRIView{b}.quick_validate(); e != IRIFactoryError::Ok) {
-        return e;
+    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
+        if (auto const e = IRIView{b}.quick_validate(); e != IRIFactoryError::Ok) {
+            return e;
+        }
     }
-
     base = b;
     base_parts_cache = IRIView{base}.all_parts();
     return IRIFactoryError::Ok;
