@@ -53,7 +53,7 @@ public:
     /**
      * See Node::serialize for usage details
      */
-    bool serialize(void *buffer, writer::Cursor &cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
@@ -63,7 +63,7 @@ public:
      */
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), w.cursor(), &W::flush);
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     /**

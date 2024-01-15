@@ -43,7 +43,7 @@ Dataset::DatasetStorage &Dataset::backend() {
 const Dataset::DatasetStorage &Dataset::backend() const {
     return dataset_storage;
 }
-bool Dataset::serialize(void *const buffer, writer::Cursor &cursor, writer::FlushFunc const flush) const noexcept {
+bool Dataset::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     for (Quad const &quad : *this) {
         RDF4CPP_DETAIL_TRY_SERIALIZE(quad.graph());
         RDF4CPP_DETAIL_TRY_WRITE_STR(" ");

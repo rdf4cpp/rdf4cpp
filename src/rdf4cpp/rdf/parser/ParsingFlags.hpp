@@ -69,6 +69,11 @@ public:
     [[nodiscard]] constexpr ParsingFlag get_syntax() const noexcept {
         return static_cast<ParsingFlag>(flags & static_cast<flag_u_type>(ParsingFlag::TriG));  // TriG is 11, so it can double as a mask
     }
+
+    [[nodiscard]] constexpr bool syntax_allows_prefixes() const noexcept {
+        auto const syn = get_syntax();
+        return syn == ParsingFlag::Turtle || syn ==  ParsingFlag::TriG;
+    }
 };
 
 constexpr ParsingFlags operator|(ParsingFlag const f1, ParsingFlag const f2) noexcept {
