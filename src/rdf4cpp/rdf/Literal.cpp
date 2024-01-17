@@ -697,6 +697,12 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
         RDF4CPP_DETAIL_TRY_WRITE_STR("@");
         RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
         return true;
+    } else if (state != nullptr && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
+            || this->datatype_eq<datatypes::xsd::Decimal>() || this->datatype_eq<datatypes::xsd::Boolean>())) {
+        auto s = lexical_form();
+        if (!writer::write_str(s.view(), buffer, cursor, flush))
+            return false;
+        return true;
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
         // Notes:

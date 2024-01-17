@@ -22,19 +22,150 @@ std::string write_basic_data(){
         FAIL("flush failed");
     return ser.finalize();
 }
+template<bool HasGraph, parser::ParsingFlag F>
+void check_basic_data(const std::string &i) {
+    using namespace parser;
+    std::istringstream iss{i};
+    IStreamQuadIterator qit{iss, F | ParsingFlag::KeepBlankNodeIds};
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == IRI::make("http://ex/obj"));
+    if constexpr (HasGraph)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+    ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Int>(5));
+    CHECK(qit->value().graph() == IRI::make(""));
+    ++qit;
+    CHECK(qit == std::default_sentinel);
+}
 
 TEST_CASE("basic ntriple") {
     CHECK(write_basic_data<writer::OutputFormat::NTriples>() == "<http://ex/sub> <http://ex/pred> <http://ex/obj> .\n<http://ex/sub> <http://ex/pred> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    check_basic_data<false, parser::ParsingFlag::NTriples>(write_basic_data<writer::OutputFormat::NTriples>());
 }
 
 TEST_CASE("basic nquad") {
     CHECK(write_basic_data<writer::OutputFormat::NQuads>() == "<http://ex/sub> <http://ex/pred> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://ex/pred> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    check_basic_data<true, parser::ParsingFlag::NQuads>(write_basic_data<writer::OutputFormat::NQuads>());
 }
 
 TEST_CASE("basic turtle") {
     CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:sub e:pred e:obj ,\n\"5\"^^xsd:int .\n");
+    check_basic_data<false, parser::ParsingFlag::Turtle>(write_basic_data<writer::OutputFormat::Turtle>());
 }
 
 TEST_CASE("basic trig") {
     CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:graph {\ne:sub e:pred e:obj .\n}\ne:sub e:pred \"5\"^^xsd:int .\n");
+    check_basic_data<true, parser::ParsingFlag::TriG>(write_basic_data<writer::OutputFormat::TriG>());
+}
+
+template<writer::OutputFormat F>
+std::string write_ext_data() {
+    writer::StringWriter ser{};
+    writer::SerializationState st{};
+    st.prefixes.emplace_back("http://ex/", "e");
+    if (!writer::serialize_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("state failed");
+    Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
+    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("write failed");
+
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Integer>(5);
+    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("write failed");
+
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Double>(5.0);
+    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("write failed");
+
+    q.object() = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
+    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("write failed");
+
+    q.predicate() = IRI::make("http://ex/pred2");
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("write failed");
+
+    if (!writer::flush_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+        FAIL("flush failed");
+    return ser.finalize();
+}
+template<parser::ParsingFlag F>
+void check_ext_data(const std::string &i) {
+    using namespace parser;
+    std::istringstream iss{i};
+    IStreamQuadIterator qit{iss, F | ParsingFlag::KeepBlankNodeIds};
+
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == IRI::make("http://ex/obj"));
+    if constexpr (F == parser::ParsingFlag::TriG)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+
+    ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Integer>(5));
+    if constexpr (F == parser::ParsingFlag::TriG)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+
+    ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Double>(5.0));
+    if constexpr (F == parser::ParsingFlag::TriG)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+
+    ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().object() == Literal::make_typed<datatypes::xsd::Decimal>("4.2"));
+    if constexpr (F == parser::ParsingFlag::TriG)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+
+    ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://ex/pred2"));
+    CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
+    if constexpr (F == parser::ParsingFlag::TriG)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
+
+    ++qit;
+    CHECK(qit == std::default_sentinel);
+}
+template<writer::OutputFormat F, parser::ParsingFlag I>
+void extended_tests() {
+    std::string data = write_ext_data<F>();
+    if constexpr (F == writer::OutputFormat::Turtle)
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:sub e:pred e:obj ,\n5 ,\n5.0E0 ,\n4.2 ;\ne:pred2 true .\n");
+    else
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:graph {\ne:sub e:pred e:obj ,\n5 ,\n5.0E0 ,\n4.2 ;\ne:pred2 true .\n}\n");
+    check_ext_data<I>(data);
+}
+TEST_CASE("extended") {
+    // ntriples & nquads don't support any of the syntax tested here
+    extended_tests<writer::OutputFormat::Turtle, parser::ParsingFlag::Turtle>();
+    extended_tests<writer::OutputFormat::TriG, parser::ParsingFlag::TriG>();
 }

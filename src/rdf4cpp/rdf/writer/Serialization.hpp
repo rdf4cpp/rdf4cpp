@@ -94,42 +94,34 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
             if (!write_str(" .\n", buffer, &cursor, flush))
                 return false;
         }
-        if (!s.subject().serialize(buffer, &cursor, flush, state))
-            return false;
         state->active_subject = s.subject();
-        if (!write_str(" ", buffer, &cursor, flush))
-            return false;
-        if (!s.predicate().serialize(buffer, &cursor, flush, state))
-            return false;
         state->active_predicate = s.predicate();
-        if (!write_str(" ", buffer, &cursor, flush))
-            return false;
-        if (!s.object().serialize(buffer, &cursor, flush, state))
-            return false;
-        return true;
-    } else {
-        if (!s.subject().serialize(buffer, &cursor, flush))
-            return false;
-        if (!write_str(" ", buffer, &cursor, flush))
-            return false;
-        if (!s.predicate().serialize(buffer, &cursor, flush))
-            return false;
-        if (!write_str(" ", buffer, &cursor, flush))
-            return false;
-        if (!s.object().serialize(buffer, &cursor, flush))
-            return false;
-        if constexpr (format_has_graph(F)) {
-            if (!s.graph().null()) {
-                if (!write_str(" ", buffer, &cursor, flush))
-                    return false;
-                if (!s.graph().serialize(buffer, &cursor, flush)) {
-                    return false;
-                }
+    }
+    else {
+        state = nullptr;
+    }
+    if (!s.subject().serialize(buffer, &cursor, flush, state))
+        return false;
+    if (!write_str(" ", buffer, &cursor, flush))
+        return false;
+    if (!s.predicate().serialize(buffer, &cursor, flush, state))
+        return false;
+    if (!write_str(" ", buffer, &cursor, flush))
+        return false;
+    if (!s.object().serialize(buffer, &cursor, flush, state))
+        return false;
+    if constexpr (format_has_graph(F) && !format_has_prefix(F)) {
+        if (!s.graph().null()) {
+            if (!write_str(" ", buffer, &cursor, flush))
+                return false;
+            if (!s.graph().serialize(buffer, &cursor, flush, state)) {
+                return false;
             }
         }
+    }
+    if constexpr (!format_has_prefix(F))
         if (!write_str(" .\n", buffer, &cursor, flush))
             return false;
-    }
     return true;
 }
 
