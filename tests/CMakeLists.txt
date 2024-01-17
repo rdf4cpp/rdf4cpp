@@ -357,6 +357,14 @@ target_link_libraries(tests_DBpediaMode
 set_property(TARGET tests_DBpediaMode PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_DBpediaMode COMMAND tests_DBpediaMode)
 
+add_executable(tests_Serialization serializer/tests_Serialization.cpp)
+target_link_libraries(tests_Serialization
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_Serialization PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Serialization COMMAND tests_Serialization)
+
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_RDFFileParser_simple.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

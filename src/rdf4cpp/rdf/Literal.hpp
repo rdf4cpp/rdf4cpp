@@ -780,7 +780,7 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, const writer::SerializationState* state = nullptr) const noexcept;
 
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {

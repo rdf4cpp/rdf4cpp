@@ -4,6 +4,7 @@
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
+#include <rdf4cpp/rdf/writer/WriterBasics.hpp>
 
 namespace rdf4cpp::rdf {
 
@@ -88,7 +89,7 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, const writer::SerializationState* state = nullptr) const noexcept;
 
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {

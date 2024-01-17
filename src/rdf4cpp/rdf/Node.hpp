@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
+#include <rdf4cpp/rdf/writer/WriterBasics.hpp>
 
 #include <memory>
 #include <optional>
@@ -90,7 +91,7 @@ public:
      * For specific usage examples have a look at StringWriter and
      * how the template Node::serialize<BufWriter> uses Serializers and tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, const writer::SerializationState* state = nullptr) const noexcept;
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

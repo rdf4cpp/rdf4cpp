@@ -18,6 +18,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
+#include <rdf4cpp/rdf/writer/Serialization.hpp>
 
 #include <openssl/evp.h>
 
@@ -664,7 +665,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     }                                                  \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, const writer::SerializationState* state) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
@@ -712,10 +713,8 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
 
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
-        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
-        RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(">");
-        return true;
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
+        return writer::serialize_iri_prefixed(datatype_iri, buffer, *cursor, flush, state);
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
@@ -734,10 +733,8 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
                         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     }
 
-                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^<");
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(dtype_iri.identifier);
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
-                    return true;
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^");
+                    return writer::serialize_iri_prefixed(dtype_iri.identifier, buffer, *cursor, flush, state);
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
                     // Notes:
@@ -752,10 +749,8 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
-                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
-                    return true;
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
+                    return writer::serialize_iri_prefixed(datatype_iri, buffer, *cursor, flush, state);
                 });
     }
 }
