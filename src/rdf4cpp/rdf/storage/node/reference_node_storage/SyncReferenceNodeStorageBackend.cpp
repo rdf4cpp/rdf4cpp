@@ -19,13 +19,19 @@ SyncReferenceNodeStorageBackend::SyncReferenceNodeStorageBackend() noexcept {
     }
 }
 
+template<typename Backend>
+static size_t storage_size(SyncNodeTypeStorage<Backend> const &storage) noexcept {
+    std::shared_lock<std::shared_mutex> l{storage.mutex};
+    return storage.id2data.size();
+}
+
 size_t SyncReferenceNodeStorageBackend::size() const noexcept {
-    return iri_storage_.id2data.size() +
-           bnode_storage_.id2data.size() +
-           variable_storage_.id2data.size() +
-           fallback_literal_storage_.id2data.size() +
+    return storage_size(iri_storage_) +
+           storage_size(bnode_storage_) +
+           storage_size(variable_storage_) +
+           storage_size(fallback_literal_storage_) +
            specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
-               return acc + storage.id2data.size();
+               return acc + storage_size(storage);
            });
 }
 

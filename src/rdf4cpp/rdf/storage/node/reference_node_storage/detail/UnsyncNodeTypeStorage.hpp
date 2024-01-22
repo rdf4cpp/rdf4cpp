@@ -6,8 +6,6 @@
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <memory>
-#include <shared_mutex>
-
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
@@ -15,7 +13,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  * Storage for one of the Node Backend types. Includes a shared mutex to synchronize access and bidirectional mappings between the Backend type and identifier::NodeID.
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
  */
-template<class BackendType_t>
+template<typename BackendType_t>
 struct UnsyncNodeTypeStorage {
     using Backend = BackendType_t;
     using BackendView = typename Backend::View;
