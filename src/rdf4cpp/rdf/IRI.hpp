@@ -61,13 +61,41 @@ public:
     [[nodiscard]] IRI try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
+     * searches for a IRI in the specified node storage and returns it.
+     * returns a null IRI, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static IRI find(std::string_view iri, const NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+private:
+    /**
+     * searches for a IRI in the specified node storage and returns it.
+     * returns a null IRI, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static IRI find(datatypes::registry::DatatypeIDView id, const NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+public:
+    /**
      * Get the IRI string of this.
      * @return IRI string
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
-    [[nodiscard]] explicit operator std::string() const noexcept;
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
+    [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const IRI &iri);
 
     [[nodiscard]] bool is_literal() const noexcept;

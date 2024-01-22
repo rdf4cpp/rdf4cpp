@@ -1,5 +1,7 @@
 #include "Variable.hpp"
 
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
+
 namespace rdf4cpp::rdf::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::Variable, {}}) {}
 Variable::Variable(std::string_view name, bool anonymous, NodeStorage &node_storage)
@@ -38,6 +40,21 @@ Variable Variable::try_get_in_node_storage(NodeStorage const &node_storage) cons
     return Variable{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
 }
 
+Variable Variable::find(std::string_view name, bool anonymous, NodeStorage& node_storage) noexcept {
+    auto nid = node_storage.find_id(storage::node::view::VariableBackendView{.name = name, .is_anonymous = anonymous});
+
+    if (nid.null())
+        return Variable{};
+
+    return Variable{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Variable, node_storage.id()}};
+}
+Variable Variable::find_named(std::string_view name, NodeStorage& node_storage) noexcept {
+    return find(name, false, node_storage);
+}
+Variable Variable::find_anonymous(std::string_view name, NodeStorage& node_storage) noexcept {
+    return find(name, true, node_storage);
+}
+
 bool Variable::is_anonymous() const {
     // TODO: encode is_anonymous into variable ID
     return this->handle_.variable_backend().is_anonymous;
@@ -45,6 +62,20 @@ bool Variable::is_anonymous() const {
 std::string_view Variable::name() const {
     return this->handle_.variable_backend().name;
 }
+
+bool Variable::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    auto const backend = handle_.variable_backend();
+
+    if (backend.is_anonymous) {
+        RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
+    } else {
+        RDF4CPP_DETAIL_TRY_WRITE_STR("?");
+    }
+
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.name);
+    return true;
+}
+
 Variable::operator std::string() const {
     return handle_.variable_backend().n_string();
 }
@@ -57,6 +88,5 @@ std::ostream &operator<<(std::ostream &os, const Variable &variable) {
     os << static_cast<std::string>(variable);
     return os;
 }
-
 
 }  // namespace rdf4cpp::rdf::query

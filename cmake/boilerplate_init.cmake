@@ -30,6 +30,4 @@ macro(boilerplate_init)
             set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
         endif ()
     endif ()
-
-    string(COMPARE EQUAL "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}" IS_TOP_LEVEL)
 endmacro()

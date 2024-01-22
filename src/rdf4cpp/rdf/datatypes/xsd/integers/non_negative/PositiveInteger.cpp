@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.hpp>
+#include "PositiveInteger.hpp"
 
 #include <stdexcept>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_positive_integer>::cpp_type capabilities::Default<xsd_positive_integer>::from_string(std::string_view s) {
     cpp_type ret;
@@ -61,6 +62,7 @@ template<>
 capabilities::Inlineable<xsd_positive_integer>::cpp_type capabilities::Inlineable<xsd_positive_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
     return cpp_type{util::unpack_integral<uint64_t>(inlined)} + 1;
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_positive_integer,
                                     capabilities::Logical,

@@ -271,6 +271,12 @@ public:
     }
 };
 
+inline std::chrono::year_month_day normalize(std::chrono::year_month_day i) {
+    // normalize
+    // see https://en.cppreference.com/w/cpp/chrono/year_month_day/operator_days
+    return static_cast<std::chrono::year_month_day>(static_cast<std::chrono::sys_days>(i + std::chrono::months{0}));
+}
+
 }  // namespace rdf4cpp::rdf::datatypes::registry::util
 
 #endif  //RDF4CPP_DATETIMEUTILS_HPP

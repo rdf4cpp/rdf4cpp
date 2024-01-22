@@ -1,6 +1,7 @@
 #include "Dataset.hpp"
-
 #include <rdf4cpp/rdf/Graph.hpp>
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
+
 #include <utility>
 
 namespace rdf4cpp::rdf {
@@ -41,5 +42,28 @@ Dataset::DatasetStorage &Dataset::backend() {
 }
 const Dataset::DatasetStorage &Dataset::backend() const {
     return dataset_storage;
+}
+bool Dataset::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    for (Quad const &quad : *this) {
+        RDF4CPP_DETAIL_TRY_SERIALIZE(quad.graph());
+        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
+
+        RDF4CPP_DETAIL_TRY_SERIALIZE(quad.subject());
+        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
+
+        RDF4CPP_DETAIL_TRY_SERIALIZE(quad.predicate());
+        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
+
+        RDF4CPP_DETAIL_TRY_SERIALIZE(quad.object());
+        RDF4CPP_DETAIL_TRY_WRITE_STR(" .\n");
+    }
+
+    return true;
+}
+std::ostream &operator<<(std::ostream &os, Dataset const &ds) {
+    writer::BufOStreamWriter w{os};
+    ds.serialize(w);
+    w.finalize();
+    return os;
 }
 }  // namespace rdf4cpp::rdf

@@ -1,7 +1,8 @@
-#include <rdf4cpp/rdf/datatypes/owl/Rational.hpp>
+#include "Rational.hpp"
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 static owl::Rational::cpp_type simplify(owl::Rational::cpp_type const &r) noexcept {
     auto const num = numerator(r);
     auto const den = denominator(r);
@@ -90,6 +91,7 @@ nonstd::expected<capabilities::Numeric<owl_rational>::ceil_result_cpp_type, Dyna
     auto const rest = numerator(operand) % denominator(operand);
     return integral + (rest != 0);
 }
+#endif
 
 template struct LiteralDatatypeImpl<owl_rational,
                                     capabilities::Logical,

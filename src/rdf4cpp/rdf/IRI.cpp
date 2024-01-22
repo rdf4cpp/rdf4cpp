@@ -1,4 +1,5 @@
 #include "IRI.hpp"
+#include <rdf4cpp/rdf/writer/TryWrite.hpp>
 
 #include <sstream>
 
@@ -66,6 +67,26 @@ IRI IRI::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept
     return IRI{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
 }
 
+IRI IRI::find(std::string_view iri, const Node::NodeStorage &node_storage) noexcept {
+    auto nid = node_storage.find_id(storage::node::view::IRIBackendView{iri});
+    if (nid.null())
+        return IRI{};
+    return IRI{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::IRI, node_storage.id()}};
+}
+IRI IRI::find(datatypes::registry::DatatypeIDView id, const Node::NodeStorage &node_storage) noexcept {
+    return visit(datatypes::registry::DatatypeIDVisitor{
+                             [&](storage::node::identifier::LiteralType const fixed) -> IRI {
+                                 return IRI{NodeBackendHandle{storage::node::identifier::literal_type_to_iri_node_id(fixed),
+                                                              storage::node::identifier::RDFNodeType::IRI,
+                                                              node_storage.id()}};
+                             },
+                             [&](std::string_view const dynamic) -> IRI {
+                                 return IRI::find(dynamic, node_storage);
+                             }},
+                     id);
+}
+
+
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::node::identifier;
 
@@ -79,7 +100,18 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
-IRI::operator std::string() const noexcept { return handle_.iri_backend().n_string(); }
+bool IRI::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    auto const backend = handle_.iri_backend();
+
+    RDF4CPP_DETAIL_TRY_WRITE_STR("<");
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.identifier);
+    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+    return true;
+}
+
+IRI::operator std::string() const noexcept {
+    return handle_.iri_backend().n_string();
+}
 
 bool IRI::is_literal() const noexcept { return false; }
 bool IRI::is_variable() const noexcept { return false; }
@@ -91,7 +123,7 @@ IRI IRI::default_graph(NodeStorage &node_storage) {
     return IRI{"", node_storage};
 }
 std::ostream &operator<<(std::ostream &os, const IRI &iri) {
-    os << static_cast<std::string>(iri);
+    os << std::string{iri};
     return os;
 }
 std::string_view IRI::identifier() const noexcept {

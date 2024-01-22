@@ -1,17 +1,17 @@
 #ifndef RDF4CPP_BLANKNODE_HPP
 #define RDF4CPP_BLANKNODE_HPP
 
-#include <optional>
-
 #include <ostream>
 #include <rdf4cpp/rdf/Node.hpp>
+#include <rdf4cpp/rdf/util/TriBool.hpp>
+
+namespace rdf4cpp::rdf::util  {
+struct NodeGenerator;
+}
 
 namespace rdf4cpp::rdf {
 class BlankNode : public Node {
-
-private:
     explicit BlankNode(NodeBackendHandle handle) noexcept;
-
 public:
     /**
      * Constructs the null-bnode
@@ -37,14 +37,37 @@ public:
     [[nodiscard]] BlankNode try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
 
     /**
+     * searches for a bnode in the specified node storage and returns it.
+     * returns a null bnode, if not found.
+     * @param iri
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static BlankNode find(std::string_view identifier, const NodeStorage& node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
     [[nodiscard]] std::string_view identifier() const noexcept;
 
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
     [[nodiscard]] explicit operator std::string() const noexcept;
 
+    [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
+    [[nodiscard]] util::TriBool union_eq(BlankNode const &other) const noexcept;
+
     friend std::ostream &operator<<(std::ostream &os, const BlankNode &node);
+
     [[nodiscard]] bool is_literal() const noexcept;
     [[nodiscard]] bool is_variable() const noexcept;
     [[nodiscard]] bool is_blank_node() const noexcept;

@@ -11,6 +11,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 inline constexpr util::ConstexprString owl_rational{"http://www.w3.org/2002/07/owl#rational"};
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<owl_rational> {
     using cpp_datatype = boost::multiprecision::cpp_rational;
@@ -39,6 +40,7 @@ nonstd::expected<capabilities::Numeric<owl_rational>::floor_result_cpp_type, Dyn
 
 template<>
 nonstd::expected<capabilities::Numeric<owl_rational>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_rational>::ceil(cpp_type const &operand) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<owl_rational,
                                            capabilities::Logical,

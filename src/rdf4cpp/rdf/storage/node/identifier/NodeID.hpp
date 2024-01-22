@@ -171,6 +171,7 @@ inline constexpr LiteralID NodeID::min_literal_id{1};
 
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct std::hash<rdf4cpp::rdf::storage::node::identifier::NodeID> {
     size_t operator()(rdf4cpp::rdf::storage::node::identifier::NodeID const id) const noexcept {
@@ -184,5 +185,6 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::ident
         return dice_hash_templates<Policy>::dice_hash(id.value());
     }
 };
+#endif
 
 #endif  //RDF4CPP_NODEID_HPP

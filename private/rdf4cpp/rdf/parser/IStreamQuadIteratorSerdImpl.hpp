@@ -2,12 +2,10 @@
 #define RDF4CPP_PARSER_PRIVATE_IMPL_HPP
 
 #include <deque>
-#include <istream>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 #include <serd/serd.h>
 
@@ -17,35 +15,30 @@
 namespace rdf4cpp::rdf::parser {
 
 struct IStreamQuadIterator::Impl {
+    using flags_type = IStreamQuadIterator::flags_type;
+    using state_type = IStreamQuadIterator::state_type;
+    using ok_type = IStreamQuadIterator::ok_type;
+    using error_type = IStreamQuadIterator::error_type;
+
 private:
-    using PrefixMap = IStreamQuadIterator::prefix_storage_type;
+    SerdReader *reader;
 
-    struct SerdReaderDelete {
-        inline void operator()(SerdReader *rdr) const noexcept {
-            serd_reader_end_stream(rdr);
-            serd_reader_free(rdr);
-        }
-    };
+    state_type *state;
+    bool state_is_owned;
 
-    using OwnedSerdReader = std::unique_ptr<SerdReader, SerdReaderDelete>;
-
-    std::reference_wrapper<std::istream> istream;
-    mutable storage::node::NodeStorage node_storage;
-
-    OwnedSerdReader reader;
-
-    PrefixMap prefixes;
     std::deque<Quad> quad_buffer;
     std::optional<ParsingError> last_error;
+    bool last_error_requires_skip = false;
     bool end_flag = false;
-    bool no_parse_prefixes;
+
+    flags_type flags;
 
 private:
     static std::string_view node_into_string_view(SerdNode const *node) noexcept;
     static ParsingError::Type parsing_error_type_from_serd(SerdStatus st) noexcept;
 
 private:
-    nonstd::expected<BlankNode, SerdStatus> get_bnode(SerdNode const *node) noexcept;
+    nonstd::expected<Node, SerdStatus> get_bnode(std::string &&graph_str, SerdNode const *node) noexcept;
     nonstd::expected<IRI, SerdStatus> get_iri(SerdNode const *node) noexcept;
     nonstd::expected<IRI, SerdStatus> get_prefixed_iri(SerdNode const *node) noexcept;
     nonstd::expected<Literal, SerdStatus> get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) noexcept;
@@ -69,19 +62,13 @@ private:
     }
 
 public:
-    Impl(std::istream &istream, ParsingFlags flags, PrefixMap prefixes, storage::node::NodeStorage node_storage) noexcept;
+    Impl(void *stream,
+         ReadFunc read,
+         ErrorFunc,
+         flags_type flags,
+         state_type *state) noexcept;
 
-    /**
-     * @return true if this will no longer yield values
-     * @note one sided implication, could be false and still not yield another value
-     */
-    [[nodiscard]] inline bool is_at_end() const noexcept {
-        return this->end_flag && quad_buffer.empty();
-    }
-
-    inline bool operator==(Impl const &other) const noexcept {
-        return this->reader == other.reader;
-    }
+    ~Impl() noexcept;
 
     /**
      * Tries to extract the next element from the serd backend.
@@ -93,7 +80,10 @@ public:
      *      expected Quad: if there was a next element and it could be parsed
      *      unexpected ParsingError: if there was a next element but it could not be parsed
      */
-    [[nodiscard]] std::optional<nonstd::expected<Quad, ParsingError>> next() noexcept;
+    [[nodiscard]] std::optional<nonstd::expected<ok_type, error_type>> next() noexcept;
+
+    [[nodiscard]] uint64_t current_line() const noexcept;
+    [[nodiscard]] uint64_t current_column() const noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::parser

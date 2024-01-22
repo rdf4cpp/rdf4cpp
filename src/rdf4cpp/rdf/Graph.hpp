@@ -4,6 +4,7 @@
 #include <rdf4cpp/rdf/Statement.hpp>
 #include <rdf4cpp/rdf/query/TriplePattern.hpp>
 #include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 #include <memory>
 #include <utility>
@@ -48,6 +49,27 @@ public:
     DatasetStorage &backend();
 
     [[nodiscard]] const DatasetStorage &backend() const;
+
+    /**
+     * See Node::serialize for usage details
+     */
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    /**
+     * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
+     *
+     * @param w a serializer
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
+    /**
+     * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
+     */
+    friend std::ostream &operator<<(std::ostream &os, Graph const &graph);
 
     // TODO: support union (+) and difference (-); open question: which graph name should be assigned?
     // TODO: add empty

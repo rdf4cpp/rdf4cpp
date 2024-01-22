@@ -19,8 +19,8 @@ int main(int argc, char *argv[]) {
 
     dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("text")});
 
-    std::cout << "dataset string: \n"
-              << writer::NQuadsWriter(g.dataset()) << std::endl;
+    std::cout << "dataset string: \n" << g.dataset() << std::endl;
+
     query::TriplePattern triple_pattern{query::Variable("x"), IRI{"http://example.com"}, query::Variable{"z"}};
     std::cout << triple_pattern.subject() << std::endl;
     std::cout << triple_pattern.predicate() << std::endl;
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        for (parser::IStreamQuadIterator qit{ifs}; qit != parser::IStreamQuadIterator{}; ++qit) {
+        for (parser::IStreamQuadIterator qit{ifs}; qit != std::default_sentinel; ++qit) {
             if (qit->has_value()) {
                 ds2.add(qit->value());
             } else {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
         }
 
         std::cout << "ds2 from " << argv[1] << ":" << std::endl;
-        std::cout << writer::NQuadsWriter(ds2) << std::endl;
+        std::cout << ds2 << std::endl;
     } else {
         std::cout << "no test file provided." << std::endl;
     }

@@ -11,6 +11,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTime> {
     using cpp_datatype = std::pair<rdf::util::TimePoint, rdf::util::OptionalTimezone>;
@@ -31,6 +32,7 @@ capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_da
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_dateTime,
                                            capabilities::Comparable,
@@ -55,6 +57,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::TimePoint> {
     static size_t dice_hash(rdf4cpp::rdf::util::TimePoint const &x) noexcept {
@@ -62,5 +65,6 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::TimePoint> {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(tp);
     }
 };
+#endif
 
 #endif  //RDF4CPP_DATETIME_HPP

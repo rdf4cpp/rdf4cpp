@@ -1,10 +1,11 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Float.hpp>
+#include "Float.hpp"
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 #include <cmath>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_float>::cpp_type capabilities::Default<xsd_float>::from_string(std::string_view s) {
     return util::from_chars<cpp_type, identifier>(s);
@@ -54,6 +55,7 @@ template<>
 capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::node::identifier::LiteralID const inlined) noexcept {
     return util::unpack<cpp_type>(inlined);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_float,
                                     capabilities::Logical,

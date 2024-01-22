@@ -5,6 +5,7 @@
 #include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
 #include <rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.hpp>
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 #include <memory>
 #include <utility>
@@ -56,6 +57,24 @@ public:
     DatasetStorage &backend();
 
     [[nodiscard]] const DatasetStorage &backend() const;
+
+    /**
+     * See Node::serialize for usage details
+     */
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    /**
+     * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
+     *
+     * @param w a serializer
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, Dataset const &self);
 
     // TODO: support union (+) and difference (-)
     // TODO: add empty

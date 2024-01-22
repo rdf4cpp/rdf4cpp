@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/Date.hpp>
+#include "Date.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
@@ -12,8 +13,11 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
-    if (!date.ok())
+    if (registry::relaxed_parsing_mode && !date.ok())
+        date = normalize(date);
+    if (!date.ok()) {
         throw std::runtime_error("invalid date");
+    }
 
     return std::make_pair(date, tz);
 }
@@ -67,6 +71,7 @@ template<>
 std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return rdf::datatypes::registry::util::compare_time_points(date_to_tp(lhs.first), lhs.second, date_to_tp(rhs.first), rhs.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_date,
                                     capabilities::Comparable,

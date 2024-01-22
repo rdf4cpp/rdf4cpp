@@ -200,3 +200,27 @@ TEST_CASE("IRI UUID") {
     CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
     CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
 }
+
+template<class T>
+struct get_find_values {};
+
+template<>
+struct get_find_values<IRI> {
+    static constexpr std::string_view t = "http://foo/bar";
+    static constexpr std::string_view v = "http://foo/bar/x";
+};
+template<>
+struct get_find_values<BlankNode> {
+    static constexpr std::string_view t = "bl1";
+    static constexpr std::string_view v = "bl2";
+};
+
+TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
+    static constexpr std::string_view t = get_find_values<T>::t;
+
+    CHECK(T::find(t) == T{});
+    T i{t};
+    CHECK(T::find(t) == i);
+    CHECK(T::find(t).backend_handle() == i.backend_handle());
+    CHECK(T::find(get_find_values<T>::v) == T{});
+}

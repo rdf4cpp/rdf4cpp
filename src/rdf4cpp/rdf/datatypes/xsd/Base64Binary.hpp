@@ -60,6 +60,7 @@ struct Base64BinaryRepr {
     std::strong_ordering operator<=>(Base64BinaryRepr const &) const noexcept = default;
 };
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_base64_binary> {
     using cpp_datatype = Base64BinaryRepr;
@@ -70,6 +71,7 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 
 template<>
 std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_base64_binary,
                                            capabilities::FixedId>;
@@ -89,7 +91,7 @@ namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
 
 } // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
 
-
+#ifndef DOXYGEN_PARSER
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
     static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) noexcept {
@@ -103,5 +105,6 @@ struct std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
         return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(x);
     }
 };
+#endif
 
 #endif //RDF4CPP_XSD_BASE64BINARY_HPP

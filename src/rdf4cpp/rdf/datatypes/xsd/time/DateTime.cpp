@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/DateTime.hpp>
+#include "DateTime.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime>::from_string(std::string_view s) {
     using namespace rdf::datatypes::registry::util;
@@ -15,22 +16,29 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     auto tz = rdf::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
-    if (!date.ok())
+    if (registry::relaxed_parsing_mode && !date.ok())
+        date = normalize(date);
+    if (!date.ok()) {
         throw std::runtime_error("invalid date");
-    if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
-        throw std::runtime_error{"minutes out of range"};
-    if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
-        throw std::runtime_error{"hours out of range"};
-    if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
-        throw std::runtime_error{"seconds out of range"};
+    }
+    if (!registry::relaxed_parsing_mode) {
+        if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
+            throw std::runtime_error{"minutes out of range"};
+        if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
+            throw std::runtime_error{"hours out of range"};
+        if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
+            throw std::runtime_error{"seconds out of range"};
+    }
     auto time = hours + minutes + ms;
-    if (time == std::chrono::hours{24}) {
-        date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
-        if (!date.ok())
-            throw std::runtime_error("invalid date");
-        time = std::chrono::hours{0};
-    } else if (time > std::chrono::hours{24}) {
-        throw std::runtime_error{"invalid time of day"};
+    if (!registry::relaxed_parsing_mode) {
+        if (time == std::chrono::hours{24}) {
+            date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
+            if (!date.ok())
+                throw std::runtime_error("invalid date");
+            time = std::chrono::hours{0};
+        } else if (time > std::chrono::hours{24}) {
+            throw std::runtime_error{"invalid time of day"};
+        }
     }
 
     return std::make_pair(rdf::util::construct(date, time), tz);
@@ -64,6 +72,7 @@ template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return rdf::datatypes::registry::util::compare_time_points(lhs.first, lhs.second, rhs.first, rhs.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_dateTime,
                                     capabilities::Comparable,

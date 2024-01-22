@@ -1,8 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.hpp>
+#include "UnsignedLong.hpp"
+
 #include <rdf4cpp/rdf/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_unsigned_long>::cpp_type capabilities::Default<xsd_unsigned_long>::from_string(std::string_view s) {
     return util::from_chars<cpp_type, identifier>(s);
@@ -27,6 +29,7 @@ nonstd::expected<capabilities::Default<xsd_unsigned_long>::cpp_type, DynamicErro
 
     return static_cast<cpp_type>(value);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_unsigned_long,
                                     capabilities::Logical,

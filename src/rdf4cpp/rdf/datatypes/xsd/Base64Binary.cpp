@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf/datatypes/xsd/Base64Binary.hpp>
+#include "Base64Binary.hpp"
 
 #include <array>
 #include <algorithm>
@@ -6,6 +6,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 namespace encode_decode_detail {
 
 // integer value -> ascii base64 character
@@ -223,6 +224,7 @@ template<>
 std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept {
     return value.to_encoded();
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_base64_binary,
                                     capabilities::FixedId>;

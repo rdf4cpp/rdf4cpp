@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/YearMonth.hpp>
+#include "YearMonth.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -11,8 +12,9 @@ capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearM
     auto tz = rdf::util::Timezone::parse_optional(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     auto date = year / month;
-    if (!date.ok())
+    if (!date.ok()) {
         throw std::runtime_error("invalid date");
+    }
 
     return std::make_pair(date, tz);
 }
@@ -64,6 +66,7 @@ template<>
 nonstd::expected<capabilities::Subtype<xsd_gYearMonth>::cpp_type, DynamicError> capabilities::Subtype<xsd_gYearMonth>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(value.first.year() / value.first.month(), value.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                     capabilities::Comparable,

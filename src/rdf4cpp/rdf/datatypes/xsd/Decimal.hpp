@@ -13,6 +13,7 @@
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_decimal> {
     // needs at least 18 decimal digits of precision
@@ -71,6 +72,7 @@ bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const 
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<xsd_decimal,
                                            capabilities::Logical,

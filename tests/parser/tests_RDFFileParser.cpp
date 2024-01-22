@@ -7,10 +7,15 @@
 TEST_SUITE("RDFFileParser") {
     TEST_CASE("not existing file") {
         rdf4cpp::rdf::parser::RDFFileParser parse{"shouldnotexist.ttl"};
-        for (const auto &v : parse) {  // more like check that this compiles ;)
-            CHECK(v.has_value() == false);
+        try {
+            for (const auto &v : parse) {  // more like check that this compiles ;)
+                FAIL("Unreachable");
+                CHECK(v.has_value() == false);
+            }
+            FAIL("Unreachable");
+        } catch (std::system_error const &e) {
+            // expecting exception
         }
-        CHECK((parse.begin() == parse.end()));
     }
     TEST_CASE("existing file") {
         int count = 0;

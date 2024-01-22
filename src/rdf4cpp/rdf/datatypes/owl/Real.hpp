@@ -10,6 +10,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 
 inline constexpr util::ConstexprString owl_real{"http://www.w3.org/2002/07/owl#real"};
 
+#ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<owl_real> {
     using cpp_datatype = boost::multiprecision::cpp_bin_float_quad; // IEEE quad float
@@ -35,6 +36,7 @@ nonstd::expected<capabilities::Numeric<owl_real>::floor_result_cpp_type, Dynamic
 
 template<>
 nonstd::expected<capabilities::Numeric<owl_real>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<owl_real>::ceil(cpp_type const &operand) noexcept;
+#endif
 
 extern template struct LiteralDatatypeImpl<owl_real,
                                            capabilities::Logical,

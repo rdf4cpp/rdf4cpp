@@ -1,9 +1,10 @@
-#include <rdf4cpp/rdf/datatypes/xsd/time/Time.hpp>
+#include "Time.hpp"
 
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
+#ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_string(std::string_view s) {
     using namespace registry::util;
@@ -11,15 +12,18 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto tz = rdf::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
-    if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
-        throw std::runtime_error{"minutes out of range"};
-    if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
-        throw std::runtime_error{"hours out of range"};
-    if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
-        throw std::runtime_error{"seconds out of range"};
+    if (!registry::relaxed_parsing_mode) {
+        if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
+            throw std::runtime_error{"minutes out of range"};
+        if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
+            throw std::runtime_error{"hours out of range"};
+        if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
+            throw std::runtime_error{"seconds out of range"};
+    }
     auto time = hours + minutes + ms;
-    if (time > std::chrono::hours{24})
+    if (time > std::chrono::hours{24}) {
         throw std::runtime_error{"invalid time of day"};
+    }
 
     return std::make_pair(time, tz);
 }
@@ -69,6 +73,7 @@ template<>
 nonstd::expected<capabilities::Subtype<xsd_time>::cpp_type, DynamicError> capabilities::Subtype<xsd_time>::from_supertype<0>(super_cpp_type<0> const &value) noexcept {
     return std::make_pair(value.first - std::chrono::floor<std::chrono::days>(value.first), value.second);
 }
+#endif
 
 template struct LiteralDatatypeImpl<xsd_time,
                                     capabilities::Comparable,

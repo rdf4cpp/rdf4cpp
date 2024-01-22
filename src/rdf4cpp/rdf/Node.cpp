@@ -1,11 +1,11 @@
 #include "Node.hpp"
 
-#include "rdf4cpp/rdf/util/Overloaded.hpp"
 #include <cassert>
 #include <rdf4cpp/rdf/BlankNode.hpp>
 #include <rdf4cpp/rdf/IRI.hpp>
 #include <rdf4cpp/rdf/Literal.hpp>
 #include <rdf4cpp/rdf/query/Variable.hpp>
+
 
 namespace rdf4cpp::rdf {
 
@@ -57,19 +57,46 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
+bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    switch (handle_.type()) {
+        [[likely]] case RDFNodeType::IRI: {
+            return IRI{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Variable: {
+            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::BNode: {
+            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.serialize(buffer, cursor, flush);
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
+    }
+}
+
 Node::operator std::string() const noexcept {
     switch (handle_.type()) {
-        case RDFNodeType::IRI:
-            return handle_.iri_backend().n_string();
-        case RDFNodeType::BNode:
-            return handle_.bnode_backend().n_string();
-        case RDFNodeType::Literal: {
-            return static_cast<std::string>(Literal{handle_});
+        [[likely]] case RDFNodeType::IRI: {
+            return std::string{IRI{handle_}};
         }
-        case RDFNodeType::Variable:
-            return handle_.variable_backend().n_string();
+        case RDFNodeType::Variable: {
+            return std::string{query::Variable{handle_}};
+        }
+        case RDFNodeType::BNode: {
+            return std::string{BlankNode{handle_}};
+        }
+        case RDFNodeType::Literal: {
+            return std::string{Literal{handle_}};
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
     }
-    return "";
 }
 
 bool Node::is_literal() const noexcept {
@@ -166,7 +193,8 @@ bool Node::null() const noexcept {
     return handle_.null();
 }
 std::ostream &operator<<(std::ostream &os, const Node &node) {
-    return os << static_cast<std::string>(node);
+    os << std::string{node};
+    return os;
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
     return handle_;

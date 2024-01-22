@@ -126,6 +126,8 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, NodeStorage &node_storage) noexcept;
 
+    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, const Node::NodeStorage &node_storage, storage::node::identifier::NodeID node_id) noexcept;
+
     /**
      * Creates a string like type with contents of str.
      * Will either create
@@ -158,10 +160,11 @@ private:
      *      which prevents the template version of datatype_eq from using IRIs
      */
     [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
-protected:
+
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
+
     /**
      * Constructs the null-literal
      */
@@ -191,7 +194,7 @@ public:
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode
      */
@@ -202,7 +205,7 @@ public:
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
      * normalizes lexical_form to UTF-8 NFC.
      * @param lexical_form the lexical form
-     * @param lang the language tag
+     * @param lang_tag the language tag
      * @param node_storage optional custom node_storage used to store the literal
      */
     [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
@@ -219,8 +222,8 @@ public:
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
-     * @tparam lexical_form the lexical form
-     * @param T the datatype
+     * @tparam T the datatype
+     * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
@@ -332,6 +335,138 @@ public:
 
     Literal to_node_storage(NodeStorage &node_storage) const noexcept;
     [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
+
+private:
+    [[nodiscard]] static NodeID find_datatype_iri(datatypes::registry::DatatypeIDView id, NodeStorage &node_storage) noexcept;
+
+public:
+    /**
+     * searches for a xsd::String Literal in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static Literal find_simple(std::string_view lexical_form, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * searches for a rdf::LangString Literal in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    [[nodiscard]] static Literal find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, NodeStorage &node_storage = NodeStorage::default_instance()) noexcept;
+
+    /**
+     * searches for a Literal of type T in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * if T is inlineable (and not rdf::LangString) always returns the inlined Literal.
+     * @tparam T
+     * @param compatible_value
+     * @param node_storage
+     * @return
+     */
+    template<datatypes::LiteralDatatype T>
+    [[nodiscard]] static Literal find_typed_from_value(typename T::cpp_type const &compatible_value,
+                                                       NodeStorage &node_storage = NodeStorage::default_instance()) noexcept {
+        if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
+            return find_lang_tagged(compatible_value.lexical_form,
+                                    compatible_value.language_tag,
+                                    node_storage);
+        }
+
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return find_simple(compatible_value, node_storage);
+        }
+
+        if constexpr (datatypes::IsInlineable<T>) {
+            if (auto const maybe_inlined = T::try_into_inlined(compatible_value); maybe_inlined.has_value()) {
+                return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+            }
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                        .datatype = T::fixed_id,
+                        .value = std::any{compatible_value}});
+                if (nid.null())
+                    return Literal{};
+                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+            }
+        }
+
+        auto dty = find_datatype_iri(T::datatype_id, node_storage);
+        if (dty.null())
+            return Literal{};
+
+        auto const lex = T::to_canonical_string(compatible_value);
+        auto const needs_escape = lexical_form_needs_escape(lex);
+
+        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                .datatype_id = dty,
+                .lexical_form = lex,
+                .language_tag = "",
+                .needs_escape = needs_escape});
+
+        if (nid.null())
+            return Literal{};
+        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+    }
+
+    /**
+     * searches for a Literal of type T in the specified node storage and returns it.
+     * returns a null Literal, if not found.
+     * if T is inlineable, always returns the inlined Literal.
+     * @tparam T
+     * @param lexical_form
+     * @param node_storage
+     * @return
+     */
+    template<datatypes::LiteralDatatype T>
+        requires(!std::same_as<T, datatypes::rdf::LangString>)
+    [[nodiscard]] static Literal find_typed(std::string_view lexical_form,
+                                            NodeStorage &node_storage = NodeStorage::default_instance()) {
+        if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
+            return find_simple(lexical_form, node_storage);
+        }
+
+        if constexpr (datatypes::HasFixedId<T>) {
+            auto value = T::from_string(lexical_form);
+
+            if constexpr (datatypes::IsInlineable<T>) {
+                if (auto const maybe_inlined = T::try_into_inlined(value); maybe_inlined.has_value()) {
+                    return Literal::make_inlined_typed_unchecked(*maybe_inlined, T::fixed_id, node_storage);
+                }
+            }
+
+            if (node_storage.has_specialized_storage_for(T::fixed_id)) {
+                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                        .datatype = T::fixed_id,
+                        .value = std::any{value}});
+                if (nid.null())
+                    return Literal{};
+                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+            }
+        }
+
+        auto dty = find_datatype_iri(T::datatype_id, node_storage);
+        if (dty.null())
+            return Literal{};
+
+        auto const needs_escape = lexical_form_needs_escape(lexical_form);
+
+        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+                .datatype_id = dty,
+                .lexical_form = lexical_form,
+                .language_tag = "",
+                .needs_escape = needs_escape});
+
+        if (nid.null())
+            return Literal{};
+        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage.id()}};
+    }
 
     /**
      * Checks if the datatype of this matches the provided LiteralDatatype
@@ -570,7 +705,9 @@ public:
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
+     * \verbatim embed:rst:leading-asterisk
      * E.g. For `"abc"^^xsd::string` the lexical form is `abc`
+     * \endverbatim
      * @return lexical form
      */
     [[nodiscard]] util::CowString lexical_form() const noexcept;
@@ -640,6 +777,15 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+    /**
+     * See Node::serialize
+     */
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
@@ -865,7 +1011,6 @@ public:
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
      *
      * @param pattern xsd:string containing a regex to match against
-     * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
      * @return whether this' lexical form matches the regex or the null literal if
      *      - this is not string-like
      *
@@ -892,8 +1037,7 @@ public:
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace
      *
-     * @param pattern regex (as string) to match against
-     * @param replacement string to replace the matched pattern
+     * @param replacer replacement regex
      * @return the new string with the matches substring replaced by replacement
      */
     [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
