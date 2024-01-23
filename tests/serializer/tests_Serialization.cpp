@@ -10,7 +10,7 @@ std::string write_basic_data(){
     writer::SerializationState st{};
     if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
         FAIL("state failed");
-    Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
+    Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
     q.graph() = Node::make_null();
@@ -28,7 +28,7 @@ void check_basic_data(const std::string &i) {
     IStreamQuadIterator qit{iss, F | ParsingFlag::KeepBlankNodeIds};
     CHECK(qit != std::default_sentinel);
     CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
-    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().predicate() == IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
     CHECK(qit->value().object() == IRI::make("http://ex/obj"));
     if constexpr (HasGraph)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
@@ -37,7 +37,7 @@ void check_basic_data(const std::string &i) {
     ++qit;
     CHECK(qit != std::default_sentinel);
     CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
-    CHECK(qit->value().predicate() == IRI::make("http://ex/pred"));
+    CHECK(qit->value().predicate() == IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
     CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Int>(5));
     CHECK(qit->value().graph() == IRI::make(""));
     ++qit;
@@ -45,22 +45,22 @@ void check_basic_data(const std::string &i) {
 }
 
 TEST_CASE("basic ntriple") {
-    CHECK(write_basic_data<writer::OutputFormat::NTriples>() == "<http://ex/sub> <http://ex/pred> <http://ex/obj> .\n<http://ex/sub> <http://ex/pred> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    CHECK(write_basic_data<writer::OutputFormat::NTriples>() == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
     check_basic_data<false, parser::ParsingFlag::NTriples>(write_basic_data<writer::OutputFormat::NTriples>());
 }
 
 TEST_CASE("basic nquad") {
-    CHECK(write_basic_data<writer::OutputFormat::NQuads>() == "<http://ex/sub> <http://ex/pred> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://ex/pred> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    CHECK(write_basic_data<writer::OutputFormat::NQuads>() == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
     check_basic_data<true, parser::ParsingFlag::NQuads>(write_basic_data<writer::OutputFormat::NQuads>());
 }
 
 TEST_CASE("basic turtle") {
-    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
+    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
     check_basic_data<false, parser::ParsingFlag::Turtle>(write_basic_data<writer::OutputFormat::Turtle>());
 }
 
 TEST_CASE("basic trig") {
-    CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> <http://ex/pred> <http://ex/obj> .\n}\n<http://ex/sub> <http://ex/pred> \"5\"^^xsd:int .\n");
+    CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/sub> a \"5\"^^xsd:int .\n");
     check_basic_data<true, parser::ParsingFlag::TriG>(write_basic_data<writer::OutputFormat::TriG>());
 }
 
@@ -86,7 +86,7 @@ std::string write_ext_data() {
     if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
-    q.predicate() = IRI::make("http://ex/pred2");
+    q.predicate() = IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
     if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
@@ -143,7 +143,7 @@ void check_ext_data(const std::string &i) {
     ++qit;
     CHECK(qit != std::default_sentinel);
     CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
-    CHECK(qit->value().predicate() == IRI::make("http://ex/pred2"));
+    CHECK(qit->value().predicate() == IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
     CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Boolean>(true));
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
@@ -157,9 +157,9 @@ template<writer::OutputFormat F, parser::ParsingFlag I>
 void extended_tests() {
     std::string data = write_ext_data<F>();
     if constexpr (F == writer::OutputFormat::Turtle)
-        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\n<http://ex/pred2> true .\n");
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\na true .\n");
     else
-        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\n<http://ex/pred2> true .\n}\n");
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\na true .\n}\n");
     check_ext_data<I>(data);
 }
 TEST_CASE("extended") {

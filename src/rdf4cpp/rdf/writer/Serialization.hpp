@@ -66,6 +66,13 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
     auto seri = &Node::serialize_short_form;
     if constexpr (!format_has_prefix(F))
         seri = &Node::serialize;
+    auto seri_pred = [&](const Node& p) {
+        if constexpr (format_has_prefix(F)) {
+            if (p.is_iri() && p.as_iri().identifier() == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+                return write_str("a", buffer, &cursor, flush);
+        }
+        return std::invoke(seri, p, buffer, &cursor, flush);
+    };
     if constexpr (format_has_prefix(F)) {
         if (state == nullptr)
             return false;
@@ -93,7 +100,7 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
             }
             if (!write_str(" ;\n", buffer, &cursor, flush))
                 return false;
-            if (!std::invoke(seri, s.predicate(), buffer, &cursor, flush))
+            if (!seri_pred(s.predicate()))
                 return false;
             state->active_predicate = s.predicate();
             if (!write_str(" ", buffer, &cursor, flush))
@@ -116,7 +123,7 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
         return false;
     if (!write_str(" ", buffer, &cursor, flush))
         return false;
-    if (!std::invoke(seri, s.predicate(), buffer, &cursor, flush))
+    if (!seri_pred(s.predicate()))
         return false;
     if (!write_str(" ", buffer, &cursor, flush))
         return false;
