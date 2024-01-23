@@ -1,6 +1,5 @@
 #include "IRI.hpp"
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
-#include <rdf4cpp/rdf/writer/Serialization.hpp>
 
 #include <sstream>
 
@@ -101,10 +100,13 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     }
 }
 
-bool IRI::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, const writer::SerializationState* state) const noexcept {
+bool IRI::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     auto const backend = handle_.iri_backend();
 
-    return writer::serialize_iri_prefixed(backend.identifier, buffer, *cursor, flush, state);
+    RDF4CPP_DETAIL_TRY_WRITE_STR("<");
+    RDF4CPP_DETAIL_TRY_WRITE_STR(backend.identifier);
+    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+    return true;
 }
 
 IRI::operator std::string() const noexcept {

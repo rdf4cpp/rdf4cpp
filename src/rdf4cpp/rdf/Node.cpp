@@ -57,10 +57,10 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, const writer::SerializationState* state) const noexcept {
+bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buffer, cursor, flush, state);
+            return IRI{handle_}.serialize(buffer, cursor, flush);
         }
         case RDFNodeType::Variable: {
             return query::Variable{handle_}.serialize(buffer, cursor, flush);
@@ -69,7 +69,27 @@ bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFu
             return BlankNode{handle_}.serialize(buffer, cursor, flush);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(buffer, cursor, flush, state);
+            return Literal{handle_}.serialize(buffer, cursor, flush);
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
+    }
+}
+bool Node::serialize_short_form(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    switch (handle_.type()) {
+        [[likely]] case RDFNodeType::IRI: {
+            return IRI{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Variable: {
+            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::BNode: {
+            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.serialize_short_form(buffer, cursor, flush);
         }
         default: {
             assert(false);

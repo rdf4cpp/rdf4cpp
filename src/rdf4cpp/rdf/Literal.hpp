@@ -777,10 +777,21 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+private:
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, bool short_form) const noexcept;
+public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, const writer::SerializationState* state = nullptr) const noexcept;
+    inline bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+        return serialize(buffer, cursor, flush, false);
+    }
+    /**
+     * See Node::serialize_short_form
+     */
+    inline bool serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+        return serialize(buffer, cursor, flush, true);
+    }
 
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {

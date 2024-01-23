@@ -8,8 +8,7 @@ template<writer::OutputFormat F>
 std::string write_basic_data(){
     writer::StringWriter ser{};
     writer::SerializationState st{};
-    st.prefixes.emplace_back("http://ex/", "e");
-    if (!writer::serialize_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
         FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
     if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
@@ -56,12 +55,12 @@ TEST_CASE("basic nquad") {
 }
 
 TEST_CASE("basic turtle") {
-    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:sub e:pred e:obj ,\n\"5\"^^xsd:int .\n");
+    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
     check_basic_data<false, parser::ParsingFlag::Turtle>(write_basic_data<writer::OutputFormat::Turtle>());
 }
 
 TEST_CASE("basic trig") {
-    CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:graph {\ne:sub e:pred e:obj .\n}\ne:sub e:pred \"5\"^^xsd:int .\n");
+    CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> <http://ex/pred> <http://ex/obj> .\n}\n<http://ex/sub> <http://ex/pred> \"5\"^^xsd:int .\n");
     check_basic_data<true, parser::ParsingFlag::TriG>(write_basic_data<writer::OutputFormat::TriG>());
 }
 
@@ -69,8 +68,7 @@ template<writer::OutputFormat F>
 std::string write_ext_data() {
     writer::StringWriter ser{};
     writer::SerializationState st{};
-    st.prefixes.emplace_back("http://ex/", "e");
-    if (!writer::serialize_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
         FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
     if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
@@ -159,9 +157,9 @@ template<writer::OutputFormat F, parser::ParsingFlag I>
 void extended_tests() {
     std::string data = write_ext_data<F>();
     if constexpr (F == writer::OutputFormat::Turtle)
-        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:sub e:pred e:obj ,\n5 ,\n5.0E0 ,\n4.2 ;\ne:pred2 true .\n");
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\n<http://ex/pred2> true .\n");
     else
-        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix e: <http://ex/> .\ne:graph {\ne:sub e:pred e:obj ,\n5 ,\n5.0E0 ,\n4.2 ;\ne:pred2 true .\n}\n");
+        CHECK(data == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> <http://ex/pred> <http://ex/obj> ,\n5 ,\n5.0E0 ,\n4.2 ;\n<http://ex/pred2> true .\n}\n");
     check_ext_data<I>(data);
 }
 TEST_CASE("extended") {

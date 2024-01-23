@@ -17,16 +17,6 @@ enum class OutputFormat {
 };
 
 class SerializationState {
-public:
-    struct Prefix {
-        std::string prefix, shorthand;
-    };
-
-    std::vector<Prefix> prefixes = {
-            {"http://www.w3.org/2001/XMLSchema#", "xsd"},
-    };
-
-private:
     Node active_graph, active_subject, active_predicate;
 
     template<OutputFormat F>

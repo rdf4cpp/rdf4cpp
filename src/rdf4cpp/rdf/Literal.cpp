@@ -5,6 +5,7 @@
 #include <random>
 #include <ranges>
 #include <sstream>
+#include <array>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -665,7 +666,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     }                                                  \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, const writer::SerializationState* state) const noexcept {
+bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, bool short_form) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
@@ -697,7 +698,7 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
         RDF4CPP_DETAIL_TRY_WRITE_STR("@");
         RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
         return true;
-    } else if (state != nullptr && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
+    } else if (short_form && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
             || this->datatype_eq<datatypes::xsd::Decimal>() || this->datatype_eq<datatypes::xsd::Boolean>())) {
         auto s = lexical_form();
         if (!writer::write_str(s.view(), buffer, cursor, flush))
@@ -715,12 +716,11 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
 
         auto const inlined_value = this->backend_handle().node_id().literal_id();
         auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
-        auto const &datatype_iri = entry->datatype_iri;
 
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-        return writer::serialize_iri_prefixed(datatype_iri, buffer, *cursor, flush, state);
+        return write_type_iri(this->backend_handle().node_id().literal_type(), buffer, cursor, flush, short_form);
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
@@ -739,8 +739,10 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
                         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     }
 
-                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^");
-                    return writer::serialize_iri_prefixed(dtype_iri.identifier, buffer, *cursor, flush, state);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("^^<");
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(dtype_iri.identifier);
+                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
+                    return true;
                 },
                 [&](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
                     // Notes:
@@ -751,12 +753,11 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
                     assert(entry != nullptr);
 
                     auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
-                    auto const &datatype_iri = entry->datatype_iri;
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-                    return writer::serialize_iri_prefixed(datatype_iri, buffer, *cursor, flush, state);
+                    return write_type_iri(this->backend_handle().node_id().literal_type(), buffer, cursor, flush, short_form);
                 });
     }
 }
