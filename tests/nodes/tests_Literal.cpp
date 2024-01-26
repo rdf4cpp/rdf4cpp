@@ -500,6 +500,19 @@ TEST_CASE("Literal - misc functions") {
 
             CHECK_NE(l1, l2);  // note: non-deterministic but should basically never fail
         }
+
+        SUBCASE("provided rng determinism") {
+            std::vector<Literal> lits;
+            for (size_t ix = 0; ix < 100; ++ix) {
+                std::default_random_engine rng{};
+                lits.push_back(Literal::generate_random_double(rng));
+            }
+
+            auto first = lits[0];
+            for (size_t ix = 1; ix < lits.size(); ++ix) {
+                CHECK_EQ(first, lits[ix]);
+            }
+        }
     }
 
     SUBCASE("abs") {
