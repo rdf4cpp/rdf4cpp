@@ -36,26 +36,27 @@ static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_fo
 #include <immintrin.h>
 
 namespace rdf4cpp::rdf {
-bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+bool Literal::lexical_form_needs_escape(std::string_view lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     __m256i const masks[4]{_mm256_set1_epi8('"'),
                            _mm256_set1_epi8('\\'),
                            _mm256_set1_epi8('\n'),
                            _mm256_set1_epi8('\r')};
 
-    for (size_t bix = 0; bix < lexical_form.size() / 32; ++bix) {
-        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data() + (bix * 32)));
+    while (lexical_form.size() >= 32) {
+        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data()));
         for (auto const &mask : masks) {
             auto const eq = _mm256_cmpeq_epi8(mask, chars);
 
-            if (_mm256_movemask_epi8(eq) > 0) {
+            if (_mm256_movemask_epi8(eq) != 0) {
                 return true;
             }
         }
+
+        lexical_form.remove_prefix(32);
     }
 
-    auto const rest = lexical_form.size() % 32;
-    return lexical_form_needs_escape_non_simd(lexical_form.substr(lexical_form.size() - rest));
+    return lexical_form_needs_escape_non_simd(lexical_form);
 }
 } // rdf4cpp::rdf
 #else
