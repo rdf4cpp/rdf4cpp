@@ -9,12 +9,11 @@
 #include <rdf4cpp/rdf/writer/SerializationState.hpp>
 
 namespace rdf4cpp::rdf::writer {
-constexpr bool format_has_graph(OutputFormat f) {
-    return f == OutputFormat::NQuads || f == OutputFormat::TriG;
-}
-constexpr bool format_has_prefix(OutputFormat f) {
-    return f == OutputFormat::Turtle || f == OutputFormat::TriG;
-}
+template<OutputFormat F>
+concept format_has_graph = (F == OutputFormat::NQuads || F == OutputFormat::TriG);
+
+template<OutputFormat F>
+concept format_has_prefix = (F == OutputFormat::Turtle || F == OutputFormat::TriG);
 
 struct TypeIRIPrefix {
     std::string_view prefix;
@@ -27,7 +26,7 @@ static constexpr std::array iri_prefixes = {
 
 template<OutputFormat F>
 bool write_prefix(void *const buffer, Cursor &cursor, FlushFunc const flush) {
-    if constexpr (format_has_prefix(F)) {
+    if constexpr (format_has_prefix<F>) {
         for (const auto &p : iri_prefixes) {
             if (!write_str("@prefix ", buffer, &cursor, flush))
                 return false;
@@ -45,7 +44,7 @@ bool write_prefix(void *const buffer, Cursor &cursor, FlushFunc const flush) {
 }
 template<OutputFormat F>
 bool flush_state(void *const buffer, Cursor &cursor, FlushFunc const flush, SerializationState *state) {
-    if constexpr (format_has_prefix(F)) {
+    if constexpr (format_has_prefix<F>) {
         if (state == nullptr)
             return false;
         if (!state->active_predicate.null() || !state->active_subject.null())
@@ -64,19 +63,20 @@ bool flush_state(void *const buffer, Cursor &cursor, FlushFunc const flush, Seri
 template<OutputFormat F>
 bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc const flush, SerializationState *state) {
     auto seri = &Node::serialize_short_form;
-    if constexpr (!format_has_prefix(F))
+    if constexpr (!format_has_prefix<F>)
         seri = &Node::serialize;
     auto seri_pred = [&](const Node& p) {
-        if constexpr (format_has_prefix(F)) {
-            if (p.is_iri() && p.as_iri().identifier() == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+        if constexpr (format_has_prefix<F>) {
+            static constexpr size_t rdf_type = datatypes::registry::reserved_datatype_ids[datatypes::registry::rdf_type].to_underlying();
+            if (p.is_iri() && p.backend_handle().node_id().value() == rdf_type)
                 return write_str("a", buffer, &cursor, flush);
         }
         return std::invoke(seri, p, buffer, &cursor, flush);
     };
-    if constexpr (format_has_prefix(F)) {
+    if constexpr (format_has_prefix<F>) {
         if (state == nullptr)
             return false;
-        if constexpr (format_has_graph(F)) {
+        if constexpr (format_has_graph<F>) {
             if (s.graph() != state->active_graph) {
                 if (!flush_state<F>(buffer, cursor, flush, state))
                     return false;
@@ -129,7 +129,7 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
         return false;
     if (!std::invoke(seri, s.object(), buffer, &cursor, flush))
         return false;
-    if constexpr (format_has_graph(F) && !format_has_prefix(F)) {
+    if constexpr (format_has_graph<F> && !format_has_prefix<F>) {
         if (!s.graph().null()) {
             if (!write_str(" ", buffer, &cursor, flush))
                 return false;
@@ -138,7 +138,7 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
             }
         }
     }
-    if constexpr (!format_has_prefix(F))
+    if constexpr (!format_has_prefix<F>)
         if (!write_str(" .\n", buffer, &cursor, flush))
             return false;
     return true;
