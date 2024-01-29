@@ -2,10 +2,11 @@
 #define RDF4CPP_REGISTRY_UTIL_CONSTEXPRSTRING_HPP
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <format>
 #include <string>
 #include <string_view>
-#include <format>
 
 namespace rdf4cpp::rdf::datatypes::registry::util {
 /**
@@ -17,13 +18,21 @@ namespace rdf4cpp::rdf::datatypes::registry::util {
  */
 template<size_t N>
 struct ConstexprString {
-    char value[N];
+    std::array<char, N> value;
+
     constexpr ConstexprString(const char (&str)[N]) noexcept {
-        std::copy_n(str, N, value);
+        std::copy_n(str, N, value.data());
     }
+    constexpr ConstexprString(std::string_view v) {
+        if (v.size()+1 != N)
+            throw std::invalid_argument{"size missmatch"};
+        std::copy_n(v.data(), N-1, value.data());
+        value[N-1] = 0;
+    }
+    constexpr ConstexprString() = default;
 
     constexpr operator std::string_view() const noexcept {
-        return std::string_view{value};
+        return std::string_view{value.data(), value.size() - 1};
     }
 
     template<size_t M>
@@ -50,6 +59,19 @@ struct ConstexprString {
     [[nodiscard]] constexpr size_t size() const noexcept {
         return N;
     }
+
+    template<size_t M>
+    constexpr ConstexprString<M+N-1> operator+(const ConstexprString<M>& other) const noexcept {
+        ConstexprString<M+N-1> r{};
+        std::copy_n(this->value.data(), N-1, r.value.data());
+        std::copy_n(other.value.data(), M-1, r.value.data() + (N-1));
+        return r;
+    }
+};
+
+template<ConstexprString Data>
+struct ConstexprStringHolder {
+    static constexpr auto value = Data;
 };
 
 }  // namespace rdf4cpp::rdf::datatypes::registry::util

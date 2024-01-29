@@ -144,50 +144,7 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
     return true;
 }
 
-static consteval size_t type_iri_get_size() {
-    uint8_t m = 0;
-    for (const auto &[name, id] : datatypes::registry::reserved_datatype_ids) {
-        if (id.to_underlying() > m)
-            m = id.to_underlying();
-    }
-    return m;
-}
-static consteval auto type_iri_build_buffer() {
-    std::array<TypeIRIPrefix, type_iri_get_size()+1> buffer{};
-    for (const auto &[name, id] : datatypes::registry::reserved_datatype_ids) {
-        size_t index = id.to_underlying();
-        for (const auto& c : iri_prefixes) {
-            if (name.starts_with(c.prefix)) {
-                buffer[index] = c;
-                break;
-            }
-        }
-    }
-    return buffer;
-}
-static constexpr auto type_iri_buffer = type_iri_build_buffer();
-inline bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, bool short_form) {
-    if (short_form) {
-        auto& p = type_iri_buffer.at(t.to_underlying());
-        if (!p.prefix.empty()) { // TODO precompute full prefixed IRI?
-            if (!write_str(p.shorthand, buffer, cursor, flush))
-                return false;
-            if (!write_str(":", buffer, cursor, flush))
-                return false;
-            const auto& iri = datatypes::registry::DatatypeRegistry::get_entry(t)->datatype_iri;
-            if (!write_str(iri.substr(p.prefix.size()), buffer, cursor, flush))
-                return false;
-            return true;
-        }
-    }
-    if (!write_str("<", buffer, cursor, flush))
-        return false;
-    if (!write_str(datatypes::registry::DatatypeRegistry::get_entry(t)->datatype_iri, buffer, cursor, flush))
-        return false;
-    if (!write_str(">", buffer, cursor, flush))
-        return false;
-    return true;
-}
+bool write_type_iri(datatypes::registry::LiteralType t, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, bool short_form);
 
 }  // namespace rdf4cpp::rdf::writer
 #endif  //RDF4CPP_SERIALIZATION_HPP

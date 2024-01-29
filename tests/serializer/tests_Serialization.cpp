@@ -167,3 +167,6 @@ TEST_CASE("extended") {
     extended_tests<writer::OutputFormat::Turtle, parser::ParsingFlag::Turtle>();
     extended_tests<writer::OutputFormat::TriG, parser::ParsingFlag::TriG>();
 }
+
+static_assert(datatypes::registry::util::ConstexprString("abc")+datatypes::registry::util::ConstexprString("def") == datatypes::registry::util::ConstexprString("abcdef"));
+static_assert((datatypes::registry::util::ConstexprString("abc")+datatypes::registry::util::ConstexprString("def")).size() == 7);

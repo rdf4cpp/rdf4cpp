@@ -20,9 +20,9 @@ class SerializationState {
     Node active_graph, active_subject, active_predicate;
 
     template<OutputFormat F>
-    friend bool flush_state(void *const buffer, Cursor &cursor, FlushFunc const flush, SerializationState* state);
+    friend bool flush_state(void *buffer, Cursor &cursor, FlushFunc flush, SerializationState *state);
     template<OutputFormat F>
-    friend bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc const flush, SerializationState* state);
+    friend bool serialize(const Quad &s, void *buffer, Cursor &cursor, FlushFunc flush, SerializationState *state);
 };
 }  // namespace rdf4cpp::rdf::writer
 
