@@ -330,7 +330,7 @@ public:
      * Generates a random double in the range [0.0, 1.0).
      * The values are generated in a thread-safe manner using a lazily initialized thread_local random generator.
      *
-     * @return random double in [0.0, 1.0]
+     * @return random double in [0.0, 1.0)
      *
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
@@ -341,7 +341,7 @@ public:
      * The values are generated using the given random number generator
      *
      * @param rng random number generator
-     * @return random double in [0.0, 1.0]
+     * @return random double in [0.0, 1.0)
      *
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
