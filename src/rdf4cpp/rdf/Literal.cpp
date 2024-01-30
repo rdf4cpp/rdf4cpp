@@ -260,13 +260,8 @@ Literal Literal::make_string_uuid(Node::NodeStorage &node_storage) {
 }
 
 Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
-    struct RngState {
-        std::default_random_engine rng{std::random_device{}()};
-        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
-    };
-
-    static thread_local RngState state;
-    return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+    static thread_local std::default_random_engine rng{std::random_device{}()};
+    return Literal::generate_random_double(rng, node_storage);
 }
 
 Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {

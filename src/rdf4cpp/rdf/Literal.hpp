@@ -5,6 +5,7 @@
 #include <any>
 #include <optional>
 #include <ostream>
+#include <random>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/owl.hpp>
@@ -329,9 +330,27 @@ public:
      * Generates a random double in the range [0.0, 1.0).
      * The values are generated in a thread-safe manner using a lazily initialized thread_local random generator.
      *
+     * @return random double in [0.0, 1.0)
+     *
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
     [[nodiscard]] static Literal generate_random_double(NodeStorage &node_storage = NodeStorage::default_instance());
+
+    /**
+     * Generates a random double in the range [0.0, 1.0).
+     * The values are generated using the given random number generator
+     *
+     * @param rng random number generator
+     * @return random double in [0.0, 1.0)
+     *
+     * @see https://www.w3.org/TR/sparql11-query/#idp2130040
+     */
+    template<typename Rng>
+    [[nodiscard]] static Literal generate_random_double(Rng &rng, NodeStorage &node_storage = NodeStorage::default_instance()) {
+        // uniform_real_distribution does not have any state, therefore we can construct a new one for each call
+        std::uniform_real_distribution<typename datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
+        return Literal::make_typed_from_value<datatypes::xsd::Double>(dist(rng), node_storage);
+    }
 
     Literal to_node_storage(NodeStorage &node_storage) const noexcept;
     [[nodiscard]] Literal try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
