@@ -90,4 +90,28 @@ bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writ
         return false;
     return true;
 }
+
+class PrefixDataBuilder {
+    template<size_t I>
+    static consteval auto build_line() {
+        using namespace datatypes::registry::util;
+        constexpr auto sh = iri_prefixes[I].shorthand;
+        constexpr auto pr = iri_prefixes[I].prefix;
+        return ConstexprString("@prefix ") + ConstexprString<sh.size()+1>(sh) + ConstexprString(": <") + ConstexprString<pr.size()+1>(pr) + ConstexprString("> .\n");
+    }
+
+    template<size_t... Idx>
+    static consteval auto build(std::index_sequence<Idx...>) {
+        return (build_line<Idx>() + ...);
+    }
+public:
+    static consteval std::string_view build() {
+        return datatypes::registry::util::ConstexprStringHolder<build(std::make_index_sequence<iri_prefixes.size()>())>::value;
+    }
+};
+
+bool write_prefix_data(void *buffer, Cursor &cursor, FlushFunc flush) {
+    static constexpr auto d = PrefixDataBuilder::build();
+    return write_str(d, buffer, &cursor, flush);
+}
 }  // namespace rdf4cpp::rdf::writer
