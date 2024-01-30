@@ -67,32 +67,40 @@ TEST_CASE("basic trig") {
 template<writer::OutputFormat F>
 std::string write_ext_data() {
     writer::StringWriter ser{};
-    writer::SerializationState st{};
-    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
-        FAIL("state failed");
-    Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("write failed");
+    {
+        writer::QuadSerializer<F> w(ser);
+        if (!w.good())
+            FAIL("state failed");
+        Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
+        w << q;
+        if (!w.good())
+            FAIL("write failed");
 
-    q.object() = Literal::make_typed_from_value<datatypes::xsd::Integer>(5);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("write failed");
+        q.object() = Literal::make_typed_from_value<datatypes::xsd::Integer>(5);
+        w << q;
+        if (!w.good())
+            FAIL("write failed");
 
-    q.object() = Literal::make_typed_from_value<datatypes::xsd::Double>(5.0);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("write failed");
+        q.object() = Literal::make_typed_from_value<datatypes::xsd::Double>(5.0);
+        w << q;
+        if (!w.good())
+            FAIL("write failed");
 
-    q.object() = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("write failed");
+        q.object() = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
+        w << q;
+        if (!w.good())
+            FAIL("write failed");
 
-    q.predicate() = IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("write failed");
+        q.predicate() = IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
+        w << q;
+        if (!w.good())
+            FAIL("write failed");
 
-    if (!writer::flush_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("flush failed");
+        w.flush();
+        if (!w.good())
+            FAIL("flush failed");
+    }
     return ser.finalize();
 }
 template<parser::ParsingFlag F>

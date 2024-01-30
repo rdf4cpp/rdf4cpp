@@ -136,5 +136,43 @@ bool serialize(const Quad &s, void *const buffer, Cursor &cursor, FlushFunc cons
 
 bool write_type_iri(datatypes::registry::LiteralType t, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush, bool short_form);
 
+template<OutputFormat F>
+class QuadSerializer {
+    void *const buffer;
+    Cursor &cursor;
+    FlushFunc const flush_;
+    SerializationState state = {};
+    bool ok_;
+
+public:
+    QuadSerializer(void *b, Cursor &c, FlushFunc f) : buffer(b), cursor(c), flush_(f) {
+        ok_ = write_prefix<F>(buffer, cursor, flush_);
+    }
+    template<BufWriter W>
+    explicit QuadSerializer(W &w) : QuadSerializer(&w.buffer(), w.cursor(), &W::flush) {
+    }
+    QuadSerializer(const QuadSerializer &) = delete;
+    QuadSerializer(QuadSerializer &&) noexcept = default;
+    QuadSerializer &operator=(const QuadSerializer &) = delete;
+    QuadSerializer &operator=(QuadSerializer &&) noexcept = default;
+
+    QuadSerializer &operator<<(const Quad &q) {
+        ok_ = serialize<F>(q, buffer, cursor, flush_, &state);
+        return *this;
+    }
+
+    [[nodiscard]] bool good() const noexcept {
+        return ok_;
+    }
+
+    QuadSerializer &flush() {
+        ok_ = flush_state<F>(buffer, cursor, flush_, &state);
+        return *this;
+    }
+
+    ~QuadSerializer() {
+        flush();
+    }
+};
 }  // namespace rdf4cpp::rdf::writer
 #endif  //RDF4CPP_SERIALIZATION_HPP
