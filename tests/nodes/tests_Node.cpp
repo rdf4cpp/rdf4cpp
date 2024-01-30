@@ -224,3 +224,16 @@ TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
     CHECK(T::find(t).backend_handle() == i.backend_handle());
     CHECK(T::find(get_find_values<T>::v) == T{});
 }
+
+TEST_CASE("node equality shortcut") {
+    auto s = storage::node::NodeStorage::new_instance();
+
+    CHECK(IRI::make("https://ex") == IRI::make("https://ex"));
+    CHECK(IRI::make("https://ex") != IRI::make("https://ex2"));
+    CHECK(IRI::make("https://ex") == IRI::make("https://ex", s));
+    CHECK(IRI::make("https://ex") != IRI::make("https://ex2", s));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) == Literal::make_typed_from_value<datatypes::xsd::UnsignedInt>(5));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) != Literal::make_typed_from_value<datatypes::xsd::Int>(6));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) == Literal::make_typed_from_value<datatypes::xsd::UnsignedInt>(5, s));
+    CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) != Literal::make_typed_from_value<datatypes::xsd::Int>(6, s));
+}

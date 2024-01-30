@@ -174,6 +174,9 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
 }
 
 bool Node::operator==(const Node &other) const noexcept {
+    if (!this->is_literal() && !other.is_literal() && this->backend_handle().node_storage_id() == other.backend_handle().node_storage_id()) {
+        return this->backend_handle() == other.backend_handle();
+    }
     return *this <=> other == std::strong_ordering::equivalent;
 }
 
