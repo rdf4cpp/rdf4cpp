@@ -80,7 +80,8 @@ TEST_SUITE("Serialize") {
                                     "<http://url.com/subj#4> <http://url.com#pred> _:123 .\n" // blank node
                                     "<http://url.com/subj#5> <http://url.com#pred> \"Spherical Cow\"@en .\n" // rdf:langString, inlined language
                                     "<http://url.com/subj#6> <http://url.com#pred> \"Spherical Cow\"@jk .\n" // rdf:langString, non-inlined language
-                                    "<http://url.com/subj#7> <http://url.com#pred> \"Spherical Cow\"^^<http://unknow-datatype.org#dt> .\n"; // unknown datatype
+                                    "<http://url.com/subj#7> <http://url.com#pred> \"Spherical Cow\"^^<http://unknow-datatype.org#dt> .\n" // unknown datatype
+                                    "<http://url.com_(test)#8> <http://url.com#pred> \"Test \\\"Quoted\\\" String\"@en .\n";
 
     static auto long_lit_triples = []() {
         std::string long_lit;
