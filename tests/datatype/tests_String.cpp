@@ -50,7 +50,7 @@ TEST_CASE("Datatype String") {
     value = "\n";
     auto lit6 = Literal::make_typed(value, type_iri);
     CHECK(lit6.value<datatypes::xsd::String>() == value);
-    CHECK_EQ(std::string{lit6}, "\"\\n\"");
+    CHECK_EQ(std::string{lit6}, R"("\n")");
 
     value = "\t";
     auto lit7 = Literal::make_typed(value, type_iri);
@@ -59,17 +59,17 @@ TEST_CASE("Datatype String") {
     value = "\r";
     auto lit8 = Literal::make_typed(value, type_iri);
     CHECK(lit8.value<datatypes::xsd::String>() == value);
-    CHECK_EQ(std::string{lit8}, "\"\\r\"");
+    CHECK_EQ(std::string{lit8}, R"("\r")");
 
     value = "\\";
     auto lit9 = Literal::make_typed(value, type_iri);
     CHECK(lit9.value<datatypes::xsd::String>() == value);
-    CHECK_EQ(std::string{lit9}, "\"\\\\\"");
+    CHECK_EQ(std::string{lit9}, R"("\\")");
 
     value = "\"";
     auto lit10 = Literal::make_typed(value, type_iri);
     CHECK(lit10.value<datatypes::xsd::String>() == value);
-    CHECK_EQ(std::string{lit10}, "\"\\\"\"");
+    CHECK_EQ(std::string{lit10}, R"("\"")");
 
     value = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\n Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
     auto lit11 = Literal::make_typed(value, type_iri);
@@ -89,7 +89,7 @@ TEST_CASE("Datatype String") {
 
     value = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa";
     auto lit15 = Literal::make_typed(value, type_iri);
-    CHECK_EQ(std::string{lit15}, "\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaa\"");
+    CHECK_EQ(std::string{lit15}, R"("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa")");
 
     CHECK(lit1 != lit2);
     CHECK(lit2 != lit3);
