@@ -78,14 +78,8 @@ bool Graph::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushF
                                                  Variable("o")));
 
     for (auto const &solution : solutions) {
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[0]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
-
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[1]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
-
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[2]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" .\n");
+        Quad q{solution[0], solution[1], solution[2]};
+        q.serialize_ntriples(buffer, cursor, flush);
     }
 
     return true;
