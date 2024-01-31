@@ -8,16 +8,16 @@ template<writer::OutputFormat F>
 std::string write_basic_data(){
     writer::StringWriter ser{};
     writer::SerializationState st{};
-    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+    if (!writer::write_prefix<F>(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
         FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!writer::serialize<F>(q, &ser.buffer(), &ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
     q.graph() = Node::make_null();
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!writer::serialize<F>(q, &ser.buffer(), &ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
-    if (!writer::flush_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!writer::flush_state<F>(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("flush failed");
     return ser.finalize();
 }
@@ -45,7 +45,7 @@ void check_basic_data(const std::string &i) {
 }
 
 TEST_CASE("basic ntriple") {
-    CHECK(write_basic_data<writer::OutputFormat::NTriples>() == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    CHECK_EQ(write_basic_data<writer::OutputFormat::NTriples>(), "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
     check_basic_data<false, parser::ParsingFlag::NTriples>(write_basic_data<writer::OutputFormat::NTriples>());
 }
 
@@ -55,7 +55,7 @@ TEST_CASE("basic nquad") {
 }
 
 TEST_CASE("basic turtle") {
-    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
+    CHECK_EQ(write_basic_data<writer::OutputFormat::Turtle>(), "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
     check_basic_data<false, parser::ParsingFlag::Turtle>(write_basic_data<writer::OutputFormat::Turtle>());
 }
 
