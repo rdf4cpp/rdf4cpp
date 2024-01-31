@@ -21,16 +21,16 @@ public:
     }
 };
 
-bool SerializationState::begin(void *buffer, Cursor &cursor, FlushFunc flush) {
+bool SerializationState::begin(void *buffer, Cursor *cursor, FlushFunc flush) {
     static constexpr auto d = PrefixDataBuilder::build();
-    return write_str(d, buffer, &cursor, flush);
+    return write_str(d, buffer, cursor, flush);
 }
-bool SerializationState::flush(void *buffer, Cursor &cursor, FlushFunc flush) {
+bool SerializationState::flush(void *buffer, Cursor *cursor, FlushFunc flush) {
     if (!active_predicate.null() || !active_subject.null())
-        if (!write_str(" .\n", buffer, &cursor, flush))
+        if (!write_str(" .\n", buffer, cursor, flush))
             return false;
     if (!active_graph.null())
-        if (!write_str("}\n", buffer, &cursor, flush))
+        if (!write_str("}\n", buffer, cursor, flush))
             return false;
     active_predicate = Node::make_null();
     active_subject = Node::make_null();

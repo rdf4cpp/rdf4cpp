@@ -21,7 +21,7 @@ std::string write_basic_data(){
     writer::StringWriter ser{};
     writer::SerializationState st{};
     if constexpr (writer::format_has_prefix<F>)
-        if (!writer::SerializationState::begin(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+        if (!writer::SerializationState::begin(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
             FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
@@ -31,7 +31,7 @@ std::string write_basic_data(){
     if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
     if constexpr (writer::format_has_prefix<F>)
-        if (!st.flush(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+        if (!st.flush(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
             FAIL("flush failed");
     return ser.finalize();
 }
@@ -83,7 +83,7 @@ std::string write_ext_data() {
     writer::StringWriter ser{};
     writer::SerializationState st{};
     if constexpr (writer::format_has_prefix<F>)
-        if (!writer::SerializationState::begin(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+        if (!writer::SerializationState::begin(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
             FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
     if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
@@ -107,7 +107,7 @@ std::string write_ext_data() {
         FAIL("write failed");
 
     if constexpr (writer::format_has_prefix<F>)
-        if (!st.flush(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+        if (!st.flush(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
             FAIL("flush failed");
     return ser.finalize();
 }

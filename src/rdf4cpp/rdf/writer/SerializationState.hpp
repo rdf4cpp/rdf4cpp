@@ -21,8 +21,8 @@ struct SerializationState {
     Node active_subject;
     Node active_predicate;
 
-    static bool begin(void *buffer, Cursor &cursor, FlushFunc flush);
-    bool flush(void *buffer, Cursor &cursor, FlushFunc flush);
+    static bool begin(void *buffer, Cursor *cursor, FlushFunc flush);
+    bool flush(void *buffer, Cursor *cursor, FlushFunc flush);
 };
 
 struct TypeIRIPrefix {

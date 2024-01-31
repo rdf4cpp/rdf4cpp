@@ -637,66 +637,35 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     return Literal::make_boolean(this->language_tag_eq(other), node_storage);
 }
 
-class TypeIRIBufferBuilder {
-    static consteval size_t get_size() {
-        size_t m = 0;
-        for (const auto &[name, id] : datatypes::registry::reserved_datatype_ids) {
-            if (id.to_underlying() > m)
-                m = id.to_underlying();
+static consteval typename decltype(writer::iri_prefixes)::const_iterator find_prefix(std::string_view name) {
+    return std::ranges::find_if(writer::iri_prefixes, [&](auto const &pre) {
+        return name.starts_with(pre.prefix);
+    });
+}
+
+template<size_t N, size_t Ix, size_t Len>
+static consteval std::array<std::string_view, N> make_type_iri_buf(std::array<std::string_view, N> ret = {}) {
+    using namespace datatypes::registry;
+    using namespace datatypes::registry::util;
+
+    if constexpr (Ix >= Len) {
+        return ret;
+    } else {
+        if constexpr (constexpr auto it = find_prefix(reserved_datatype_ids.storage[Ix].first); it != writer::iri_prefixes.end()) {
+            constexpr auto without_prefix = reserved_datatype_ids.storage[Ix].first.substr(it->prefix.size());
+
+            using concat = ConstexprStringHolder<ConstexprString<it->shorthand.size() + 1>{it->shorthand}
+                                                 + ConstexprString{":"}
+                                                 + ConstexprString<without_prefix.size() + 1>{without_prefix}>;
+
+            ret[static_cast<size_t>(reserved_datatype_ids.storage[Ix].second.to_underlying())] = concat::value;
         }
-        return m + 1;
-    }
 
-    static consteval size_t match_prefix(std::string_view name) {
-        for (size_t i = 0; i < writer::iri_prefixes.size(); ++i) {
-            auto c = writer::iri_prefixes[i];
-            if (name.starts_with(c.prefix)) {
-                return i;
-            }
-        }
-        return std::numeric_limits<size_t>::max();
+        return make_type_iri_buf<N, Ix + 1, Len>(ret);
     }
+}
 
-    template<size_t TypeID>
-    static consteval size_t find_type() {
-        for (size_t i = 0; i < datatypes::registry::reserved_datatype_ids.storage.size(); ++i) {
-            if (static_cast<size_t>(datatypes::registry::reserved_datatype_ids.storage[i].second.to_underlying()) == TypeID)
-                return i;
-        }
-        return std::numeric_limits<size_t>::max();
-    }
-
-    template<size_t TypeID>
-    static consteval std::string_view build_single_entry() {
-        constexpr size_t type_index = find_type<TypeID>();
-        if constexpr (type_index == std::numeric_limits<size_t>::max()) {
-            return "";
-        } else {
-            constexpr auto type_data = datatypes::registry::reserved_datatype_ids.storage[type_index];
-            constexpr auto prefix_index = match_prefix(type_data.first);
-            if constexpr (prefix_index == std::numeric_limits<size_t>::max()) {
-                return "";
-            } else {
-                using namespace datatypes::registry::util;
-                constexpr auto shorthand = writer::iri_prefixes[prefix_index].shorthand;
-                constexpr auto rel = type_data.first.substr(writer::iri_prefixes[prefix_index].prefix.size());
-                return ConstexprStringHolder<ConstexprString<shorthand.size() + 1>(shorthand) + ConstexprString(":") + ConstexprString<rel.size() + 1>(rel)>::value;
-            }
-        }
-    }
-
-    template<size_t... Idx>
-    static consteval auto build_buffer(std::index_sequence<Idx...>) {
-        return std::array{build_single_entry<Idx>()...};
-    }
-
-public:
-    static consteval auto build() {
-        return build_buffer(std::make_index_sequence<get_size()>());
-    }
-};
-
-static constexpr auto type_iri_buffer = TypeIRIBufferBuilder::build();
+static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::node::identifier::LiteralType::width, 0, datatypes::registry::reserved_datatype_ids.size()>();
 
 // check at compile time, if all datatype ids have a valid mapping. if not, at throws, which breaks the static_assert
 static consteval bool validate_iri_buffer() {
@@ -708,6 +677,7 @@ static consteval bool validate_iri_buffer() {
 }
 static_assert(validate_iri_buffer());
 
+// will only get called with fixed ids
 bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, bool short_form) {
     if (short_form) {
         auto &p = type_iri_buffer[t.to_underlying()];
