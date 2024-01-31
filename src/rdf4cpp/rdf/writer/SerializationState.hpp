@@ -15,14 +15,28 @@ enum class OutputFormat {
     NQuads,
     TriG
 };
+template<OutputFormat F>
+concept format_has_graph = (F == OutputFormat::NQuads || F == OutputFormat::TriG);
 
-class SerializationState {
-    Node active_graph, active_subject, active_predicate;
+template<OutputFormat F>
+concept format_has_prefix = (F == OutputFormat::Turtle || F == OutputFormat::TriG);
 
-    template<OutputFormat F>
-    friend bool flush_state(void *buffer, Cursor &cursor, FlushFunc flush, SerializationState *state);
-    template<OutputFormat F>
-    friend bool serialize(const Quad &s, void *buffer, Cursor &cursor, FlushFunc flush, SerializationState *state);
+struct SerializationState {
+    Node active_graph;
+    Node active_subject;
+    Node active_predicate;
+
+    static bool begin(void *buffer, Cursor &cursor, FlushFunc flush);
+    bool flush(void *buffer, Cursor &cursor, FlushFunc flush);
+};
+
+struct TypeIRIPrefix {
+    std::string_view prefix;
+    std::string_view shorthand;
+};
+static constexpr std::array iri_prefixes = {
+        TypeIRIPrefix{"http://www.w3.org/2001/XMLSchema#", "xsd"},
+        TypeIRIPrefix{"http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf"},
 };
 }  // namespace rdf4cpp::rdf::writer
 

@@ -12,7 +12,7 @@
 #include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
 #include <rdf4cpp/rdf/version.hpp>
 #include <rdf4cpp/rdf/IRIFactory.hpp>
-#include <rdf4cpp/rdf/writer/Serialization.hpp>
+#include <rdf4cpp/rdf/writer/SerializationState.hpp>
 
 
 /**

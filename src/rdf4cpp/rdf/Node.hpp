@@ -120,6 +120,16 @@ public:
     bool serialize(W &w) const noexcept {
         return serialize(&w.buffer(), &w.cursor(), &W::flush);
     }
+    /**
+     * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a> and <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
+     *
+     * @param w a serializer
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    template<writer::BufWriter W>
+    bool serialize_short_form(W &w) const noexcept {
+        return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
+    }
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

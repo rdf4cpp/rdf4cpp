@@ -5,20 +5,34 @@
 using namespace rdf4cpp::rdf;
 
 template<writer::OutputFormat F>
+bool serialize(const Quad& q, void *buffer, writer::Cursor &cursor, writer::FlushFunc flush, writer::SerializationState* state) {
+    if constexpr (F == writer::OutputFormat::NTriples)
+        return q.serialize_ntriples(buffer, &cursor, flush);
+    else if constexpr (F == writer::OutputFormat::NQuads)
+        return q.serialize_nquad(buffer, &cursor, flush);
+    else if constexpr (F == writer::OutputFormat::Turtle)
+        return q.serialize_turtle(*state, buffer, &cursor, flush);
+    else if constexpr (F == writer::OutputFormat::TriG)
+        return q.serialize_trig(*state, buffer, &cursor, flush);
+}
+
+template<writer::OutputFormat F>
 std::string write_basic_data(){
     writer::StringWriter ser{};
     writer::SerializationState st{};
-    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
-        FAIL("state failed");
+    if constexpr (writer::format_has_prefix<F>)
+        if (!writer::SerializationState::begin(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+            FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
     q.graph() = Node::make_null();
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
-    if (!writer::flush_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("flush failed");
+    if constexpr (writer::format_has_prefix<F>)
+        if (!st.flush(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+            FAIL("flush failed");
     return ser.finalize();
 }
 template<bool HasGraph, parser::ParsingFlag F>
@@ -68,31 +82,33 @@ template<writer::OutputFormat F>
 std::string write_ext_data() {
     writer::StringWriter ser{};
     writer::SerializationState st{};
-    if (!writer::write_prefix<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
-        FAIL("state failed");
+    if constexpr (writer::format_has_prefix<F>)
+        if (!writer::SerializationState::begin(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+            FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Integer>(5);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Double>(5.0);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
     q.object() = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
     q.predicate() = IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
-    if (!writer::serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
 
-    if (!writer::flush_state<F>(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
-        FAIL("flush failed");
+    if constexpr (writer::format_has_prefix<F>)
+        if (!st.flush(&ser.buffer(), ser.cursor(), &writer::StringWriter::flush))
+            FAIL("flush failed");
     return ser.finalize();
 }
 template<parser::ParsingFlag F>

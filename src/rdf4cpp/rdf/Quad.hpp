@@ -4,6 +4,9 @@
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
 
 namespace rdf4cpp::rdf {
+namespace writer {
+struct SerializationState;
+}
 /**
  * A Quad is an RDF statement which has an additional graph name.
  * Quads are typically used to identify a statement in a named Graph of a RDF Dataset. The Graph name can also be the default Graph.
@@ -64,6 +67,28 @@ public:
             else
                 *(it++) = item.to_node_storage(node_storage);
         return qu;
+    }
+
+    bool serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+    bool serialize_nquad(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+    bool serialize_turtle(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+    bool serialize_trig(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+
+    template<writer::BufWriter W>
+    bool serialize_ntriples(W &w) const noexcept {
+        return serialize_ntriples(&w.buffer(), &w.cursor(), &W::flush);
+    }
+    template<writer::BufWriter W>
+    bool serialize_nquad(W &w) const noexcept {
+        return serialize_nquad(&w.buffer(), &w.cursor(), &W::flush);
+    }
+    template<writer::BufWriter W>
+    bool serialize_turtle(writer::SerializationState& state, W &w) const noexcept {
+        return serialize_turtle(state, &w.buffer(), &w.cursor(), &W::flush);
+    }
+    template<writer::BufWriter W>
+    bool serialize_trig(writer::SerializationState& state, W &w) const noexcept {
+        return serialize_trig(state, &w.buffer(), &w.cursor(), &W::flush);
     }
 };
 }  // namespace rdf4cpp::rdf

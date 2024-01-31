@@ -797,6 +797,10 @@ public:
     bool serialize(W &w) const noexcept {
         return serialize(&w.buffer(), &w.cursor(), &W::flush);
     }
+    template<writer::BufWriter W>
+    bool serialize_short_form(W &w) const noexcept {
+        return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
+    }
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);
