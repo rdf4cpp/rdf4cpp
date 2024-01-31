@@ -37,7 +37,8 @@ bool serialize(const Quad &s, void *const buffer, writer::Cursor *cursor, writer
     auto write_predicate = [&](const Node &p) {
         if constexpr (writer::format_has_prefix<F>) {
             static constexpr auto rdf_type = datatypes::registry::reserved_datatype_ids[datatypes::registry::rdf_type];
-            if (p.is_iri() && iri_node_id_to_literal_type(p.backend_handle().node_id()) == rdf_type)
+            assert(p.is_iri());
+            if (iri_node_id_to_literal_type(p.backend_handle().node_id()) == rdf_type)
                 return write_str("a", buffer, cursor, flush);
         }
         return write_node<F>(p, buffer, cursor, flush);

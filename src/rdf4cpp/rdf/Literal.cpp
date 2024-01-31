@@ -678,7 +678,8 @@ static consteval bool validate_iri_buffer() {
 static_assert(validate_iri_buffer());
 
 // will only get called with fixed ids
-bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, bool short_form) {
+template<bool short_form>
+bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) {
     if (short_form) {
         auto &p = type_iri_buffer[t.to_underlying()];
         if (!p.empty()) {
@@ -725,7 +726,8 @@ bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writ
     }                                                  \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush, bool short_form) const noexcept {
+template<bool short_form>
+bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
@@ -779,7 +781,7 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-        return write_type_iri(this->backend_handle().node_id().literal_type(), buffer, cursor, flush, short_form);
+        return write_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
@@ -816,12 +818,19 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-                    return write_type_iri(this->backend_handle().node_id().literal_type(), buffer, cursor, flush, short_form);
+                    return write_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
                 });
     }
 }
 
 #undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
+
+bool Literal::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+    return serialize<false>(buffer,cursor, flush);
+}
+bool Literal::serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+    return serialize<true>(buffer,cursor, flush);
+}
 
 Literal::operator std::string() const noexcept {
     writer::StringWriter ser;
