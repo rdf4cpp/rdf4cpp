@@ -2,14 +2,9 @@
 #define RDF4CPP_SERIALIZATIONSTATE_HPP
 
 #include <rdf4cpp/rdf/Node.hpp>
-#include <rdf4cpp/rdf/writer/BufWriter.hpp>
-#include <rdf4cpp/rdf/Node.hpp>
-#include <rdf4cpp/rdf/Quad.hpp>
-#include <string>
-#include <vector>
 
 namespace rdf4cpp::rdf::writer {
-enum class OutputFormat {
+enum struct OutputFormat {
     NTriples,
     Turtle,
     NQuads,
