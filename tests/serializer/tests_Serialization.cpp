@@ -26,7 +26,7 @@ std::string write_basic_data(){
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
-    q.graph() = Node::make_null();
+    q.graph() = IRI::make("http://ex/graph2");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
     if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
         FAIL("write failed");
@@ -35,6 +35,24 @@ std::string write_basic_data(){
             FAIL("flush failed");
     return ser.finalize();
 }
+Graph get_graph() {
+    Graph gd{};
+    Statement q{IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
+    gd.add(q);
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+    gd.add(q);
+    return gd;
+}
+Dataset get_dataset() {
+    Dataset gd{};
+    Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
+    gd.add(q);
+    q.graph() = IRI::make("http://ex/graph2");
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+    gd.add(q);
+    return gd;
+}
+
 template<bool HasGraph, parser::ParsingFlag F>
 void check_basic_data(const std::string &i) {
     using namespace parser;
@@ -53,29 +71,52 @@ void check_basic_data(const std::string &i) {
     CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
     CHECK(qit->value().predicate() == IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
     CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Int>(5));
-    CHECK(qit->value().graph() == IRI::make(""));
+    if constexpr (HasGraph)
+        CHECK(qit->value().graph() == IRI::make("http://ex/graph2"));
+    else
+        CHECK(qit->value().graph() == IRI::make(""));
     ++qit;
     CHECK(qit == std::default_sentinel);
 }
 
 TEST_CASE("basic ntriple") {
-    CHECK(write_basic_data<writer::OutputFormat::NTriples>() == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
-    check_basic_data<false, parser::ParsingFlag::NTriples>(write_basic_data<writer::OutputFormat::NTriples>());
+    const std::string  d = write_basic_data<writer::OutputFormat::NTriples>();
+    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    writer::StringWriter ser{};
+    if (!get_graph().serialize(ser))
+        FAIL("write failed");
+    CHECK(ser.finalize() == d);
+    check_basic_data<false, parser::ParsingFlag::NTriples>(d);
 }
 
 TEST_CASE("basic nquad") {
-    CHECK(write_basic_data<writer::OutputFormat::NQuads>() == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
-    check_basic_data<true, parser::ParsingFlag::NQuads>(write_basic_data<writer::OutputFormat::NQuads>());
+    const std::string d = write_basic_data<writer::OutputFormat::NQuads>();
+    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> <http://ex/graph2> .\n");
+    writer::StringWriter ser{};
+    if (!get_dataset().serialize(ser))
+        FAIL("write failed");
+    CHECK(ser.finalize() == d);
+    check_basic_data<true, parser::ParsingFlag::NQuads>(d);
 }
 
 TEST_CASE("basic turtle") {
-    CHECK(write_basic_data<writer::OutputFormat::Turtle>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
-    check_basic_data<false, parser::ParsingFlag::Turtle>(write_basic_data<writer::OutputFormat::Turtle>());
+    const std::string d = write_basic_data<writer::OutputFormat::Turtle>();
+    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
+    writer::StringWriter ser{};
+    if (!get_graph().serialize_turtle(ser))
+        FAIL("write failed");
+    CHECK(ser.finalize() == d);
+    check_basic_data<false, parser::ParsingFlag::Turtle>(d);
 }
 
 TEST_CASE("basic trig") {
-    CHECK(write_basic_data<writer::OutputFormat::TriG>() == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/sub> a \"5\"^^xsd:int .\n");
-    check_basic_data<true, parser::ParsingFlag::TriG>(write_basic_data<writer::OutputFormat::TriG>());
+    const std::string d = write_basic_data<writer::OutputFormat::TriG>();
+    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/graph2> {\n<http://ex/sub> a \"5\"^^xsd:int .\n}\n");
+    writer::StringWriter ser{};
+    if (!get_dataset().serialize_trig(ser))
+        FAIL("write failed");
+    CHECK(ser.finalize() == d);
+    check_basic_data<true, parser::ParsingFlag::TriG>(d);
 }
 
 template<writer::OutputFormat F>

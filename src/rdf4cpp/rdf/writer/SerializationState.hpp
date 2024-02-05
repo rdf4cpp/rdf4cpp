@@ -23,6 +23,15 @@ struct SerializationState {
 
     static bool begin(void *buffer, Cursor *cursor, FlushFunc flush);
     bool flush(void *buffer, Cursor *cursor, FlushFunc flush);
+
+    template<writer::BufWriter W>
+    static bool begin(W &w) noexcept {
+        return begin(&w.buffer(), &w.cursor(), &W::flush);
+    }
+    template<writer::BufWriter W>
+    bool flush(W &w) noexcept {
+        return flush(&w.buffer(), &w.cursor(), &W::flush);
+    }
 };
 
 struct TypeIRIPrefix {
