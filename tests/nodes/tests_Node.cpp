@@ -1,4 +1,4 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 
 #include <charconv>
 #include <set>
@@ -6,8 +6,20 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 using namespace rdf4cpp::rdf;
+using namespace rdf4cpp::rdf::storage::node;
+
+int main(int argc, char **argv) {
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+}
+
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
