@@ -35,14 +35,12 @@ bool UnsyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::
 }
 
 /**
- * Synchronized lookup (and creation) of IDs by a provided view of a Node Backend.
- * @tparam Backend_t the Backend type. One of BNodeBackend, IRIBackend, FallbackLiteralBackend or VariableBackend
+ * Unsynchronized lookup (and creation) of IDs by a provided view of a Node Backend.
  * @tparam create_if_not_present enables code for creating non-existing Node Backends
- * @tparam NextIDFromView_func type of a function to generate the next ID which is assigned in case a new Node Backend is created
  * @param view contains the data of the requested Node Backend
  * @param storage the storage where the Node Backend is looked up
  * @param next_id_func function to generate the next ID which is assigned in case a new Node Backend is created
- * @return the NodeID for the looked up Node Backend. Result is null() if there was no matching Node Backend.
+ * @return the NodeID for the looked up Node Backend. Result is the null-id if there was no matching Node Backend.
  */
 template<bool create_if_not_present, typename Storage, typename NextIDFunc = void *>
     requires (!create_if_not_present || std::is_nothrow_invocable_r_v<identifier::NodeID, NextIDFunc>)
