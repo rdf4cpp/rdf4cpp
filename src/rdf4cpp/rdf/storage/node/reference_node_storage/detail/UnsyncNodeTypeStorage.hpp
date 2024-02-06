@@ -10,7 +10,8 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 /**
- * Storage for one of the Node Backend types. Includes a shared mutex to synchronize access and bidirectional mappings between the Backend type and identifier::NodeID.
+ * Storage for one of the Node Backend types. Includes bidirectional mappings between the Backend type and identifier::NodeID,
+ * the mappings are not synchronized and are not intended to be thread-safe.
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
  */
 template<typename BackendType_t>
