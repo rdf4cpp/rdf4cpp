@@ -1,16 +1,16 @@
-#ifndef RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
-#define RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
+#ifndef RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP
+#define RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP
 
 #include <atomic>
 #include <tuple>
 
 #include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/NodeTypeStorage.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/SpecializedLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/SyncNodeTypeStorage.hpp>
 
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
@@ -18,39 +18,39 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 /**
  * Thread-safe reference implementation of a INodeStorageBackend.
  */
-class ReferenceNodeStorageBackend : public INodeStorageBackend {
+class SyncReferenceNodeStorageBackend : public INodeStorageBackend {
 public:
     using NodeID = identifier::NodeID;
     using LiteralID = identifier::LiteralID;
 
 private:
-    NodeTypeStorage<BNodeBackend> bnode_storage_;
-    NodeTypeStorage<IRIBackend> iri_storage_;
-    NodeTypeStorage<VariableBackend> variable_storage_;
+    SyncNodeTypeStorage<BNodeBackend> bnode_storage_;
+    SyncNodeTypeStorage<IRIBackend> iri_storage_;
+    SyncNodeTypeStorage<VariableBackend> variable_storage_;
 
-    NodeTypeStorage<FallbackLiteralBackend> fallback_literal_storage_;
+    SyncNodeTypeStorage<FallbackLiteralBackend> fallback_literal_storage_;
 
-    std::tuple<NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Integer>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonNegativeInteger>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::PositiveInteger>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonPositiveInteger>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NegativeInteger>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Long>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::UnsignedLong>>,
+    std::tuple<SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Integer>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonNegativeInteger>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::PositiveInteger>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NonPositiveInteger>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::NegativeInteger>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Long>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::UnsignedLong>>,
 
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Decimal>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Double>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Decimal>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Double>>,
 
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Base64Binary>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::HexBinary>>,
 
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Date>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTime>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTimeStamp>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::GYearMonth>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Duration>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DayTimeDuration>>,
-               NodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Date>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTime>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DateTimeStamp>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::GYearMonth>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::Duration>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DayTimeDuration>>,
+               SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
     std::atomic<uint64_t> next_fallback_literal_id_{NodeID::min_literal_id.value};
     std::array<std::atomic<uint64_t>, std::tuple_size_v<decltype(specialized_literal_storage_)>> next_specialized_literal_ids_;
@@ -59,19 +59,8 @@ private:
     std::atomic<uint64_t> next_iri_id_{NodeID::min_iri_id.value()};
     std::atomic<uint64_t> next_variable_id_{NodeID::min_variable_id.value()};
 
-    /**
-     * Calls the given function f with the specialized object for the given datatype
-     *
-     * @param container any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
-     * @param datatype the datatype of the specialized object
-     * @param f the function to call with the corresponding specialized object
-     * @return whatever f returns
-     */
-    template<typename S, typename F>
-    static decltype(auto) visit_specialized(S &&container, identifier::LiteralType datatype, F f);
-
 public:
-    ReferenceNodeStorageBackend() noexcept;
+    SyncReferenceNodeStorageBackend() noexcept;
 
     [[nodiscard]] size_t size() const noexcept override;
 
@@ -99,4 +88,4 @@ public:
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
-#endif  //RDF4CPP_REFERENCENODESTORAGEBACKEND_HPP
+#endif  //RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP

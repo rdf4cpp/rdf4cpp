@@ -1,7 +1,9 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 #include <array>
 #include <iostream>
@@ -9,6 +11,14 @@
 using namespace rdf4cpp::rdf;
 using namespace storage::node;
 using namespace datatypes;
+
+int main(int argc, char **argv) {
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+}
 
 template<typename It>
 void print_handles(It begin, It const end) {

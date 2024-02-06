@@ -174,8 +174,8 @@ public:
     }
 
     /**
-     * Create a new instance of reference_node_storage::ReferenceNodeStorageBackend.
-     * @return NodeStorage backed by reference_node_storage::ReferenceNodeStorageBackend
+     * Create a new instance of reference_node_storage::SyncReferenceNodeStorageBackend.
+     * @return NodeStorage backed by reference_node_storage::SyncReferenceNodeStorageBackend
      */
     static NodeStorage new_instance();
 

@@ -2,8 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 #include <atomic>
 #include <shared_mutex>
@@ -16,7 +15,7 @@ using namespace rdf4cpp::rdf;
 using namespace rdf4cpp::rdf::storage::node;
 using namespace std::chrono_literals;
 
-struct SlowDestructingBackend : reference_node_storage::ReferenceNodeStorageBackend {
+struct SlowDestructingBackend : reference_node_storage::SyncReferenceNodeStorageBackend {
     std::mutex m;
 
     ~SlowDestructingBackend() override {
@@ -210,7 +209,7 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
 
             {
                 auto t1 = std::jthread([&]() {
-                    auto backend = new reference_node_storage::ReferenceNodeStorageBackend{};
+                    auto backend = new reference_node_storage::SyncReferenceNodeStorageBackend{};
 
                     while (!run.load(std::memory_order_acquire)) {} // spin until told not to
 
@@ -220,7 +219,7 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
                 });
 
                 auto t2 = std::jthread([&]() {
-                    auto backend = new reference_node_storage::ReferenceNodeStorageBackend{};
+                    auto backend = new reference_node_storage::SyncReferenceNodeStorageBackend{};
 
                     while (!run.load(std::memory_order_acquire)) {} // spin until told not to
 
