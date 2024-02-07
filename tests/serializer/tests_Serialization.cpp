@@ -4,12 +4,26 @@
 
 using namespace rdf4cpp::rdf;
 
+TEST_CASE("Literal short type") {
+    writer::StringWriter ser{};
+    Literal::make_typed<datatypes::xsd::Date>("2042-5-4").serialize_short_form(ser);
+    writer::write_str("\n", ser);
+    Literal::make_typed<datatypes::xsd::Boolean>("true").serialize_short_form(ser);
+    writer::write_str("\n", ser);
+    Literal::make_typed<datatypes::xsd::Float>("4").serialize_short_form(ser);
+    writer::write_str("\n", ser);
+    Literal::make_typed<datatypes::xsd::UnsignedByte>("4").serialize_short_form(ser);
+    writer::write_str("\n", ser);
+    Literal::make_typed<datatypes::xsd::Integer>("4").serialize_short_form(ser);
+    CHECK(ser.finalize()=="\"2042-05-04\"^^xsd:date\ntrue\n\"4.0E0\"^^xsd:float\n\"4\"^^xsd:unsignedByte\n4");
+}
+
 template<writer::OutputFormat F>
 bool serialize(const Quad& q, void *buffer, writer::Cursor &cursor, writer::FlushFunc flush, writer::SerializationState* state) {
     if constexpr (F == writer::OutputFormat::NTriples)
         return q.serialize_ntriples(buffer, &cursor, flush);
     else if constexpr (F == writer::OutputFormat::NQuads)
-        return q.serialize_nquad(buffer, &cursor, flush);
+        return q.serialize_nquads(buffer, &cursor, flush);
     else if constexpr (F == writer::OutputFormat::Turtle)
         return q.serialize_turtle(*state, buffer, &cursor, flush);
     else if constexpr (F == writer::OutputFormat::TriG)

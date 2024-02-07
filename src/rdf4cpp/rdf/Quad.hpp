@@ -70,7 +70,7 @@ public:
     }
 
     bool serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
-    bool serialize_nquad(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+    bool serialize_nquads(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
     bool serialize_turtle(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
     bool serialize_trig(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
 
@@ -79,8 +79,8 @@ public:
         return serialize_ntriples(&w.buffer(), &w.cursor(), &W::flush);
     }
     template<writer::BufWriter W>
-    bool serialize_nquad(W &w) const noexcept {
-        return serialize_nquad(&w.buffer(), &w.cursor(), &W::flush);
+    bool serialize_nquads(W &w) const noexcept {
+        return serialize_nquads(&w.buffer(), &w.cursor(), &W::flush);
     }
     template<writer::BufWriter W>
     bool serialize_turtle(writer::SerializationState& state, W &w) const noexcept {

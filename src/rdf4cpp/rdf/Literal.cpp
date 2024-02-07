@@ -663,19 +663,10 @@ static consteval std::array<std::string_view, N> make_type_iri_buf(std::array<st
 
 static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::node::identifier::LiteralType::width, 0, datatypes::registry::reserved_datatype_ids.size()>();
 
-// check at compile time, if all datatype ids have a valid mapping. if not, at throws, which breaks the static_assert
-static consteval bool validate_iri_buffer() {
-    for (const auto &d : datatypes::registry::reserved_datatype_ids) {
-        if (type_iri_buffer.at(d.second.to_underlying()).size() == 1)  // also check, if something is just :
-            return false;
-    }
-    return true;
-}
-static_assert(validate_iri_buffer());
-
 // will only get called with fixed ids
 template<bool short_form>
 bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) {
+    assert(t.is_fixed());
     if (short_form) {
         auto &p = type_iri_buffer[t.to_underlying()];
         if (!p.empty()) {

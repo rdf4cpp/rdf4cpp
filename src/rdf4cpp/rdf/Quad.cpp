@@ -115,7 +115,7 @@ bool serialize(const Quad &s, void *const buffer, writer::Cursor *cursor, writer
 bool Quad::serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const {
     return serialize<writer::OutputFormat::NTriples>(*this, buffer, cursor, flush, nullptr);
 }
-bool Quad::serialize_nquad(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const {
+bool Quad::serialize_nquads(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const {
     return serialize<writer::OutputFormat::NQuads>(*this, buffer, cursor, flush, nullptr);
 }
 bool Quad::serialize_turtle(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const {

@@ -46,7 +46,7 @@ const Dataset::DatasetStorage &Dataset::backend() const {
 }
 bool Dataset::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     for (Quad const &quad : *this) {
-        if (!quad.serialize_nquad(buffer, cursor, flush))
+        if (!quad.serialize_nquads(buffer, cursor, flush))
             return false;
     }
 
