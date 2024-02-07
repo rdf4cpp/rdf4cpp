@@ -1,22 +1,21 @@
-#ifndef RDF4CPP_NODETYPESTORAGE_HPP
-#define RDF4CPP_NODETYPESTORAGE_HPP
+#ifndef RDF4CPP_UNSYNCNODETYPESTORAGE_HPP
+#define RDF4CPP_UNSYNCNODETYPESTORAGE_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 
 #include <memory>
-#include <shared_mutex>
-
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 /**
- * Storage for one of the Node Backend types. Includes a shared mutex to synchronize access and bidirectional mappings between the Backend type and identifier::NodeID.
+ * Storage for one of the Node Backend types. Includes bidirectional mappings between the Backend type and identifier::NodeID,
+ * the mappings are not synchronized and are not intended to be thread-safe.
  * @tparam BackendType_t one of BNodeBackend, IRIBackend, FallbackLiteralBackend, SpecializedLiteralBackend and VariableBackend.
  */
-template<class BackendType_t>
-struct NodeTypeStorage {
+template<typename BackendType_t>
+struct UnsyncNodeTypeStorage {
     using Backend = BackendType_t;
     using BackendView = typename Backend::View;
 private:
@@ -76,11 +75,10 @@ public:
         }
     };
 
-    std::shared_mutex mutable mutex;
     dice::sparse_map::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
     dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendHash, BackendEqual> data2id;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
 
-#endif  //RDF4CPP_NODETYPESTORAGE_HPP
+#endif  //RDF4CPP_UNSYNCNODETYPESTORAGE_HPP

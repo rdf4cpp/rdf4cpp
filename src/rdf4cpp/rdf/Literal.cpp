@@ -38,26 +38,27 @@ static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_fo
 #include <immintrin.h>
 
 namespace rdf4cpp::rdf {
-bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
+bool Literal::lexical_form_needs_escape(std::string_view lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     __m256i const masks[4]{_mm256_set1_epi8('"'),
                            _mm256_set1_epi8('\\'),
                            _mm256_set1_epi8('\n'),
                            _mm256_set1_epi8('\r')};
 
-    for (size_t bix = 0; bix < lexical_form.size() / 32; ++bix) {
-        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data() + (bix * 32)));
+    while (lexical_form.size() >= 32) {
+        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data()));
         for (auto const &mask : masks) {
             auto const eq = _mm256_cmpeq_epi8(mask, chars);
 
-            if (_mm256_movemask_epi8(eq) > 0) {
+            if (_mm256_movemask_epi8(eq) != 0) {
                 return true;
             }
         }
+
+        lexical_form.remove_prefix(32);
     }
 
-    auto const rest = lexical_form.size() % 32;
-    return lexical_form_needs_escape_non_simd(lexical_form.substr(lexical_form.size() - rest));
+    return lexical_form_needs_escape_non_simd(lexical_form);
 }
 } // rdf4cpp::rdf
 #else
@@ -262,13 +263,8 @@ Literal Literal::make_string_uuid(Node::NodeStorage &node_storage) {
 }
 
 Literal Literal::generate_random_double(Node::NodeStorage &node_storage) {
-    struct RngState {
-        std::default_random_engine rng{std::random_device{}()};
-        std::uniform_real_distribution<datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
-    };
-
-    static thread_local RngState state;
-    return Literal::make_typed_from_value<datatypes::xsd::Double>(state.dist(state.rng), node_storage);
+    static thread_local std::default_random_engine rng{std::random_device{}()};
+    return Literal::generate_random_double(rng, node_storage);
 }
 
 Literal Literal::to_node_storage(NodeStorage &node_storage) const noexcept {

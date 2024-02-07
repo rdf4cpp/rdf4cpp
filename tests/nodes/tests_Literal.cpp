@@ -1,11 +1,22 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 #include <thread>
 
 using namespace rdf4cpp::rdf;
+using namespace rdf4cpp::rdf::storage::node;
+
+int main(int argc, char **argv) {
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+
+    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
+    doctest::Context{argc, argv}.run();
+}
 
 TEST_CASE("Literal - Check for only lexical form") {
 
@@ -499,6 +510,19 @@ TEST_CASE("Literal - misc functions") {
             t.join();
 
             CHECK_NE(l1, l2);  // note: non-deterministic but should basically never fail
+        }
+
+        SUBCASE("provided rng determinism") {
+            std::vector<Literal> lits;
+            for (size_t ix = 0; ix < 100; ++ix) {
+                std::default_random_engine rng{};
+                lits.push_back(Literal::generate_random_double(rng));
+            }
+
+            auto first = lits[0];
+            for (size_t ix = 1; ix < lits.size(); ++ix) {
+                CHECK_EQ(first, lits[ix]);
+            }
         }
     }
 

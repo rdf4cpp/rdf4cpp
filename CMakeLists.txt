@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(rdf4cpp VERSION 0.0.24)
+project(rdf4cpp VERSION 0.0.25)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -198,7 +198,8 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/regex/RegexReplacer.cpp
         src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
         src/rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.cpp
-        src/rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
         src/rdf4cpp/rdf/storage/node/view/BNodeBackendView.cpp
         src/rdf4cpp/rdf/storage/node/view/IRIBackendView.cpp
         src/rdf4cpp/rdf/storage/node/view/LiteralBackendView.cpp

@@ -1,6 +1,5 @@
-#include "NodeStorage.hpp"
-
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/ReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 namespace rdf4cpp::rdf::storage::node {
 
@@ -60,7 +59,7 @@ void NodeStorage::set_default_instance(NodeStorage const &node_context) {
 }
 
 NodeStorage NodeStorage::new_instance() {
-    return register_backend(new reference_node_storage::ReferenceNodeStorageBackend());
+    return register_backend(new reference_node_storage::SyncReferenceNodeStorageBackend());
 }
 
 NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
