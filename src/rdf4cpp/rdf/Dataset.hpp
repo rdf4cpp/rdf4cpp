@@ -62,6 +62,10 @@ public:
      * See Node::serialize for usage details
      */
     bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    /**
+     * See Node::serialize for usage details
+     */
+    bool serialize_trig(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
@@ -72,6 +76,16 @@ public:
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {
         return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+    /**
+     * Serialize this dataset as <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
+     *
+     * @param w a serializer
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    template<writer::BufWriter W>
+    bool serialize_trig(W &w) const noexcept {
+        return serialize_trig(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dataset const &self);

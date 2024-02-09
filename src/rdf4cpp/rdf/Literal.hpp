@@ -796,14 +796,26 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
+private:
+    template<bool short_form>
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+public:
     /**
      * See Node::serialize
      */
     bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    /**
+     * See Node::serialize_short_form
+     */
+    bool serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     template<writer::BufWriter W>
     bool serialize(W &w) const noexcept {
         return serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+    template<writer::BufWriter W>
+    bool serialize_short_form(W &w) const noexcept {
+        return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     [[nodiscard]] explicit operator std::string() const noexcept;

@@ -1,6 +1,7 @@
 #include "Graph.hpp"
 #include <rdf4cpp/rdf/Dataset.hpp>
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
+#include <rdf4cpp/rdf/writer/SerializationState.hpp>
 
 #include <utility>
 
@@ -78,15 +79,35 @@ bool Graph::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushF
                                                  Variable("o")));
 
     for (auto const &solution : solutions) {
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[0]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
-
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[1]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
-
-        RDF4CPP_DETAIL_TRY_SERIALIZE(solution[2]);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(" .\n");
+        Quad q{solution[0], solution[1], solution[2]};
+        if (!q.serialize_ntriples(buffer, cursor, flush))
+            return false;
     }
+
+    return true;
+}
+bool Graph::serialize_turtle(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    using namespace query;
+
+    // TODO this is a very inefficient way to do this
+    // But we would need to rewrite graph and friends to make it less inefficient
+    auto solutions = backend().match(QuadPattern(name(),
+                                                 Variable("s"),
+                                                 Variable("p"),
+                                                 Variable("o")));
+
+    writer::SerializationState state{};
+    if (!writer::SerializationState::begin(buffer, cursor, flush))
+        return false;
+
+    for (auto const &solution : solutions) {
+        Quad q{solution[0], solution[1], solution[2]};
+        if (!q.serialize_turtle(state, buffer, cursor, flush))
+            return false;
+    }
+
+    if (!state.flush(buffer, cursor, flush))
+        return false;
 
     return true;
 }

@@ -13,6 +13,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
 using storage::node::identifier::LiteralType;
 
 inline constexpr util::ConstexprString default_graph_iri{""};
+inline constexpr util::ConstexprString rdf_type{"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"};
 inline constexpr util::ConstexprString xsd_string{"http://www.w3.org/2001/XMLSchema#string"};
 inline constexpr util::ConstexprString rdf_lang_string{"http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"};
 inline constexpr util::ConstexprString xsd_boolean{"http://www.w3.org/2001/XMLSchema#boolean"};
@@ -57,6 +58,8 @@ using ReservedDatatypeIdEntry = std::pair<std::string_view, LiteralType>;
 /**
  * All datatypes that have their own LiteralTypes in the node storage and their own fixed id
  * in the registry are listed here.
+ *
+ * TODO fix issue https://github.com/rdf4cpp/rdf4cpp/issues/243
  */
 inline constexpr util::StaticFlatMap reserved_datatype_ids{
         // ReservedDatatypeIdEntry{reserved for dynamic types, LiteralType::from_parts(false, 0)},
@@ -79,6 +82,8 @@ inline constexpr util::StaticFlatMap reserved_datatype_ids{
         ReservedDatatypeIdEntry{xsd_duration,           LiteralType::from_parts(false, 16)},
         ReservedDatatypeIdEntry{xsd_dayTimeDuration,    LiteralType::from_parts(false, 17)},
         ReservedDatatypeIdEntry{xsd_yearMonthDuration,  LiteralType::from_parts(false, 18)},
+
+        ReservedDatatypeIdEntry{rdf_type,  LiteralType::from_parts(false, 19)},
 
         ReservedDatatypeIdEntry{xsd_float,   LiteralType::from_parts(true, 0)},
         ReservedDatatypeIdEntry{xsd_double,  LiteralType::from_parts(true, 1)},

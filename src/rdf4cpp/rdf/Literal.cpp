@@ -5,6 +5,7 @@
 #include <random>
 #include <ranges>
 #include <sstream>
+#include <array>
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -18,6 +19,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/util/CaseInsensitiveCharTraits.hpp>
+#include <rdf4cpp/rdf/writer/SerializationState.hpp>
 
 #include <openssl/evp.h>
 
@@ -631,6 +633,57 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     return Literal::make_boolean(this->language_tag_eq(other), node_storage);
 }
 
+static consteval typename decltype(writer::iri_prefixes)::const_iterator find_prefix(std::string_view name) {
+    return std::ranges::find_if(writer::iri_prefixes, [&](auto const &pre) {
+        return name.starts_with(pre.prefix);
+    });
+}
+
+template<size_t N, size_t Ix, size_t Len>
+static consteval std::array<std::string_view, N> make_type_iri_buf(std::array<std::string_view, N> ret = {}) {
+    using namespace datatypes::registry;
+    using namespace datatypes::registry::util;
+
+    if constexpr (Ix >= Len) {
+        return ret;
+    } else {
+        if constexpr (constexpr auto it = find_prefix(reserved_datatype_ids.storage[Ix].first); it != writer::iri_prefixes.end()) {
+            constexpr auto without_prefix = reserved_datatype_ids.storage[Ix].first.substr(it->prefix.size());
+
+            using concat = ConstexprStringHolder<ConstexprString<it->shorthand.size() + 1>{it->shorthand}
+                                                 + ConstexprString{":"}
+                                                 + ConstexprString<without_prefix.size() + 1>{without_prefix}>;
+
+            ret[static_cast<size_t>(reserved_datatype_ids.storage[Ix].second.to_underlying())] = concat::value;
+        }
+
+        return make_type_iri_buf<N, Ix + 1, Len>(ret);
+    }
+}
+
+static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::node::identifier::LiteralType::width, 0, datatypes::registry::reserved_datatype_ids.size()>();
+
+// will only get called with fixed ids
+template<bool short_form>
+bool write_type_iri(datatypes::registry::LiteralType t, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) {
+    assert(t.is_fixed());
+    if (short_form) {
+        auto &p = type_iri_buffer[t.to_underlying()];
+        if (!p.empty()) {
+            if (!write_str(p, buffer, cursor, flush))
+                return false;
+            return true;
+        }
+    }
+    if (!write_str("<", buffer, cursor, flush))
+        return false;
+    if (!write_str(datatypes::registry::DatatypeRegistry::get_entry(t)->datatype_iri, buffer, cursor, flush))
+        return false;
+    if (!write_str(">", buffer, cursor, flush))
+        return false;
+    return true;
+}
+
 // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
 #define RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL(lexical) \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");                \
@@ -660,6 +713,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     }                                                  \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
+template<bool short_form>
 bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
@@ -692,6 +746,12 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
         RDF4CPP_DETAIL_TRY_WRITE_STR("@");
         RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
         return true;
+    } else if (short_form && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
+            || this->datatype_eq<datatypes::xsd::Decimal>() || this->datatype_eq<datatypes::xsd::Boolean>())) {
+        auto s = lexical_form();
+        if (!writer::write_str(s.view(), buffer, cursor, flush))
+            return false;
+        return true;
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
         // Notes:
@@ -704,14 +764,11 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
 
         auto const inlined_value = this->backend_handle().node_id().literal_id();
         auto const lexical_form = entry->to_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value));
-        auto const &datatype_iri = entry->datatype_iri;
 
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
         RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
-        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
-        RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
-        RDF4CPP_DETAIL_TRY_WRITE_STR(">");
-        return true;
+        RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
+        return write_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
@@ -744,19 +801,23 @@ bool Literal::serialize(void *const buffer, writer::Cursor *cursor, writer::Flus
                     assert(entry != nullptr);
 
                     auto const lexical_form = entry->to_canonical_string_fptr(value_backend.value);
-                    auto const &datatype_iri = entry->datatype_iri;
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
                     RDF4CPP_DETAIL_TRY_WRITE_STR(lexical_form);
-                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^<");
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(datatype_iri);
-                    RDF4CPP_DETAIL_TRY_WRITE_STR(">");
-                    return true;
+                    RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
+                    return write_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
                 });
     }
 }
 
 #undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
+
+bool Literal::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+    return serialize<false>(buffer,cursor, flush);
+}
+bool Literal::serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+    return serialize<true>(buffer,cursor, flush);
+}
 
 Literal::operator std::string() const noexcept {
     writer::StringWriter ser;

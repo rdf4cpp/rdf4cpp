@@ -77,6 +77,26 @@ bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFu
         }
     }
 }
+bool Node::serialize_short_form(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+    switch (handle_.type()) {
+        [[likely]] case RDFNodeType::IRI: {
+            return IRI{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Variable: {
+            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::BNode: {
+            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+        }
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.serialize_short_form(buffer, cursor, flush);
+        }
+        default: {
+            assert(false);
+            __builtin_unreachable();
+        }
+    }
+}
 
 Node::operator std::string() const noexcept {
     switch (handle_.type()) {
@@ -154,6 +174,10 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
 }
 
 bool Node::operator==(const Node &other) const noexcept {
+    if (!this->is_literal() && !other.is_literal() && this->backend_handle().node_storage_id() == other.backend_handle().node_storage_id()) {
+        // this short check does not work for Literals, because Literals that contain the same value as different Datatypes have different backend_handles.
+        return this->backend_handle() == other.backend_handle();
+    }
     return *this <=> other == std::strong_ordering::equivalent;
 }
 
