@@ -58,6 +58,8 @@ using ReservedDatatypeIdEntry = std::pair<std::string_view, LiteralType>;
 /**
  * All datatypes that have their own LiteralTypes in the node storage and their own fixed id
  * in the registry are listed here.
+ *
+ * TODO fix issue https://github.com/rdf4cpp/rdf4cpp/issues/243
  */
 inline constexpr util::StaticFlatMap reserved_datatype_ids{
         // ReservedDatatypeIdEntry{reserved for dynamic types, LiteralType::from_parts(false, 0)},
