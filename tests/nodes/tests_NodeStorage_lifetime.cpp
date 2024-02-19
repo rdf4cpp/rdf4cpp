@@ -292,4 +292,32 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
         NodeStorage::set_default_instance(inst);
         CHECK(NodeStorage::default_instance().id() == inst.id());
     }
+
+    TEST_CASE("reserve") {
+        identifier::NodeStorageID id;
+        {
+            auto proxy = NodeStorage::reserve_backend();
+            id = proxy.id();
+
+            {
+                auto broken_inst = NodeStorage::lookup_instance(id);
+                IRI const iri{"https://testing.com#iri", *broken_inst};
+                CHECK_EQ(iri, IRI{});
+            }
+
+            auto inst = proxy.construct<reference_node_storage::SyncReferenceNodeStorageBackend>();
+
+            IRI const iri{"https://testing.com#iri", inst};
+            CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
+        }
+
+        {
+            auto proxy = NodeStorage::reserve_backend_at(id);
+            CHECK_EQ(proxy.id(), id);
+            auto inst = proxy.set(new reference_node_storage::SyncReferenceNodeStorageBackend{});
+
+            IRI const iri{"https://testing.com#iri", inst};
+            CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
+        }
+    }
 }

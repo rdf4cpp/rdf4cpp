@@ -1,5 +1,6 @@
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/PlaceholderReferenceNodeStorageBackend.hpp>
 
 namespace rdf4cpp::rdf::storage::node {
 
@@ -62,7 +63,7 @@ NodeStorage NodeStorage::new_instance() {
     return register_backend(new reference_node_storage::SyncReferenceNodeStorageBackend());
 }
 
-NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
+std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> NodeStorage::register_backend_impl(INodeStorageBackend *backend_instance) {
     if (backend_instance == nullptr) [[unlikely]] {
         throw std::invalid_argument{"Backend instance must not be null."};
     }
@@ -100,7 +101,7 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
             slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade/lookup_instance
             slot.refcount.store(1, std::memory_order_relaxed);
 
-            return NodeStorage{identifier::NodeStorageID{static_cast<uint16_t>(ix)}, backend_instance};
+            return std::make_pair(identifier::NodeStorageID{static_cast<uint16_t>(ix)}, &slot.backend);
         } else if (old_value == backend_instance) [[unlikely]] {
             throw std::runtime_error{"The provided backend is already registered"};
         }
@@ -110,7 +111,9 @@ NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instanc
     throw std::length_error{"Maximum number of backend instances exceeded"};
 }
 
-NodeStorage NodeStorage::register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance) {
+static constinit reference_node_storage::PlaceholderReferenceNodeStorageBackend placeholder_node_storage_backend{};
+
+std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> NodeStorage::register_backend_at_impl(identifier::NodeStorageID id, INodeStorageBackend *backend_instance) {
     if (backend_instance == nullptr) [[unlikely]] {
         throw std::invalid_argument{"Backend instance must not be null."};
     }
@@ -123,11 +126,33 @@ NodeStorage NodeStorage::register_backend_at(identifier::NodeStorageID id, INode
         slot.generation.fetch_add(1, std::memory_order_release); // release for synchronization with Weak::upgrade/lookup_instance
         slot.refcount.store(1, std::memory_order_relaxed);
 
-        return NodeStorage{id, backend_instance};
+        return std::make_pair(id, &slot.backend);
     }
 
-    delete backend_instance;
+    if (backend_instance != &placeholder_node_storage_backend) {
+        delete backend_instance;
+    }
     throw std::logic_error{"The node storage ID is already in use"};
+}
+
+NodeStorage NodeStorage::register_backend(INodeStorageBackend *&&backend_instance) {
+    auto [slot_id, _] = register_backend_impl(backend_instance);
+    return NodeStorage{slot_id, backend_instance};
+}
+
+NodeStorage NodeStorage::register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance) {
+    auto const [slot_id, _] = register_backend_at_impl(id, backend_instance);
+    return NodeStorage{slot_id, backend_instance};
+}
+
+NodeStorageConstructProxy NodeStorage::reserve_backend() {
+    auto const [slot_id, slot_ptr] = register_backend_impl(&placeholder_node_storage_backend);
+    return NodeStorageConstructProxy{slot_id, slot_ptr};
+}
+
+NodeStorageConstructProxy NodeStorage::reserve_backend_at(identifier::NodeStorageID id) {
+    auto [slot_id, slot_ptr] = register_backend_at_impl(id, &placeholder_node_storage_backend);
+    return NodeStorageConstructProxy{slot_id, slot_ptr};
 }
 
 std::optional<NodeStorage> NodeStorage::lookup_instance(identifier::NodeStorageID id) noexcept {

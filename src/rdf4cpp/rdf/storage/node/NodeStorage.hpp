@@ -34,6 +34,8 @@ struct ControlBlock {
 };
 }  //namespace node_storage_detail
 
+struct NodeStorageConstructProxy;
+
 /**
  * NodeStorage provides an interface to the internal storage for nodes.
  * Each NodeStorage has a INodeStorageBackend, which is uniquely identified by a identifier::NodeStorageID.
@@ -59,6 +61,7 @@ class NodeStorage {
      */
 
     friend struct WeakNodeStorage;
+    friend struct NodeStorageConstructProxy;
 
     /**
      * Static array storing up to 2^10 - 1 = 1023 node_context Instances. As key identifier::NodeStorageID is used.
@@ -137,6 +140,31 @@ class NodeStorage {
      */
     void decrease_refcount() noexcept;
 
+    /**
+     * Registers a INodeStorageBackend.
+     *
+     * @param backend_instance instance to be registered
+     * @return pair of id of new node storage and pointer to slot
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::length_error if the maximum number of backend instances has been exceeded
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
+     */
+    static std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> register_backend_impl(INodeStorageBackend *backend_instance);
+
+    /**
+     * Attempts to register a INodeStorageBackend at a specific id
+     *
+     * @param id id to assign the instance
+     * @param backend_instance instance to be registered
+     * @return pair of id of new node storage and pointer to slot
+     * @throws std::invalid_argument if a nullptr is provided
+     * @throws std::logic_error if the given id is already in use
+     * @safety This function takes ownership of the backend, do _not_ delete it manually or use it directly in any way
+     *      after calling this function.
+     */
+    static std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> register_backend_at_impl(identifier::NodeStorageID id, INodeStorageBackend *backend_instance);
+
 public:
     /**
      * Get the default NodeStorage instance. This is the instance that is used wherever no NodeStorage is explicitly specified.
@@ -168,7 +196,7 @@ public:
      * @param args arguments to construct BackendImpl
      * @return NodeStorage referring to the instance.
      */
-    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
+    template<typename BackendImpl, typename ...Args>
     static NodeStorage new_instance_at(identifier::NodeStorageID id, Args &&...args) {
         return register_backend_at(id, new BackendImpl{std::forward<Args>(args)...});
     }
@@ -210,6 +238,27 @@ public:
      *      after calling this function.
      */
      static NodeStorage register_backend_at(identifier::NodeStorageID id, INodeStorageBackend *&&backend_instance);
+
+     /**
+      * Reserves a slot for an INodeStorageBackend.
+      *
+      * @return an NodeStorageConstructProxy that can be used to populate the placeholder slot
+      * @throws std::length_error if the maximum number of backend instances has been exceeded
+      * @note The slot gets populated by a reference_node_storage::PlaceholderReferenceNodeStorageBackend,
+      *         as such all operations on the placeholder will fail
+      */
+     [[nodiscard]] static NodeStorageConstructProxy reserve_backend();
+
+     /**
+      * Attempts to reserve a slot for an INodeStorageBackend at a specific ID.
+      *
+      * @param id id to assign the instance
+      * @return an NodeStorageConstructProxy that can be used to populate the placeholder slot
+      * @throws std::length_error if the maximum number of backend instances has been exceeded
+      * @note The slot gets populated by a reference_node_storage::PlaceholderReferenceNodeStorageBackend,
+      *         as such all operations on the placeholder will fail
+      */
+     [[nodiscard]] static NodeStorageConstructProxy reserve_backend_at(identifier::NodeStorageID id);
 
 public:
     NodeStorage(NodeStorage &&other) noexcept;
@@ -545,6 +594,34 @@ public:
      * @return whether this and other are _not_ referring to the same backend
      */
     bool operator!=(WeakNodeStorage const &) const noexcept = default;
+};
+
+struct [[nodiscard]] NodeStorageConstructProxy {
+private:
+    identifier::NodeStorageID id_;
+    std::atomic<INodeStorageBackend *> *slot_;
+
+public:
+    NodeStorageConstructProxy(identifier::NodeStorageID id, std::atomic<INodeStorageBackend *> *slot) noexcept : id_{id},
+                                                                                                                 slot_{slot} {
+        assert(slot != nullptr);
+    }
+
+    [[nodiscard]] identifier::NodeStorageID id() const noexcept {
+        return id_;
+    }
+
+    NodeStorage set(INodeStorageBackend *&&backend) noexcept {
+        slot_->store(backend, std::memory_order_relaxed);
+        return NodeStorage{id_, backend};
+    }
+
+    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
+    NodeStorage construct(Args &&...args) {
+        auto *backend = new BackendImpl{std::forward<Args>(args)...};
+        slot_->store(backend, std::memory_order_relaxed);
+        return NodeStorage{id_, backend};
+    }
 };
 
 }  // namespace rdf4cpp::rdf::storage::node
