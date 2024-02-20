@@ -6,19 +6,19 @@ namespace rdf4cpp::rdf::storage::node {
 
 NodeStorage NodeStorage::default_instance_ = {};
 
-void NodeStorage::increase_refcount() noexcept {
+void NodeStorage::increase_refcount(identifier::NodeStorageID backend_index) noexcept {
     /**
      * Can be relaxed as this object is keeping the backend alive anyways.
      *
      * see https://www.boost.org/doc/libs/1_57_0/doc/html/atomic/usage_examples.html#boost_atomic.usage_examples.example_reference_counters
      */
-    get_slot(this->backend_index)
+    get_slot(backend_index)
             .refcount
             .fetch_add(1, std::memory_order_relaxed);
 }
 
-void NodeStorage::decrease_refcount() noexcept {
-    auto &slot = get_slot(this->backend_index);
+void NodeStorage::decrease_refcount(identifier::NodeStorageID backend_index) noexcept {
+    auto &slot = get_slot(backend_index);
 
     /**
      * All memory accesses must happen before this store because it is
@@ -44,6 +44,14 @@ void NodeStorage::decrease_refcount() noexcept {
      */
     INodeStorageBackend *old = slot.backend.exchange(nullptr, std::memory_order_relaxed);
     delete old;
+}
+
+void NodeStorage::increase_refcount() noexcept {
+    increase_refcount(this->backend_index);
+}
+
+void NodeStorage::decrease_refcount() noexcept {
+    decrease_refcount(this->backend_index);
 }
 
 NodeStorage &NodeStorage::default_instance() {

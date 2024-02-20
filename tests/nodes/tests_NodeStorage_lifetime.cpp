@@ -294,30 +294,63 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
     }
 
     TEST_CASE("reserve") {
-        identifier::NodeStorageID id;
-        {
-            auto proxy = NodeStorage::reserve_backend();
-            id = proxy.id();
-
+        SUBCASE("sanity check") {
+            identifier::NodeStorageID id;
             {
-                auto broken_inst = NodeStorage::lookup_instance(id);
-                IRI const iri{"https://testing.com#iri", *broken_inst};
-                CHECK_EQ(iri, IRI{});
+                NodeStorage inst = NodeStorage::default_instance();
+                {
+                    auto proxy = NodeStorage::reserve_backend();
+                    id = proxy.id();
+
+                    {
+                        auto broken_inst = NodeStorage::lookup_instance(id);
+                        CHECK(broken_inst.has_value());
+                        IRI const iri{"https://testing.com#iri", *broken_inst};
+                        CHECK_EQ(iri, IRI{});
+                        CHECK_EQ(broken_inst->ref_count(), 1);
+                    }
+
+                    inst = proxy.construct<reference_node_storage::SyncReferenceNodeStorageBackend>();
+                    CHECK_EQ(inst.ref_count(), 1);
+                }
+
+                CHECK_EQ(inst.ref_count(), 1);
+                IRI const iri{"https://testing.com#iri", inst};
+                CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
             }
 
-            auto inst = proxy.construct<reference_node_storage::SyncReferenceNodeStorageBackend>();
+            {
+                auto proxy = NodeStorage::reserve_backend_at(id);
+                CHECK_EQ(proxy.id(), id);
+                auto inst = proxy.set(new reference_node_storage::SyncReferenceNodeStorageBackend{});
 
-            IRI const iri{"https://testing.com#iri", inst};
-            CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
+                CHECK_EQ(inst.ref_count(), 1);
+                IRI const iri{"https://testing.com#iri", inst};
+                CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
+            }
         }
 
-        {
-            auto proxy = NodeStorage::reserve_backend_at(id);
-            CHECK_EQ(proxy.id(), id);
-            auto inst = proxy.set(new reference_node_storage::SyncReferenceNodeStorageBackend{});
+        SUBCASE("multiple set calls") {
+            auto proxy = NodeStorage::reserve_backend();
+            proxy.construct<reference_node_storage::SyncReferenceNodeStorageBackend>();
 
-            IRI const iri{"https://testing.com#iri", inst};
-            CHECK_EQ(std::string{iri}, "<https://testing.com#iri>");
+            try {
+                proxy.set(new reference_node_storage::SyncReferenceNodeStorageBackend{});
+                FAIL("Did not throw on double construction");
+            } catch (std::invalid_argument const &) {
+                // expecting exception
+            }
+        }
+
+        SUBCASE("forgot to construct") {
+            identifier::NodeStorageID id;
+            {
+                auto proxy = NodeStorage::reserve_backend();
+                id = proxy.id();
+            }
+
+            auto does_not_exist = NodeStorage::lookup_instance(id);
+            CHECK_FALSE(does_not_exist.has_value());
         }
     }
 }

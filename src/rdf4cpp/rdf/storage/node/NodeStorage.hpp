@@ -128,7 +128,7 @@ class NodeStorage {
      *      that the reference count of this backend cannot reach zero while calling this function.
      *      I.e. Something like NodeStorage{id}.increase_refcount(); is inherently undefined behaviour.
      */
-    void increase_refcount() noexcept;
+    static void increase_refcount(identifier::NodeStorageID backend_index) noexcept;
 
     /**
      * Decreases the reference count of the backend instance pointed to by
@@ -137,6 +137,16 @@ class NodeStorage {
      * @safety This function must only be called on destruction or similar events (like assignment)
      *      calling it in any other scenario is undefined behaviour as it could destroy the backend
      *      other or this NodeStorage is referring to.
+     */
+    static void decrease_refcount(identifier::NodeStorageID backend_index) noexcept;
+
+    /**
+     * Same as NodeStorage::increase_refcount(NodeStorageID), except that it uses this->backend_index
+     */
+    void increase_refcount() noexcept;
+
+    /**
+     * Same as NodeStorage::decrease_refcount(NodeStorageID), except that it uses this->backend_index
      */
     void decrease_refcount() noexcept;
 
@@ -604,6 +614,12 @@ private:
     identifier::NodeStorageID id_;
     std::atomic<INodeStorageBackend *> *slot_;
 
+    void drop() noexcept {
+        if (id_ != node_storage_detail::INVALID_BACKEND_INDEX) {
+            NodeStorage::decrease_refcount(id_);
+        }
+    }
+
 public:
     NodeStorageConstructProxy(identifier::NodeStorageID id, std::atomic<INodeStorageBackend *> *slot) noexcept : id_{id},
                                                                                                                  slot_{slot} {
@@ -612,20 +628,23 @@ public:
 
     NodeStorageConstructProxy(NodeStorageConstructProxy const &) = delete;
     NodeStorageConstructProxy &operator=(NodeStorageConstructProxy const &) = delete;
-    NodeStorageConstructProxy &operator=(NodeStorageConstructProxy &&other) = delete;
 
     NodeStorageConstructProxy(NodeStorageConstructProxy &&other) noexcept : id_{std::exchange(other.id_, node_storage_detail::INVALID_BACKEND_INDEX)},
                                                                             slot_{std::exchange(other.slot_, nullptr)} {
     }
 
-    // even defining an empty destructor makes the type non-trivial
-#if NDEBUG
-    ~NodeStorageConstructProxy() noexcept = default;
-#else
-    ~NodeStorageConstructProxy() noexcept {
-        assert(*slot_ != nullptr);
+    NodeStorageConstructProxy &operator=(NodeStorageConstructProxy &&other) noexcept {
+        assert(this != &other);
+
+        drop();
+        id_ = std::exchange(other.id_, node_storage_detail::INVALID_BACKEND_INDEX);
+        slot_ = std::exchange(other.slot_, nullptr);
+        return *this;
     }
-#endif
+
+    ~NodeStorageConstructProxy() noexcept {
+        drop();
+    }
 
     /**
      * @return The reserved id for the node storage being constructed
@@ -639,10 +658,20 @@ public:
      *
      * @param backend pointer to backend instance
      * @return constructed NodeStorage
+     * @throws std::invalid_argument if the placeholder was already populated by either set or construct
      */
-    NodeStorage set(INodeStorageBackend *&&backend) noexcept {
+    NodeStorage set(INodeStorageBackend *&&backend) {
+        if (id_ == node_storage_detail::INVALID_BACKEND_INDEX) [[unlikely]] {
+            throw std::invalid_argument{"Placeholder was already populated"};
+        }
+
         slot_->store(backend, std::memory_order_relaxed);
-        return NodeStorage{id_, backend};
+        NodeStorage ret{id_, backend};
+
+        id_ = node_storage_detail::INVALID_BACKEND_INDEX;
+        slot_ = nullptr;
+
+        return ret;
     }
 
     /**
@@ -654,9 +683,7 @@ public:
      */
     template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
     NodeStorage construct(Args &&...args) {
-        auto *backend = new BackendImpl{std::forward<Args>(args)...};
-        slot_->store(backend, std::memory_order_relaxed);
-        return NodeStorage{id_, backend};
+        return set(new BackendImpl{std::forward<Args>(args)...});
     }
 };
 
