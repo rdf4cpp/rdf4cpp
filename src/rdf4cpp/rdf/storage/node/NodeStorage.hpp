@@ -623,6 +623,7 @@ private:
 public:
     NodeStorageConstructProxy(identifier::NodeStorageID id, std::atomic<INodeStorageBackend *> *slot) noexcept : id_{id},
                                                                                                                  slot_{slot} {
+        assert(id != node_storage_detail::INVALID_BACKEND_INDEX);
         assert(slot != nullptr);
     }
 
