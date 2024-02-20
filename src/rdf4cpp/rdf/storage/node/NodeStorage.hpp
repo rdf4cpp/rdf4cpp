@@ -596,6 +596,9 @@ public:
     bool operator!=(WeakNodeStorage const &) const noexcept = default;
 };
 
+/**
+ * Proxy to construct a backend in a placeholder slot
+ */
 struct [[nodiscard]] NodeStorageConstructProxy {
 private:
     identifier::NodeStorageID id_;
@@ -607,15 +610,48 @@ public:
         assert(slot != nullptr);
     }
 
+    NodeStorageConstructProxy(NodeStorageConstructProxy const &) = delete;
+    NodeStorageConstructProxy &operator=(NodeStorageConstructProxy const &) = delete;
+    NodeStorageConstructProxy &operator=(NodeStorageConstructProxy &&other) = delete;
+
+    NodeStorageConstructProxy(NodeStorageConstructProxy &&other) noexcept : id_{std::exchange(other.id_, node_storage_detail::INVALID_BACKEND_INDEX)},
+                                                                            slot_{std::exchange(other.slot_, nullptr)} {
+    }
+
+    // even defining an empty destructor makes the type non-trivial
+#if NDEBUG
+    ~NodeStorageConstructProxy() noexcept = default;
+#else
+    ~NodeStorageConstructProxy() noexcept {
+        assert(*slot_ != nullptr);
+    }
+#endif
+
+    /**
+     * @return The reserved id for the node storage being constructed
+     */
     [[nodiscard]] identifier::NodeStorageID id() const noexcept {
         return id_;
     }
 
+    /**
+     * Sets the placeholder to the given backend
+     *
+     * @param backend pointer to backend instance
+     * @return constructed NodeStorage
+     */
     NodeStorage set(INodeStorageBackend *&&backend) noexcept {
         slot_->store(backend, std::memory_order_relaxed);
         return NodeStorage{id_, backend};
     }
 
+    /**
+     * Constructs a backend at the placeholder
+     *
+     * @tparam BackendImpl type that will be constructed
+     * @param args constructor arguments passed to the constructor of BackendImpl
+     * @return constructed NodeStorage
+     */
     template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
     NodeStorage construct(Args &&...args) {
         auto *backend = new BackendImpl{std::forward<Args>(args)...};
