@@ -111,8 +111,6 @@ std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> NodeS
     throw std::length_error{"Maximum number of backend instances exceeded"};
 }
 
-static constinit reference_node_storage::PlaceholderReferenceNodeStorageBackend placeholder_node_storage_backend{};
-
 std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> NodeStorage::register_backend_at_impl(identifier::NodeStorageID id, INodeStorageBackend *backend_instance) {
     if (backend_instance == nullptr) [[unlikely]] {
         throw std::invalid_argument{"Backend instance must not be null."};
@@ -129,9 +127,7 @@ std::pair<identifier::NodeStorageID, std::atomic<INodeStorageBackend *> *> NodeS
         return std::make_pair(id, &slot.backend);
     }
 
-    if (backend_instance != &placeholder_node_storage_backend) {
-        delete backend_instance;
-    }
+    delete backend_instance;
     throw std::logic_error{"The node storage ID is already in use"};
 }
 
@@ -146,12 +142,12 @@ NodeStorage NodeStorage::register_backend_at(identifier::NodeStorageID id, INode
 }
 
 NodeStorageConstructProxy NodeStorage::reserve_backend() {
-    auto const [slot_id, slot_ptr] = register_backend_impl(&placeholder_node_storage_backend);
+    auto const [slot_id, slot_ptr] = register_backend_impl(new reference_node_storage::PlaceholderReferenceNodeStorageBackend{});
     return NodeStorageConstructProxy{slot_id, slot_ptr};
 }
 
 NodeStorageConstructProxy NodeStorage::reserve_backend_at(identifier::NodeStorageID id) {
-    auto [slot_id, slot_ptr] = register_backend_at_impl(id, &placeholder_node_storage_backend);
+    auto [slot_id, slot_ptr] = register_backend_at_impl(id, new reference_node_storage::PlaceholderReferenceNodeStorageBackend{});
     return NodeStorageConstructProxy{slot_id, slot_ptr};
 }
 
