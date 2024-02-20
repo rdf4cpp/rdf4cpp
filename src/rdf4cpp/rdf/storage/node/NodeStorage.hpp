@@ -196,7 +196,7 @@ public:
      * @param args arguments to construct BackendImpl
      * @return NodeStorage referring to the instance.
      */
-    template<typename BackendImpl, typename ...Args>
+    template<typename BackendImpl, typename ...Args> requires std::derived_from<BackendImpl, INodeStorageBackend>
     static NodeStorage new_instance_at(identifier::NodeStorageID id, Args &&...args) {
         return register_backend_at(id, new BackendImpl{std::forward<Args>(args)...});
     }
