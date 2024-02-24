@@ -15,8 +15,8 @@ constexpr Acc tuple_type_fold_impl(std::index_sequence<Ixs...>, Acc init, FoldF 
 }
 
 template<typename Tuple, typename Acc, typename FoldF, size_t ...Ixs>
-constexpr Acc tuple_fold_impl(std::index_sequence<Ixs...>, Tuple const &tuple, Acc init, FoldF f) noexcept {
-    ((init = f(std::move(init), std::get<Ixs>(tuple))), ...);
+constexpr Acc tuple_fold_impl(std::index_sequence<Ixs...>, Tuple &&tuple, Acc init, FoldF f) noexcept {
+    ((init = f(std::move(init), std::get<Ixs>(std::forward<Tuple>(tuple)))), ...);
     return init;
 }
 
@@ -26,8 +26,8 @@ constexpr Acc tuple_type_fold(Acc &&init, FoldF &&f) noexcept {
 }
 
 template<typename Tuple, typename Acc, typename FoldF>
-constexpr Acc tuple_fold(Tuple const &tuple, Acc &&init, FoldF &&f) noexcept {
-    return tuple_fold_impl(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, tuple, std::forward<Acc>(init), std::forward<FoldF>(f));
+constexpr Acc tuple_fold(Tuple &&tuple, Acc &&init, FoldF &&f) noexcept {
+    return tuple_fold_impl(std::make_index_sequence<std::tuple_size_v<std::remove_cvref_t<Tuple>>>{}, std::forward<Tuple>(tuple), std::forward<Acc>(init), std::forward<FoldF>(f));
 }
 
 template<typename Tuple>

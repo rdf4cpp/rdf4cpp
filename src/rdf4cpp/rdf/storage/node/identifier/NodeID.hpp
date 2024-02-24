@@ -76,6 +76,9 @@ public:
      */
     [[nodiscard]] constexpr LiteralType literal_type() const noexcept { return LiteralType::from_underlying(literal_.literal_type); }
     [[nodiscard]] constexpr uint64_t value() const noexcept { return value_; }
+
+    explicit operator uint64_t() const noexcept { return value_; }
+
     //    void value(uint64_t val) { assert(val < (1UL << 48)); value_ = val; }
 
     constexpr std::strong_ordering operator<=>(NodeID const &other) const noexcept { return value_ <=> other.value_; }

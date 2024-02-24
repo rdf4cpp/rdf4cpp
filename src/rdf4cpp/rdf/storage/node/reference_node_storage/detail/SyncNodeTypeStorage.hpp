@@ -15,8 +15,6 @@ struct SyncNodeTypeStorage : UnsyncNodeTypeStorage<BackendType_t> {
     using Base = UnsyncNodeTypeStorage<BackendType_t>;
     using Backend = typename Base::Backend;
     using BackendView = typename Base::BackendView;
-    using BackendEqual = typename Base::BackendEqual;
-    using BackendHash = typename Base::BackendHash;
 
     std::shared_mutex mutable mutex;
 };

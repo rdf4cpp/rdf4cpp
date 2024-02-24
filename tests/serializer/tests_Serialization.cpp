@@ -95,7 +95,7 @@ void check_basic_data(const std::string &i) {
 
 TEST_CASE("basic ntriple") {
     const std::string  d = write_basic_data<writer::OutputFormat::NTriples>();
-    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n");
     writer::StringWriter ser{};
     if (!get_graph().serialize(ser))
         FAIL("write failed");
@@ -115,7 +115,7 @@ TEST_CASE("basic nquad") {
 
 TEST_CASE("basic turtle") {
     const std::string d = write_basic_data<writer::OutputFormat::Turtle>();
-    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
+    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a \"5\"^^xsd:int ,\n<http://ex/obj> .\n");
     writer::StringWriter ser{};
     if (!get_graph().serialize_turtle(ser))
         FAIL("write failed");

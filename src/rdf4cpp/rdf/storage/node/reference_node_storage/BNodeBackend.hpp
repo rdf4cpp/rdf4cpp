@@ -10,6 +10,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 struct BNodeBackend {
     using View = view::BNodeBackendView;
+    using Id = identifier::NodeID;
 
     size_t hash;
     std::string identifier;
