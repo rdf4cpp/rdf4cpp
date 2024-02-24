@@ -13,8 +13,8 @@ struct FallbackLiteralBackend {
 
     size_t hash;
     identifier::NodeID datatype_id;
-    ConstString lexical_form;
-    ConstString language_tag;
+    detail::ConstString lexical_form;
+    detail::ConstString language_tag;
     bool needs_escape;
 
     explicit FallbackLiteralBackend(View const &view) noexcept : hash{view.hash()},

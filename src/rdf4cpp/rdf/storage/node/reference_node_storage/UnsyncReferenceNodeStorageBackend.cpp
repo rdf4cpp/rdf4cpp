@@ -110,12 +110,11 @@ identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::VariableBack
 
 template<typename NodeTypeStorage>
 static typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) {
-    auto const val_ptr = storage.mapping.lookup_value(NodeTypeStorage::to_backend_id(id));
-    if (val_ptr == nullptr) {
+    if (auto view = storage.mapping.lookup_value(NodeTypeStorage::to_backend_id(id)); view.has_value()) {
+        return *view;
+    } else {
         throw std::out_of_range{"Did not find node for given id"};
     }
-
-    return static_cast<typename NodeTypeStorage::BackendView>(*val_ptr);
 }
 
 view::IRIBackendView UnsyncReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const {
@@ -143,8 +142,7 @@ view::VariableBackendView UnsyncReferenceNodeStorageBackend::find_variable_backe
 template<typename Storage>
 static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
     auto const backend_id = Storage::to_backend_id(id);
-
-    if (storage.mapping.lookup_value(backend_id) == nullptr) {
+    if (!storage.mapping.lookup_value(backend_id).has_value()) {
         return false;
     }
 

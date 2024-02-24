@@ -1,18 +1,16 @@
 #ifndef RDF4CPP_BNODEBACKENDHANDLE_HPP
 #define RDF4CPP_BNODEBACKENDHANDLE_HPP
 
-#include <string>
 #include <string_view>
+#include <optional>
 
-namespace rdf4cpp::rdf::bnode_mngt {
-struct WeakNodeScope;
-} // namespace rdf4cpp::rdf::bnode_mngt
+#include <rdf4cpp/rdf/bnode_mngt/WeakNodeScope.hpp>
 
 namespace rdf4cpp::rdf::storage::node::view {
 
 struct BNodeBackendView {
     std::string_view identifier;
-    rdf4cpp::rdf::bnode_mngt::WeakNodeScope const *scope;
+    std::optional<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> scope;
 
     /**
      * N-Triples conform string representation.
@@ -20,8 +18,9 @@ struct BNodeBackendView {
      */
     [[nodiscard]] std::string n_string() const noexcept;
 
-    auto operator<=>(BNodeBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
+
+    auto operator<=>(BNodeBackendView const &other) const noexcept = default;
 };
 }  // namespace rdf4cpp::rdf::storage::node::view
 

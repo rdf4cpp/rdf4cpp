@@ -136,12 +136,11 @@ template<typename Storage>
 static typename Storage::BackendView find_backend_view(Storage &storage, identifier::NodeID const id) {
     std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
 
-    auto const val_ptr = storage.mapping.lookup_value(Storage::to_backend_id(id));
-    if (val_ptr == nullptr) {
+    if (auto view = storage.mapping.lookup_value(Storage::to_backend_id(id)); view.has_value()) {
+        return *view;
+    } else {
         throw std::out_of_range{"Did not find node for given id"};
     }
-
-    return static_cast<typename Storage::BackendView>(*val_ptr);
 }
 
 view::IRIBackendView SyncReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const {
@@ -171,7 +170,7 @@ static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
     std::unique_lock lock{storage.mutex};
 
     auto const backend_id = Storage::to_backend_id(id);
-    if (storage.mapping.lookup_value(backend_id) == nullptr) {
+    if (!storage.mapping.lookup_value(backend_id).has_value()) {
         return false;
     }
 

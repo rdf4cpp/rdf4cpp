@@ -81,7 +81,7 @@ public:
         }
     }
 
-    BiDirFlatMap<BackendId, Backend, BackendView, BackendHash, BackendEqual> mapping;
+    detail::BiDirFlatMap<BackendId, Backend, BackendView, BackendHash, BackendEqual> mapping;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

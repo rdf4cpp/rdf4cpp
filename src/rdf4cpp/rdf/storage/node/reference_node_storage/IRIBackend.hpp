@@ -11,7 +11,7 @@ struct IRIBackend {
     using Id = identifier::NodeID;
 
     size_t hash;
-    ConstString identifier;
+    detail::ConstString identifier;
 
     explicit IRIBackend(View const &view) noexcept : hash{view.hash()},
                                                      identifier{view.identifier} {

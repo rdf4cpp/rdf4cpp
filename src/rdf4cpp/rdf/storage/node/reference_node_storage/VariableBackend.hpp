@@ -11,7 +11,7 @@ struct VariableBackend {
     using Id = identifier::NodeID;
 
     size_t hash;
-    ConstString name;
+    detail::ConstString name;
     bool is_anonymous;
 
     explicit VariableBackend(view::VariableBackendView const &view) noexcept : hash{view.hash()},
