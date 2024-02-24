@@ -3,8 +3,7 @@
 
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
-
-#include <string>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/ConstString.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
@@ -13,7 +12,7 @@ struct BNodeBackend {
     using Id = identifier::NodeID;
 
     size_t hash;
-    std::string identifier;
+    ConstString identifier;
     std::optional<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> scope;
 
     explicit BNodeBackend(View const &view) noexcept : hash{view.hash()},

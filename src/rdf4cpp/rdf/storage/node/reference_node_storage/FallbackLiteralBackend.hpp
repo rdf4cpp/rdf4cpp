@@ -3,8 +3,7 @@
 
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
-
-#include <string>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/ConstString.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
@@ -14,8 +13,8 @@ struct FallbackLiteralBackend {
 
     size_t hash;
     identifier::NodeID datatype_id;
-    std::string lexical_form;
-    std::string language_tag;
+    ConstString lexical_form;
+    ConstString language_tag;
     bool needs_escape;
 
     explicit FallbackLiteralBackend(View const &view) noexcept : hash{view.hash()},
