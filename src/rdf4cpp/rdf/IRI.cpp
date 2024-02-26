@@ -110,7 +110,9 @@ bool IRI::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFun
 }
 
 IRI::operator std::string() const noexcept {
-    return handle_.iri_backend().n_string();
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
 }
 
 bool IRI::is_literal() const noexcept { return false; }
@@ -122,8 +124,11 @@ bool IRI::is_iri() const noexcept { return true; }
 IRI IRI::default_graph(NodeStorage &node_storage) {
     return IRI{"", node_storage};
 }
-std::ostream &operator<<(std::ostream &os, const IRI &iri) {
-    os << std::string{iri};
+std::ostream &operator<<(std::ostream &os, IRI const &iri) {
+    writer::BufOStreamWriter w{os};
+    iri.serialize(w);
+    w.finalize();
+
     return os;
 }
 std::string_view IRI::identifier() const noexcept {

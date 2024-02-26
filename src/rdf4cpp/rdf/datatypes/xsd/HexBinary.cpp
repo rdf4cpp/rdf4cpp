@@ -77,9 +77,9 @@ HexBinaryRepr HexBinaryRepr::from_encoded(std::string_view const hex_encoded) {
 }
 
 std::string HexBinaryRepr::to_encoded() const noexcept {
-    writer::StringWriter w; // TODO reserve
-    this->serialize(w);
-    return w.finalize();
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
 }
 
 bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {

@@ -77,15 +77,21 @@ bool Variable::serialize(void *const buffer, writer::Cursor *cursor, writer::Flu
 }
 
 Variable::operator std::string() const {
-    return handle_.variable_backend().n_string();
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
 }
+
 bool Variable::is_literal() const { return false; }
 bool Variable::is_variable() const { return true; }
 bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
 Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
-std::ostream &operator<<(std::ostream &os, const Variable &variable) {
-    os << static_cast<std::string>(variable);
+std::ostream &operator<<(std::ostream &os, Variable const &variable) {
+    writer::BufOStreamWriter w{os};
+    variable.serialize(w);
+    w.finalize();
+
     return os;
 }
 

@@ -59,15 +59,20 @@ bool BlankNode::serialize(void *const buffer, writer::Cursor *cursor, writer::Fl
 }
 
 BlankNode::operator std::string() const noexcept {
-    return handle_.bnode_backend().n_string();
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
 }
 
 bool BlankNode::is_literal() const noexcept { return false; }
 bool BlankNode::is_variable() const noexcept { return false; }
 bool BlankNode::is_blank_node() const noexcept { return true; }
 bool BlankNode::is_iri() const noexcept { return false; }
-std::ostream &operator<<(std::ostream &os, const BlankNode &bnode) {
-    os << static_cast<std::string>(bnode);
+std::ostream &operator<<(std::ostream &os, BlankNode const &bnode) {
+    writer::BufOStreamWriter w{os};
+    bnode.serialize(w);
+    w.finalize();
+
     return os;
 }
 

@@ -216,8 +216,11 @@ query::Variable Node::as_variable() const noexcept {
 bool Node::null() const noexcept {
     return handle_.null();
 }
-std::ostream &operator<<(std::ostream &os, const Node &node) {
-    os << std::string{node};
+std::ostream &operator<<(std::ostream &os, Node const &node) {
+    writer::BufOStreamWriter w{os};
+    node.serialize(w);
+    w.finalize();
+
     return os;
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {

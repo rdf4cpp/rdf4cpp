@@ -57,11 +57,6 @@ public:
 template<typename W>
 concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
-     * Return type of finalize, typically void
-     */
-    typename W::Output;
-
-    /**
      * Type of the internal buffer
      */
     typename W::Buffer;
@@ -79,7 +74,7 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
      * Triggers a final flush, needs to be called after you are done using this BufWriter
      */
-    { bw.finalize() } -> std::convertible_to<typename W::Output>;
+    { bw.finalize() } -> std::convertible_to<bool>;
 
     /**
      * Flushes bw.buffer() and repoints bw.cursor() to the new free space
@@ -165,39 +160,57 @@ public:
     }
 };
 
-using StringBuffer = std::string;
+struct StringBuffer {
+    std::string *buffer_;
+
+    explicit StringBuffer(std::string &buffer) noexcept : buffer_{&buffer} {
+    }
+};
 
 /**
  * A serializer that serializes to a std::string
  */
 struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     using Buffer = StringBuffer;
-    using Output = std::string;
 
-    explicit StringWriter(size_t cap = 256) noexcept {
-        buffer().resize(cap);
-        cursor().repoint(buffer().data(), buffer().size());
+    constexpr StringWriter(std::string &buf) noexcept : BufWriterBase<StringWriter, StringBuffer>{buf} {
+        cursor().repoint(buffer().buffer_->data(),
+                         buffer().buffer_->size());
     }
 
-    [[nodiscard]] Output &finalize() noexcept {
-        buffer().resize(static_cast<size_t>(cursor().data() - buffer().data()));
-        return buffer();
+    bool finalize() noexcept {
+        buffer().buffer_->resize(static_cast<size_t>(cursor().data() - buffer().buffer_->data()));
+        return true;
     }
 
     [[nodiscard]] std::string_view view() const noexcept {
-        return std::string_view{buffer().data(), static_cast<size_t>(cursor().data() - buffer().data())};
+        return std::string_view{buffer().buffer_->data(), static_cast<size_t>(cursor().data() - buffer().buffer_->data())};
     }
 
     void clear() noexcept {
-        cursor().repoint(buffer().data(), buffer().size());
+        cursor().repoint(buffer().buffer_->data(), buffer().buffer_->capacity());
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {
-        auto const bytes_filled = cursor.data() - buffer.data();
+        auto const bytes_filled = cursor.data() - buffer.buffer_->data();
 
-        buffer.resize(std::bit_ceil(buffer.size() + additional_cap));
-        cursor.repoint(buffer.data() + bytes_filled,
-                       buffer.size() - bytes_filled);
+        buffer.buffer_->resize(std::bit_ceil(buffer.buffer_->size() + additional_cap));
+        cursor.repoint(buffer.buffer_->data() + bytes_filled,
+                       buffer.buffer_->size() - bytes_filled);
+    }
+
+    template<typename F>
+    static std::string oneshot(F &&f) requires std::is_invocable_r_v<bool, decltype(std::forward<F>(f)), StringWriter &> {
+        std::string s;
+        s.resize(32);
+        StringWriter w{s};
+
+        if (!std::invoke(std::forward<F>(f), w)) {
+            throw std::runtime_error{"rdf4cpp::rdf::writer::StringWriter::oneshot failed"};
+        }
+
+        w.finalize(); // cannot fail
+        return s;
     }
 };
 
@@ -215,18 +228,15 @@ struct CFileBuffer {
  */
 struct BufCFileWriter : BufWriterBase<BufCFileWriter, CFileBuffer> {
     using Buffer = CFileBuffer;
-    using Output = void;
 
     explicit constexpr BufCFileWriter(FILE *file) noexcept : BufWriterBase<BufCFileWriter, CFileBuffer>{file} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
 
-    void finalize() {
+    bool finalize() {
         auto const to_write = static_cast<size_t>(cursor().data() - buffer().buffer_.data());
-        if (fwrite(buffer().buffer_.data(), 1, to_write, buffer().file_) < to_write) {
-            throw std::system_error{std::error_code{errno, std::system_category()}};
-        }
+        return fwrite(buffer().buffer_.data(), 1, to_write, buffer().file_) == to_write;
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
@@ -250,17 +260,14 @@ struct OStreamBuffer {
  */
 struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     using Buffer = OStreamBuffer;
-    using Output = void;
 
     explicit constexpr BufOStreamWriter(std::ostream &os) noexcept : BufWriterBase<BufOStreamWriter, OStreamBuffer>{os} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
 
-    void finalize() {
-        if (!buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(cursor().data() - buffer().buffer_.data()))) {
-            throw std::system_error{std::error_code{errno, std::system_category()}};
-        }
+    bool finalize() {
+        return static_cast<bool>(buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(cursor().data() - buffer().buffer_.data())));
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {

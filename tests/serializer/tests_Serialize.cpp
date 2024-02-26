@@ -15,9 +15,9 @@ TEST_SUITE("Serialize") {
             expected = std::string{node};
         }
 
-        writer::StringWriter ser;
-        node.serialize(ser);
-        auto result = ser.finalize();
+        auto const result = writer::StringWriter::oneshot([node](auto &w) noexcept {
+            return node.serialize(w);
+        });
 
         CHECK_EQ(expected, result);
     }
@@ -95,7 +95,10 @@ TEST_SUITE("Serialize") {
     TEST_CASE("Reserialize NTriples StringWriter") {
         auto do_test = [](auto triples) {
             using namespace rdf4cpp::rdf::parser;
-            writer::StringWriter ser{256};
+
+            std::string buf;
+            buf.reserve(256);
+            writer::StringWriter ser{buf};
 
             std::istringstream iss{triples};
             for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
@@ -108,9 +111,9 @@ TEST_SUITE("Serialize") {
                 write_str(" .\n", ser);
             }
 
-            auto result = ser.finalize();
+            ser.finalize();
 
-            CHECK_EQ(result, std::string_view{triples});
+            CHECK_EQ(buf, std::string_view{triples});
         };
 
         SUBCASE("variants") {

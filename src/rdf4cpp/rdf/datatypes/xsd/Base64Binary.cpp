@@ -160,9 +160,9 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
 }
 
 std::string Base64BinaryRepr::to_encoded() const noexcept {
-    writer::StringWriter w; // TODO reserve
-    this->serialize(w);
-    return w.finalize();
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
 }
 
 bool Base64BinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
