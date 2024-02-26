@@ -30,8 +30,8 @@ bool capabilities::Default<xsd_gMonthDay>::serialize_canonical_string(cpp_type c
     auto str = std::format("--{:%m-%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    //return str;
-    return false; //TODO
+
+    return writer::write_str(str, buffer, cursor, flush);
 }
 
 struct __attribute__((__packed__)) InliningHelperMonthDay {

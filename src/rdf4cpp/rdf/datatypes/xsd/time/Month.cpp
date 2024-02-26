@@ -28,8 +28,8 @@ bool capabilities::Default<xsd_gMonth>::serialize_canonical_string(cpp_type cons
     auto str = std::format("--{:%m}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    //return str;
-    return false; // TODO
+
+    return writer::write_str(str, buffer, cursor, flush);
 }
 
 template<>

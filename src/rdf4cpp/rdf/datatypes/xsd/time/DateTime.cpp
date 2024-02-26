@@ -49,8 +49,8 @@ bool capabilities::Default<xsd_dateTime>::serialize_canonical_string(cpp_type co
     auto str = std::format("{:%Y-%m-%dT%H:%M:%S}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    //return str;
-    return false; //TODO
+
+    return writer::write_str(str, buffer, cursor, flush);
 }
 
 template<>

@@ -52,8 +52,7 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 template<>
 bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     auto str = std::format("{:%Y-%m-%dT%H:%M:%S%Z}", value);
-    //return str;
-    return false; // TODO
+    return writer::write_str(str, buffer, cursor, flush);
 }
 
 template<>

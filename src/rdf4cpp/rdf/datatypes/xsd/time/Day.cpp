@@ -28,8 +28,8 @@ bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const 
     auto str = std::format("---{:%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    //return str;
-    return false; // TODO
+
+    return writer::write_str(str, buffer, cursor, flush);
 }
 
 template<>
