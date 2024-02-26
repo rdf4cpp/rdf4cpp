@@ -4,7 +4,14 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept {
-    iri_storage_.mapping.reserve(identifier::NodeID::min_iri_id);
+    iri_storage_.mapping.reserve(NodeID::min_iri_id);
+    bnode_storage_.mapping.reserve(NodeID::min_bnode_id);
+    variable_storage_.mapping.reserve(NodeID::min_variable_id);
+    fallback_literal_storage_.mapping.reserve(NodeID::min_literal_id);
+
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage.mapping.reserve(NodeID::min_literal_id);
+    });
 
     // some iri's like xsd:string are there by default
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
@@ -21,6 +28,17 @@ size_t UnsyncReferenceNodeStorageBackend::size() const noexcept {
            specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
                return acc + storage.mapping.size();
            });
+}
+
+void UnsyncReferenceNodeStorageBackend::shrink_to_fit() {
+    iri_storage_.mapping.shrink_to_fit();
+    bnode_storage_.mapping.shrink_to_fit();
+    variable_storage_.mapping.shrink_to_fit();
+    fallback_literal_storage_.mapping.shrink_to_fit();
+
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage.mapping.shrink_to_fit();
+    });
 }
 
 bool UnsyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) const noexcept {

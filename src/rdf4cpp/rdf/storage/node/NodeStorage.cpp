@@ -253,6 +253,11 @@ size_t NodeStorage::ref_count() const noexcept {
 size_t NodeStorage::size() const noexcept {
     return this->cached_backend_ptr->size();
 }
+
+void NodeStorage::shrink_to_fit() {
+    this->cached_backend_ptr->shrink_to_fit();
+}
+
 bool NodeStorage::has_specialized_storage_for(identifier::LiteralType datatype) const noexcept {
     return this->cached_backend_ptr->has_specialized_storage_for(datatype);
 }

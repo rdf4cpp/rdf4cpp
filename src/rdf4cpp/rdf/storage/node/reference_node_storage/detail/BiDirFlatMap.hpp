@@ -116,6 +116,11 @@ public:
         return forward_.size();
     }
 
+    void shrink_to_fit() {
+        forward_.shrink_to_fit();
+        // TODO backward_?
+    }
+
     [[nodiscard]] std::optional<view_type> lookup_value(id_type const id) const noexcept {
         if (id == id_type{}) [[unlikely]] {
             return std::nullopt;

@@ -9,9 +9,8 @@ SyncReferenceNodeStorageBackend::SyncReferenceNodeStorageBackend() noexcept {
     variable_storage_.mapping.reserve(NodeID::min_variable_id);
     fallback_literal_storage_.mapping.reserve(NodeID::min_literal_id);
 
-    specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto &storage) noexcept {
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
         storage.mapping.reserve(NodeID::min_literal_id);
-        return acc;
     });
 
     // some iri's like xsd:string are there by default
@@ -35,6 +34,23 @@ size_t SyncReferenceNodeStorageBackend::size() const noexcept {
            specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
                return acc + storage_size(storage);
            });
+}
+
+template<typename Backend>
+static void storage_shrink_to_fit(SyncNodeTypeStorage<Backend> &storage) {
+    std::unique_lock<std::shared_mutex> l{storage.mutex};
+    storage.mapping.shrink_to_fit();
+}
+
+void SyncReferenceNodeStorageBackend::shrink_to_fit() {
+    storage_shrink_to_fit(iri_storage_);
+    storage_shrink_to_fit(bnode_storage_);
+    storage_shrink_to_fit(variable_storage_);
+    storage_shrink_to_fit(fallback_literal_storage_);
+
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage_shrink_to_fit(storage);
+    });
 }
 
 bool SyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) const noexcept {

@@ -235,6 +235,11 @@ public:
     [[nodiscard]] size_t size() const noexcept;
 
     /**
+     * Requests the removal of unused capacity.
+     */
+    void shrink_to_fit();
+
+    /**
      * Checks if the current backend has specialized storage for the given datatype
      */
     [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept;

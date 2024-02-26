@@ -56,6 +56,7 @@ public:
     UnsyncReferenceNodeStorageBackend() noexcept;
 
     [[nodiscard]] size_t size() const noexcept override;
+    void shrink_to_fit() override;
 
     [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept override;
 
