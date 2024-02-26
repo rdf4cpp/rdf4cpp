@@ -5,6 +5,7 @@
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 #include <algorithm>
 #include <any>
@@ -39,10 +40,10 @@ public:
      * Constructs an instance of a type from a string.
      */
     using factory_fptr_t = std::any (*)(std::string_view);
-    using to_string_fptr_t = std::string (*)(std::any const &) noexcept;
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
     using try_into_inlined_fptr_t = std::optional<storage::node::identifier::LiteralID> (*)(std::any const &) noexcept;
     using from_inlined_fptr_t = std::any (*)(storage::node::identifier::LiteralID) noexcept;
+    using serialize_fptr_t = bool (*)(std::any const &, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
@@ -110,8 +111,8 @@ public:
     struct DatatypeEntry {
         std::string datatype_iri;                   // datatype IRI string
         factory_fptr_t factory_fptr;                // construct from string
-        to_string_fptr_t to_canonical_string_fptr;  // convert to canonical string
-        to_string_fptr_t to_simplified_string_fptr; // convert to simplified string (e.g. for casting to xsd:string)
+        serialize_fptr_t serialize_canonical_string_fptr;  // convert to canonical string
+        serialize_fptr_t serialize_simplified_string_fptr; // convert to simplified string (e.g. for casting to xsd:string)
 
         ebv_fptr_t ebv_fptr; // convert to effective boolean value
 
@@ -126,8 +127,8 @@ public:
             return DatatypeEntry{
                     .datatype_iri = "",
                     .factory_fptr = nullptr,
-                    .to_canonical_string_fptr = nullptr,
-                    .to_simplified_string_fptr = nullptr,
+                    .serialize_canonical_string_fptr = nullptr,
+                    .serialize_simplified_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
                     .inlining_ops = std::nullopt,
@@ -139,8 +140,8 @@ public:
             return DatatypeEntry{
                     .datatype_iri = std::string{datatype_iri},
                     .factory_fptr = nullptr,
-                    .to_canonical_string_fptr = nullptr,
-                    .to_simplified_string_fptr = nullptr,
+                    .serialize_canonical_string_fptr = nullptr,
+                    .serialize_simplified_string_fptr = nullptr,
                     .ebv_fptr = nullptr,
                     .numeric_ops = std::nullopt,
                     .inlining_ops = std::nullopt,
@@ -244,14 +245,14 @@ public:
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer or nullptr
      */
-    [[nodiscard]] static to_string_fptr_t get_to_canonical_string(DatatypeIDView datatype_id) noexcept;
+    [[nodiscard]] static serialize_fptr_t get_serialize_canonical_string(DatatypeIDView datatype_id) noexcept;
 
     /**
      * Get the to_simplified_string function for a datatype. This function can be used for user friendly output.
      * @param datatype_id datatype id for the corresponding datatype
      * @return function pointer if datatype was found else nullptr
      */
-    [[nodiscard]] static to_string_fptr_t get_to_simplified_string(DatatypeIDView datatype_id) noexcept;
+    [[nodiscard]] static serialize_fptr_t get_serialize_simplified_string(DatatypeIDView datatype_id) noexcept;
 
     /**
      * Try to get the numerical ops function table for a datatype.
@@ -562,11 +563,11 @@ inline void DatatypeRegistry::add() noexcept {
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return LiteralDatatype_t::from_string(string_repr);
             },
-            .to_canonical_string_fptr = [](std::any const &value) noexcept -> std::string {
-                return LiteralDatatype_t::to_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
+            .serialize_canonical_string_fptr = [](std::any const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept -> bool {
+                return LiteralDatatype_t::serialize_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), buffer, cursor, flush);
             },
-            .to_simplified_string_fptr = [](std::any const &value) noexcept -> std::string {
-                return LiteralDatatype_t::to_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value));
+            .serialize_simplified_string_fptr = [](std::any const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept -> bool {
+                return LiteralDatatype_t::serialize_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), buffer, cursor, flush);
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,

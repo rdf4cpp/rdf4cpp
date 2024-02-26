@@ -17,10 +17,10 @@ template<>
 capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_double>::to_canonical_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_double>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 
 template<>
-std::string capabilities::Default<xsd_double>::to_simplified_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_double>::serialize_simplified_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_double>::effective_boolean_value(cpp_type const &value) noexcept;

@@ -157,6 +157,9 @@ public:
     [[nodiscard]] constexpr Cursor &cursor() noexcept { return cursor_; }
     [[nodiscard]] constexpr Buffer &buffer() noexcept { return buffer_; }
 
+    [[nodiscard]] constexpr Cursor const &cursor() const noexcept { return cursor_; }
+    [[nodiscard]] constexpr Buffer const &buffer() const noexcept { return buffer_; }
+
     static void flush(void *buffer, Cursor *cursor, size_t additional_cap) noexcept {
         CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), *cursor, additional_cap);
     }
@@ -179,6 +182,14 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     [[nodiscard]] Output &finalize() noexcept {
         buffer().resize(static_cast<size_t>(cursor().data() - buffer().data()));
         return buffer();
+    }
+
+    [[nodiscard]] std::string_view view() const noexcept {
+        return std::string_view{buffer().data(), static_cast<size_t>(cursor().data() - buffer().data())};
+    }
+
+    void clear() noexcept {
+        cursor().repoint(buffer().data(), buffer().size());
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {

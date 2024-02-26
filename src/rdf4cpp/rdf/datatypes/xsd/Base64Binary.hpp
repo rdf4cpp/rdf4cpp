@@ -32,6 +32,13 @@ struct Base64BinaryRepr {
      */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return this->serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
     /**
      * @param n the index of the hextet to extract
      * @return the n-th hextet in this decoded base64 value
@@ -70,7 +77,7 @@ template<>
 capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_base64_binary>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_base64_binary,

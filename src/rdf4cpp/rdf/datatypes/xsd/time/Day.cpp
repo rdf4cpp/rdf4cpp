@@ -24,11 +24,12 @@ capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_
 }
 
 template<>
-std::string capabilities::Default<xsd_gDay>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     auto str = std::format("---{:%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+    //return str;
+    return false; // TODO
 }
 
 template<>

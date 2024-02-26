@@ -40,7 +40,11 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
         for (size_t ix = 0; ix < N; ++ix) {
             auto const &value = test_values[ix];
 
-            std::cout << "Testing with: " << T::to_canonical_string(value) << " as " << std::string_view{T::identifier} << '\n';
+            writer::StringWriter w;
+            T::serialize_canonical_string(value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+            auto const &lex = w.finalize();
+
+            std::cout << "Testing with: " << lex << " as " << std::string_view{T::identifier} << '\n';
 
             view::ValueLiteralBackendView view{.datatype = T::fixed_id, .value = value};
             auto const id = NodeStorage::default_instance().find_or_make_id(view);
@@ -53,8 +57,8 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
             CHECK(!erased_2);
 
             auto lit1 = Literal::make_typed_from_value<T>(value);
-            auto lit2 = Literal::make_typed<T>(T::to_canonical_string(value));
-            auto lit3 = Literal::make_typed(T::to_canonical_string(value), IRI{T::identifier});
+            auto lit2 = Literal::make_typed<T>(lex);
+            auto lit3 = Literal::make_typed(lex, IRI{T::identifier});
 
             CHECK(lit1.backend_handle() == lit2.backend_handle());
             CHECK(lit2.backend_handle() == lit3.backend_handle());

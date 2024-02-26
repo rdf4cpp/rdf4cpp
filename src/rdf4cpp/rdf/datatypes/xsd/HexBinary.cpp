@@ -77,21 +77,29 @@ HexBinaryRepr HexBinaryRepr::from_encoded(std::string_view const hex_encoded) {
 }
 
 std::string HexBinaryRepr::to_encoded() const noexcept {
+    writer::StringWriter w; // TODO reserve
+    this->serialize(w);
+    return w.finalize();
+}
+
+bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
     if (this->n_bytes() == 0) {
-        return "0";
+        return writer::write_str("0", buffer, cursor, flush);
     }
 
-    std::string buf;
     for (ssize_t ix = static_cast<ssize_t>(this->n_bytes()) - 1; ix >= 0; --ix) {
         auto const byte = this->byte(ix);
         auto const lower = static_cast<uint8_t>(byte) & 0b1111;
         auto const higher = (static_cast<uint8_t>(byte) >> 4) & 0b1111;
 
-        buf.push_back(encode_decode_detail::hex_encode(higher));
-        buf.push_back(encode_decode_detail::hex_encode(lower));
+        std::array<char, 2> const chars{encode_decode_detail::hex_encode(higher), encode_decode_detail::hex_encode(lower)};
+
+        if (!writer::write_str(std::string_view{chars.data(), chars.size()}, buffer, cursor, flush)) {
+            return false;
+        }
     }
 
-    return buf;
+    return true;
 }
 
 std::byte HexBinaryRepr::half_octet(size_t const n) const noexcept {
@@ -118,8 +126,8 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 }
 
 template<>
-std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept {
-    return value.to_encoded();
+bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    return value.serialize(buffer, cursor, flush);
 }
 #endif
 

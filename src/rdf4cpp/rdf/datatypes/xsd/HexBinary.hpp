@@ -34,6 +34,13 @@ struct HexBinaryRepr {
      */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
+    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize(W &w) const noexcept {
+        return this->serialize(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
     /**
      * @param n index of half-octet / hex digit to extract
      * @return the n-th half-octet of this byte sequence
@@ -73,7 +80,7 @@ template<>
 capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_binary>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_hex_binary>::to_canonical_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_hex_binary,

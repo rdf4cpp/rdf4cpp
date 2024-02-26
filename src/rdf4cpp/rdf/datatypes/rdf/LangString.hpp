@@ -33,12 +33,11 @@ inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rd
 }
 
 template<>
-inline std::string capabilities::Default<rdf_lang_string>::to_canonical_string(cpp_type const &) noexcept {
+inline bool capabilities::Default<rdf_lang_string>::serialize_canonical_string(cpp_type const &, void *, writer::Cursor *, writer::FlushFunc) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();
 }
-
 
 template<>
 inline std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<rdf_lang_string>::try_into_inlined(cpp_type const &) noexcept {

@@ -12,13 +12,13 @@ capabilities::Default<xsd_float>::cpp_type capabilities::Default<xsd_float>::fro
 }
 
 template<>
-std::string capabilities::Default<xsd_float>::to_canonical_string(cpp_type const &value) noexcept {
-    return util::to_chars_canonical(value);
+bool capabilities::Default<xsd_float>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    return util::to_chars_canonical(value, buffer, cursor, flush);
 }
 
 template<>
-std::string capabilities::Default<xsd_float>::to_simplified_string(cpp_type const &value) noexcept {
-    return util::to_chars_simplified(value);
+bool capabilities::Default<xsd_float>::serialize_simplified_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    return util::to_chars_simplified(value, buffer, cursor, flush);
 }
 
 template<>

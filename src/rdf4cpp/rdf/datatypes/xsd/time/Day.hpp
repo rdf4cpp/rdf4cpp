@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_gDay>::to_canonical_string(const cpp_type &value) noexcept;
+bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 
 
 template<>

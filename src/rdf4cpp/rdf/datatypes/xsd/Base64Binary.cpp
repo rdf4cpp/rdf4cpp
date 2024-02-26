@@ -160,11 +160,16 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
 }
 
 std::string Base64BinaryRepr::to_encoded() const noexcept {
+    writer::StringWriter w; // TODO reserve
+    this->serialize(w);
+    return w.finalize();
+}
+
+bool Base64BinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
     if (this->n_bytes() == 0) {
-        return "";
+        return true;
     }
 
-    std::string buf;
     for (size_t triple = 0; triple < this->n_bytes() / 3; ++triple) {
         // encode all full 3-byte chunks, last chunk that is potentially less than 3 bytes will be handled separately
 
@@ -173,7 +178,9 @@ std::string Base64BinaryRepr::to_encoded() const noexcept {
         auto const b3 = this->byte(triple * 3 + 2);
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        std::copy(encoded.begin(), encoded.end(), std::back_inserter(buf));
+        if (!writer::write_str(std::string_view{encoded.data(), encoded.size()}, buffer, cursor, flush)) {
+            return false;
+        }
     }
 
     if (auto const rest = this->n_bytes() % 3; rest != 0) {
@@ -185,11 +192,20 @@ std::string Base64BinaryRepr::to_encoded() const noexcept {
         auto const b3 = triple * 3 + 2 < this->n_bytes() ? this->byte(triple * 3 + 2) : std::byte{0}; // maybe add padding byte for encoding
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        std::copy_n(encoded.begin(), 4 - (3 - rest), std::back_inserter(buf)); // add non-padding / data hextets
-        std::fill_n(std::back_inserter(buf), 3 - rest, '='); // add padding hextets to signal that padding bytes were used
+
+        // add non-padding / data hextets
+        if (!writer::write_str(std::string_view{encoded.data(), 4 - (3 - rest)}, buffer, cursor, flush)) {
+            return false;
+        }
+
+        // add padding hextets to signal that padding bytes were used
+        static constexpr std::array<char const *, 3> rest_str{"===", "==", "="};
+        if (!writer::write_str(rest_str[rest], buffer, cursor, flush)) {
+            return false;
+        }
     }
 
-    return buf;
+    return true;
 }
 
 std::byte Base64BinaryRepr::hextet(size_t const n) const noexcept {
@@ -221,8 +237,8 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 }
 
 template<>
-std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept {
-    return value.to_encoded();
+bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    return value.serialize(buffer, cursor, flush);
 }
 #endif
 

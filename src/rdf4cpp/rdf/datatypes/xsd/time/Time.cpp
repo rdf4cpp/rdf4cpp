@@ -29,11 +29,12 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
 }
 
 template<>
-std::string capabilities::Default<xsd_time>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_time>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     auto str = std::format("{:%H:%M:%S}", std::chrono::hh_mm_ss(value.first));
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+    //return str;
+    return false; //TODO
 }
 
 using IHelp = registry::util::InliningHelperPacked;

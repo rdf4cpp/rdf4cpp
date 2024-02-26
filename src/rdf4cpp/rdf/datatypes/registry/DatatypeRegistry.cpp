@@ -64,17 +64,17 @@ DatatypeRegistry::factory_fptr_t DatatypeRegistry::get_factory(DatatypeIDView co
     return res.has_value() ? *res : nullptr;
 }
 
-DatatypeRegistry::to_string_fptr_t DatatypeRegistry::get_to_canonical_string(DatatypeIDView const datatype_id) noexcept {
+DatatypeRegistry::serialize_fptr_t DatatypeRegistry::get_serialize_canonical_string(DatatypeIDView const datatype_id) noexcept {
     auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
-        return entry.to_canonical_string_fptr;
+        return entry.serialize_canonical_string_fptr;
     });
 
     return res.has_value() ? *res : nullptr;
 }
 
-DatatypeRegistry::to_string_fptr_t DatatypeRegistry::get_to_simplified_string(DatatypeIDView const datatype_id) noexcept {
+DatatypeRegistry::serialize_fptr_t DatatypeRegistry::get_serialize_simplified_string(DatatypeIDView const datatype_id) noexcept {
     auto const res = find_map_entry(datatype_id, [](auto const &entry) noexcept {
-        return entry.to_simplified_string_fptr;
+        return entry.serialize_simplified_string_fptr;
     });
 
     return res.has_value() ? *res : nullptr;

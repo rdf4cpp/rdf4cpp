@@ -12,8 +12,8 @@ capabilities::Default<xsd_int>::cpp_type capabilities::Default<xsd_int>::from_st
 }
 
 template<>
-std::string capabilities::Default<xsd_int>::to_canonical_string(cpp_type const &value) noexcept {
-    return util::to_chars_canonical(value);
+bool capabilities::Default<xsd_int>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    return util::to_chars_canonical(value, buffer, cursor, flush);
 }
 
 template<>

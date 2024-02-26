@@ -21,7 +21,7 @@ inline capabilities::Default<xsd_string>::cpp_type capabilities::Default<xsd_str
 }
 
 template<>
-inline std::string capabilities::Default<xsd_string>::to_canonical_string(cpp_type const &) noexcept {
+inline bool capabilities::Default<xsd_string>::serialize_canonical_string(cpp_type const &, void *, writer::Cursor *, writer::FlushFunc) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();

@@ -8,17 +8,18 @@
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 #include <rdf4cpp/rdf/util/Expected.hpp>
+#include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 namespace rdf4cpp::rdf::datatypes {
 
 template<typename LiteralDatatypeImpl>
-concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value) {
+concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
                               { LiteralDatatypeImpl::datatype_id } -> std::convertible_to<registry::DatatypeIDView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
-                              { LiteralDatatypeImpl::to_canonical_string(cpp_value) } -> std::convertible_to<std::string>;
-                              { LiteralDatatypeImpl::to_simplified_string(cpp_value) } -> std::convertible_to<std::string>;
+                              { LiteralDatatypeImpl::serialize_canonical_string(cpp_value, buffer, cursor, flush) } -> std::convertible_to<bool>;
+                              { LiteralDatatypeImpl::serialize_simplified_string(cpp_value, buffer, cursor, flush) } -> std::convertible_to<bool>;
                           };
 
 template<typename LiteralDatatypeImpl>

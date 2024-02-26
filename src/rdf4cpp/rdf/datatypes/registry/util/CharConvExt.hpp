@@ -45,7 +45,7 @@ I from_chars(std::string_view s) {
  * @param value the value to be serialized
  */
 template<std::integral I>
-std::string to_chars_canonical(I const value) noexcept {
+bool to_chars_canonical(I const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
@@ -55,7 +55,8 @@ std::string to_chars_canonical(I const value) noexcept {
 
     assert(res.ec == std::errc{});
 
-    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    return writer::write_str(s, buffer, cursor, flush);
 }
 
 /**
@@ -120,16 +121,16 @@ constexpr size_t log10ceil(T const value) noexcept {
  * @param value the value to be serialized
  */
 template<std::floating_point F>
-std::string to_chars_canonical(F const value) noexcept {
+bool to_chars_canonical(F const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     if (std::isnan(value)) {
-        return "NaN";
+        return writer::write_str("NaN", buffer, cursor, flush);
     }
 
     if (std::isinf(value)) {
         if (value > 0) {
-            return "INF";
+            return writer::write_str("INF", buffer, cursor, flush);
         } else {
-            return "-INF";
+            return writer::write_str("-INF", buffer, cursor, flush);
         }
     }
 
@@ -181,7 +182,8 @@ std::string to_chars_canonical(F const value) noexcept {
         res.ptr = std::shift_left(e_ptr + 1 + (1 - shift_off), res.ptr, shift_amt + shift_off); // shift out all leading zeros and plus sign from exponent
     }
 
-    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    return writer::write_str(s, buffer, cursor, flush);
 }
 
 /**
@@ -192,7 +194,7 @@ std::string to_chars_canonical(F const value) noexcept {
  * @param value the value to be serialized
  */
 template<std::floating_point F>
-std::string to_chars_simplified(F const value) noexcept {
+bool to_chars_simplified(F const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     if (value == 0) {
         return std::signbit(value) ? "-0" : "0";
     }
@@ -204,10 +206,11 @@ std::string to_chars_simplified(F const value) noexcept {
         auto const res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::fixed);
         assert(res.ec == std::errc{});
 
-        return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+        std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+        return writer::write_str(s, buffer, cursor, flush);
     }
 
-    return to_chars_canonical(value);
+    return to_chars_canonical(value, buffer, cursor, flush);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

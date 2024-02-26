@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_dayTimeDuration>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_dayTimeDuration>::to_canonical_string(const cpp_type &value) noexcept;
+bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dayTimeDuration>::try_into_inlined(cpp_type const &value) noexcept;

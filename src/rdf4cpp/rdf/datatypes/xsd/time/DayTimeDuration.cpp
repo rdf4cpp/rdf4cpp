@@ -51,9 +51,10 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
 }
 
 template<>
-std::string capabilities::Default<xsd_dayTimeDuration>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     if (value.count() == 0)
-        return "PT0.000S";
+        //return "PT0.000S";
+        return false; //TODO
     std::stringstream str{};
     std::chrono::milliseconds ms_rem = value;
     if (ms_rem.count() < 0) {
@@ -79,7 +80,8 @@ std::string capabilities::Default<xsd_dayTimeDuration>::to_canonical_string(cons
             str << std::format("{:%S}S", ms_rem);
     }
 
-    return str.str();
+    //return str.str();
+    return false; //TODO
 }
 
 template<>

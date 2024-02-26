@@ -35,16 +35,18 @@ capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational
 }
 
 template<>
-std::string capabilities::Default<owl_rational>::to_canonical_string(cpp_type const &value) noexcept {
+bool capabilities::Default<owl_rational>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     auto const simplified = simplify(value);
 
     if (auto den = denominator(simplified); den < 0) {
         // canonicalize x/-y to -x/y and -x/-y to x/y and simplify
         cpp_type const canonical{-numerator(simplified), -std::move(den)};
-        return canonical.str();
+        auto const s = canonical.str();
+        return writer::write_str(s, buffer, cursor, flush);
     }
 
-    return simplified.str();
+    auto const s = simplified.str();
+    return writer::write_str(s, buffer, cursor, flush);
 }
 
 template<>

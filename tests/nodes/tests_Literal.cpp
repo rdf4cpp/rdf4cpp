@@ -1015,8 +1015,9 @@ inline capabilities::Default<fake_datatype>::cpp_type capabilities::Default<fake
     return util::from_chars<int, "fake">(s);
 }
 template<>
-inline std::string capabilities::Default<fake_datatype>::to_canonical_string(cpp_type const &value) noexcept {
-    return std::format("{}", value);
+bool capabilities::Default<fake_datatype>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    auto const s = std::format("{}", value);
+    return writer::write_str(s, buffer, cursor, flush);
 }
 }
 struct FakeDatatype : rdf4cpp::rdf::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::rdf::datatypes::registry::fake_datatype> {};

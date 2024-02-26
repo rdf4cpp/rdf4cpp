@@ -253,7 +253,11 @@ public:
             }
         }
 
-        auto const lex = T::to_canonical_string(value);
+        writer::StringWriter w;
+        T::serialize_canonical_string(value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+
+        auto const &lex = w.finalize();
+
         auto const needs_escape = lexical_form_needs_escape(lex);
         return Literal::make_noninlined_typed_unchecked(lex,
                                                         needs_escape,
@@ -301,7 +305,10 @@ public:
             }
         }
 
-        auto const lex = T::to_canonical_string(compatible_value);
+        writer::StringWriter w;
+        T::serialize_canonical_string(compatible_value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+
+        auto const &lex = w.finalize();
         auto const needs_escape = lexical_form_needs_escape(lex);
 
         return Literal::make_noninlined_typed_unchecked(lex,
@@ -420,7 +427,10 @@ public:
         if (dty.null())
             return Literal{};
 
-        auto const lex = T::to_canonical_string(compatible_value);
+        writer::StringWriter w;
+        T::serialize_canonical_string(compatible_value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+
+        auto const &lex = w.finalize();
         auto const needs_escape = lexical_form_needs_escape(lex);
 
         auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
@@ -729,7 +739,7 @@ public:
      * \endverbatim
      * @return lexical form
      */
-    [[nodiscard]] util::CowString lexical_form() const noexcept;
+    [[nodiscard]] std::string lexical_form() const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -743,7 +753,7 @@ public:
      * Returns the simplified/more user friendly string version of this. This is for example used when casting numerics to string.
      * @return user friendly string representation
      */
-    [[nodiscard]] util::CowString simplified_lexical_form() const noexcept;
+    [[nodiscard]] std::string simplified_lexical_form() const noexcept;
 
     /**
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
@@ -816,6 +826,20 @@ public:
     template<writer::BufWriter W>
     bool serialize_short_form(W &w) const noexcept {
         return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
+    bool serialize_lexical_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize_lexical_form(W &w) const noexcept {
+        return serialize_lexical_form(&w.buffer(), &w.cursor(), &W::flush);
+    }
+
+    bool serialize_simplified_lexical_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    template<writer::BufWriter W>
+    bool serialize_simplified_lexical_form(W &w) const noexcept {
+        return serialize_simplified_lexical_form(&w.buffer(), &w.cursor(), &W::flush);
     }
 
     [[nodiscard]] explicit operator std::string() const noexcept;

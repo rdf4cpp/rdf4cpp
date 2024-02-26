@@ -59,9 +59,10 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
 }
 
 template<>
-std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
     if (value.first.count() == 0 && value.second.count() == 0)
-        return "PT0.000S";
+        //return "PT0.000S";
+        return false; // TODO
     std::stringstream str{};
     std::chrono::months m_rem = value.first;
     std::chrono::milliseconds ms_rem = value.second;
@@ -95,7 +96,8 @@ std::string capabilities::Default<xsd_duration>::to_canonical_string(const cpp_t
             str << std::format("{:%S}S", ms_rem);
     }
 
-    return str.str();
+    //return str.str();
+    return false; // TODO
 }
 
 struct __attribute__((__packed__)) InlinedDurationHelper {
