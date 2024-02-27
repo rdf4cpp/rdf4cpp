@@ -19,6 +19,12 @@
 
 namespace rdf4cpp::rdf {
 
+enum struct FetchOrSerializeResult {
+    Fetched,
+    Serialized,
+    SerializationFailed,
+};
+
 /**
  * An RDF Literal.
  *
@@ -766,16 +772,35 @@ public:
     [[nodiscard]] util::CowString lexical_form() const noexcept;
 
     /**
-     * Same as Literal::lexical_form, except that it returns a view to a potentially short-lived/ephemeral buffer
-     * that contains the lexical form of the Literal.
-     * It will **not** ensure safe access by cloning the buffer in case it is short-lived.
+     * Similar to Literal::lexical_form.
+     * If the lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
      *
-     * @warning The returned string_view can only be safely used as long as this thread
-     * did not call any other function (on any Literal) between calling this function and the use.
-     * The reason is that the returned pointer might point to a thread-local static buffer that might be overwritten
-     * every time another function of Literal is called.
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param buffer buffer of the writer used if the lexical form is not yet materialized
+     * @param cursor cursor of the writer used if the lexical form is not yet materialized
+     * @param flush flush function of the writer that is used if the lexical form is not yet materialized
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] std::string_view ephemeral_lexical_form() const noexcept;
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    /**
+     * Similar to Literal::lexical_form.
+     * If the lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
+     *
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param w writer
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
+     */
+    template<writer::BufWriter W>
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, W &w) const noexcept {
+        return fetch_or_serialize_lexical_form(out_lex_form, &w.buffer(), &w.cursor(), &W::flush);
+    }
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -792,16 +817,35 @@ public:
     [[nodiscard]] util::CowString simplified_lexical_form() const noexcept;
 
     /**
-     * Same as Literal::simplified_lexical_form, except that it returns a view to a potentially short-lived/ephemeral buffer
-     * that contains the lexical form of the Literal.
-     * It will **not** ensure safe access by cloning the buffer in case it is short-lived.
+     * Similar to Literal::simplified_lexical_form.
+     * If the simplified lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
      *
-     * @warning The returned string_view can only be safely used as long as this thread
-     * did not call any other function (on any Literal) between calling this function and the use.
-     * The reason is that the returned pointer might point to a thread-local static buffer that might be overwritten
-     * every time another function of Literal is called.
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param buffer buffer of the writer used if the lexical form is not yet materialized
+     * @param cursor cursor of the writer used if the lexical form is not yet materialized
+     * @param flush flush function of the writer that is used if the lexical form is not yet materialized
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] std::string_view ephemeral_simplified_lexical_form() const noexcept;
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+
+    /**
+     * Similar to Literal::simplified_lexical_form.
+     * If the simplified lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
+     *
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param w writer
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
+     */
+    template<writer::BufWriter W>
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, W &w) const noexcept {
+        return fetch_or_serialize_simplified_lexical_form(out_lex_form, &w.buffer(), &w.cursor(), &W::flush);
+    }
 
     /**
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.

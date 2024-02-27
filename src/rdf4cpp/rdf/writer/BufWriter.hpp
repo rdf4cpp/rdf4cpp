@@ -188,7 +188,7 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     }
 
     void clear() noexcept {
-        cursor().repoint(buffer().buffer_->data(), buffer().buffer_->capacity());
+        cursor().repoint(buffer().buffer_->data(), buffer().buffer_->size());
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {

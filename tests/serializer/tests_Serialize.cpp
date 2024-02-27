@@ -220,4 +220,62 @@ TEST_SUITE("Serialize") {
             do_test(long_lit_triples);
         }
     }
+
+    TEST_CASE("serialize pseudo format") {
+        std::vector<Literal> lits{
+                Literal::make_typed_from_value<datatypes::xsd::Int>(5),
+                Literal::make_typed_from_value<datatypes::xsd::Long>(10),
+                Literal::make_typed_from_value<datatypes::xsd::Long>(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max()),
+                Literal::make_simple("Spherical Cow"),
+                Literal::make_lang_tagged("Spherical Cow", "en"),
+                Literal::make_lang_tagged("Cow", "spherical")
+        };
+
+        std::string_view const expected = R"(lex:5,dt:http://www.w3.org/2001/XMLSchema#int,lang:
+lex:10,dt:http://www.w3.org/2001/XMLSchema#long,lang:
+lex:9223372036854775807,dt:http://www.w3.org/2001/XMLSchema#long,lang:
+lex:Spherical Cow,dt:http://www.w3.org/2001/XMLSchema#string,lang:
+lex:Spherical Cow,dt:http://www.w3.org/1999/02/22-rdf-syntax-ns#langString,lang:en
+lex:Cow,dt:http://www.w3.org/1999/02/22-rdf-syntax-ns#langString,lang:spherical
+)";
+
+        std::string buf;
+        writer::StringWriter w{buf};
+
+        std::string lexbuf;
+        writer::StringWriter lexw{lexbuf};
+
+        for (auto l : lits) {
+            writer::write_str("lex:", w);
+
+            {
+                lexw.clear();
+                std::string_view lex;
+                auto const r = l.fetch_or_serialize_lexical_form(lex, lexw);
+
+                switch (r) {
+                    case FetchOrSerializeResult::Fetched: {
+                        writer::write_str(lex, w);
+                        break;
+                    }
+                    case FetchOrSerializeResult::Serialized: {
+                        writer::write_str(lexw.view(), w);
+                        break;
+                    }
+                    default: {
+                        FAIL("Serialization failed");
+                        break;
+                    }
+                }
+            }
+
+            writer::write_str(",dt:", w);
+            writer::write_str(l.datatype().identifier(), w);
+            writer::write_str(",lang:", w);
+            writer::write_str(l.language_tag(), w);
+            writer::write_str("\n", w);
+        }
+
+        CHECK_EQ(w.view(), expected);
+    }
 }

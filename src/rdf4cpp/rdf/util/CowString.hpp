@@ -35,16 +35,20 @@ struct CowString {
 
 private:
     using repr_t = std::variant<std::string, std::string_view>;
-    repr_t data;
+    repr_t data_;
 
 public:
-    constexpr CowString(ownership_tag::Borrowed, std::string_view const value) noexcept : data{std::in_place_type<std::string_view>, value} {}
+    constexpr CowString(ownership_tag::Borrowed, std::string_view const value) noexcept : data_{std::in_place_type<std::string_view>, value} {}
 
-    inline CowString(ownership_tag::Owned, std::string const &value) : data{std::in_place_type<std::string>, value} {}
-    inline CowString(ownership_tag::Owned, std::string &&value) noexcept : data{std::in_place_type<std::string>, std::move(value)} {}
+    inline CowString(ownership_tag::Owned, std::string const &value) : data_{std::in_place_type<std::string>, value} {}
+    inline CowString(ownership_tag::Owned, std::string &&value) noexcept : data_{std::in_place_type<std::string>, std::move(value)} {}
 
     [[nodiscard]] constexpr size_type size() const noexcept {
         return this->view().size();
+    }
+
+    [[nodiscard]] constexpr value_type const *data() const noexcept {
+        return this->view().data();
     }
 
     [[nodiscard]] constexpr bool empty() const noexcept {
@@ -90,27 +94,27 @@ public:
     [[nodiscard]] constexpr std::string_view view() const noexcept {
         return std::visit([](auto const &value) noexcept -> std::string_view {
             return value;
-        }, this->data);
+        }, this->data_);
     }
 
     [[nodiscard]] constexpr bool is_borrowed() const noexcept {
-        return this->data.index() == 1;
+        return this->data_.index() == 1;
     }
 
     [[nodiscard]] constexpr bool is_owned() const noexcept {
-        return this->data.index() == 0;
+        return this->data_.index() == 0;
     }
 
     [[nodiscard]] constexpr std::string_view get_borrowed() const {
-        return std::get<std::string_view>(this->data);
+        return std::get<std::string_view>(this->data_);
     }
 
     [[nodiscard]] constexpr std::string const &get_owned() const {
-        return std::get<std::string>(this->data);
+        return std::get<std::string>(this->data_);
     }
 
     [[nodiscard]] constexpr std::string &get_owned() {
-        return std::get<std::string>(this->data);
+        return std::get<std::string>(this->data_);
     }
 
     /**
@@ -141,7 +145,7 @@ public:
      */
     [[nodiscard]] inline std::string &to_mutable() noexcept {
         if (this->is_borrowed()) {
-            this->data = std::string{this->get_borrowed()};
+            this->data_ = std::string{this->get_borrowed()};
         }
 
         return this->get_owned();

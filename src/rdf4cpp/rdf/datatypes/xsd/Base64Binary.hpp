@@ -32,6 +32,13 @@ struct Base64BinaryRepr {
      */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
+    static bool serialize(std::span<std::byte const> bytes, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
+
+    template<writer::BufWriter W>
+    static bool serialize(std::span<std::byte const> bytes, W &w) noexcept {
+        return serialize(bytes, &w.buffer(), &w.cursor(), &W::flush);
+    }
+
     bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     template<writer::BufWriter W>

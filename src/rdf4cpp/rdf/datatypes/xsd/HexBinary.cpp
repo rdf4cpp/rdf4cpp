@@ -82,13 +82,13 @@ std::string HexBinaryRepr::to_encoded() const noexcept {
     });
 }
 
-bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
-    if (this->n_bytes() == 0) {
+bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+    if (bytes.empty()) {
         return writer::write_str("0", buffer, cursor, flush);
     }
 
-    for (ssize_t ix = static_cast<ssize_t>(this->n_bytes()) - 1; ix >= 0; --ix) {
-        auto const byte = this->byte(ix);
+    for (ssize_t ix = static_cast<ssize_t>(bytes.size()) - 1; ix >= 0; --ix) {
+        auto const byte = bytes[ix];
         auto const lower = static_cast<uint8_t>(byte) & 0b1111;
         auto const higher = (static_cast<uint8_t>(byte) >> 4) & 0b1111;
 
@@ -100,6 +100,10 @@ bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::Flus
     }
 
     return true;
+}
+
+bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+    return serialize(this->bytes, buffer, cursor, flush);
 }
 
 std::byte HexBinaryRepr::half_octet(size_t const n) const noexcept {
