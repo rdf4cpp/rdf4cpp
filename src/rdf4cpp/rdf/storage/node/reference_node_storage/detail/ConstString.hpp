@@ -12,8 +12,8 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage::detail {
         using allocator_type = Allocator;
         using size_type = size_t;
         using different_type = std::ptrdiff_t;
-        using pointer = std::allocator_traits<allocator_type>::pointer;
-        using const_pointer = std::allocator_traits<allocator_type>::const_pointer;
+        using pointer = typename std::allocator_traits<allocator_type>::pointer;
+        using const_pointer = typename std::allocator_traits<allocator_type>::const_pointer;
 
     private:
         pointer data_;
