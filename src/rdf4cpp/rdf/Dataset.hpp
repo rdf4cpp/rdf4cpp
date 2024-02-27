@@ -65,6 +65,7 @@ public:
     /**
      * See Node::serialize for usage details
      */
+    bool serialize_trig(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
     bool serialize_trig(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     /**
@@ -83,6 +84,11 @@ public:
      * @param w a serializer
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
+    template<writer::BufWriter W>
+    bool serialize_trig(writer::SerializationState &state, W &w) const noexcept {
+        return serialize_trig(state, &w.buffer(), &w.cursor(), &W::flush);
+    }
+
     template<writer::BufWriter W>
     bool serialize_trig(W &w) const noexcept {
         return serialize_trig(&w.buffer(), &w.cursor(), &W::flush);

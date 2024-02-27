@@ -37,7 +37,7 @@ public:
     Quad(Node graph, Node subject, Node predicate, Node object);
 
 
-    [[nodiscard]] bool valid() const;
+    [[nodiscard]] bool valid() const noexcept;
 
     /**
      * The constructed Quad is validated. The optional result is only present, if it is valid.
@@ -47,7 +47,7 @@ public:
      * @param object IRI, Literal or BlankNode
      * @return A Quad if valid otherwise std::optional is empty
      */
-    static std::optional<Quad> create_validated(Node graph, Node subject, Node predicate, Node object);
+    static std::optional<Quad> create_validated(Node graph, Node subject, Node predicate, Node object) noexcept;
 
     /**
      * The constructed Quad has the default Graph as graph name and is validated. The optional result is only present, if it is valid.
@@ -56,23 +56,14 @@ public:
      * @param object IRI, Literal or BlankNode
      * @return A Quad if valid otherwise std::optional is empty
      */
-    static std::optional<Quad> create_validated(Node subject, Node predicate, Node object);
+    static std::optional<Quad> create_validated(Node subject, Node predicate, Node object) noexcept;
 
-    [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const {
-        Quad qu;
-        auto it = qu.begin();
-        for (const auto &item : (*this))
-            if (item.backend_handle().node_storage_id() == node_storage.id())
-                *(it++) = item;
-            else
-                *(it++) = item.to_node_storage(node_storage);
-        return qu;
-    }
+    [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const noexcept;
 
-    bool serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
-    bool serialize_nquads(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
-    bool serialize_turtle(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
-    bool serialize_trig(writer::SerializationState& state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const;
+    bool serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize_nquads(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize_turtle(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize_trig(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
 
     template<writer::BufWriter W>
     bool serialize_ntriples(W &w) const noexcept {
@@ -83,11 +74,11 @@ public:
         return serialize_nquads(&w.buffer(), &w.cursor(), &W::flush);
     }
     template<writer::BufWriter W>
-    bool serialize_turtle(writer::SerializationState& state, W &w) const noexcept {
+    bool serialize_turtle(writer::SerializationState &state, W &w) const noexcept {
         return serialize_turtle(state, &w.buffer(), &w.cursor(), &W::flush);
     }
     template<writer::BufWriter W>
-    bool serialize_trig(writer::SerializationState& state, W &w) const noexcept {
+    bool serialize_trig(writer::SerializationState &state, W &w) const noexcept {
         return serialize_trig(state, &w.buffer(), &w.cursor(), &W::flush);
     }
 };

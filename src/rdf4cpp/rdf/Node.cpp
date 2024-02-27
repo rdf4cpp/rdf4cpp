@@ -57,7 +57,7 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
             return IRI{handle_}.serialize(buffer, cursor, flush);
@@ -77,7 +77,7 @@ bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFu
         }
     }
 }
-bool Node::serialize_short_form(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize_short_form(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
             return IRI{handle_}.serialize(buffer, cursor, flush);
