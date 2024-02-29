@@ -138,6 +138,8 @@ struct BufWriterParts {
  * @return true if serialization was successful, false if a call to flush was not able to make room
  *
  * @see Node::serialize for more details on the signature/usage
+ *
+ * @note for maintainers, this function is defined in the header because that makes serialization measurably faster
  */
 inline bool write_str(std::string_view str, BufWriterParts const parts) noexcept {
     while (true) {
