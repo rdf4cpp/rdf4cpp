@@ -67,7 +67,7 @@ public:
     using backend_id_type = typename backend_type::id_type;
 
     /**
-     * Translates the given BackenId into a NodeID
+     * Translates the given backend_id_type into a NodeID
      */
     static identifier::NodeID to_node_id(backend_id_type const id, [[maybe_unused]] backend_view_type const &view) noexcept {
         if constexpr (requires { backend_type::to_node_id(id, view); }) {
@@ -77,6 +77,9 @@ public:
         }
     }
 
+    /**
+     * Translates the given NodeID into a backend_id_type
+     */
     static backend_id_type to_backend_id(identifier::NodeID const id) noexcept {
         if constexpr (requires { backend_type::to_backend_id(id); }) {
             return backend_type::to_backend_id(id);
