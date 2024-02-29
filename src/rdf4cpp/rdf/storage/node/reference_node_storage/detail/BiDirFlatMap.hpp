@@ -2,6 +2,7 @@
 #define RDF4CPP_RDF_REFERENCENODESTORAGE_BIDIRFLATMAP_HPP
 
 #include <dice/sparse-map/sparse_set.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/IndexFreeList.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage::detail {
 
@@ -83,8 +84,13 @@ private:
     using backward_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<backward_key_type>;
     using backward_type = dice::sparse_map::sparse_set<backward_key_type, backward_hasher, backward_key_equal, backward_allocator_type>;
 
+    using index_free_list_bitmap_type = size_t;
+    using index_free_list_allocator = typename std::allocator_traits<Allocator>::template rebind_alloc<index_free_list_bitmap_type>;
+    using index_free_list_type = IndexFreeList<index_free_list_bitmap_type, index_free_list_allocator>;
+
     forward_type forward_;   //< forward_[to_index(id)] stores Value for Id id
     backward_type backward_; //< backward_[view] stores Id into forward_
+    index_free_list_type freelist_; //< freelist for forward_
     [[no_unique_address]] allocator_type alloc_;
 
     /**
@@ -131,6 +137,7 @@ public:
     void shrink_to_fit() {
         forward_.shrink_to_fit();
         backward_.rehash(0); // force rehash (zero is special value)
+        freelist_.shrink_to_fit();
     }
 
     /**
@@ -171,7 +178,7 @@ public:
      * Reserve capacity such that min_id is the first id that
      * triggers an allocation if it is inserted.
      */
-    void reserve(id_type const min_id) {
+    void reserve_until(id_type const min_id) {
         auto const new_size = to_index(min_id);
         if (new_size < forward_.size()) {
             return;
@@ -179,6 +186,7 @@ public:
 
         forward_.resize(new_size);
         backward_.reserve(new_size);
+        freelist_.occupy_until(new_size);
     }
 
     /**
@@ -192,9 +200,15 @@ public:
     [[nodiscard]] id_type insert_assume_not_present(view_type const &view) {
         assert(lookup_id(view) == Id{});
 
-        auto const assigned_id = to_id(forward_.size());
+        auto const assigned_ix = freelist_.occupy_next_available();
+        if (assigned_ix >= forward_.size()) {
+            assert(assigned_ix == forward_.size());
+            forward_.emplace_back();
+        }
 
-        forward_.push_back(std::make_obj_using_allocator<mapped_type>(alloc_, view));
+        forward_[assigned_ix] = std::make_obj_using_allocator<mapped_type>(alloc_, view);
+
+        auto const assigned_id = to_id(assigned_ix);
         auto const h = backward_.hash_function().hash(view);
         backward_.emplace(h, assigned_id);
 
@@ -206,8 +220,10 @@ public:
      *
      * @precondition the value is not yet present in this map
      * @precondition there is no value present at the requested id
+     * @precondition sufficient capacity was allocated using reserve
      *
      * @param view view of the value to construct
+     * @param requested_id id to place the value at
      * @return id of newly constructed value
      */
     void insert_assume_not_present_at(view_type const &view, id_type const requested_id) {
@@ -232,11 +248,13 @@ public:
     void erase_assume_present(id_type const id) {
         assert(lookup_value(id).has_value());
 
-        auto &value = forward_[to_index(id)];
+        auto const ix = to_index(id);
+        auto &value = forward_[ix];
         auto const view = static_cast<view_type>(*value);
 
         backward_.erase(view);
         value.reset();
+        freelist_.vacate(ix);
     }
 };
 

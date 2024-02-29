@@ -4,13 +4,13 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept {
-    iri_storage_.mapping.reserve(identifier::NodeID::min_iri_id);
-    bnode_storage_.mapping.reserve(identifier::NodeID::min_bnode_id);
-    variable_storage_.mapping.reserve(identifier::NodeID::min_variable_id);
-    fallback_literal_storage_.mapping.reserve(identifier::NodeID::min_literal_id);
+    iri_storage_.mapping.reserve_until(identifier::NodeID::min_iri_id);
+    bnode_storage_.mapping.reserve_until(identifier::NodeID::min_bnode_id);
+    variable_storage_.mapping.reserve_until(identifier::NodeID::min_variable_id);
+    fallback_literal_storage_.mapping.reserve_until(identifier::NodeID::min_literal_id);
 
     specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
-        storage.mapping.reserve(identifier::NodeID::min_literal_id);
+        storage.mapping.reserve_until(identifier::NodeID::min_literal_id);
     });
 
     // some iri's like xsd:string are there by default
