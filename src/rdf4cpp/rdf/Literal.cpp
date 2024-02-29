@@ -75,7 +75,7 @@ namespace rdf4cpp::rdf {
 template<typename T, typename S>
 static std::string run_serialize(S serialize, T const &value) {
     return writer::StringWriter::oneshot([&serialize, &value](writer::StringWriter &w) noexcept {
-        return std::invoke(serialize, value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+        return std::invoke(serialize, value, w);
     });
 }
 
@@ -571,7 +571,7 @@ struct ConsumeSafe {
 
     [[nodiscard]] util::CowString operator()(std::any const &value, datatypes::registry::DatatypeRegistry::serialize_fptr_t serialize) const noexcept {
         auto s = writer::StringWriter::oneshot([&value, serialize](writer::StringWriter &w) noexcept {
-            return serialize(value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+            return serialize(value, w);
         });
 
         return util::CowString{util::ownership_tag::owned, std::move(s)};
@@ -580,9 +580,7 @@ struct ConsumeSafe {
 
 struct ConsumeMaybeSerialize {
     std::string_view *const out_lex_form;
-    void *const buffer;
-    writer::Cursor *const cursor;
-    writer::FlushFunc const flush;
+    writer::BufWriterParts const parts;
 
     [[nodiscard]] FetchOrSerializeResult operator()(std::string_view const lexical) const noexcept {
         *out_lex_form = lexical;
@@ -590,7 +588,7 @@ struct ConsumeMaybeSerialize {
     }
 
     [[nodiscard]] FetchOrSerializeResult operator()(std::any const &value, datatypes::registry::DatatypeRegistry::serialize_fptr_t const serialize) const noexcept {
-        if (!serialize(value, buffer, cursor, flush)) {
+        if (!serialize(value, parts)) {
             return FetchOrSerializeResult::SerializationFailed;
         }
         return FetchOrSerializeResult::Serialized;
@@ -598,16 +596,14 @@ struct ConsumeMaybeSerialize {
 };
 
 struct ConsumeSerialize {
-    void *const buffer;
-    writer::Cursor *const cursor;
-    writer::FlushFunc const flush;
+    writer::BufWriterParts const parts;
 
     bool operator()(std::string_view const lexical_form) const noexcept {
-        return writer::write_str(lexical_form, buffer, cursor, flush);
+        return writer::write_str(lexical_form, parts);
     }
 
     bool operator()(std::any const &value, datatypes::registry::DatatypeRegistry::serialize_fptr_t const serialize) const noexcept {
-        return serialize(value, buffer, cursor, flush);
+        return serialize(value, parts);
     }
 };
 
@@ -615,8 +611,8 @@ util::CowString Literal::lexical_form() const noexcept {
     return serialize_lexical_form_impl<false>(ConsumeSafe{});
 }
 
-FetchOrSerializeResult Literal::fetch_or_serialize_lexical_form(std::string_view &out_lex_form, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_lexical_form_impl<false>(ConsumeMaybeSerialize{&out_lex_form, buffer, cursor, flush});
+FetchOrSerializeResult Literal::fetch_or_serialize_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts const parts) const noexcept {
+    return serialize_lexical_form_impl<false>(ConsumeMaybeSerialize{&out_lex_form, parts});
 }
 
 Literal Literal::as_lexical_form(NodeStorage &node_storage) const noexcept {
@@ -633,8 +629,8 @@ util::CowString Literal::simplified_lexical_form() const noexcept {
     return serialize_lexical_form_impl<true>(ConsumeSafe{});
 }
 
-FetchOrSerializeResult Literal::fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_lexical_form_impl<true>(ConsumeMaybeSerialize{&out_lex_form, buffer, cursor, flush});
+FetchOrSerializeResult Literal::fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts const parts) const noexcept {
+    return serialize_lexical_form_impl<true>(ConsumeMaybeSerialize{&out_lex_form, parts});
 }
 
 Literal Literal::as_simplified_lexical_form(NodeStorage &node_storage) const noexcept {
@@ -729,7 +725,7 @@ Literal Literal::as_language_tag_eq(Literal const &other, Node::NodeStorage &nod
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
 template<bool short_form>
-bool Literal::serialize_impl(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Literal::serialize_impl(writer::BufWriterParts const parts) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
@@ -764,7 +760,7 @@ bool Literal::serialize_impl(void *const buffer, writer::Cursor *const cursor, w
     } else if (short_form && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
             || this->datatype_eq<datatypes::xsd::Decimal>() || this->datatype_eq<datatypes::xsd::Boolean>())) {
 
-        return this->serialize_lexical_form(buffer, cursor, flush);
+        return this->serialize_lexical_form(parts);
     } else if (this->is_inlined()) {
         assert(!this->datatype_eq<datatypes::rdf::LangString>());
         // Notes:
@@ -778,12 +774,12 @@ bool Literal::serialize_impl(void *const buffer, writer::Cursor *const cursor, w
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
         auto const inlined_value = this->backend_handle().node_id().literal_id();
-        if (!entry->serialize_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value), buffer, cursor, flush)) {
+        if (!entry->serialize_canonical_string_fptr(entry->inlining_ops->from_inlined_fptr(inlined_value), parts)) {
             return false;
         }
 
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-        return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
+        return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), parts);
     } else {
         using storage::node::NodeStorage;
         using storage::node::identifier::NodeBackendHandle;
@@ -817,31 +813,31 @@ bool Literal::serialize_impl(void *const buffer, writer::Cursor *const cursor, w
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-                    if (!entry->serialize_canonical_string_fptr(value_backend.value, buffer, cursor, flush)) {
+                    if (!entry->serialize_canonical_string_fptr(value_backend.value, parts)) {
                         return false;
                     }
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-                    return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), buffer, cursor, flush);
+                    return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), parts);
                 });
     }
 }
 
 #undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
 
-bool Literal::serialize(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_impl<false>(buffer, cursor, flush);
+bool Literal::serialize(writer::BufWriterParts const parts) const noexcept {
+    return serialize_impl<false>(parts);
 }
-bool Literal::serialize_short_form(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_impl<true>(buffer, cursor, flush);
-}
-
-bool Literal::serialize_lexical_form(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_lexical_form_impl<false>(ConsumeSerialize{buffer, cursor, flush});
+bool Literal::serialize_short_form(writer::BufWriterParts const parts) const noexcept {
+    return serialize_impl<true>(parts);
 }
 
-bool Literal::serialize_simplified_lexical_form(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize_lexical_form_impl<true>(ConsumeSerialize{buffer, cursor, flush});
+bool Literal::serialize_lexical_form(writer::BufWriterParts const parts) const noexcept {
+    return serialize_lexical_form_impl<false>(ConsumeSerialize{parts});
+}
+
+bool Literal::serialize_simplified_lexical_form(writer::BufWriterParts const parts) const noexcept {
+    return serialize_lexical_form_impl<true>(ConsumeSerialize{parts});
 }
 
 Literal::operator std::string() const noexcept {

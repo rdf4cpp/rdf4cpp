@@ -93,21 +93,57 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
 using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) noexcept;
 
 /**
+ * The fundamental parts of a BufWriter.
+ * This struct can be constructed either from a BufWriter itself
+ * or manually from its raw parts.
+ *
+ *
+ * It consists of an arbitrary, flushable/extendable buffer type (e.g. a std::string), a cursor
+ * into the buffer (that describes its base address and length of the free segment) and a function to flush the buffer (i.e. to either flush to io or extend the buffer).
+ * During usage callers must update the cursor to reflect the current start of the spare capacity and remaining length.
+ * When the remaining length reaches zero, flush must be called using the provided buffer and cursor. Its task is to somehow make more buffer
+ * room and then adjust the cursor to point to the new spare room.
+ *
+ * See implementation of write_str (below) for a practical usage example
+ */
+struct BufWriterParts {
+    void *buffer; //< pointer to arbitrary buffer structure
+    Cursor *cursor; //< cursor into buffer
+    FlushFunc flush; //< function to flush the contents of buffer and update cursor to point to the new free space
+
+    BufWriterParts() = delete;
+    BufWriterParts(BufWriterParts const &) noexcept = default;
+    BufWriterParts(BufWriterParts &&) noexcept = default;
+    BufWriterParts &operator=(BufWriterParts const &) noexcept = default;
+    BufWriterParts &operator=(BufWriterParts &&) noexcept = default;
+    ~BufWriterParts() noexcept = default;
+
+    template<BufWriter W>
+    BufWriterParts(W &w) noexcept : buffer{&w.buffer()},
+                                    cursor{&w.cursor()},
+                                    flush{&W::flush} {
+    }
+
+    BufWriterParts(void *buffer, Cursor *cursor, FlushFunc flush) noexcept : buffer{buffer},
+                                                                             cursor{cursor},
+                                                                             flush{flush} {
+    }
+};
+
+/**
  * Serializes the given string as is
  *
  * @param str string to write
- * @param buffer pointer to arbitrary buffer structure
- * @param cursor cursor into buffer
- * @param flush function to flush the contents of buffer and update cursor to point to the new free space
+ * @param parts writer parts
  * @return true if serialization was successful, false if a call to flush was not able to make room
  *
  * @see Node::serialize for more details on the signature/usage
  */
-inline bool write_str(std::string_view str, void *const buffer, Cursor *cursor, FlushFunc const flush) noexcept {
+inline bool write_str(std::string_view str, BufWriterParts const parts) noexcept {
     while (true) {
-        auto const max_write = std::min(str.size(), cursor->size());
-        memcpy(cursor->data(), str.data(), max_write);
-        cursor->advance(max_write);
+        auto const max_write = std::min(str.size(), parts.cursor->size());
+        memcpy(parts.cursor->data(), str.data(), max_write);
+        parts.cursor->advance(max_write);
 
         if (max_write == str.size()) [[likely]] {
             break;
@@ -115,20 +151,11 @@ inline bool write_str(std::string_view str, void *const buffer, Cursor *cursor, 
 
         str.remove_prefix(max_write);
 
-        if (flush(buffer, cursor, str.size()); cursor->size() == 0) [[unlikely]] {
+        if (parts.flush(parts.buffer, parts.cursor, str.size()); parts.cursor->size() == 0) [[unlikely]] {
             return false;
         }
     }
     return true;
-}
-
-/**
- * Serializes a string as is
- * See Node::serialize<> for more details on the signature/usage
- */
-template<BufWriter W>
-bool write_str(std::string_view str, W &w) {
-    return write_str(str, &w.buffer(), &w.cursor(), &W::flush);
 }
 
 /**

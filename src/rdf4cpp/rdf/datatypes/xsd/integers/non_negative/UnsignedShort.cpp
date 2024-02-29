@@ -10,8 +10,8 @@ capabilities::Default<xsd_unsigned_short>::cpp_type capabilities::Default<xsd_un
 }
 
 template<>
-bool capabilities::Default<xsd_unsigned_short>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
-    return util::to_chars_canonical(value, buffer, cursor, flush);
+bool capabilities::Default<xsd_unsigned_short>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
+    return util::to_chars_canonical(value, parts);
 }
 
 

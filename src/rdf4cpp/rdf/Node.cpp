@@ -57,19 +57,19 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize(writer::BufWriterParts const parts) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buffer, cursor, flush);
+            return IRI{handle_}.serialize(parts);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+            return query::Variable{handle_}.serialize(parts);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+            return BlankNode{handle_}.serialize(parts);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(buffer, cursor, flush);
+            return Literal{handle_}.serialize(parts);
         }
         default: {
             assert(false);
@@ -77,19 +77,19 @@ bool Node::serialize(void *const buffer, writer::Cursor *const cursor, writer::F
         }
     }
 }
-bool Node::serialize_short_form(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize_short_form(writer::BufWriterParts const parts) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buffer, cursor, flush);
+            return IRI{handle_}.serialize(parts);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+            return query::Variable{handle_}.serialize(parts);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+            return BlankNode{handle_}.serialize(parts);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize_short_form(buffer, cursor, flush);
+            return Literal{handle_}.serialize_short_form(parts);
         }
         default: {
             assert(false);

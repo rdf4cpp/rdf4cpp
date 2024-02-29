@@ -60,27 +60,10 @@ public:
 
     [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const noexcept;
 
-    bool serialize_ntriples(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    bool serialize_nquads(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    bool serialize_turtle(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    bool serialize_trig(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    template<writer::BufWriter W>
-    bool serialize_ntriples(W &w) const noexcept {
-        return serialize_ntriples(&w.buffer(), &w.cursor(), &W::flush);
-    }
-    template<writer::BufWriter W>
-    bool serialize_nquads(W &w) const noexcept {
-        return serialize_nquads(&w.buffer(), &w.cursor(), &W::flush);
-    }
-    template<writer::BufWriter W>
-    bool serialize_turtle(writer::SerializationState &state, W &w) const noexcept {
-        return serialize_turtle(state, &w.buffer(), &w.cursor(), &W::flush);
-    }
-    template<writer::BufWriter W>
-    bool serialize_trig(writer::SerializationState &state, W &w) const noexcept {
-        return serialize_trig(state, &w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_ntriples(writer::BufWriterParts parts) const noexcept;
+    bool serialize_nquads(writer::BufWriterParts parts) const noexcept;
+    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
+    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
 };
 }  // namespace rdf4cpp::rdf
 

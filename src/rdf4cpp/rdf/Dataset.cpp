@@ -44,33 +44,35 @@ Dataset::DatasetStorage &Dataset::backend() {
 const Dataset::DatasetStorage &Dataset::backend() const {
     return dataset_storage;
 }
-bool Dataset::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Dataset::serialize(writer::BufWriterParts const parts) const noexcept {
     for (Quad const &quad : *this) {
-        if (!quad.serialize_nquads(buffer, cursor, flush))
+        if (!quad.serialize_nquads(parts)) {
             return false;
+        }
     }
 
     return true;
 }
-bool Dataset::serialize_trig(writer::SerializationState &state, void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Dataset::serialize_trig(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
     for (Quad const &quad : *this) {
-        if (!quad.serialize_trig(state, buffer, cursor, flush))
+        if (!quad.serialize_trig(state, parts)) {
             return false;
+        }
     }
 
     return true;
 }
-bool Dataset::serialize_trig(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
+bool Dataset::serialize_trig(writer::BufWriterParts const parts) const noexcept {
     writer::SerializationState st{};
-    if (!st.begin(buffer, cursor, flush)) {
+    if (!st.begin(parts)) {
         return false;
     }
 
-    if (!serialize_trig(st, buffer, cursor, flush)) {
+    if (!serialize_trig(st, parts)) {
         return false;
     }
 
-    return st.flush(buffer, cursor, flush);
+    return st.flush(parts);
 }
 std::ostream &operator<<(std::ostream &os, Dataset const &ds) {
     writer::BufOStreamWriter w{os};

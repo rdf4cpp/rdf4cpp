@@ -42,45 +42,45 @@ Quad Quad::to_node_storage(storage::node::NodeStorage &node_storage) const noexc
 }
 
 template<writer::OutputFormat F>
-static bool write_node(Node const node, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) noexcept {
+static bool write_node(Node const node, writer::BufWriterParts const parts) noexcept {
     if constexpr (writer::format_has_prefix<F>) {
-        return node.serialize_short_form(buffer, cursor, flush);
+        return node.serialize_short_form(parts);
     } else {
-        return node.serialize(buffer, cursor, flush);
+        return node.serialize(parts);
     }
 }
 
 template<writer::OutputFormat F>
-static bool write_pred(Node const pred, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) {
+static bool write_pred(Node const pred, writer::BufWriterParts const parts) {
     assert(pred.is_iri());
 
     if constexpr (writer::format_has_prefix<F>) {
         static constexpr storage::node::identifier::LiteralType rdf_type = datatypes::registry::reserved_datatype_ids[datatypes::registry::rdf_type];
 
         if (iri_node_id_to_literal_type(pred.backend_handle().node_id()) == rdf_type) {
-            return writer::write_str("a", buffer, cursor, flush);
+            return writer::write_str("a", parts);
         }
     }
 
-    return write_node<F>(pred, buffer, cursor, flush);
+    return write_node<F>(pred, parts);
 }
 
-#define RDF4CPP_DETAIL_TRY_WRITE_NODE(pred)              \
-    if (!write_node<F>((pred), buffer, cursor, flush)) { \
-        return false;                                    \
+#define RDF4CPP_DETAIL_TRY_WRITE_NODE(pred) \
+    if (!write_node<F>((pred), parts)) {    \
+        return false;                       \
     }
 
-#define RDF4CPP_DETAIL_TRY_WRITE_PRED(pred)              \
-    if (!write_pred<F>((pred), buffer, cursor, flush)) { \
-        return false;                                    \
+#define RDF4CPP_DETAIL_TRY_WRITE_PRED(pred) \
+    if (!write_pred<F>((pred), parts)) {    \
+        return false;                       \
     }
 
 template<writer::OutputFormat F>
-static bool serialize(Quad const &s, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush, writer::SerializationState *const state) noexcept {
+static bool serialize(Quad const &s, writer::BufWriterParts const parts, writer::SerializationState *const state) noexcept {
     if constexpr (writer::format_has_prefix<F>) {
         if constexpr (writer::format_has_graph<F>) {
             if (s.graph() != state->active_graph) {
-                if (!state->flush(buffer, cursor, flush)) {
+                if (!state->flush(parts)) {
                     return false;
                 }
 
@@ -140,20 +140,20 @@ static bool serialize(Quad const &s, void *const buffer, writer::Cursor *const c
 #undef RDF4CPP_DETAIL_TRY_WRITE_NODE
 #undef RDF4CPP_DETAIL_TRY_WRITE_PRED
 
-bool Quad::serialize_ntriples(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize<writer::OutputFormat::NTriples>(*this, buffer, cursor, flush, nullptr);
+bool Quad::serialize_ntriples(writer::BufWriterParts const parts) const noexcept {
+    return serialize<writer::OutputFormat::NTriples>(*this, parts, nullptr);
 }
 
-bool Quad::serialize_nquads(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize<writer::OutputFormat::NQuads>(*this, buffer, cursor, flush, nullptr);
+bool Quad::serialize_nquads(writer::BufWriterParts const parts) const noexcept {
+    return serialize<writer::OutputFormat::NQuads>(*this, parts, nullptr);
 }
 
-bool Quad::serialize_turtle(writer::SerializationState &state, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize<writer::OutputFormat::Turtle>(*this, buffer, cursor, flush, &state);
+bool Quad::serialize_turtle(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
+    return serialize<writer::OutputFormat::Turtle>(*this, parts, &state);
 }
 
-bool Quad::serialize_trig(writer::SerializationState &state, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
-    return serialize<writer::OutputFormat::TriG>(*this, buffer, cursor, flush, &state);
+bool Quad::serialize_trig(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
+    return serialize<writer::OutputFormat::TriG>(*this, parts, &state);
 }
 
 }  // namespace rdf4cpp::rdf

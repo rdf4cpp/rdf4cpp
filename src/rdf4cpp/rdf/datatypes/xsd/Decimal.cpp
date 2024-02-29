@@ -25,21 +25,21 @@ capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>:
 }
 
 template<>
-bool capabilities::Default<xsd_decimal>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool capabilities::Default<xsd_decimal>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
     auto const s = static_cast<std::string>(value);
-    return writer::write_str(s, buffer, cursor, flush);
+    return writer::write_str(s, parts);
 }
 
 template<>
-bool capabilities::Default<xsd_decimal>::serialize_simplified_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool capabilities::Default<xsd_decimal>::serialize_simplified_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
     cpp_type v = value;
     v.normalize();
     if (v.get_exponent() == 0) {
         auto const s = static_cast<boost::multiprecision::cpp_int>(v).str();
-        return writer::write_str(s, buffer, cursor, flush);
+        return writer::write_str(s, parts);
     } else {
         auto const s = static_cast<std::string>(v);
-        return writer::write_str(s, buffer, cursor, flush);
+        return writer::write_str(s, parts);
     }
 }
 

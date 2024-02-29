@@ -68,7 +68,7 @@ storage::tuple::DatasetStorage &Graph::backend() {
 const storage::tuple::DatasetStorage &Graph::backend() const {
     return dataset_storage;
 }
-bool Graph::serialize(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize(writer::BufWriterParts const parts) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -80,14 +80,14 @@ bool Graph::serialize(void *const buffer, writer::Cursor *const cursor, writer::
 
     for (auto const &solution : solutions) {
         Quad q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_ntriples(buffer, cursor, flush)) {
+        if (!q.serialize_ntriples(parts)) {
             return false;
         }
     }
 
     return true;
 }
-bool Graph::serialize_turtle(writer::SerializationState &state, void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize_turtle(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -99,24 +99,24 @@ bool Graph::serialize_turtle(writer::SerializationState &state, void *const buff
 
     for (auto const &solution : solutions) {
         Quad const q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_turtle(state, buffer, cursor, flush)) {
+        if (!q.serialize_turtle(state, parts)) {
             return false;
         }
     }
 
     return true;
 }
-bool Graph::serialize_turtle(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize_turtle(writer::BufWriterParts const parts) const noexcept {
     writer::SerializationState st{};
-    if (!st.begin(buffer, cursor, flush)) {
+    if (!st.begin(parts)) {
         return false;
     }
 
-    if (!serialize_turtle(st, buffer, cursor, flush)) {
+    if (!serialize_turtle(st, parts)) {
         return false;
     }
 
-    return st.flush(buffer, cursor, flush);
+    return st.flush(parts);
 }
 
 std::ostream &operator<<(std::ostream &os, Graph const &graph) {

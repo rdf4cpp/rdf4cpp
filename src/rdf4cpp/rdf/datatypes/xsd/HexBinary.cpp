@@ -82,9 +82,9 @@ std::string HexBinaryRepr::to_encoded() const noexcept {
     });
 }
 
-bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWriterParts parts) noexcept {
     if (bytes.empty()) {
-        return writer::write_str("0", buffer, cursor, flush);
+        return writer::write_str("0", parts);
     }
 
     for (ssize_t ix = static_cast<ssize_t>(bytes.size()) - 1; ix >= 0; --ix) {
@@ -94,7 +94,7 @@ bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, void *buffer, wr
 
         std::array<char, 2> const chars{encode_decode_detail::hex_encode(higher), encode_decode_detail::hex_encode(lower)};
 
-        if (!writer::write_str(std::string_view{chars.data(), chars.size()}, buffer, cursor, flush)) {
+        if (!writer::write_str(std::string_view{chars.data(), chars.size()}, parts)) {
             return false;
         }
     }
@@ -102,8 +102,8 @@ bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, void *buffer, wr
     return true;
 }
 
-bool HexBinaryRepr::serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept {
-    return serialize(this->bytes, buffer, cursor, flush);
+bool HexBinaryRepr::serialize(writer::BufWriterParts parts) const noexcept {
+    return serialize(this->bytes, parts);
 }
 
 std::byte HexBinaryRepr::half_octet(size_t const n) const noexcept {
@@ -130,8 +130,8 @@ capabilities::Default<xsd_hex_binary>::cpp_type capabilities::Default<xsd_hex_bi
 }
 
 template<>
-bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
-    return value.serialize(buffer, cursor, flush);
+bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
+    return value.serialize(parts);
 }
 #endif
 

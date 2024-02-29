@@ -59,9 +59,9 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
 }
 
 template<>
-bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
     if (value.first.count() == 0 && value.second.count() == 0) {
-        return writer::write_str("PT0.000S", buffer, cursor, flush);
+        return writer::write_str("PT0.000S", parts);
     }
     std::stringstream str{};
     std::chrono::months m_rem = value.first;
@@ -96,7 +96,7 @@ bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type co
             str << std::format("{:%S}S", ms_rem);
     }
 
-    return writer::write_str(str.view(), buffer, cursor, flush);
+    return writer::write_str(str.view(), parts);
 }
 
 struct __attribute__((__packed__)) InlinedDurationHelper {

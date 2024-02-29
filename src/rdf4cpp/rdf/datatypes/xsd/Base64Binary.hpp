@@ -32,19 +32,9 @@ struct Base64BinaryRepr {
      */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
-    static bool serialize(std::span<std::byte const> bytes, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
+    static bool serialize(std::span<std::byte const> bytes, writer::BufWriterParts parts) noexcept;
 
-    template<writer::BufWriter W>
-    static bool serialize(std::span<std::byte const> bytes, W &w) noexcept {
-        return serialize(bytes, &w.buffer(), &w.cursor(), &W::flush);
-    }
-
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return this->serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize(writer::BufWriterParts parts) const noexcept;
 
     /**
      * @param n the index of the hextet to extract
@@ -84,7 +74,7 @@ template<>
 capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_base64_binary>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
+bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_base64_binary,

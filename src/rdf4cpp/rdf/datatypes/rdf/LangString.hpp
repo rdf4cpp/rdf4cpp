@@ -33,7 +33,7 @@ inline capabilities::Default<rdf_lang_string>::cpp_type capabilities::Default<rd
 }
 
 template<>
-inline bool capabilities::Default<rdf_lang_string>::serialize_canonical_string(cpp_type const &, void *, writer::Cursor *, writer::FlushFunc) noexcept {
+inline bool capabilities::Default<rdf_lang_string>::serialize_canonical_string(cpp_type const &, writer::BufWriterParts) noexcept {
     // dummy implementation, actual implementation in Literal
     assert(false);
     __builtin_unreachable();

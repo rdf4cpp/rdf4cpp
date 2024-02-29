@@ -176,7 +176,7 @@ private:
      * @tparam short_form whether to serialize in short/turtle form or in long/ntriples form
      */
     template<bool short_form>
-    bool serialize_impl(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize_impl(writer::BufWriterParts parts) const noexcept;
 
     /**
      * Implementation.
@@ -285,7 +285,7 @@ public:
         }
 
         auto const lex = writer::StringWriter::oneshot([&value](writer::StringWriter &w) noexcept {
-            return T::serialize_canonical_string(value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+            return T::serialize_canonical_string(value, w);
         });
 
         auto const needs_escape = lexical_form_needs_escape(lex);
@@ -336,7 +336,7 @@ public:
         }
 
         auto const lex = writer::StringWriter::oneshot([&compatible_value](writer::StringWriter &w) noexcept {
-            return T::serialize_canonical_string(compatible_value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+            return T::serialize_canonical_string(compatible_value, w);
         });
 
         auto const needs_escape = lexical_form_needs_escape(lex);
@@ -458,7 +458,7 @@ public:
             return Literal{};
 
         auto const lex = writer::StringWriter::oneshot([&compatible_value]<typename W>(W &w) noexcept {
-            return T::serialize_canonical_string(compatible_value, &w.buffer(), &w.cursor(), &W::flush);
+            return T::serialize_canonical_string(compatible_value, w);
         });
 
         auto const needs_escape = lexical_form_needs_escape(lex);
@@ -777,30 +777,12 @@ public:
      * serializes it using the given writer.
      *
      * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param buffer buffer of the writer used if the lexical form is not yet materialized
-     * @param cursor cursor of the writer used if the lexical form is not yet materialized
-     * @param flush flush function of the writer that is used if the lexical form is not yet materialized
+     * @param parts writer parts to be used if the lexical form is not yet materialized
      * @return - Fetched, if lexical form was already materialized and could be fetched.
      *         - Serialized if lexical form was not yet materialized, but could be serialized.
      *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * Similar to Literal::lexical_form.
-     * If the lexical form is already materialized, will return a string_view to it, otherwise
-     * serializes it using the given writer.
-     *
-     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param w writer
-     * @return - Fetched, if lexical form was already materialized and could be fetched.
-     *         - Serialized if lexical form was not yet materialized, but could be serialized.
-     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
-     */
-    template<writer::BufWriter W>
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, W &w) const noexcept {
-        return fetch_or_serialize_lexical_form(out_lex_form, &w.buffer(), &w.cursor(), &W::flush);
-    }
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts parts) const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -822,30 +804,12 @@ public:
      * serializes it using the given writer.
      *
      * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param buffer buffer of the writer used if the lexical form is not yet materialized
-     * @param cursor cursor of the writer used if the lexical form is not yet materialized
-     * @param flush flush function of the writer that is used if the lexical form is not yet materialized
+     * @param parts writer pats to be used if the simplified lexical form is not yet materialized
      * @return - Fetched, if lexical form was already materialized and could be fetched.
      *         - Serialized if lexical form was not yet materialized, but could be serialized.
      *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * Similar to Literal::simplified_lexical_form.
-     * If the simplified lexical form is already materialized, will return a string_view to it, otherwise
-     * serializes it using the given writer.
-     *
-     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param w writer
-     * @return - Fetched, if lexical form was already materialized and could be fetched.
-     *         - Serialized if lexical form was not yet materialized, but could be serialized.
-     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
-     */
-    template<writer::BufWriter W>
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, W &w) const noexcept {
-        return fetch_or_serialize_simplified_lexical_form(out_lex_form, &w.buffer(), &w.cursor(), &W::flush);
-    }
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts parts) const noexcept;
 
     /**
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
@@ -901,58 +865,24 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * See Node::serialize
-     */
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize(writer::BufWriterParts parts) const noexcept;
 
     /**
      * See Node::serialize_short_form
      */
-    bool serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * See Node::serialize_short_form
-     */
-    template<writer::BufWriter W>
-    bool serialize_short_form(W &w) const noexcept {
-        return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_short_form(writer::BufWriterParts parts) const noexcept;
 
     /**
      * Serializes this Literal's canonical lexical form into the decomposed writer
      * See Node::serialize for more details
      */
-    bool serialize_lexical_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * Serializes this Literal's canonical lexical form into the writer
-     * See Node::serialize for more details
-     */
-    template<writer::BufWriter W>
-    bool serialize_lexical_form(W &w) const noexcept {
-        return serialize_lexical_form(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_lexical_form(writer::BufWriterParts parts) const noexcept;
 
     /**
      * Serializes this Literal's simplified lexical form into the decomposed writer
      * See Node::serialize for more details
      */
-    bool serialize_simplified_lexical_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
-     * Serializes this Literal's simplified lexical form into the writer
-     * See Node::serialize for more details
-     */
-    template<writer::BufWriter W>
-    bool serialize_simplified_lexical_form(W &w) const noexcept {
-        return serialize_simplified_lexical_form(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_simplified_lexical_form(writer::BufWriterParts parts) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);

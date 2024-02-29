@@ -17,9 +17,9 @@ capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>:
 }
 
 template<>
-bool capabilities::Default<xsd_boolean>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool capabilities::Default<xsd_boolean>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
     static constexpr std::array<char const *, 2> lut{"false", "true"};
-    return writer::write_str(lut[static_cast<size_t>(value)], buffer, cursor, flush);
+    return writer::write_str(lut[static_cast<size_t>(value)], parts);
 }
 
 template<>

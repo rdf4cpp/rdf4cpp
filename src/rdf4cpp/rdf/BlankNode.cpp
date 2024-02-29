@@ -50,7 +50,7 @@ BlankNode BlankNode::find(std::string_view identifier, const NodeStorage& node_s
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
-bool BlankNode::serialize(void *const buffer, writer::Cursor *const cursor, writer::FlushFunc const flush) const noexcept {
+bool BlankNode::serialize(writer::BufWriterParts const parts) const noexcept {
     auto const backend = handle_.bnode_backend();
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("_:");

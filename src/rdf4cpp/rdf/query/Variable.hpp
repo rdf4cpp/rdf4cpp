@@ -49,12 +49,7 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize(writer::BufWriterParts parts) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);

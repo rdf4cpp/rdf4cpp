@@ -39,13 +39,16 @@ I from_chars(std::string_view s) {
 }
 
 /**
- * Serializes an integral type into its (SPARQL) _canonical_ representation.
+ * Serializes an integral type into its (SPARQL) representation.
+ * For integers the canonical and simplified representation are identical.
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-integer
  *
  * @param value the value to be serialized
+ * @param parts writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::integral I>
-bool to_chars_canonical(I const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool to_chars_canonical(I const value, writer::BufWriterParts const parts) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
@@ -56,21 +59,7 @@ bool to_chars_canonical(I const value, void *buffer, writer::Cursor *cursor, wri
     assert(res.ec == std::errc{});
 
     std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-    return writer::write_str(s, buffer, cursor, flush);
-}
-
-/**
- * Serializes an integer into its _simplified_ string representation which is e.g. used in
- * casting integers to strings.
- * @note for integers this is identical to the canonical representation
- *
- * @see https://www.w3.org/TR/xpath-functions/#casting-to-string
- *
- * @param value the value to be serialized
- */
-template<std::integral I>
-std::string to_chars_simplified(I const value) noexcept {
-    return to_chars_canonical(value);
+    return writer::write_str(s, parts);
 }
 
 /**
@@ -119,18 +108,20 @@ constexpr size_t log10ceil(T const value) noexcept {
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-float
  *
  * @param value the value to be serialized
+ * @param parts writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-bool to_chars_canonical(F const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool to_chars_canonical(F const value, writer::BufWriterParts const parts) noexcept {
     if (std::isnan(value)) {
-        return writer::write_str("NaN", buffer, cursor, flush);
+        return writer::write_str("NaN", parts);
     }
 
     if (std::isinf(value)) {
         if (value > 0) {
-            return writer::write_str("INF", buffer, cursor, flush);
+            return writer::write_str("INF", parts);
         } else {
-            return writer::write_str("-INF", buffer, cursor, flush);
+            return writer::write_str("-INF", parts);
         }
     }
 
@@ -183,7 +174,7 @@ bool to_chars_canonical(F const value, void *buffer, writer::Cursor *cursor, wri
     }
 
     std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-    return writer::write_str(s, buffer, cursor, flush);
+    return writer::write_str(s, parts);
 }
 
 /**
@@ -192,9 +183,11 @@ bool to_chars_canonical(F const value, void *buffer, writer::Cursor *cursor, wri
  * see https://www.w3.org/TR/xpath-functions/#casting-to-string
  *
  * @param value the value to be serialized
+ * @param parts writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-bool to_chars_simplified(F const value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept {
+bool to_chars_simplified(F const value, writer::BufWriterParts const parts) noexcept {
     if (value == 0) {
         return std::signbit(value) ? "-0" : "0";
     }
@@ -207,10 +200,10 @@ bool to_chars_simplified(F const value, void *buffer, writer::Cursor *cursor, wr
         assert(res.ec == std::errc{});
 
         std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-        return writer::write_str(s, buffer, cursor, flush);
+        return writer::write_str(s, parts);
     }
 
-    return to_chars_canonical(value, buffer, cursor, flush);
+    return to_chars_canonical(value, parts);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

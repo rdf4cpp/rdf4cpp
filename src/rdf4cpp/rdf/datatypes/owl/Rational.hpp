@@ -21,7 +21,7 @@ template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<owl_rational>::serialize_canonical_string(cpp_type const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
+bool capabilities::Default<owl_rational>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
 
 template<>
 bool capabilities::Logical<owl_rational>::effective_boolean_value(cpp_type const &value) noexcept;

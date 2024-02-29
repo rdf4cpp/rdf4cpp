@@ -41,7 +41,7 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
             auto const &value = test_values[ix];
 
             auto const lex = writer::StringWriter::oneshot([&value](writer::StringWriter &w) noexcept {
-                return T::serialize_canonical_string(value, &w.buffer(), &w.cursor(), &writer::StringWriter::flush);
+                return T::serialize_canonical_string(value, w);
             });
 
             std::cout << "Testing with: " << lex << " as " << std::string_view{T::identifier} << '\n';

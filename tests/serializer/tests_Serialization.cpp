@@ -35,15 +35,15 @@ TEST_CASE("Literal short type") {
 }
 
 template<OutputFormat F>
-bool serialize(const Quad& q, void *buffer, writer::Cursor &cursor, writer::FlushFunc flush, writer::SerializationState* state) {
+bool serialize(Quad const &q, writer::BufWriterParts parts, writer::SerializationState* state) {
     if constexpr (F == OutputFormat::NTriples)
-        return q.serialize_ntriples(buffer, &cursor, flush);
+        return q.serialize_ntriples(parts);
     else if constexpr (F == OutputFormat::NQuads)
-        return q.serialize_nquads(buffer, &cursor, flush);
+        return q.serialize_nquads(parts);
     else if constexpr (F == OutputFormat::Turtle)
-        return q.serialize_turtle(*state, buffer, &cursor, flush);
+        return q.serialize_turtle(*state, parts);
     else if constexpr (F == OutputFormat::TriG)
-        return q.serialize_trig(*state, buffer, &cursor, flush);
+        return q.serialize_trig(*state, parts);
 }
 
 template<OutputFormat F>
@@ -52,17 +52,17 @@ std::string write_basic_data(){
     writer::StringWriter ser{buf};
     writer::SerializationState st{};
     if constexpr (format_has_prefix<F>)
-        if (!writer::SerializationState::begin(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
+        if (!writer::SerializationState::begin(ser))
             FAIL("state failed");
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, ser, &st))
         FAIL("write failed");
     q.graph() = IRI::make("http://ex/graph2");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st))
+    if (!serialize<F>(q, ser, &st))
         FAIL("write failed");
     if constexpr (format_has_prefix<F>)
-        if (!st.flush(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush))
+        if (!st.flush(ser))
             FAIL("flush failed");
     ser.finalize();
     return buf;
@@ -171,33 +171,33 @@ std::string write_ext_data() {
     }
 
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://ex/pred"), IRI::make("http://ex/obj")};
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st)) {
+    if (!serialize<F>(q, ser, &st)) {
         FAIL("write failed");
     }
 
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Integer>(5);
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st)) {
+    if (!serialize<F>(q, ser, &st)) {
         FAIL("write failed");
     }
 
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Double>(5.0);
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st)) {
+    if (!serialize<F>(q, ser, &st)) {
         FAIL("write failed");
     }
 
     q.object() = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st)) {
+    if (!serialize<F>(q, ser, &st)) {
         FAIL("write failed");
     }
 
     q.predicate() = IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Boolean>(true);
-    if (!serialize<F>(q, &ser.buffer(), ser.cursor(), &writer::StringWriter::flush, &st)) {
+    if (!serialize<F>(q, ser, &st)) {
         FAIL("write failed");
     }
 
     if constexpr (format_has_prefix<F>) {
-        if (!st.flush(&ser.buffer(), &ser.cursor(), &writer::StringWriter::flush)) {
+        if (!st.flush(ser)) {
             FAIL("flush failed");
         }
     }

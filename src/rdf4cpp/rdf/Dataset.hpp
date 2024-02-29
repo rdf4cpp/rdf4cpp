@@ -59,40 +59,33 @@ public:
     [[nodiscard]] const DatasetStorage &backend() const;
 
     /**
-     * See Node::serialize for usage details
-     */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    /**
-     * See Node::serialize for usage details
-     */
-    bool serialize_trig(writer::SerializationState &state, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    bool serialize_trig(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-    /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * @param w a serializer
-     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     * @param parts writer parts
+     * @return true if serialization was successful, false if a call to flush was not able to make room
      */
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize(writer::BufWriterParts parts) const noexcept;
+
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
+     * This function does not call `begin` or `flush` on the given state,
+     * it just serialized the contents of this Dataset using it.
      *
-     * @param w a serializer
+     * @param state serialization state
+     * @param parts writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    template<writer::BufWriter W>
-    bool serialize_trig(writer::SerializationState &state, W &w) const noexcept {
-        return serialize_trig(state, &w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
 
-    template<writer::BufWriter W>
-    bool serialize_trig(W &w) const noexcept {
-        return serialize_trig(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    /**
+     * Serialize this dataset as <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
+     * This function will internally create a SerializationState and call `begin` and `flush`
+     * on it when appropriate.
+     *
+     * @param parts writer parts
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    bool serialize_trig(writer::BufWriterParts parts) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, Dataset const &self);
 

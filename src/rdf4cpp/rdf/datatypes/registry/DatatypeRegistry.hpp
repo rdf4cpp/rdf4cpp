@@ -43,7 +43,7 @@ public:
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
     using try_into_inlined_fptr_t = std::optional<storage::node::identifier::LiteralID> (*)(std::any const &) noexcept;
     using from_inlined_fptr_t = std::any (*)(storage::node::identifier::LiteralID) noexcept;
-    using serialize_fptr_t = bool (*)(std::any const &, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept;
+    using serialize_fptr_t = bool (*)(std::any const &, writer::BufWriterParts parts) noexcept;
 
     struct NumericOpResult {
         DatatypeID result_type_id;
@@ -563,11 +563,11 @@ inline void DatatypeRegistry::add() noexcept {
             .factory_fptr = [](std::string_view string_repr) -> std::any {
                 return LiteralDatatype_t::from_string(string_repr);
             },
-            .serialize_canonical_string_fptr = [](std::any const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept -> bool {
-                return LiteralDatatype_t::serialize_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), buffer, cursor, flush);
+            .serialize_canonical_string_fptr = [](std::any const &value, writer::BufWriterParts parts) noexcept -> bool {
+                return LiteralDatatype_t::serialize_canonical_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), parts);
             },
-            .serialize_simplified_string_fptr = [](std::any const &value, void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) noexcept -> bool {
-                return LiteralDatatype_t::serialize_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), buffer, cursor, flush);
+            .serialize_simplified_string_fptr = [](std::any const &value, writer::BufWriterParts parts) noexcept -> bool {
+                return LiteralDatatype_t::serialize_simplified_string(std::any_cast<typename LiteralDatatype_t::cpp_type>(value), parts);
             },
             .ebv_fptr = ebv_fptr,
             .numeric_ops = num_ops,

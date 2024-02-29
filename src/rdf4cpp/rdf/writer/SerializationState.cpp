@@ -4,7 +4,7 @@
 
 namespace rdf4cpp::rdf::writer {
 
-bool SerializationState::begin(void *const buffer, Cursor *const cursor, FlushFunc const flush) noexcept {
+bool SerializationState::begin(BufWriterParts const parts) noexcept {
     for (auto const &p : iri_prefixes) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("@prefix ");
         RDF4CPP_DETAIL_TRY_WRITE_STR(p.shorthand);
@@ -16,7 +16,7 @@ bool SerializationState::begin(void *const buffer, Cursor *const cursor, FlushFu
     return true;
 }
 
-bool SerializationState::flush(void *const buffer, Cursor *const cursor, FlushFunc const flush) noexcept {
+bool SerializationState::flush(BufWriterParts const parts) noexcept {
     if (!active_predicate.null() || !active_subject.null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR(" .\n");
     }
