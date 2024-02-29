@@ -198,6 +198,8 @@ struct StringBuffer {
 
 /**
  * A serializer that serializes to a std::string
+ *
+ * Implements `BufWriter`
  */
 struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     using Buffer = StringBuffer;
@@ -253,7 +255,9 @@ struct CFileBuffer {
 /**
  * A serializer that serializes to a C FILE
  * It is advisable to set the internal file buffer to nullptr
- * because this serializer has an internal buffer
+ * because this serializer has an internal buffer.
+ *
+ * Implements `BufWriter`
  */
 struct BufCFileWriter : BufWriterBase<BufCFileWriter, CFileBuffer> {
     using Buffer = CFileBuffer;
@@ -286,6 +290,8 @@ struct OStreamBuffer {
  * A serializer that serializes to an std::ostream.
  * It is advisable to set the associated stream buffer to nullptr
  * because this serializer has an internal buffer.
+ *
+ * Implements `BufWriter`
  */
 struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     using Buffer = OStreamBuffer;
