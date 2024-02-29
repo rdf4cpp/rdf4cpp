@@ -8,52 +8,52 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 template<datatypes::FixedIdLiteralDatatype T>
 struct SpecializedLiteralBackend {
-    using View = view::ValueLiteralBackendView;
-    using Type = T;
-    using Id = identifier::LiteralID;
+    using view_type = view::ValueLiteralBackendView;
+    using literal_type = T;
+    using id_type = identifier::LiteralID;
 
     size_t hash;
     static constexpr identifier::LiteralType datatype = T::fixed_id;
     typename T::cpp_type value;
 
-    explicit SpecializedLiteralBackend(View const &view) noexcept : hash{view.hash<Type>()},
-                                                                    value{std::any_cast<typename T::cpp_type>(view.value)} {
+    explicit SpecializedLiteralBackend(view_type const &view) noexcept : hash{view.hash<literal_type>()},
+                                                                         value{std::any_cast<typename T::cpp_type>(view.value)} {
         assert(view.datatype == SpecializedLiteralBackend::datatype);
     }
 
-    explicit operator View() const noexcept {
-        return View{.datatype = datatype,
-                    .value = value};
+    explicit operator view_type() const noexcept {
+        return view_type{.datatype = datatype,
+                         .value = value};
     }
 
-    static identifier::NodeID to_node_id(Id const id, View const view) noexcept {
+    static identifier::NodeID to_node_id(id_type const id, view_type const view) noexcept {
         return identifier::NodeID{id, view.datatype};
     }
 
-    static Id to_backend_id(identifier::NodeID const id) noexcept {
+    static id_type to_backend_id(identifier::NodeID const id) noexcept {
         return id.literal_id();
     }
 
-    struct Equal {
+    struct equal {
         using is_transparent = void;
 
-        bool operator()(View const &lhs, SpecializedLiteralBackend const &rhs) const noexcept {
+        bool operator()(view_type const &lhs, SpecializedLiteralBackend const &rhs) const noexcept {
             assert(lhs.datatype == SpecializedLiteralBackend::datatype);
-            return lhs.eq<Type>(rhs.value);
+            return lhs.eq<literal_type>(rhs.value);
         }
 
-        bool operator()(SpecializedLiteralBackend const &lhs, View const &rhs) const noexcept {
+        bool operator()(SpecializedLiteralBackend const &lhs, view_type const &rhs) const noexcept {
             assert(SpecializedLiteralBackend::datatype == rhs.datatype);
-            return rhs.eq<Type>(lhs.value);
+            return rhs.eq<literal_type>(lhs.value);
         }
     };
 
-    struct Hash {
+    struct hasher {
         using is_transparent = void;
 
-        [[nodiscard]] size_t operator()(View const &x) const noexcept {
+        [[nodiscard]] size_t operator()(view_type const &x) const noexcept {
             assert(x.datatype == SpecializedLiteralBackend::datatype);
-            return x.hash<Type>();
+            return x.hash<literal_type>();
         }
     };
 };

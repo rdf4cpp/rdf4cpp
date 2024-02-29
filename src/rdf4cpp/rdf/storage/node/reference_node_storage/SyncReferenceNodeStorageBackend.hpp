@@ -18,11 +18,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 /**
  * Thread-safe reference implementation of a INodeStorageBackend.
  */
-class SyncReferenceNodeStorageBackend : public INodeStorageBackend {
-public:
-    using NodeID = identifier::NodeID;
-    using LiteralID = identifier::LiteralID;
-
+struct SyncReferenceNodeStorageBackend : INodeStorageBackend {
 private:
     SyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     SyncNodeTypeStorage<IRIBackend> iri_storage_;

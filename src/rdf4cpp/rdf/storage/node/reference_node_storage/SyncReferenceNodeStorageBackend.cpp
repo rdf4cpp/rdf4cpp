@@ -4,13 +4,13 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 SyncReferenceNodeStorageBackend::SyncReferenceNodeStorageBackend() noexcept {
-    iri_storage_.mapping.reserve(NodeID::min_iri_id);
-    bnode_storage_.mapping.reserve(NodeID::min_bnode_id);
-    variable_storage_.mapping.reserve(NodeID::min_variable_id);
-    fallback_literal_storage_.mapping.reserve(NodeID::min_literal_id);
+    iri_storage_.mapping.reserve(identifier::NodeID::min_iri_id);
+    bnode_storage_.mapping.reserve(identifier::NodeID::min_bnode_id);
+    variable_storage_.mapping.reserve(identifier::NodeID::min_variable_id);
+    fallback_literal_storage_.mapping.reserve(identifier::NodeID::min_literal_id);
 
     specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
-        storage.mapping.reserve(NodeID::min_literal_id);
+        storage.mapping.reserve(identifier::NodeID::min_literal_id);
     });
 
     // some iri's like xsd:string are there by default
@@ -66,12 +66,12 @@ bool SyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::Li
  * @return the NodeID for the looked up Node Backend. Result is the null-id if there was no matching Node Backend.
  */
 template<bool create_if_not_present, typename Storage>
-static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView const &view,
+static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_type const &view,
                                                 Storage &storage) noexcept {
 
     {
         std::shared_lock lock{storage.mutex};
-        if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::BackendId{}) {
+        if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::backend_id_type{}) {
             return Storage::to_node_id(id, view);
         }
     }
@@ -82,7 +82,7 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView co
         std::unique_lock lock{storage.mutex};
 
         // check again, might have changed between unlocking of shared_lock and locking of unique_lock
-        if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::BackendId{}) {
+        if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::backend_id_type{}) {
             return Storage::to_node_id(id, view);
         }
 
@@ -149,7 +149,7 @@ identifier::NodeID SyncReferenceNodeStorageBackend::find_id(view::VariableBacken
 }
 
 template<typename Storage>
-static typename Storage::BackendView find_backend_view(Storage &storage, identifier::NodeID const id) {
+static typename Storage::backend_view_type find_backend_view(Storage &storage, identifier::NodeID const id) {
     std::shared_lock<std::shared_mutex> shared_lock{storage.mutex};
 
     if (auto view = storage.mapping.lookup_value(Storage::to_backend_id(id)); view.has_value()) {

@@ -79,8 +79,6 @@ public:
 
     explicit operator uint64_t() const noexcept { return value_; }
 
-    //    void value(uint64_t val) { assert(val < (1UL << 48)); value_ = val; }
-
     constexpr std::strong_ordering operator<=>(NodeID const &other) const noexcept { return value_ <=> other.value_; }
 
     constexpr bool operator==(NodeID const &other) const noexcept { return value_ == other.value_; }

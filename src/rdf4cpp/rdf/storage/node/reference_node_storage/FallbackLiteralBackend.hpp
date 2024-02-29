@@ -8,8 +8,8 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 struct FallbackLiteralBackend {
-    using View = view::LexicalFormLiteralBackendView;
-    using Id = identifier::LiteralID;
+    using view_type = view::LexicalFormLiteralBackendView;
+    using id_type = identifier::LiteralID;
 
     size_t hash;
     identifier::NodeID datatype_id;
@@ -17,25 +17,25 @@ struct FallbackLiteralBackend {
     detail::ConstString language_tag;
     bool needs_escape;
 
-    explicit FallbackLiteralBackend(View const &view) noexcept : hash{view.hash()},
-                                                                 datatype_id{view.datatype_id},
-                                                                 lexical_form{view.lexical_form},
-                                                                 language_tag{view.language_tag},
-                                                                 needs_escape{view.needs_escape} {
+    explicit FallbackLiteralBackend(view_type const &view) noexcept : hash{view.hash()},
+                                                                      datatype_id{view.datatype_id},
+                                                                      lexical_form{view.lexical_form},
+                                                                      language_tag{view.language_tag},
+                                                                      needs_escape{view.needs_escape} {
     }
 
-    explicit operator View() const noexcept {
-        return View{.datatype_id = datatype_id,
-                    .lexical_form = lexical_form,
-                    .language_tag = language_tag,
-                    .needs_escape = needs_escape};
+    explicit operator view_type() const noexcept {
+        return view_type{.datatype_id = datatype_id,
+                         .lexical_form = lexical_form,
+                         .language_tag = language_tag,
+                         .needs_escape = needs_escape};
     }
 
-    static identifier::NodeID to_node_id(Id const id, View const view) noexcept {
+    static identifier::NodeID to_node_id(id_type const id, view_type const view) noexcept {
         return identifier::NodeID{id, iri_node_id_to_literal_type(view.datatype_id)};
     }
 
-    static Id to_backend_id(identifier::NodeID const id) noexcept {
+    static id_type to_backend_id(identifier::NodeID const id) noexcept {
         return id.literal_id();
     }
 };

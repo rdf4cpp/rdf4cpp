@@ -18,11 +18,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 /**
  * NON-Thread-safe reference implementation of a INodeStorageBackend.
  */
-class UnsyncReferenceNodeStorageBackend : public INodeStorageBackend {
-public:
-    using NodeID = identifier::NodeID;
-    using LiteralID = identifier::LiteralID;
-
+struct UnsyncReferenceNodeStorageBackend : INodeStorageBackend {
 private:
     UnsyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     UnsyncNodeTypeStorage<IRIBackend> iri_storage_;

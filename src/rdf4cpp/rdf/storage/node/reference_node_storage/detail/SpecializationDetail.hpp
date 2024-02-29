@@ -50,12 +50,21 @@ constexpr void tuple_type_for_each(F &&f) {
     return tuple_type_for_each_impl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, std::forward<F>(f));
 }
 
+/**
+ * Generates a storage specialization lookup-table for the reference node storages.
+ * The returned array is indexed with identifier::LiteralType and contains true
+ * if the node storage has a specialized storage for the type and false if it does not.
+ *
+ * @tparam Tuple a tuple of (Sync|Unsync)NodeTypeStorage<SpecializedLiteralBackend<...>> containing all the specialized backends
+ *          for the node storage. In our case this is `decltype( (Sync|Unsync)ReferenceNodeStorageBackend::specialized_literal_storage_ )`
+ * @return array that contains true in every slot for which there is a specialized backend
+ */
 template<typename Tuple>
 static consteval std::array<bool, 1 << identifier::LiteralType::width> make_storage_specialization_lut() noexcept {
     std::array<bool, 1 << identifier::LiteralType::width> ret{};
 
     tuple_type_for_each<Tuple>([&]<typename T>() {
-        ret[T::Backend::Type::fixed_id.to_underlying()] = true;
+        ret[T::backend_type::literal_type::fixed_id.to_underlying()] = true;
     });
 
     return ret;
@@ -64,7 +73,7 @@ static consteval std::array<bool, 1 << identifier::LiteralType::width> make_stor
 /**
  * Calls the given function f with the specialized object for the given datatype
  *
- * @param self any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
+ * @param container any container for specialized things in the correct order (i.e. specialized_literal_storage_ or next_specialized_literal_ids_)
  * @param datatype the datatype of the specialized object
  * @param f the function to call with the corresponding specialized object
  * @return whatever f returns

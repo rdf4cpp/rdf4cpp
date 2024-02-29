@@ -31,8 +31,8 @@ private:
     using forward_type = std::vector<forward_value_type, forward_allocator_type>;
 
     struct backward_key_type {
-        size_t hash; // hash of the Value being looked up
-        id_type id;  // id into forward_
+        size_t hash; //< hash of the Value being looked up
+        id_type id;  //< id into forward_
     };
 
     struct backward_key_equal {
@@ -40,8 +40,8 @@ private:
 
         using forward_const_pointer = typename std::allocator_traits<allocator_type>::template rebind_traits<forward_type>::const_pointer;
 
-        forward_const_pointer forward_ptr; // pointer to forward_ to be able to check for equality between View and Value
-        [[no_unique_address]] Equal eq;
+        forward_const_pointer forward_ptr; //< pointer to forward_ to be able to check for equality between View and Value
+        [[no_unique_address]] Equal eq; //< eq for backend and view
 
         bool operator()(backward_key_type const &a, backward_key_type const &b) const noexcept {
             return a.id == b.id;
@@ -69,7 +69,7 @@ private:
     struct backward_hasher {
         using is_transparent = void;
 
-        [[no_unique_address]] Hash hash;
+        [[no_unique_address]] Hash hash; //< hasher for views
 
         size_t operator()(backward_key_type const &a) const noexcept {
             return a.hash;
@@ -83,15 +83,21 @@ private:
     using backward_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<backward_key_type>;
     using backward_type = dice::sparse_map::sparse_set<backward_key_type, backward_hasher, backward_key_equal, backward_allocator_type>;
 
-    forward_type forward_;   // forward_[id] stores Value for Id id
-    backward_type backward_; // backward_[view] stores Id into forward_
+    forward_type forward_;   //< forward_[to_index(id)] stores Value for Id id
+    backward_type backward_; //< backward_[view] stores Id into forward_
     [[no_unique_address]] allocator_type alloc_;
 
-    [[nodiscard]] static constexpr size_type to_index(id_type id) noexcept {
+    /**
+     * Translates the given id into an index into forward_
+     */
+    [[nodiscard]] static constexpr size_type to_index(id_type const id) noexcept {
         return static_cast<size_type>(id) - 1;
     }
 
-    [[nodiscard]] static constexpr id_type to_id(size_type ix) noexcept {
+    /**
+     * Translates the given index into forward_ into an id
+     */
+    [[nodiscard]] static constexpr id_type to_id(size_type const ix) noexcept {
         return static_cast<id_type>(ix + 1);
     }
 
@@ -112,15 +118,27 @@ public:
     BiDirFlatMap &operator=(BiDirFlatMap const &) = delete;
     BiDirFlatMap &operator=(BiDirFlatMap &&) = delete;
 
+    /**
+     * Number of elements stored in this map
+     */
     [[nodiscard]] size_type size() const noexcept {
         return forward_.size();
     }
 
+    /**
+     * Requests the removal of unused capacity.
+     */
     void shrink_to_fit() {
         forward_.shrink_to_fit();
-        // TODO backward_?
+        backward_.rehash(0); // force rehash (zero is special value)
     }
 
+    /**
+     * Look up the value corresponding to the given id
+     *
+     * @param id id for value to look up
+     * @return if a value was found: a view to that value, otherwise nullopt
+     */
     [[nodiscard]] std::optional<view_type> lookup_value(id_type const id) const noexcept {
         if (id == id_type{}) [[unlikely]] {
             return std::nullopt;
@@ -134,19 +152,43 @@ public:
         return static_cast<view_type>(*forward_[ix]);
     }
 
+    /**
+     * Look up the id corresponding the given (view to a) value
+     *
+     * @param view view of value of which to find the id
+     * @return id of the value if it was found, otherwise id_type{} if no id was found
+     */
     [[nodiscard]] id_type lookup_id(view_type const &view) const noexcept {
         auto it = backward_.find(view);
         if (it == backward_.end()) {
-            return Id{};
+            return id_type{};
         }
 
         return it->id;
     }
 
+    /**
+     * Reserve capacity such that min_id is the first id that
+     * triggers an allocation if it is inserted.
+     */
     void reserve(id_type const min_id) {
-        forward_.resize(to_index(min_id));
+        auto const new_size = to_index(min_id);
+        if (new_size < forward_.size()) {
+            return;
+        }
+
+        forward_.resize(new_size);
+        backward_.reserve(new_size);
     }
 
+    /**
+     * Insert a value at the first free id
+     *
+     * @precondition the value is not yet present in this map
+     *
+     * @param view view of the value to construct
+     * @return id of newly constructed value
+     */
     [[nodiscard]] id_type insert_assume_not_present(view_type const &view) {
         assert(lookup_id(view) == Id{});
 
@@ -159,7 +201,16 @@ public:
         return assigned_id;
     }
 
-    void insert_assume_not_present_at(view_type const &view, id_type requested_id) {
+    /**
+     * Insert a value at the given id
+     *
+     * @precondition the value is not yet present in this map
+     * @precondition there is no value present at the requested id
+     *
+     * @param view view of the value to construct
+     * @return id of newly constructed value
+     */
+    void insert_assume_not_present_at(view_type const &view, id_type const requested_id) {
         assert(lookup_id(view) == Id{});
 
         auto const lookup_ix = to_index(requested_id);
@@ -172,7 +223,13 @@ public:
         backward_.emplace(h, requested_id);
     }
 
-    void erase_assume_present(id_type id) {
+    /**
+     * Erase the value at the given id
+     *
+     * @precondition there is actually a value at the given id
+     * @param id id of the value to be erased
+     */
+    void erase_assume_present(id_type const id) {
         assert(lookup_value(id).has_value());
 
         auto &value = forward_[to_index(id)];

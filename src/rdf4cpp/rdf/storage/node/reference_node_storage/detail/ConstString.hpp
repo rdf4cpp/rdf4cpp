@@ -5,6 +5,10 @@
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage::detail {
 
+    /**
+     * A constant-size (i.e. non-growing), heap-allocated string type
+     * Behaves like std::string except that it cannot grow and therefore occupies 1 less word in memory (it has no capacity field).
+     */
     template<typename Char, typename Traits = std::char_traits<Char>, typename Allocator = std::allocator<Char>>
     struct BasicConstString {
         using value_type = Char;

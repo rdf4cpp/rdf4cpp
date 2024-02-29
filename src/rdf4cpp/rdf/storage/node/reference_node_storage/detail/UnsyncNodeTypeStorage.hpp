@@ -17,18 +17,19 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  */
 template<typename BackendType_t>
 struct UnsyncNodeTypeStorage {
-    using Backend = BackendType_t;
-    using BackendView = typename Backend::View;
+    using backend_type = BackendType_t;
+    using backend_view_type = typename backend_type::view_type;
+
 private:
     struct DefaultBackendTypeEqual {
         using is_transparent = void;
 
-        bool operator()(BackendView const &lhs, Backend const &rhs) const noexcept {
-            return lhs == BackendView(rhs);
+        bool operator()(backend_view_type const &lhs, backend_type const &rhs) const noexcept {
+            return lhs == static_cast<backend_view_type>(rhs);
         }
 
-        bool operator()(Backend const &lhs, BackendView const &rhs) const noexcept {
-            return BackendView(lhs) == rhs;
+        bool operator()(backend_type const &lhs, backend_view_type const &rhs) const noexcept {
+            return static_cast<backend_view_type>(lhs) == rhs;
         }
     };
 
@@ -37,15 +38,15 @@ private:
         using type = DefaultBackendTypeEqual;
     };
 
-    template<typename T> requires requires { typename T::Equal; }
+    template<typename T> requires requires { typename T::equal; }
     struct SelectBackendTypeEqual<T> {
-        using type = typename T::Equal;
+        using type = typename T::equal;
     };
 
     struct DefaultBackendTypeHash {
         using is_transparent = void;
 
-        [[nodiscard]] size_t operator()(BackendView const &x) const noexcept {
+        [[nodiscard]] size_t operator()(backend_view_type const &x) const noexcept {
             return x.hash();
         }
     };
@@ -55,33 +56,36 @@ private:
         using type = DefaultBackendTypeHash;
     };
 
-    template<typename T> requires requires { typename T::Hash; }
+    template<typename T> requires requires { typename T::hasher; }
     struct SelectBackendTypeHash<T> {
-        using type = typename T::Hash;
+        using type = typename T::hasher;
     };
 
 public:
-    using BackendEqual = typename SelectBackendTypeEqual<Backend>::type;
-    using BackendHash = typename SelectBackendTypeHash<Backend>::type;
-    using BackendId = typename Backend::Id;
+    using backend_equal = typename SelectBackendTypeEqual<backend_type>::type;
+    using backend_hasher = typename SelectBackendTypeHash<backend_type>::type;
+    using backend_id_type = typename backend_type::id_type;
 
-    static identifier::NodeID to_node_id(BackendId const id, [[maybe_unused]] BackendView const &view) noexcept {
-        if constexpr (requires { Backend::to_node_id(id, view); }) {
-            return Backend::to_node_id(id, view);
+    /**
+     * Translates the given BackenId into a NodeID
+     */
+    static identifier::NodeID to_node_id(backend_id_type const id, [[maybe_unused]] backend_view_type const &view) noexcept {
+        if constexpr (requires { backend_type::to_node_id(id, view); }) {
+            return backend_type::to_node_id(id, view);
         } else {
             return id;
         }
     }
 
-    static BackendId to_backend_id(identifier::NodeID const id) noexcept {
-        if constexpr (requires { Backend::to_backend_id(id); }) {
-            return Backend::to_backend_id(id);
+    static backend_id_type to_backend_id(identifier::NodeID const id) noexcept {
+        if constexpr (requires { backend_type::to_backend_id(id); }) {
+            return backend_type::to_backend_id(id);
         } else {
             return id;
         }
     }
 
-    detail::BiDirFlatMap<BackendId, Backend, BackendView, BackendHash, BackendEqual> mapping;
+    detail::BiDirFlatMap<backend_id_type, backend_type, backend_view_type, backend_hasher, backend_equal> mapping;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage
