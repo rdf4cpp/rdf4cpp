@@ -19,8 +19,8 @@ LSB                                                          MSB
 ```
 
 `NodeID` is the most frequently used identifier and is thus aligned with the LSB.
-In the following, the parts of `NodeBackendHandle` will be explained starting from the most significant bits because the
-parts in the less significant depend on the parts in the more significant bits.
+In the following, the writer of `NodeBackendHandle` will be explained starting from the most significant bits because the
+parts in the less significant depend on the writer in the more significant bits.
 
 ## Free Tagging Bits (3 bit)
 

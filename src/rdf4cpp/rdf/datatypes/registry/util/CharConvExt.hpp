@@ -39,13 +39,16 @@ I from_chars(std::string_view s) {
 }
 
 /**
- * Serializes an integral type into its (SPARQL) _canonical_ representation.
+ * Serializes an integral type into its (SPARQL) representation.
+ * For integers the canonical and simplified representation are identical.
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-integer
  *
  * @param value the value to be serialized
+ * @param writer writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::integral I>
-std::string to_chars_canonical(I const value) noexcept {
+bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
@@ -55,21 +58,8 @@ std::string to_chars_canonical(I const value) noexcept {
 
     assert(res.ec == std::errc{});
 
-    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-}
-
-/**
- * Serializes an integer into its _simplified_ string representation which is e.g. used in
- * casting integers to strings.
- * @note for integers this is identical to the canonical representation
- *
- * @see https://www.w3.org/TR/xpath-functions/#casting-to-string
- *
- * @param value the value to be serialized
- */
-template<std::integral I>
-std::string to_chars_simplified(I const value) noexcept {
-    return to_chars_canonical(value);
+    std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    return writer::write_str(s, writer);
 }
 
 /**
@@ -118,18 +108,20 @@ constexpr size_t log10ceil(T const value) noexcept {
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-float
  *
  * @param value the value to be serialized
+ * @param writer writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-std::string to_chars_canonical(F const value) noexcept {
+bool to_chars_canonical(F const value, writer::BufWriterParts const writer) noexcept {
     if (std::isnan(value)) {
-        return "NaN";
+        return writer::write_str("NaN", writer);
     }
 
     if (std::isinf(value)) {
         if (value > 0) {
-            return "INF";
+            return writer::write_str("INF", writer);
         } else {
-            return "-INF";
+            return writer::write_str("-INF", writer);
         }
     }
 
@@ -181,7 +173,8 @@ std::string to_chars_canonical(F const value) noexcept {
         res.ptr = std::shift_left(e_ptr + 1 + (1 - shift_off), res.ptr, shift_amt + shift_off); // shift out all leading zeros and plus sign from exponent
     }
 
-    return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+    return writer::write_str(s, writer);
 }
 
 /**
@@ -190,9 +183,11 @@ std::string to_chars_canonical(F const value) noexcept {
  * see https://www.w3.org/TR/xpath-functions/#casting-to-string
  *
  * @param value the value to be serialized
+ * @param writer writer parts to be used for serialization
+ * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-std::string to_chars_simplified(F const value) noexcept {
+bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noexcept {
     if (value == 0) {
         return std::signbit(value) ? "-0" : "0";
     }
@@ -204,10 +199,11 @@ std::string to_chars_simplified(F const value) noexcept {
         auto const res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::fixed);
         assert(res.ec == std::errc{});
 
-        return std::string{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+        std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
+        return writer::write_str(s, writer);
     }
 
-    return to_chars_canonical(value);
+    return to_chars_canonical(value, writer);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

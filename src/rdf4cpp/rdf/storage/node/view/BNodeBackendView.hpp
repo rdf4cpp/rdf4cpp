@@ -14,12 +14,6 @@ struct BNodeBackendView {
     std::string_view identifier;
     rdf4cpp::rdf::bnode_mngt::WeakNodeScope const *scope;
 
-    /**
-     * N-Triples conform string representation.
-     * @return N-Triples conform string representation.
-     */
-    [[nodiscard]] std::string n_string() const noexcept;
-
     auto operator<=>(BNodeBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
 };

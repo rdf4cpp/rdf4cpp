@@ -31,7 +31,7 @@ template<>
 capabilities::Default<xsd_short>::cpp_type capabilities::Default<xsd_short>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_short>::to_canonical_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_short>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 
 template<>

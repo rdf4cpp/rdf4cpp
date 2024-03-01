@@ -8,16 +8,17 @@ namespace rdf4cpp::rdf::datatypes::registry {
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
     auto tz = rdf::util::Timezone::parse_optional(s);
-    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s);
+    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s); //TODO buffer overread
     return std::make_pair(year, tz);
 }
 
 template<>
-std::string capabilities::Default<xsd_gYear>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_gYear>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("{:%Y}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+
+    return writer::write_str(str, writer);
 }
 
 template<>

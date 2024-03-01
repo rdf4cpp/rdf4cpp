@@ -23,7 +23,7 @@ template<>
 capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_boolean>::to_canonical_string(cpp_type const &value) noexcept;
+bool capabilities::Default<xsd_boolean>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_boolean>::effective_boolean_value(cpp_type const &value) noexcept;

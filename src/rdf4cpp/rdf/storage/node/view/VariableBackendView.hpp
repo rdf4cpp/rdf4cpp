@@ -10,12 +10,6 @@ struct VariableBackendView {
     std::string_view name;
     bool is_anonymous;
 
-    /**
-     * N-Triples conform string representation.
-     * @return N-Triples conform string representation.
-     */
-    [[nodiscard]] std::string n_string() const noexcept;
-
     auto operator<=>(VariableBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
 };

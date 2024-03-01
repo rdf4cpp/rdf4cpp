@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_date>::to_canonical_string(const cpp_type &value) noexcept;
+bool capabilities::Default<xsd_date>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 
 template<>

@@ -160,36 +160,57 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
 }
 
 std::string Base64BinaryRepr::to_encoded() const noexcept {
-    if (this->n_bytes() == 0) {
-        return "";
+    return writer::StringWriter::oneshot([this](auto &w) noexcept {
+        return this->serialize(w);
+    });
+}
+
+bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
+    if (bytes.empty()) {
+        return true;
     }
 
-    std::string buf;
-    for (size_t triple = 0; triple < this->n_bytes() / 3; ++triple) {
+    for (size_t triple = 0; triple < bytes.size() / 3; ++triple) {
         // encode all full 3-byte chunks, last chunk that is potentially less than 3 bytes will be handled separately
 
-        auto const b1 = this->byte(triple * 3);
-        auto const b2 = this->byte(triple * 3 + 1);
-        auto const b3 = this->byte(triple * 3 + 2);
+        auto const b1 = bytes[triple * 3];
+        auto const b2 = bytes[triple * 3 + 1];
+        auto const b3 = bytes[triple * 3 + 2];
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        std::copy(encoded.begin(), encoded.end(), std::back_inserter(buf));
+        if (!writer::write_str(std::string_view{encoded.data(), encoded.size()}, writer)) {
+            return false;
+        }
     }
 
-    if (auto const rest = this->n_bytes() % 3; rest != 0) {
+    if (auto const rest = bytes.size() % 3; rest != 0) {
         // there is a chunk that is not complete, i.e. < 3 bytes large
-        auto const triple = this->n_bytes() / 3;
+        auto const triple = bytes.size() / 3;
 
-        auto const b1 = this->byte(triple * 3);
-        auto const b2 = triple * 3 + 1 < this->n_bytes() ? this->byte(triple * 3 + 1) : std::byte{0}; // maybe add padding byte for encoding
-        auto const b3 = triple * 3 + 2 < this->n_bytes() ? this->byte(triple * 3 + 2) : std::byte{0}; // maybe add padding byte for encoding
+        auto const b1 = bytes[triple * 3];
+        auto const b2 = triple * 3 + 1 < bytes.size() ? bytes[triple * 3 + 1] : std::byte{0}; // maybe add padding byte for encoding
+        auto const b3 = triple * 3 + 2 < bytes.size() ? bytes[triple * 3 + 2] : std::byte{0}; // maybe add padding byte for encoding
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        std::copy_n(encoded.begin(), 4 - (3 - rest), std::back_inserter(buf)); // add non-padding / data hextets
-        std::fill_n(std::back_inserter(buf), 3 - rest, '='); // add padding hextets to signal that padding bytes were used
+
+        // add non-padding / data hextets
+        if (!writer::write_str(std::string_view{encoded.data(), 4 - (3 - rest)}, writer)) {
+            return false;
+        }
+
+        // add padding hextets to signal that padding bytes were used
+        static constexpr std::array<char const *, 3> rest_str{"===", "==", "="};
+        if (!writer::write_str(rest_str[rest], writer)) {
+            return false;
+        }
     }
 
-    return buf;
+    return true;
+}
+
+
+bool Base64BinaryRepr::serialize(writer::BufWriterParts writer) const noexcept {
+    return serialize(this->bytes, writer);
 }
 
 std::byte Base64BinaryRepr::hextet(size_t const n) const noexcept {
@@ -221,8 +242,8 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 }
 
 template<>
-std::string capabilities::Default<xsd_base64_binary>::to_canonical_string(cpp_type const &value) noexcept {
-    return value.to_encoded();
+bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    return value.serialize(writer);
 }
 #endif
 
