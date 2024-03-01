@@ -56,13 +56,15 @@ private:
     /**
      * Searches the next free bit after the given slot_ix, offset pair
      *
+     * @precondition all slots before slot_ix, offset are occupied
+     *
      * @param slot_ix slot index
      * @param offset bit offset into slot
      * @return index of the next free bit
      */
     [[nodiscard]] size_type search_next_free(size_type slot_ix, size_type const offset) const noexcept {
         size_type new_offset = std::countr_one(occupied_bitmap_[slot_ix]);
-        assert(new_offset > offset);
+        assert(new_offset >= offset);
 
         if (new_offset < bitmap_bits) {
             return compose(slot_ix, new_offset);
@@ -102,14 +104,19 @@ public:
      * Marks all slots up-to (not-including) the given index as occupied
      */
     void occupy_until(size_type const ix) {
+        static constexpr bitmap_type all_ones = std::numeric_limits<bitmap_type>::max();
+
         auto const [slot_ix, offset] = decompose(ix);
         if (slot_ix >= occupied_bitmap_.size()) {
             occupied_bitmap_.resize(0);
-            occupied_bitmap_.resize(slot_ix + 1, std::numeric_limits<bitmap_type>::max());
+            occupied_bitmap_.resize(slot_ix + 1, all_ones);
+            occupied_bitmap_[slot_ix] = (1ul << offset) - 1;
+        } else {
+            std::fill_n(occupied_bitmap_.begin(), slot_ix, all_ones);
+            occupied_bitmap_[slot_ix] |= (1ul << offset) - 1;
         }
 
-        occupied_bitmap_[slot_ix] = (1ul << offset) - 1;
-        next_free_ix_ = ix;
+        next_free_ix_ = search_next_free(slot_ix, offset);
     }
 
     /**

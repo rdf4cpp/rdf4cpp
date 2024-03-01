@@ -42,6 +42,22 @@ TEST_SUITE("NodeStorage helper types") {
         CHECK_EQ(freelist.occupy_next_available(), 281);
     }
 
+    TEST_CASE("fill up to populated slot") {
+        IndexFreeList<> freelist;
+        freelist.occupy_until(71);
+
+        for (size_t ix = 0; ix < 70; ++ix) {
+            freelist.vacate(ix);
+        }
+
+        // only slot 70 is now populated
+
+        CHECK_EQ(freelist.occupy_next_available(), 0);
+
+        freelist.occupy_until(70); // slots 0-69 (inclusive) populated (and 70 from before)
+        CHECK_EQ(freelist.occupy_next_available(), 71);
+    }
+
     TEST_CASE("integration test") {
         using namespace rdf4cpp::rdf;
         using namespace rdf4cpp::rdf::storage::node;
