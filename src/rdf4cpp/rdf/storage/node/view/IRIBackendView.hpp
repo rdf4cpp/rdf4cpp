@@ -9,12 +9,6 @@ namespace rdf4cpp::rdf::storage::node::view {
 struct IRIBackendView {
     std::string_view identifier;
 
-    /**
-     * N-Triples conform string representation.
-     * @return N-Triples conform string representation.
-     */
-    [[nodiscard]] std::string n_string() const noexcept;
-
     auto operator<=>(IRIBackendView const &) const noexcept = default;
     [[nodiscard]] size_t hash() const noexcept;
 };

@@ -1015,8 +1015,9 @@ inline capabilities::Default<fake_datatype>::cpp_type capabilities::Default<fake
     return util::from_chars<int, "fake">(s);
 }
 template<>
-inline std::string capabilities::Default<fake_datatype>::to_canonical_string(cpp_type const &value) noexcept {
-    return std::format("{}", value);
+bool capabilities::Default<fake_datatype>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    auto const s = std::format("{}", value);
+    return writer::write_str(s, writer);
 }
 }
 struct FakeDatatype : rdf4cpp::rdf::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::rdf::datatypes::registry::fake_datatype> {};
@@ -1088,3 +1089,75 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(l == Literal::make_typed<T>(get_find_values<T>::inls));
     }
 }
+
+TEST_CASE("Literal::fetch_or_serialize_lexical_form") {
+    std::string buf;
+    writer::StringWriter w{buf};
+
+    SUBCASE("no non-inline storage available") {
+        auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+        assert(lit.is_inlined());
+
+        std::string_view s;
+        auto r = lit.fetch_or_serialize_lexical_form(s, w);
+        CHECK_EQ(r, FetchOrSerializeResult::Serialized);
+        CHECK_EQ(w.view(), "5");
+    }
+
+    SUBCASE("specialized storage") {
+        SUBCASE("inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(10);
+            assert(lit.is_inlined());
+
+            std::string_view s;
+            auto r = lit.fetch_or_serialize_lexical_form(s, w);
+            CHECK_EQ(r, FetchOrSerializeResult::Serialized);
+            CHECK_EQ(w.view(), "10");
+        }
+
+        SUBCASE("not inlined") {
+            auto lit = Literal::make_typed_from_value<datatypes::xsd::Long>(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max());
+            assert(!lit.is_inlined());
+
+            std::string_view s;
+            auto r = lit.fetch_or_serialize_lexical_form(s, w);
+            CHECK_EQ(r, FetchOrSerializeResult::Serialized);
+            CHECK_EQ(w.view(), std::to_string(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max()));
+        }
+    }
+
+    SUBCASE("lexical storage") {
+        SUBCASE("rdf:langString") {
+            SUBCASE("tag inlined") {
+                auto lit = Literal::make_lang_tagged("test", "en");
+                assert(lit.is_inlined());
+
+                std::string_view s;
+                auto r = lit.fetch_or_serialize_lexical_form(s, w);
+                CHECK_EQ(r, FetchOrSerializeResult::Fetched);
+                CHECK_EQ(s, "test");
+            }
+
+            SUBCASE("tag not inlined") {
+                auto lit = Literal::make_lang_tagged("test", "spherical");
+                assert(!lit.is_inlined());
+
+                std::string_view s;
+                auto r = lit.fetch_or_serialize_lexical_form(s, w);
+                CHECK_EQ(r, FetchOrSerializeResult::Fetched);
+                CHECK_EQ(s, "test");
+            }
+        }
+
+        SUBCASE("xsd:string") {
+            auto lit = Literal::make_simple("test");
+            assert(!lit.is_inlined());
+
+            std::string_view s;
+            auto r = lit.fetch_or_serialize_lexical_form(s, w);
+            CHECK_EQ(r, FetchOrSerializeResult::Fetched);
+            CHECK_EQ(s, "test");
+        }
+    }
+}
+

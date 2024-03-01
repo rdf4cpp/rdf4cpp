@@ -22,7 +22,7 @@ template<>
 capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime>::from_string(std::string_view s);
 
 template<>
-std::string capabilities::Default<xsd_dateTime>::to_canonical_string(const cpp_type &value) noexcept;
+bool capabilities::Default<xsd_dateTime>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dateTime>::try_into_inlined(cpp_type const &value) noexcept;

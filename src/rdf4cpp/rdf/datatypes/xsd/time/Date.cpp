@@ -23,11 +23,12 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
 }
 
 template<>
-std::string capabilities::Default<xsd_date>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_date>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("{:%Y-%m-%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+
+    return writer::write_str(str, writer);
 }
 
 struct __attribute__((__packed__)) InliningHelperYearMonthDay {

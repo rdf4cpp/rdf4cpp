@@ -68,7 +68,7 @@ storage::tuple::DatasetStorage &Graph::backend() {
 const storage::tuple::DatasetStorage &Graph::backend() const {
     return dataset_storage;
 }
-bool Graph::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize(writer::BufWriterParts const writer) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -80,13 +80,14 @@ bool Graph::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushF
 
     for (auto const &solution : solutions) {
         Quad q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_ntriples(buffer, cursor, flush))
+        if (!q.serialize_ntriples(writer)) {
             return false;
+        }
     }
 
     return true;
 }
-bool Graph::serialize_turtle(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Graph::serialize_turtle(writer::SerializationState &state, writer::BufWriterParts const writer) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -96,21 +97,28 @@ bool Graph::serialize_turtle(void *const buffer, writer::Cursor *cursor, writer:
                                                  Variable("p"),
                                                  Variable("o")));
 
-    writer::SerializationState state{};
-    if (!writer::SerializationState::begin(buffer, cursor, flush))
-        return false;
-
     for (auto const &solution : solutions) {
-        Quad q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_turtle(state, buffer, cursor, flush))
+        Quad const q{solution[0], solution[1], solution[2]};
+        if (!q.serialize_turtle(state, writer)) {
             return false;
+        }
     }
-
-    if (!state.flush(buffer, cursor, flush))
-        return false;
 
     return true;
 }
+bool Graph::serialize_turtle(writer::BufWriterParts const writer) const noexcept {
+    writer::SerializationState st{};
+    if (!st.begin(writer)) {
+        return false;
+    }
+
+    if (!serialize_turtle(st, writer)) {
+        return false;
+    }
+
+    return st.flush(writer);
+}
+
 std::ostream &operator<<(std::ostream &os, Graph const &graph) {
     writer::BufOStreamWriter w{os};
     graph.serialize(w);

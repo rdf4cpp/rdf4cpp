@@ -26,11 +26,12 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
 }
 
 template<>
-std::string capabilities::Default<xsd_gMonthDay>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_gMonthDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("--{:%m-%d}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+
+    return writer::write_str(str, writer);
 }
 
 struct __attribute__((__packed__)) InliningHelperMonthDay {

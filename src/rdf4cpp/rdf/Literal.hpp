@@ -19,6 +19,12 @@
 
 namespace rdf4cpp::rdf {
 
+enum struct FetchOrSerializeResult {
+    Fetched,
+    Serialized,
+    SerializationFailed,
+};
+
 /**
  * An RDF Literal.
  *
@@ -162,6 +168,31 @@ private:
      */
     [[nodiscard]] bool dynamic_datatype_eq_impl(std::string_view datatype) const noexcept;
 
+    /**
+     * Implementation.
+     * Serializes the n-format representation of this literal into the decomposed
+     * writer. See `Node::serialize` for more details
+     *
+     * @tparam short_form whether to serialize in short/turtle form or in long/ntriples form
+     */
+    template<bool short_form>
+    bool serialize_impl(writer::BufWriterParts writer) const noexcept;
+
+    /**
+     * Implementation.
+     * Serializes the lexical form into consume.
+     *
+     * @tparam simplified whether to serialize the simplified or canonical lexical_form
+     * @param consume a function-like object that is invocable with a std::string_view or (std::any, datatypes::registry::DatatypeRegistry::serialize_fptr_t)
+     *      In case it is invoked with a std::string_view, that view will come from the node storage and can be considered to be of static lifetime.
+     *      In case it is invoked with the other parameters, the lexical form is not yet materialized and consume is responsible for materializing it
+     *          using the value (std::any) and serialization function (datatypes::registry::DatatypeRegistry::serialize_fptr_t) provided.
+     *
+     * @return whatever consume returned
+     */
+    template<bool simplified, typename C>
+    auto serialize_lexical_form_impl(C &&consume) const noexcept;
+
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
@@ -253,7 +284,10 @@ public:
             }
         }
 
-        auto const lex = T::to_canonical_string(value);
+        auto const lex = writer::StringWriter::oneshot([&value](writer::StringWriter &w) noexcept {
+            return T::serialize_canonical_string(value, w);
+        });
+
         auto const needs_escape = lexical_form_needs_escape(lex);
         return Literal::make_noninlined_typed_unchecked(lex,
                                                         needs_escape,
@@ -301,7 +335,10 @@ public:
             }
         }
 
-        auto const lex = T::to_canonical_string(compatible_value);
+        auto const lex = writer::StringWriter::oneshot([&compatible_value](writer::StringWriter &w) noexcept {
+            return T::serialize_canonical_string(compatible_value, w);
+        });
+
         auto const needs_escape = lexical_form_needs_escape(lex);
 
         return Literal::make_noninlined_typed_unchecked(lex,
@@ -420,7 +457,10 @@ public:
         if (dty.null())
             return Literal{};
 
-        auto const lex = T::to_canonical_string(compatible_value);
+        auto const lex = writer::StringWriter::oneshot([&compatible_value]<typename W>(W &w) noexcept {
+            return T::serialize_canonical_string(compatible_value, w);
+        });
+
         auto const needs_escape = lexical_form_needs_escape(lex);
 
         auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
@@ -675,52 +715,52 @@ public:
         return std::nullopt;
     }
 
-        /**
-         * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
-         * Only considers casts from subtype to supertype.
-         *
-         * @return conversion result
-         */
-        template<datatypes::LiteralDatatype T>
-        requires (!std::same_as<T, datatypes::xsd::String>)
-        std::optional<typename T::cpp_type> cast_to_supertype_value() const noexcept {
-            using namespace datatypes::registry;
-            using namespace datatypes::xsd;
+    /**
+     * Tries to cast this literal to a literal of the given type and return the result without creating a Literal.
+     * Only considers casts from subtype to supertype.
+     *
+     * @return conversion result
+     */
+    template<datatypes::LiteralDatatype T>
+    requires (!std::same_as<T, datatypes::xsd::String>)
+    std::optional<typename T::cpp_type> cast_to_supertype_value() const noexcept {
+        using namespace datatypes::registry;
+        using namespace datatypes::xsd;
 
-            if (this->null()) {
-                return std::nullopt;
-            }
-
-            auto const this_dtid = this->datatype_id();
-            DatatypeIDView const target_dtid = T::datatype_id;
-
-            if (this_dtid == target_dtid) {
-                return this->value<T>();
-            }
-
-            auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
-            if (target_e == nullptr) {
-                // target not registered
-                return std::nullopt;
-            }
-
-            auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
-            if (this_e == nullptr) {
-                // this datatype not registered
-                return std::nullopt;
-            }
-
-            if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
-                if (common_conversion->target_type_id != target_dtid) // the found conversion does require downcasting
-                    return std::nullopt;
-
-                auto const target_value = common_conversion->convert_lhs(this->value());
-                return std::any_cast<typename T::cpp_type>(target_value);
-            }
-
-            // no conversion found
+        if (this->null()) {
             return std::nullopt;
         }
+
+        auto const this_dtid = this->datatype_id();
+        DatatypeIDView const target_dtid = T::datatype_id;
+
+        if (this_dtid == target_dtid) {
+            return this->value<T>();
+        }
+
+        auto const *target_e = DatatypeRegistry::get_entry(target_dtid);
+        if (target_e == nullptr) {
+            // target not registered
+            return std::nullopt;
+        }
+
+        auto const *this_e = DatatypeRegistry::get_entry(this_dtid);
+        if (this_e == nullptr) {
+            // this datatype not registered
+            return std::nullopt;
+        }
+
+        if (auto const common_conversion = DatatypeRegistry::get_common_type_conversion(this_e->conversion_table, target_e->conversion_table); common_conversion.has_value()) {
+            if (common_conversion->target_type_id != target_dtid) // the found conversion does require downcasting
+                return std::nullopt;
+
+            auto const target_value = common_conversion->convert_lhs(this->value());
+            return std::any_cast<typename T::cpp_type>(target_value);
+        }
+
+        // no conversion found
+        return std::nullopt;
+    }
 
     /**
      * Returns the lexical from of this. The lexical form is the part of the identifier that encodes the value. So datatype and language_tag are not part of the lexical form.
@@ -730,6 +770,19 @@ public:
      * @return lexical form
      */
     [[nodiscard]] util::CowString lexical_form() const noexcept;
+
+    /**
+     * Similar to Literal::lexical_form.
+     * If the lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
+     *
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param writer writer parts to be used if the lexical form is not yet materialized
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
+     */
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -744,6 +797,19 @@ public:
      * @return user friendly string representation
      */
     [[nodiscard]] util::CowString simplified_lexical_form() const noexcept;
+
+    /**
+     * Similar to Literal::simplified_lexical_form.
+     * If the simplified lexical form is already materialized, will return a string_view to it, otherwise
+     * serializes it using the given writer.
+     *
+     * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
+     * @param writer writer parts to be used if the simplified lexical form is not yet materialized
+     * @return - Fetched, if lexical form was already materialized and could be fetched.
+     *         - Serialized if lexical form was not yet materialized, but could be serialized.
+     *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
+     */
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
@@ -796,27 +862,27 @@ public:
      */
     [[nodiscard]] Literal as_language_tag_eq(Literal const &other, NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
 
-private:
-    template<bool short_form>
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-public:
     /**
      * See Node::serialize
      */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
+
     /**
      * See Node::serialize_short_form
      */
-    bool serialize_short_form(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
+    bool serialize_short_form(writer::BufWriterParts writer) const noexcept;
 
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
-    template<writer::BufWriter W>
-    bool serialize_short_form(W &w) const noexcept {
-        return serialize_short_form(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    /**
+     * Serializes this Literal's canonical lexical form into the decomposed writer
+     * See Node::serialize for more details
+     */
+    bool serialize_lexical_form(writer::BufWriterParts writer) const noexcept;
+
+    /**
+     * Serializes this Literal's simplified lexical form into the decomposed writer
+     * See Node::serialize for more details
+     */
+    bool serialize_simplified_lexical_form(writer::BufWriterParts writer) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);

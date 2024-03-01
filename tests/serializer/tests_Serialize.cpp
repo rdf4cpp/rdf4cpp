@@ -15,9 +15,9 @@ TEST_SUITE("Serialize") {
             expected = std::string{node};
         }
 
-        writer::StringWriter ser;
-        node.serialize(ser);
-        auto result = ser.finalize();
+        auto const result = writer::StringWriter::oneshot([node](auto &w) noexcept {
+            return node.serialize(w);
+        });
 
         CHECK_EQ(expected, result);
     }
@@ -95,7 +95,10 @@ TEST_SUITE("Serialize") {
     TEST_CASE("Reserialize NTriples StringWriter") {
         auto do_test = [](auto triples) {
             using namespace rdf4cpp::rdf::parser;
-            writer::StringWriter ser{256};
+
+            std::string buf;
+            buf.reserve(256);
+            writer::StringWriter ser{buf};
 
             std::istringstream iss{triples};
             for (IStreamQuadIterator qit{iss, ParsingFlag::KeepBlankNodeIds}; qit != std::default_sentinel; ++qit) {
@@ -108,9 +111,9 @@ TEST_SUITE("Serialize") {
                 write_str(" .\n", ser);
             }
 
-            auto result = ser.finalize();
+            ser.finalize();
 
-            CHECK_EQ(result, std::string_view{triples});
+            CHECK_EQ(buf, std::string_view{triples});
         };
 
         SUBCASE("variants") {
@@ -216,5 +219,63 @@ TEST_SUITE("Serialize") {
         SUBCASE("long input") {
             do_test(long_lit_triples);
         }
+    }
+
+    TEST_CASE("serialize pseudo format") {
+        std::vector<Literal> lits{
+                Literal::make_typed_from_value<datatypes::xsd::Int>(5),
+                Literal::make_typed_from_value<datatypes::xsd::Long>(10),
+                Literal::make_typed_from_value<datatypes::xsd::Long>(std::numeric_limits<datatypes::xsd::Long::cpp_type>::max()),
+                Literal::make_simple("Spherical Cow"),
+                Literal::make_lang_tagged("Spherical Cow", "en"),
+                Literal::make_lang_tagged("Cow", "spherical")
+        };
+
+        std::string_view const expected = R"(lex:5,dt:http://www.w3.org/2001/XMLSchema#int,lang:
+lex:10,dt:http://www.w3.org/2001/XMLSchema#long,lang:
+lex:9223372036854775807,dt:http://www.w3.org/2001/XMLSchema#long,lang:
+lex:Spherical Cow,dt:http://www.w3.org/2001/XMLSchema#string,lang:
+lex:Spherical Cow,dt:http://www.w3.org/1999/02/22-rdf-syntax-ns#langString,lang:en
+lex:Cow,dt:http://www.w3.org/1999/02/22-rdf-syntax-ns#langString,lang:spherical
+)";
+
+        std::string buf;
+        writer::StringWriter w{buf};
+
+        std::string lexbuf;
+        writer::StringWriter lexw{lexbuf};
+
+        for (auto l : lits) {
+            writer::write_str("lex:", w);
+
+            {
+                lexw.clear();
+                std::string_view lex;
+                auto const r = l.fetch_or_serialize_lexical_form(lex, lexw);
+
+                switch (r) {
+                    case FetchOrSerializeResult::Fetched: {
+                        writer::write_str(lex, w);
+                        break;
+                    }
+                    case FetchOrSerializeResult::Serialized: {
+                        writer::write_str(lexw.view(), w);
+                        break;
+                    }
+                    default: {
+                        FAIL("Serialization failed");
+                        break;
+                    }
+                }
+            }
+
+            writer::write_str(",dt:", w);
+            writer::write_str(l.datatype().identifier(), w);
+            writer::write_str(",lang:", w);
+            writer::write_str(l.language_tag(), w);
+            writer::write_str("\n", w);
+        }
+
+        CHECK_EQ(w.view(), expected);
     }
 }

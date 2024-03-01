@@ -57,11 +57,6 @@ public:
 template<typename W>
 concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
-     * Return type of finalize, typically void
-     */
-    typename W::Output;
-
-    /**
      * Type of the internal buffer
      */
     typename W::Buffer;
@@ -79,7 +74,7 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
      * Triggers a final flush, needs to be called after you are done using this BufWriter
      */
-    { bw.finalize() } -> std::convertible_to<typename W::Output>;
+    { bw.finalize() } -> std::convertible_to<bool>;
 
     /**
      * Flushes bw.buffer() and repoints bw.cursor() to the new free space
@@ -98,21 +93,59 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
 using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) noexcept;
 
 /**
+ * The fundamental parts of a BufWriter.
+ * This struct can be constructed either from a BufWriter itself
+ * or manually from its raw writer.
+ *
+ *
+ * It consists of an arbitrary, flushable/extendable buffer type (e.g. a std::string), a cursor
+ * into the buffer (that describes its base address and length of the free segment) and a function to flush the buffer (i.e. to either flush to io or extend the buffer).
+ * During usage callers must update the cursor to reflect the current start of the spare capacity and remaining length.
+ * When the remaining length reaches zero, flush must be called using the provided buffer and cursor. Its task is to somehow make more buffer
+ * room and then adjust the cursor to point to the new spare room.
+ *
+ * See implementation of write_str (below) for a practical usage example
+ */
+struct BufWriterParts {
+    void *buffer; //< pointer to arbitrary buffer structure
+    Cursor *cursor; //< cursor into buffer
+    FlushFunc flush; //< function to flush the contents of buffer and update cursor to point to the new free space
+
+    BufWriterParts() = delete;
+    BufWriterParts(BufWriterParts const &) noexcept = default;
+    BufWriterParts(BufWriterParts &&) noexcept = default;
+    BufWriterParts &operator=(BufWriterParts const &) noexcept = default;
+    BufWriterParts &operator=(BufWriterParts &&) noexcept = default;
+    ~BufWriterParts() noexcept = default;
+
+    template<BufWriter W>
+    BufWriterParts(W &w) noexcept : buffer{&w.buffer()},
+                                    cursor{&w.cursor()},
+                                    flush{&W::flush} {
+    }
+
+    BufWriterParts(void *buffer, Cursor *cursor, FlushFunc flush) noexcept : buffer{buffer},
+                                                                             cursor{cursor},
+                                                                             flush{flush} {
+    }
+};
+
+/**
  * Serializes the given string as is
  *
  * @param str string to write
- * @param buffer pointer to arbitrary buffer structure
- * @param cursor cursor into buffer
- * @param flush function to flush the contents of buffer and update cursor to point to the new free space
+ * @param writer writer writer
  * @return true if serialization was successful, false if a call to flush was not able to make room
  *
  * @see Node::serialize for more details on the signature/usage
+ *
+ * @note for maintainers, this function is defined in the header because that makes serialization measurably faster
  */
-inline bool write_str(std::string_view str, void *const buffer, Cursor *cursor, FlushFunc const flush) noexcept {
+inline bool write_str(std::string_view str, BufWriterParts const writer) noexcept {
     while (true) {
-        auto const max_write = std::min(str.size(), cursor->size());
-        memcpy(cursor->data(), str.data(), max_write);
-        cursor->advance(max_write);
+        auto const max_write = std::min(str.size(), writer.cursor->size());
+        memcpy(writer.cursor->data(), str.data(), max_write);
+        writer.cursor->advance(max_write);
 
         if (max_write == str.size()) [[likely]] {
             break;
@@ -120,20 +153,11 @@ inline bool write_str(std::string_view str, void *const buffer, Cursor *cursor, 
 
         str.remove_prefix(max_write);
 
-        if (flush(buffer, cursor, str.size()); cursor->size() == 0) [[unlikely]] {
+        if (writer.flush(writer.buffer, writer.cursor, str.size()); writer.cursor->size() == 0) [[unlikely]] {
             return false;
         }
     }
     return true;
-}
-
-/**
- * Serializes a string as is
- * See Node::serialize<> for more details on the signature/usage
- */
-template<BufWriter W>
-bool write_str(std::string_view str, W &w) {
-    return write_str(str, &w.buffer(), &w.cursor(), &W::flush);
 }
 
 /**
@@ -157,36 +181,67 @@ public:
     [[nodiscard]] constexpr Cursor &cursor() noexcept { return cursor_; }
     [[nodiscard]] constexpr Buffer &buffer() noexcept { return buffer_; }
 
+    [[nodiscard]] constexpr Cursor const &cursor() const noexcept { return cursor_; }
+    [[nodiscard]] constexpr Buffer const &buffer() const noexcept { return buffer_; }
+
     static void flush(void *buffer, Cursor *cursor, size_t additional_cap) noexcept {
         CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), *cursor, additional_cap);
     }
 };
 
-using StringBuffer = std::string;
+struct StringBuffer {
+    std::string *buffer_;
+
+    explicit StringBuffer(std::string &buffer) noexcept : buffer_{&buffer} {
+    }
+};
 
 /**
  * A serializer that serializes to a std::string
+ *
+ * Implements `BufWriter`
  */
 struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     using Buffer = StringBuffer;
-    using Output = std::string;
 
-    explicit StringWriter(size_t cap = 256) noexcept {
-        buffer().resize(cap);
-        cursor().repoint(buffer().data(), buffer().size());
+    constexpr StringWriter(std::string &buf) noexcept : BufWriterBase<StringWriter, StringBuffer>{buf} {
+        cursor().repoint(buffer().buffer_->data(),
+                         buffer().buffer_->size());
     }
 
-    [[nodiscard]] Output &finalize() noexcept {
-        buffer().resize(static_cast<size_t>(cursor().data() - buffer().data()));
-        return buffer();
+    bool finalize() noexcept {
+        buffer().buffer_->resize(static_cast<size_t>(cursor().data() - buffer().buffer_->data()));
+        return true;
+    }
+
+    [[nodiscard]] std::string_view view() const noexcept {
+        return std::string_view{buffer().buffer_->data(), static_cast<size_t>(cursor().data() - buffer().buffer_->data())};
+    }
+
+    void clear() noexcept {
+        cursor().repoint(buffer().buffer_->data(), buffer().buffer_->size());
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {
-        auto const bytes_filled = cursor.data() - buffer.data();
+        auto const bytes_filled = cursor.data() - buffer.buffer_->data();
 
-        buffer.resize(std::bit_ceil(buffer.size() + additional_cap));
-        cursor.repoint(buffer.data() + bytes_filled,
-                       buffer.size() - bytes_filled);
+        buffer.buffer_->resize(std::bit_ceil(buffer.buffer_->size() + additional_cap));
+        cursor.repoint(buffer.buffer_->data() + bytes_filled,
+                       buffer.buffer_->size() - bytes_filled);
+    }
+
+    template<typename F>
+    static std::string oneshot(F &&f) requires std::is_invocable_r_v<bool, decltype(std::forward<F>(f)), StringWriter &> {
+        std::string s;
+        s.resize(32);
+        StringWriter w{s};
+
+        if (!std::invoke(std::forward<F>(f), w)) {
+            throw std::runtime_error{"rdf4cpp::rdf::writer::StringWriter::oneshot failed"};
+        }
+
+        w.finalize(); // cannot fail
+        return s;
     }
 };
 
@@ -200,22 +255,21 @@ struct CFileBuffer {
 /**
  * A serializer that serializes to a C FILE
  * It is advisable to set the internal file buffer to nullptr
- * because this serializer has an internal buffer
+ * because this serializer has an internal buffer.
+ *
+ * Implements `BufWriter`
  */
 struct BufCFileWriter : BufWriterBase<BufCFileWriter, CFileBuffer> {
     using Buffer = CFileBuffer;
-    using Output = void;
 
     explicit constexpr BufCFileWriter(FILE *file) noexcept : BufWriterBase<BufCFileWriter, CFileBuffer>{file} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
 
-    void finalize() {
+    bool finalize() {
         auto const to_write = static_cast<size_t>(cursor().data() - buffer().buffer_.data());
-        if (fwrite(buffer().buffer_.data(), 1, to_write, buffer().file_) < to_write) {
-            throw std::system_error{std::error_code{errno, std::system_category()}};
-        }
+        return fwrite(buffer().buffer_.data(), 1, to_write, buffer().file_) == to_write;
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
@@ -236,20 +290,19 @@ struct OStreamBuffer {
  * A serializer that serializes to an std::ostream.
  * It is advisable to set the associated stream buffer to nullptr
  * because this serializer has an internal buffer.
+ *
+ * Implements `BufWriter`
  */
 struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     using Buffer = OStreamBuffer;
-    using Output = void;
 
     explicit constexpr BufOStreamWriter(std::ostream &os) noexcept : BufWriterBase<BufOStreamWriter, OStreamBuffer>{os} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }
 
-    void finalize() {
-        if (!buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(cursor().data() - buffer().buffer_.data()))) {
-            throw std::system_error{std::error_code{errno, std::system_category()}};
-        }
+    bool finalize() {
+        return static_cast<bool>(buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(cursor().data() - buffer().buffer_.data())));
     }
 
     static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {

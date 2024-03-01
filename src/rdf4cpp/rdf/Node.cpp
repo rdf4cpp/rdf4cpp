@@ -57,19 +57,19 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buffer, cursor, flush);
+            return IRI{handle_}.serialize(writer);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+            return query::Variable{handle_}.serialize(writer);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+            return BlankNode{handle_}.serialize(writer);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(buffer, cursor, flush);
+            return Literal{handle_}.serialize(writer);
         }
         default: {
             assert(false);
@@ -77,19 +77,19 @@ bool Node::serialize(void *const buffer, writer::Cursor *cursor, writer::FlushFu
         }
     }
 }
-bool Node::serialize_short_form(void *const buffer, writer::Cursor *cursor, writer::FlushFunc const flush) const noexcept {
+bool Node::serialize_short_form(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(buffer, cursor, flush);
+            return IRI{handle_}.serialize(writer);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(buffer, cursor, flush);
+            return query::Variable{handle_}.serialize(writer);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(buffer, cursor, flush);
+            return BlankNode{handle_}.serialize(writer);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize_short_form(buffer, cursor, flush);
+            return Literal{handle_}.serialize_short_form(writer);
         }
         default: {
             assert(false);
@@ -216,8 +216,11 @@ query::Variable Node::as_variable() const noexcept {
 bool Node::null() const noexcept {
     return handle_.null();
 }
-std::ostream &operator<<(std::ostream &os, const Node &node) {
-    os << std::string{node};
+std::ostream &operator<<(std::ostream &os, Node const &node) {
+    writer::BufOStreamWriter w{os};
+    node.serialize(w);
+    w.finalize();
+
     return os;
 }
 const Node::NodeBackendHandle &Node::backend_handle() const noexcept {

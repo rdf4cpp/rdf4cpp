@@ -36,9 +36,10 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
 }
 
 template<>
-std::string capabilities::Default<xsd_yearMonthDuration>::to_canonical_string(const cpp_type &value) noexcept {
-    if (value.count() == 0)
-        return "P0M";
+bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    if (value.count() == 0) {
+        return writer::write_str("P0M", writer);
+    }
     std::stringstream str{};
     std::chrono::months m_rem = value;
     if (m_rem.count() < 0) {
@@ -53,7 +54,7 @@ std::string capabilities::Default<xsd_yearMonthDuration>::to_canonical_string(co
     if (m_rem.count() != 0)
         str << m_rem.count() << 'M';
 
-    return str.str();
+    return writer::write_str(str.view(), writer);
 }
 
 template<>

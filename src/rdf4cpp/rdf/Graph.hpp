@@ -51,35 +51,32 @@ public:
     [[nodiscard]] const DatasetStorage &backend() const;
 
     /**
-     * See Node::serialize for usage details
-     */
-    bool serialize(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-    /**
-     * See Node::serialize for usage details
-     */
-    bool serialize_turtle(void *buffer, writer::Cursor *cursor, writer::FlushFunc flush) const noexcept;
-
-
-    /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
      *
-     * @param w a serializer
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    template<writer::BufWriter W>
-    bool serialize(W &w) const noexcept {
-        return serialize(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize(writer::BufWriterParts writer) const noexcept;
+
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a>
+     * This function does not call `begin` or `flush` on the given state,
+     * it just serialized the contents of this Graph using it.
      *
-     * @param w a serializer
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    template<writer::BufWriter W>
-    bool serialize_turtle(W &w) const noexcept {
-        return serialize_turtle(&w.buffer(), &w.cursor(), &W::flush);
-    }
+    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
+
+    /**
+     * Serialize this graph as <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a>
+     * This function will internally create a SerializationState and call `begin` and `flush`
+     * on it when appropriate.
+     *
+     * @param writer writer parts
+     * @return true if serialization was successful, false if a call to W::flush was not able to make room
+     */
+    bool serialize_turtle(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.

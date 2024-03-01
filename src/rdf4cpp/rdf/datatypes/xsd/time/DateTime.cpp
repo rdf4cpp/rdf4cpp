@@ -45,11 +45,12 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
 }
 
 template<>
-std::string capabilities::Default<xsd_dateTime>::to_canonical_string(const cpp_type &value) noexcept {
+bool capabilities::Default<xsd_dateTime>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("{:%Y-%m-%dT%H:%M:%S}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
-    return str;
+
+    return writer::write_str(str, writer);
 }
 
 template<>
