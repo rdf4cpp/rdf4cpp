@@ -61,10 +61,10 @@ public:
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to flush was not able to make room
      */
-    bool serialize(writer::BufWriterParts parts) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
@@ -72,20 +72,20 @@ public:
      * it just serialized the contents of this Dataset using it.
      *
      * @param state serialization state
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
+    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
      * This function will internally create a SerializationState and call `begin` and `flush`
      * on it when appropriate.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    bool serialize_trig(writer::BufWriterParts parts) const noexcept;
+    bool serialize_trig(writer::BufWriterParts writer) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, Dataset const &self);
 

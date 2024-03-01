@@ -60,10 +60,10 @@ public:
 
     [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const noexcept;
 
-    bool serialize_ntriples(writer::BufWriterParts parts) const noexcept;
-    bool serialize_nquads(writer::BufWriterParts parts) const noexcept;
-    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
-    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
+    bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;
+    bool serialize_nquads(writer::BufWriterParts writer) const noexcept;
+    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
+    bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
 };
 }  // namespace rdf4cpp::rdf
 

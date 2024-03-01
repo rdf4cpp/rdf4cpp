@@ -11,8 +11,8 @@ capabilities::Default<xsd_byte>::cpp_type capabilities::Default<xsd_byte>::from_
 }
 
 template<>
-bool capabilities::Default<xsd_byte>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
-    return util::to_chars_canonical(value, parts);
+bool capabilities::Default<xsd_byte>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    return util::to_chars_canonical(value, writer);
 }
 
 

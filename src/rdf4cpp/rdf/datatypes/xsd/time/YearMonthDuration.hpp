@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd_yearMonthDuration>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
+bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 template<>
 std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_yearMonthDuration>::try_into_inlined(cpp_type const &value) noexcept;

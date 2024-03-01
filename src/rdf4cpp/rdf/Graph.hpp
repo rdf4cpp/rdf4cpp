@@ -53,30 +53,30 @@ public:
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    bool serialize(writer::BufWriterParts parts) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a>
      * This function does not call `begin` or `flush` on the given state,
      * it just serialized the contents of this Graph using it.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts parts) const noexcept;
+    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a>
      * This function will internally create a SerializationState and call `begin` and `flush`
      * on it when appropriate.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to W::flush was not able to make room
      */
-    bool serialize_turtle(writer::BufWriterParts parts) const noexcept;
+    bool serialize_turtle(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.

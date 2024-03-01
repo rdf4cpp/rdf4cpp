@@ -76,22 +76,22 @@ public:
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
-     * @param parts writer parts
+     * @param writer Typically, you pass in an instance of a writer::BufWriter (Concept) instance. Any writer::BufWriter instance is implicitly convertible to writer::BufWriterParts.
      * @return true if serialization was successful, false if a call to flush was not able to make room
      *
      * For specific usage examples have a look at tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(writer::BufWriterParts parts) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a> and <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
      *
-     * @param parts writer parts
+     * @param writer writer parts
      * @return true if serialization was successful, false if a call to flush was not able to make room
      *
      * For specific usage examples have a look at tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize_short_form(writer::BufWriterParts parts) const noexcept;
+    bool serialize_short_form(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

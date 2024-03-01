@@ -176,7 +176,7 @@ private:
      * @tparam short_form whether to serialize in short/turtle form or in long/ntriples form
      */
     template<bool short_form>
-    bool serialize_impl(writer::BufWriterParts parts) const noexcept;
+    bool serialize_impl(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Implementation.
@@ -777,12 +777,12 @@ public:
      * serializes it using the given writer.
      *
      * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param parts writer parts to be used if the lexical form is not yet materialized
+     * @param writer writer parts to be used if the lexical form is not yet materialized
      * @return - Fetched, if lexical form was already materialized and could be fetched.
      *         - Serialized if lexical form was not yet materialized, but could be serialized.
      *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts parts) const noexcept;
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Converts this into it's lexical form as xsd:string. See Literal::lexical_form for more details.
@@ -804,12 +804,12 @@ public:
      * serializes it using the given writer.
      *
      * @param out_lex_form out parameter for the fetched lexical form, is set to the lexical form if function returned FetchOrSerializeResult::Fetched
-     * @param parts writer pats to be used if the simplified lexical form is not yet materialized
+     * @param writer writer parts to be used if the simplified lexical form is not yet materialized
      * @return - Fetched, if lexical form was already materialized and could be fetched.
      *         - Serialized if lexical form was not yet materialized, but could be serialized.
      *         - SerializationFailed if lexical for was not yet materialized, but serialization failed.
      */
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts parts) const noexcept;
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_simplified_lexical_form(std::string_view &out_lex_form, writer::BufWriterParts writer) const noexcept;
 
     /**
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
@@ -865,24 +865,24 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(writer::BufWriterParts parts) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
 
     /**
      * See Node::serialize_short_form
      */
-    bool serialize_short_form(writer::BufWriterParts parts) const noexcept;
+    bool serialize_short_form(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serializes this Literal's canonical lexical form into the decomposed writer
      * See Node::serialize for more details
      */
-    bool serialize_lexical_form(writer::BufWriterParts parts) const noexcept;
+    bool serialize_lexical_form(writer::BufWriterParts writer) const noexcept;
 
     /**
      * Serializes this Literal's simplified lexical form into the decomposed writer
      * See Node::serialize for more details
      */
-    bool serialize_simplified_lexical_form(writer::BufWriterParts parts) const noexcept;
+    bool serialize_simplified_lexical_form(writer::BufWriterParts writer) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
     friend std::ostream &operator<<(std::ostream &os, const Literal &literal);

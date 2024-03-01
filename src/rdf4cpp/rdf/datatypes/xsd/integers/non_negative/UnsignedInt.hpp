@@ -31,7 +31,7 @@ template<>
 capabilities::Default<xsd_unsigned_int>::cpp_type capabilities::Default<xsd_unsigned_int>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<xsd_unsigned_int>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
+bool capabilities::Default<xsd_unsigned_int>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 template<>
 bool capabilities::Logical<xsd_unsigned_int>::effective_boolean_value(cpp_type const &value) noexcept;

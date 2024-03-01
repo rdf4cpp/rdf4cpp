@@ -68,7 +68,7 @@ storage::tuple::DatasetStorage &Graph::backend() {
 const storage::tuple::DatasetStorage &Graph::backend() const {
     return dataset_storage;
 }
-bool Graph::serialize(writer::BufWriterParts const parts) const noexcept {
+bool Graph::serialize(writer::BufWriterParts const writer) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -80,14 +80,14 @@ bool Graph::serialize(writer::BufWriterParts const parts) const noexcept {
 
     for (auto const &solution : solutions) {
         Quad q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_ntriples(parts)) {
+        if (!q.serialize_ntriples(writer)) {
             return false;
         }
     }
 
     return true;
 }
-bool Graph::serialize_turtle(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
+bool Graph::serialize_turtle(writer::SerializationState &state, writer::BufWriterParts const writer) const noexcept {
     using namespace query;
 
     // TODO this is a very inefficient way to do this
@@ -99,24 +99,24 @@ bool Graph::serialize_turtle(writer::SerializationState &state, writer::BufWrite
 
     for (auto const &solution : solutions) {
         Quad const q{solution[0], solution[1], solution[2]};
-        if (!q.serialize_turtle(state, parts)) {
+        if (!q.serialize_turtle(state, writer)) {
             return false;
         }
     }
 
     return true;
 }
-bool Graph::serialize_turtle(writer::BufWriterParts const parts) const noexcept {
+bool Graph::serialize_turtle(writer::BufWriterParts const writer) const noexcept {
     writer::SerializationState st{};
-    if (!st.begin(parts)) {
+    if (!st.begin(writer)) {
         return false;
     }
 
-    if (!serialize_turtle(st, parts)) {
+    if (!serialize_turtle(st, writer)) {
         return false;
     }
 
-    return st.flush(parts);
+    return st.flush(writer);
 }
 
 std::ostream &operator<<(std::ostream &os, Graph const &graph) {

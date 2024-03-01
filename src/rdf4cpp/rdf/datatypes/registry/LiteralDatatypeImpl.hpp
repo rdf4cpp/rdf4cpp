@@ -70,20 +70,20 @@ struct Default {
      * @param value the value
      * @return <div>value</div>'s canonical string representation
      */
-    inline static bool serialize_canonical_string(cpp_type const &value, writer::BufWriterParts const parts) noexcept {
+    inline static bool serialize_canonical_string(cpp_type const &value, writer::BufWriterParts const writer) noexcept {
         // If not further specified, to_canonical_string is instantiated via operator<<. If operator<< is not defined for cpp_type instantiation will fail.
         std::stringstream str_s;
         str_s << value;
 
-        return writer::write_str(str_s.view(), parts);
+        return writer::write_str(str_s.view(), writer);
     }
 
     /**
      * Returns a string representation of a datatype that is intended to be shown in user friendly output.
      * E.g. when casting to xsd:string
      */
-    inline static bool serialize_simplified_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
-        return serialize_canonical_string(value, parts);
+    inline static bool serialize_simplified_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+        return serialize_canonical_string(value, writer);
     }
 };
 

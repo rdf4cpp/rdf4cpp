@@ -50,9 +50,9 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 }
 
 template<>
-bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
+bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("{:%Y-%m-%dT%H:%M:%S%Z}", value);
-    return writer::write_str(str, parts);
+    return writer::write_str(str, writer);
 }
 
 template<>

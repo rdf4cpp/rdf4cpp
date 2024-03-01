@@ -12,13 +12,13 @@ capabilities::Default<xsd_double>::cpp_type capabilities::Default<xsd_double>::f
 }
 
 template<>
-bool capabilities::Default<xsd_double>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
-    return util::to_chars_canonical(value, parts);
+bool capabilities::Default<xsd_double>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    return util::to_chars_canonical(value, writer);
 }
 
 template<>
-bool capabilities::Default<xsd_double>::serialize_simplified_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
-    return util::to_chars_simplified(value, parts);
+bool capabilities::Default<xsd_double>::serialize_simplified_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    return util::to_chars_simplified(value, writer);
 }
 
 template<>

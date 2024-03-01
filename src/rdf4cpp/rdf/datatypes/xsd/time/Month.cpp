@@ -24,12 +24,12 @@ capabilities::Default<xsd_gMonth>::cpp_type capabilities::Default<xsd_gMonth>::f
 }
 
 template<>
-bool capabilities::Default<xsd_gMonth>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
+bool capabilities::Default<xsd_gMonth>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     auto str = std::format("--{:%m}", value.first);
     if (value.second.has_value())
         str += value.second->to_canonical_string();
 
-    return writer::write_str(str, parts);
+    return writer::write_str(str, writer);
 }
 
 template<>

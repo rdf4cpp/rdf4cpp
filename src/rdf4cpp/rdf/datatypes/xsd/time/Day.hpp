@@ -26,7 +26,7 @@ template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
+bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 
 template<>

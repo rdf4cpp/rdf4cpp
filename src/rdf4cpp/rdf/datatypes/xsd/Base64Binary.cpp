@@ -165,7 +165,7 @@ std::string Base64BinaryRepr::to_encoded() const noexcept {
     });
 }
 
-bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWriterParts parts) noexcept {
+bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
     if (bytes.empty()) {
         return true;
     }
@@ -178,7 +178,7 @@ bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWr
         auto const b3 = bytes[triple * 3 + 2];
 
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
-        if (!writer::write_str(std::string_view{encoded.data(), encoded.size()}, parts)) {
+        if (!writer::write_str(std::string_view{encoded.data(), encoded.size()}, writer)) {
             return false;
         }
     }
@@ -194,13 +194,13 @@ bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWr
         auto const encoded = encode_decode_detail::base64_encode(b1, b2, b3);
 
         // add non-padding / data hextets
-        if (!writer::write_str(std::string_view{encoded.data(), 4 - (3 - rest)}, parts)) {
+        if (!writer::write_str(std::string_view{encoded.data(), 4 - (3 - rest)}, writer)) {
             return false;
         }
 
         // add padding hextets to signal that padding bytes were used
         static constexpr std::array<char const *, 3> rest_str{"===", "==", "="};
-        if (!writer::write_str(rest_str[rest], parts)) {
+        if (!writer::write_str(rest_str[rest], writer)) {
             return false;
         }
     }
@@ -209,8 +209,8 @@ bool Base64BinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWr
 }
 
 
-bool Base64BinaryRepr::serialize(writer::BufWriterParts parts) const noexcept {
-    return serialize(this->bytes, parts);
+bool Base64BinaryRepr::serialize(writer::BufWriterParts writer) const noexcept {
+    return serialize(this->bytes, writer);
 }
 
 std::byte Base64BinaryRepr::hextet(size_t const n) const noexcept {
@@ -242,8 +242,8 @@ capabilities::Default<xsd_base64_binary>::cpp_type capabilities::Default<xsd_bas
 }
 
 template<>
-bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts parts) noexcept {
-    return value.serialize(parts);
+bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
+    return value.serialize(writer);
 }
 #endif
 

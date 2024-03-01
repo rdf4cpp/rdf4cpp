@@ -49,7 +49,7 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(writer::BufWriterParts parts) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, const Variable &variable);

@@ -35,15 +35,15 @@ TEST_CASE("Literal short type") {
 }
 
 template<OutputFormat F>
-bool serialize(Quad const &q, writer::BufWriterParts parts, writer::SerializationState* state) {
+bool serialize(Quad const &q, writer::BufWriterParts writer, writer::SerializationState* state) {
     if constexpr (F == OutputFormat::NTriples)
-        return q.serialize_ntriples(parts);
+        return q.serialize_ntriples(writer);
     else if constexpr (F == OutputFormat::NQuads)
-        return q.serialize_nquads(parts);
+        return q.serialize_nquads(writer);
     else if constexpr (F == OutputFormat::Turtle)
-        return q.serialize_turtle(*state, parts);
+        return q.serialize_turtle(*state, writer);
     else if constexpr (F == OutputFormat::TriG)
-        return q.serialize_trig(*state, parts);
+        return q.serialize_trig(*state, writer);
 }
 
 template<OutputFormat F>

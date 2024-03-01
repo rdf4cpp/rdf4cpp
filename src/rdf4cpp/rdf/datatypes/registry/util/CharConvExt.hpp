@@ -44,11 +44,11 @@ I from_chars(std::string_view s) {
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-integer
  *
  * @param value the value to be serialized
- * @param parts writer parts to be used for serialization
+ * @param writer writer parts to be used for serialization
  * @return true if serialization successful, otherwise false
  */
 template<std::integral I>
-bool to_chars_canonical(I const value, writer::BufWriterParts const parts) noexcept {
+bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
@@ -59,7 +59,7 @@ bool to_chars_canonical(I const value, writer::BufWriterParts const parts) noexc
     assert(res.ec == std::errc{});
 
     std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-    return writer::write_str(s, parts);
+    return writer::write_str(s, writer);
 }
 
 /**
@@ -108,20 +108,20 @@ constexpr size_t log10ceil(T const value) noexcept {
  * see https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-float
  *
  * @param value the value to be serialized
- * @param parts writer parts to be used for serialization
+ * @param writer writer parts to be used for serialization
  * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-bool to_chars_canonical(F const value, writer::BufWriterParts const parts) noexcept {
+bool to_chars_canonical(F const value, writer::BufWriterParts const writer) noexcept {
     if (std::isnan(value)) {
-        return writer::write_str("NaN", parts);
+        return writer::write_str("NaN", writer);
     }
 
     if (std::isinf(value)) {
         if (value > 0) {
-            return writer::write_str("INF", parts);
+            return writer::write_str("INF", writer);
         } else {
-            return writer::write_str("-INF", parts);
+            return writer::write_str("-INF", writer);
         }
     }
 
@@ -174,7 +174,7 @@ bool to_chars_canonical(F const value, writer::BufWriterParts const parts) noexc
     }
 
     std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-    return writer::write_str(s, parts);
+    return writer::write_str(s, writer);
 }
 
 /**
@@ -183,11 +183,11 @@ bool to_chars_canonical(F const value, writer::BufWriterParts const parts) noexc
  * see https://www.w3.org/TR/xpath-functions/#casting-to-string
  *
  * @param value the value to be serialized
- * @param parts writer parts to be used for serialization
+ * @param writer writer parts to be used for serialization
  * @return true if serialization successful, otherwise false
  */
 template<std::floating_point F>
-bool to_chars_simplified(F const value, writer::BufWriterParts const parts) noexcept {
+bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noexcept {
     if (value == 0) {
         return std::signbit(value) ? "-0" : "0";
     }
@@ -200,10 +200,10 @@ bool to_chars_simplified(F const value, writer::BufWriterParts const parts) noex
         assert(res.ec == std::errc{});
 
         std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
-        return writer::write_str(s, parts);
+        return writer::write_str(s, writer);
     }
 
-    return to_chars_canonical(value, parts);
+    return to_chars_canonical(value, writer);
 }
 
 } // namespace rdf4cpp::rdf::datatypes::registry::util

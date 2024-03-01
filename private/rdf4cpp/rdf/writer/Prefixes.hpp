@@ -52,19 +52,19 @@ static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::node::id
 
 // will only get called with fixed ids
 template<bool short_form>
-static bool write_fixed_type_iri(datatypes::registry::LiteralType t, writer::BufWriterParts const parts) noexcept {
+static bool write_fixed_type_iri(datatypes::registry::LiteralType t, writer::BufWriterParts const writer) noexcept {
     assert(t.is_fixed());
 
     if constexpr (short_form) {
         auto const &p = detail::type_iri_buffer[t.to_underlying()];
         if (!p.empty()) {
-            return write_str(p, parts);
+            return write_str(p, writer);
         }
     }
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("<");
     RDF4CPP_DETAIL_TRY_WRITE_STR(datatypes::registry::DatatypeRegistry::get_entry(t)->datatype_iri);
-    return write_str(">", parts);
+    return write_str(">", writer);
 }
 
 } // namespace rdf4cpp::rdf::writer

@@ -57,19 +57,19 @@ Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexce
     }
 }
 
-bool Node::serialize(writer::BufWriterParts const parts) const noexcept {
+bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(parts);
+            return IRI{handle_}.serialize(writer);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(parts);
+            return query::Variable{handle_}.serialize(writer);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(parts);
+            return BlankNode{handle_}.serialize(writer);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(parts);
+            return Literal{handle_}.serialize(writer);
         }
         default: {
             assert(false);
@@ -77,19 +77,19 @@ bool Node::serialize(writer::BufWriterParts const parts) const noexcept {
         }
     }
 }
-bool Node::serialize_short_form(writer::BufWriterParts const parts) const noexcept {
+bool Node::serialize_short_form(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
         [[likely]] case RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(parts);
+            return IRI{handle_}.serialize(writer);
         }
         case RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(parts);
+            return query::Variable{handle_}.serialize(writer);
         }
         case RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(parts);
+            return BlankNode{handle_}.serialize(writer);
         }
         case RDFNodeType::Literal: {
-            return Literal{handle_}.serialize_short_form(parts);
+            return Literal{handle_}.serialize_short_form(writer);
         }
         default: {
             assert(false);

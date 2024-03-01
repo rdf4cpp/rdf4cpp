@@ -4,7 +4,7 @@
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
 #define RDF4CPP_DETAIL_TRY_WRITE_STR(...)                           \
-    if (!::rdf4cpp::rdf::writer::write_str({__VA_ARGS__}, parts)) { \
+    if (!::rdf4cpp::rdf::writer::write_str({__VA_ARGS__}, writer)) { \
         return false;                                               \
     }
 

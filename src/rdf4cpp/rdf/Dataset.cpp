@@ -44,35 +44,35 @@ Dataset::DatasetStorage &Dataset::backend() {
 const Dataset::DatasetStorage &Dataset::backend() const {
     return dataset_storage;
 }
-bool Dataset::serialize(writer::BufWriterParts const parts) const noexcept {
+bool Dataset::serialize(writer::BufWriterParts const writer) const noexcept {
     for (Quad const &quad : *this) {
-        if (!quad.serialize_nquads(parts)) {
+        if (!quad.serialize_nquads(writer)) {
             return false;
         }
     }
 
     return true;
 }
-bool Dataset::serialize_trig(writer::SerializationState &state, writer::BufWriterParts const parts) const noexcept {
+bool Dataset::serialize_trig(writer::SerializationState &state, writer::BufWriterParts const writer) const noexcept {
     for (Quad const &quad : *this) {
-        if (!quad.serialize_trig(state, parts)) {
+        if (!quad.serialize_trig(state, writer)) {
             return false;
         }
     }
 
     return true;
 }
-bool Dataset::serialize_trig(writer::BufWriterParts const parts) const noexcept {
+bool Dataset::serialize_trig(writer::BufWriterParts const writer) const noexcept {
     writer::SerializationState st{};
-    if (!st.begin(parts)) {
+    if (!st.begin(writer)) {
         return false;
     }
 
-    if (!serialize_trig(st, parts)) {
+    if (!serialize_trig(st, writer)) {
         return false;
     }
 
-    return st.flush(parts);
+    return st.flush(writer);
 }
 std::ostream &operator<<(std::ostream &os, Dataset const &ds) {
     writer::BufOStreamWriter w{os};

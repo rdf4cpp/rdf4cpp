@@ -35,10 +35,10 @@ template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s);
 
 template<>
-bool capabilities::Default<xsd_decimal>::serialize_canonical_string(const cpp_type &value, writer::BufWriterParts parts) noexcept;
+bool capabilities::Default<xsd_decimal>::serialize_canonical_string(const cpp_type &value, writer::BufWriterParts writer) noexcept;
 
 template<>
-bool capabilities::Default<xsd_decimal>::serialize_simplified_string(cpp_type const &value, writer::BufWriterParts parts) noexcept;
+bool capabilities::Default<xsd_decimal>::serialize_simplified_string(cpp_type const &value, writer::BufWriterParts writer) noexcept;
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::add_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::add(cpp_type const &lhs, cpp_type const &rhs) noexcept;

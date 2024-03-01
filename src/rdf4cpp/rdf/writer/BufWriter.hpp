@@ -95,7 +95,7 @@ using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) 
 /**
  * The fundamental parts of a BufWriter.
  * This struct can be constructed either from a BufWriter itself
- * or manually from its raw parts.
+ * or manually from its raw writer.
  *
  *
  * It consists of an arbitrary, flushable/extendable buffer type (e.g. a std::string), a cursor
@@ -134,18 +134,18 @@ struct BufWriterParts {
  * Serializes the given string as is
  *
  * @param str string to write
- * @param parts writer parts
+ * @param writer writer writer
  * @return true if serialization was successful, false if a call to flush was not able to make room
  *
  * @see Node::serialize for more details on the signature/usage
  *
  * @note for maintainers, this function is defined in the header because that makes serialization measurably faster
  */
-inline bool write_str(std::string_view str, BufWriterParts const parts) noexcept {
+inline bool write_str(std::string_view str, BufWriterParts const writer) noexcept {
     while (true) {
-        auto const max_write = std::min(str.size(), parts.cursor->size());
-        memcpy(parts.cursor->data(), str.data(), max_write);
-        parts.cursor->advance(max_write);
+        auto const max_write = std::min(str.size(), writer.cursor->size());
+        memcpy(writer.cursor->data(), str.data(), max_write);
+        writer.cursor->advance(max_write);
 
         if (max_write == str.size()) [[likely]] {
             break;
@@ -153,7 +153,7 @@ inline bool write_str(std::string_view str, BufWriterParts const parts) noexcept
 
         str.remove_prefix(max_write);
 
-        if (parts.flush(parts.buffer, parts.cursor, str.size()); parts.cursor->size() == 0) [[unlikely]] {
+        if (writer.flush(writer.buffer, writer.cursor, str.size()); writer.cursor->size() == 0) [[unlikely]] {
             return false;
         }
     }

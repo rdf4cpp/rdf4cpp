@@ -13,13 +13,13 @@
 namespace rdf4cpp::rdf::datatypes {
 
 template<typename LiteralDatatypeImpl>
-concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value, writer::BufWriterParts parts) {
+concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value, writer::BufWriterParts writer) {
                               typename LiteralDatatypeImpl::cpp_type;
                               { LiteralDatatypeImpl::identifier } -> std::convertible_to<std::string_view>;
                               { LiteralDatatypeImpl::datatype_id } -> std::convertible_to<registry::DatatypeIDView>;
                               { LiteralDatatypeImpl::from_string(sv) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
-                              { LiteralDatatypeImpl::serialize_canonical_string(cpp_value, parts) } -> std::convertible_to<bool>;
-                              { LiteralDatatypeImpl::serialize_simplified_string(cpp_value, parts) } -> std::convertible_to<bool>;
+                              { LiteralDatatypeImpl::serialize_canonical_string(cpp_value, writer) } -> std::convertible_to<bool>;
+                              { LiteralDatatypeImpl::serialize_simplified_string(cpp_value, writer) } -> std::convertible_to<bool>;
                           };
 
 template<typename LiteralDatatypeImpl>

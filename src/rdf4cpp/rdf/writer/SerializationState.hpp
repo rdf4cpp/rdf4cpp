@@ -10,8 +10,8 @@ struct SerializationState {
     Node active_subject;
     Node active_predicate;
 
-    static bool begin(BufWriterParts parts) noexcept;
-    bool flush(BufWriterParts parts) noexcept;
+    static bool begin(BufWriterParts writer) noexcept;
+    bool flush(BufWriterParts writer) noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::writer
