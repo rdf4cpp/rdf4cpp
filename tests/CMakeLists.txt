@@ -54,7 +54,15 @@ target_link_libraries(tests_NodeStorage_lifetime
         doctest::doctest
         rdf4cpp
         )
-add_test(NAME tests_NodeStorage_lifetime COMMAND tests_Node)
+add_test(NAME tests_NodeStorage_lifetime COMMAND tests_NodeStorage_lifetime)
+
+add_executable(tests_NodeStorage_helper_types nodes/tests_NodeStorage_helper_types.cpp)
+target_link_libraries(tests_NodeStorage_helper_types
+        doctest::doctest
+        rdf4cpp
+)
+add_test(NAME tests_NodeStorage_helper_types COMMAND tests_NodeStorage_helper_types)
+
 
 # RDF Core Types
 add_executable(tests_String datatype/tests_String.cpp)

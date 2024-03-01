@@ -6,7 +6,7 @@
 namespace rdf4cpp::rdf {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
 BlankNode::BlankNode(std::string_view identifier, NodeStorage &node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier, .scope = nullptr}),
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
                              storage::node::identifier::RDFNodeType::BNode,
                              node_storage.id()}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
@@ -42,7 +42,7 @@ BlankNode BlankNode::try_get_in_node_storage(NodeStorage const &node_storage) co
 }
 
 BlankNode BlankNode::find(std::string_view identifier, const NodeStorage& node_storage) noexcept {
-    auto nid = node_storage.find_id(storage::node::view::BNodeBackendView{identifier, nullptr});
+    auto nid = node_storage.find_id(storage::node::view::BNodeBackendView{identifier, std::nullopt});
     if (nid.null())
         return BlankNode{};
     return BlankNode{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::BNode, node_storage.id()}};
@@ -94,8 +94,8 @@ util::TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
     auto const this_backend = this->handle_.bnode_backend();
     auto const other_backend = other.handle_.bnode_backend();
 
-    if (this_backend.scope == nullptr || other_backend.scope == nullptr) {
-        return (this_backend.scope == nullptr) == (other_backend.scope == nullptr) && this_backend.identifier == other_backend.identifier;
+    if (!this_backend.scope.has_value() || !other_backend.scope.has_value()) {
+        return this_backend.scope.has_value() == other_backend.scope.has_value() && this_backend.identifier == other_backend.identifier;
     }
 
     auto this_scope = this_backend.scope->try_upgrade();

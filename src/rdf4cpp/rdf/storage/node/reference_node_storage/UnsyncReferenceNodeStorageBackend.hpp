@@ -18,11 +18,7 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 /**
  * NON-Thread-safe reference implementation of a INodeStorageBackend.
  */
-class UnsyncReferenceNodeStorageBackend : public INodeStorageBackend {
-public:
-    using NodeID = identifier::NodeID;
-    using LiteralID = identifier::LiteralID;
-
+struct UnsyncReferenceNodeStorageBackend : INodeStorageBackend {
 private:
     UnsyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     UnsyncNodeTypeStorage<IRIBackend> iri_storage_;
@@ -52,17 +48,11 @@ private:
                UnsyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DayTimeDuration>>,
                UnsyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
-    uint64_t next_fallback_literal_id_{NodeID::min_literal_id.value};
-    std::array<uint64_t, std::tuple_size_v<decltype(specialized_literal_storage_)>> next_specialized_literal_ids_;
-
-    uint64_t next_bnode_id_{NodeID::min_bnode_id.value()};
-    uint64_t next_iri_id_{NodeID::min_iri_id.value()};
-    uint64_t next_variable_id_{NodeID::min_variable_id.value()};
-
 public:
     UnsyncReferenceNodeStorageBackend() noexcept;
 
     [[nodiscard]] size_t size() const noexcept override;
+    void shrink_to_fit() override;
 
     [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept override;
 

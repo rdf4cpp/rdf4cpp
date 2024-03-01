@@ -4,6 +4,7 @@
 #include <dice/hash.hpp>
 #include <dice/sparse-map/sparse_map.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/BiDirFlatMap.hpp>
 
 #include <memory>
 
@@ -16,21 +17,19 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  */
 template<typename BackendType_t>
 struct UnsyncNodeTypeStorage {
-    using Backend = BackendType_t;
-    using BackendView = typename Backend::View;
+    using backend_type = BackendType_t;
+    using backend_view_type = typename backend_type::view_type;
+
 private:
     struct DefaultBackendTypeEqual {
         using is_transparent = void;
 
-        bool operator()(Backend const *lhs, Backend const *rhs) const noexcept {
-            return lhs == rhs;
-        }
-        bool operator()(BackendView const &lhs, Backend const *rhs) const noexcept {
-            return lhs == BackendView(*rhs);
+        bool operator()(backend_view_type const &lhs, backend_type const &rhs) const noexcept {
+            return lhs == static_cast<backend_view_type>(rhs);
         }
 
-        bool operator()(Backend const *lhs, BackendView const &rhs) const noexcept {
-            return BackendView(*lhs) == rhs;
+        bool operator()(backend_type const &lhs, backend_view_type const &rhs) const noexcept {
+            return static_cast<backend_view_type>(lhs) == rhs;
         }
     };
 
@@ -39,18 +38,15 @@ private:
         using type = DefaultBackendTypeEqual;
     };
 
-    template<typename T> requires requires { typename T::Equal; }
+    template<typename T> requires requires { typename T::equal; }
     struct SelectBackendTypeEqual<T> {
-        using type = typename T::Equal;
+        using type = typename T::equal;
     };
 
     struct DefaultBackendTypeHash {
         using is_transparent = void;
 
-        [[nodiscard]] size_t operator()(Backend const *x) const noexcept {
-            return x->hash;
-        }
-        [[nodiscard]] size_t operator()(BackendView const &x) const noexcept {
+        [[nodiscard]] size_t operator()(backend_view_type const &x) const noexcept {
             return x.hash();
         }
     };
@@ -60,23 +56,39 @@ private:
         using type = DefaultBackendTypeHash;
     };
 
-    template<typename T> requires requires { typename T::Hash; }
+    template<typename T> requires requires { typename T::hasher; }
     struct SelectBackendTypeHash<T> {
-        using type = typename T::Hash;
+        using type = typename T::hasher;
     };
 
 public:
-    using BackendEqual = typename SelectBackendTypeEqual<Backend>::type;
-    using BackendHash = typename SelectBackendTypeHash<Backend>::type;
+    using backend_equal = typename SelectBackendTypeEqual<backend_type>::type;
+    using backend_hasher = typename SelectBackendTypeHash<backend_type>::type;
+    using backend_id_type = typename backend_type::id_type;
 
-    struct NodeIDHash {
-        [[nodiscard]] size_t operator()(identifier::NodeID const &x) const noexcept {
-            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x.value());
+    /**
+     * Translates the given backend_id_type into a NodeID
+     */
+    static identifier::NodeID to_node_id(backend_id_type const id, [[maybe_unused]] backend_view_type const &view) noexcept {
+        if constexpr (requires { backend_type::to_node_id(id, view); }) {
+            return backend_type::to_node_id(id, view);
+        } else {
+            return id;
         }
-    };
+    }
 
-    dice::sparse_map::sparse_map<identifier::NodeID, std::unique_ptr<Backend>, NodeIDHash> id2data;
-    dice::sparse_map::sparse_map<Backend *, identifier::NodeID, BackendHash, BackendEqual> data2id;
+    /**
+     * Translates the given NodeID into a backend_id_type
+     */
+    static backend_id_type to_backend_id(identifier::NodeID const id) noexcept {
+        if constexpr (requires { backend_type::to_backend_id(id); }) {
+            return backend_type::to_backend_id(id);
+        } else {
+            return id;
+        }
+    }
+
+    detail::BiDirFlatMap<backend_id_type, backend_type, backend_view_type, backend_hasher, backend_equal> mapping;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

@@ -27,6 +27,11 @@ public:
     [[nodiscard]] virtual size_t size() const noexcept = 0;
 
     /**
+     * Requests the removal of unused capacity.
+     */
+    virtual void shrink_to_fit() = 0;
+
+    /**
      * Backend for NodeStorage::has_specialized_storage_for(datatype)
      * @param datatype datatype of specialized storage to check for
      * @return whether this implementation has specialized storage for the given datatype

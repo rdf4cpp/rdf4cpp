@@ -3,25 +3,25 @@
 
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/NodeScope.hpp>
-
-#include <string>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/ConstString.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 struct BNodeBackend {
-    using View = view::BNodeBackendView;
+    using view_type = view::BNodeBackendView;
+    using id_type = identifier::NodeID;
 
     size_t hash;
-    std::string identifier;
+    detail::ConstString identifier;
     std::optional<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> scope;
 
-    explicit BNodeBackend(View const &view) noexcept : hash{view.hash()},
-                                                       identifier{view.identifier},
-                                                       scope{view.scope == nullptr ? std::nullopt : std::optional{*view.scope}} {
+    explicit BNodeBackend(view_type const &view) noexcept : hash{view.hash()},
+                                                            identifier{view.identifier},
+                                                            scope{view.scope} {
     }
 
-    explicit operator View() const noexcept {
-        return View{.identifier = identifier, .scope = scope.has_value() ? &*scope : nullptr};
+    explicit operator view_type() const noexcept {
+        return view_type{.identifier = identifier, .scope = scope};
     }
 };
 

@@ -22,10 +22,10 @@ storage::node::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerato
         if (scope != nullptr) {
             WeakNodeScope weak = scope->downgrade();
             return node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier,
-                                                                                      .scope = &weak});
+                                                                                      .scope = weak});
         } else {
             return node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier,
-                                                                                      .scope = nullptr});
+                                                                                      .scope = std::nullopt});
         }
     }();
 

@@ -12,11 +12,9 @@ namespace rdf4cpp::rdf::storage::node::reference_node_storage {
  */
 template<typename BackendType_t>
 struct SyncNodeTypeStorage : UnsyncNodeTypeStorage<BackendType_t> {
-    using Base = UnsyncNodeTypeStorage<BackendType_t>;
-    using Backend = typename Base::Backend;
-    using BackendView = typename Base::BackendView;
-    using BackendEqual = typename Base::BackendEqual;
-    using BackendHash = typename Base::BackendHash;
+    using base_type = UnsyncNodeTypeStorage<BackendType_t>;
+    using backend_type = typename base_type::backend_type;
+    using backend_view_type = typename base_type::backend_view_type;
 
     std::shared_mutex mutable mutex;
 };

@@ -4,29 +4,41 @@
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept {
-    // set correct initial value for atomics
-    for (auto &id : next_specialized_literal_ids_) {
-        id = NodeID::min_literal_id.value;
-    }
+    iri_storage_.mapping.reserve_until(identifier::NodeID::min_iri_id);
+    bnode_storage_.mapping.reserve_until(identifier::NodeID::min_bnode_id);
+    variable_storage_.mapping.reserve_until(identifier::NodeID::min_variable_id);
+    fallback_literal_storage_.mapping.reserve_until(identifier::NodeID::min_literal_id);
+
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage.mapping.reserve_until(identifier::NodeID::min_literal_id);
+    });
 
     // some iri's like xsd:string are there by default
     for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
         auto const id = literal_type.to_underlying();
-
-        auto const [it, inserted] = iri_storage_.id2data.emplace(id, std::make_unique<IRIBackend>(view::IRIBackendView{.identifier = iri}));
-        assert(inserted);
-        iri_storage_.data2id.emplace(it->second.get(), id);
+        iri_storage_.mapping.insert_assume_not_present_at(view::IRIBackendView{.identifier = iri}, identifier::NodeID{id});
     }
 }
 
 size_t UnsyncReferenceNodeStorageBackend::size() const noexcept {
-    return iri_storage_.id2data.size() +
-           bnode_storage_.id2data.size() +
-           variable_storage_.id2data.size() +
-           fallback_literal_storage_.id2data.size() +
+    return iri_storage_.mapping.size() +
+           bnode_storage_.mapping.size() +
+           variable_storage_.mapping.size() +
+           fallback_literal_storage_.mapping.size() +
            specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
-               return acc + storage.id2data.size();
+               return acc + storage.mapping.size();
            });
+}
+
+void UnsyncReferenceNodeStorageBackend::shrink_to_fit() {
+    iri_storage_.mapping.shrink_to_fit();
+    bnode_storage_.mapping.shrink_to_fit();
+    variable_storage_.mapping.shrink_to_fit();
+    fallback_literal_storage_.mapping.shrink_to_fit();
+
+    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage.mapping.shrink_to_fit();
+    });
 }
 
 bool UnsyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) const noexcept {
@@ -39,33 +51,21 @@ bool UnsyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::
  * @tparam create_if_not_present enables code for creating non-existing Node Backends
  * @param view contains the data of the requested Node Backend
  * @param storage the storage where the Node Backend is looked up
- * @param next_id_func function to generate the next ID which is assigned in case a new Node Backend is created
  * @return the NodeID for the looked up Node Backend. Result is the null-id if there was no matching Node Backend.
  */
-template<bool create_if_not_present, typename Storage, typename NextIDFunc = void *>
-    requires (!create_if_not_present || std::is_nothrow_invocable_r_v<identifier::NodeID, NextIDFunc>)
-static identifier::NodeID lookup_or_insert_impl(typename Storage::BackendView const &view,
-                                                Storage &storage,
-                                                NextIDFunc next_id_func = nullptr) noexcept {
+template<bool create_if_not_present, typename Storage>
+static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_type const &view,
+                                                Storage &storage) noexcept {
 
-    if (auto const it = storage.data2id.find(view); it != storage.data2id.end()) {
-        return it->second;
+    if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::backend_id_type{}) {
+        return Storage::to_node_id(id, view);
     }
 
     if constexpr (!create_if_not_present) {
         return identifier::NodeID{};
     } else {
-        // check again, might have changed between unlocking of shared_lock and locking of unique_lock
-        if (auto const it = storage.data2id.find(view); it != storage.data2id.end()) {
-            return it->second;
-        }
-
-        identifier::NodeID const next_id = next_id_func();
-        auto const [it, inserted] = storage.id2data.emplace(next_id, std::make_unique<typename Storage::Backend>(view));
-        assert(inserted);
-        storage.data2id.emplace(it->second.get(), next_id);
-
-        return next_id;
+        auto const id = storage.mapping.insert_assume_not_present(view);
+        return Storage::to_node_id(id, view);
     }
 }
 
@@ -75,68 +75,27 @@ identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::Lite
                 auto const datatype = identifier::iri_node_id_to_literal_type(lexical.datatype_id);
                 assert(!this->has_specialized_storage_for(datatype));
 
-                auto const next_id_func = [this, datatype]() noexcept {
-                    auto const id = next_fallback_literal_id_++;
-                    if (id >= (1ul << LiteralID::width)) [[unlikely]] {
-                        std::abort();
-                    }
-
-                    return identifier::NodeID{identifier::LiteralID{id}, datatype};
-                };
-
-                return lookup_or_insert_impl<true>(lexical, fallback_literal_storage_, next_id_func);
+                return lookup_or_insert_impl<true>(lexical, fallback_literal_storage_);
             },
             [this](view::ValueLiteralBackendView const &any) noexcept {
                 assert(this->has_specialized_storage_for(any.datatype));
 
-                auto const next_id_func = [this, datatype = any.datatype]() noexcept {
-                    return specialization_detail::visit_specialized(next_specialized_literal_ids_, datatype, [datatype](auto &lit_id) {
-                        auto const id = lit_id++;
-                        if (id >= (1ul << LiteralID::width)) [[unlikely]] {
-                            std::abort();
-                        }
-
-                        return identifier::NodeID{LiteralID{id}, datatype};
-                    });
-                };
-
                 return specialization_detail::visit_specialized(specialized_literal_storage_, any.datatype, [&](auto &storage) noexcept {
-                    return lookup_or_insert_impl<true>(any, storage, next_id_func);
+                    return lookup_or_insert_impl<true>(any, storage);
                 });
             });
 }
 
 identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::IRIBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(view, iri_storage_, [this]() noexcept {
-        auto const id = next_iri_id_++;
-        if (id >= (1ul << NodeID::width)) [[unlikely]] {
-            std::abort();
-        }
-
-        return identifier::NodeID{id};
-    });
+    return lookup_or_insert_impl<true>(view, iri_storage_);
 }
 
 identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::BNodeBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(view, bnode_storage_, [this]() noexcept {
-        auto const id = next_bnode_id_++;
-        if (id >= (1ul << NodeID::width)) [[unlikely]] {
-            std::abort();
-        }
-
-        return identifier::NodeID{id};
-    });
+    return lookup_or_insert_impl<true>(view, bnode_storage_);
 }
 
 identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::VariableBackendView const &view) noexcept {
-    return lookup_or_insert_impl<true>(view, variable_storage_, [this]() noexcept {
-        auto const id = next_variable_id_++;
-        if (id >= (1ul << NodeID::width)) [[unlikely]] {
-            std::abort();
-        }
-
-        return identifier::NodeID{id};
-    });
+    return lookup_or_insert_impl<true>(view, variable_storage_);
 }
 
 identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::BNodeBackendView const &view) const noexcept {
@@ -168,8 +127,12 @@ identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::VariableBack
 }
 
 template<typename NodeTypeStorage>
-static typename NodeTypeStorage::BackendView find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) {
-    return static_cast<typename NodeTypeStorage::BackendView>(*storage.id2data.at(id));
+static typename NodeTypeStorage::backend_view_type find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) {
+    if (auto view = storage.mapping.lookup_value(NodeTypeStorage::to_backend_id(id)); view.has_value()) {
+        return *view;
+    } else {
+        throw std::out_of_range{"Did not find node for given id"};
+    }
 }
 
 view::IRIBackendView UnsyncReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const {
@@ -194,21 +157,14 @@ view::VariableBackendView UnsyncReferenceNodeStorageBackend::find_variable_backe
     return find_backend_view(variable_storage_, id);
 }
 
-template<typename NodeTypeStorage>
-static bool erase_impl(NodeTypeStorage &storage, identifier::NodeID const id) noexcept {
-    auto it = storage.id2data.find(id);
-    if (it == storage.id2data.end()) {
+template<typename Storage>
+static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
+    auto const backend_id = Storage::to_backend_id(id);
+    if (!storage.mapping.lookup_value(backend_id).has_value()) {
         return false;
     }
 
-    auto const *backend_ptr = it->second.get();
-
-    auto data_it = storage.data2id.find(static_cast<typename NodeTypeStorage::BackendView>(*backend_ptr));
-    assert(data_it != storage.data2id.end());
-
-    storage.id2data.erase(it);
-    storage.data2id.erase(data_it);
-
+    storage.mapping.erase_assume_present(backend_id);
     return true;
 }
 

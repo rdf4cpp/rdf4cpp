@@ -4,6 +4,10 @@
 #include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
+namespace rdf4cpp::rdf::storage::node {
+class NodeStorage;
+} // rdf4cpp::rdf::storage::node
+
 namespace rdf4cpp::rdf::bnode_mngt {
 
 struct NodeScope;

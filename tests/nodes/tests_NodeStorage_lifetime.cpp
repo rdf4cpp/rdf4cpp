@@ -175,7 +175,7 @@ TEST_SUITE("NodeStorage lifetime and ref counting") {
         ns.erase_iri(iri.backend_handle().node_id());
 
         identifier::NodeID iri_id2 = ns.find_or_make_id(view::IRIBackendView {.identifier = "https://hello.com"});
-        CHECK(iri.backend_handle().node_id() != iri_id2);
+        CHECK(iri.backend_handle().node_id() == iri_id2);
     }
 
     /* the following functions are by nature non-deterministic, but they at least _attempt_ to detect race-conditions */

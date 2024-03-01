@@ -4,33 +4,12 @@
 #include <rdf4cpp/rdf/bnode_mngt/INodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/NodeGenerator.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
+#include <rdf4cpp/rdf/bnode_mngt/WeakNodeScope.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
 
 #include <string_view>
 
 namespace rdf4cpp::rdf::bnode_mngt {
-
-namespace identifier {
-
-struct NodeScopeID {
-    static constexpr size_t width = 16;
-    using underlying_type = uint16_t;
-
-private:
-    underlying_type raw_ : width;
-
-public:
-    constexpr NodeScopeID() = default;
-    explicit constexpr NodeScopeID(underlying_type raw) : raw_{raw} {}
-
-    [[nodiscard]] constexpr underlying_type to_underlying() const noexcept {
-        return raw_;
-    }
-
-    constexpr auto operator<=>(NodeScopeID const &) const noexcept = default;
-};
-
-} // namespace identifier
 
 namespace node_scope_detail {
 
@@ -212,61 +191,11 @@ public:
     bool operator!=(NodeScope const &other) const noexcept;
 };
 
-struct WeakNodeScope {
-private:
-    friend struct NodeScope;
-    friend struct std::hash<WeakNodeScope>;
-
-    identifier::NodeScopeID backend_index_;
-    size_t generation_;
-
-    WeakNodeScope(identifier::NodeScopeID backend_index, size_t generation) noexcept;
-
-public:
-    /**
-     * @return Identifier of this NodeScope
-     */
-    [[nodiscard]] identifier::NodeScopeID id() const noexcept;
-
-    /**
-     * Tries to upgrade this WeakNodeScope into a NodeScope.
-     * This will only succeed if the corresponding INodeScope backend is still alive.
-     *
-     * @return a NodeScope pointing to the same backend as this, if the backend is still alive, otherwise nullopt
-     */
-    [[nodiscard]] std::optional<NodeScope> try_upgrade() const noexcept;
-
-    /**
-     * Tries to upgrade this WeakNodeScope into a NodeScope.
-     * This will only succeed if the corresponding INodeScope is still alive.
-     * This function throws on failure to upgrade.
-     *
-     * @return a NodeScope pointing to the same backend as this, if the backend is still alive
-     * @throws std::runtime_error on upgrade failure
-     */
-    [[nodiscard]] NodeScope upgrade() const;
-
-    /**
-     * @return whether this and other are referring to the same backend
-     */
-    bool operator==(WeakNodeScope const &other) const noexcept = default;
-
-    /**
-     * @return whether this and other are _not_ referring to the same backend
-     */
-    bool operator!=(WeakNodeScope const &other) const noexcept = default;
-};
-
 }  //namespace rdf4cpp::rdf::bnode_mngt
 
 template<>
 struct std::hash<rdf4cpp::rdf::bnode_mngt::NodeScope> {
     size_t operator()(rdf4cpp::rdf::bnode_mngt::NodeScope const &scope) const noexcept;
-};
-
-template<>
-struct std::hash<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> {
-    size_t operator()(rdf4cpp::rdf::bnode_mngt::WeakNodeScope const &scope) const noexcept;
 };
 
 #endif  //RDF4CPP_RDF_UTIL_BLANKNODEIDSCOPE_HPP
