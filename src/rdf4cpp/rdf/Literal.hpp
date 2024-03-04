@@ -193,6 +193,15 @@ private:
     template<bool simplified, typename C>
     auto serialize_lexical_form_impl(C &&consume) const noexcept;
 
+
+    DynNodeStorage select_node_storage(DynNodeStorage node_storage) const noexcept {
+        if (node_storage == keep_node_storage) {
+            return handle_.storage();
+        } else {
+            return node_storage;
+        }
+    }
+
     explicit Literal(Node::NodeBackendHandle handle) noexcept;
 
 public:
@@ -487,7 +496,7 @@ public:
     template<datatypes::LiteralDatatype T>
         requires(!std::same_as<T, datatypes::rdf::LangString>)
     [[nodiscard]] static Literal find_typed(std::string_view lexical_form,
-                                            DynNodeStorage node_storage = keep_node_storage) {
+                                            DynNodeStorage node_storage = storage::node::default_node_storage) {
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
             return find_simple(lexical_form, node_storage);
         }
@@ -579,7 +588,7 @@ public:
             return Literal{};
         }
 
-        return Literal::make_boolean(this->datatype_eq<T>(), node_storage);
+        return Literal::make_boolean(this->datatype_eq<T>(), select_node_storage(node_storage));
     }
 
     /**
@@ -1323,7 +1332,7 @@ public:
      * @param string literal to encode
      * @return URL encoded string type literal
      */
-    [[nodiscard]] static Literal encode_for_uri(std::string_view string, DynNodeStorage node_storage = keep_node_storage);
+    [[nodiscard]] static Literal encode_for_uri(std::string_view string, DynNodeStorage node_storage = storage::node::default_node_storage);
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
      * @return URL encoded string type literal or the null literal if
@@ -1512,6 +1521,7 @@ public:
     Literal operator!() const noexcept;
 
     friend class Node;
+    friend Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::node::DynNodeStorage node_storage) noexcept;
 };
 
 /**
