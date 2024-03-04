@@ -127,8 +127,8 @@ list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 add_library(rdf4cpp
         src/rdf4cpp/rdf/BlankNode.cpp
         src/rdf4cpp/rdf/ClosedNamespace.cpp
-        #src/rdf4cpp/rdf/Dataset.cpp
-        #src/rdf4cpp/rdf/Graph.cpp
+        src/rdf4cpp/rdf/Dataset.cpp
+        src/rdf4cpp/rdf/Graph.cpp
         src/rdf4cpp/rdf/IRI.cpp
         src/rdf4cpp/rdf/Literal.cpp
         src/rdf4cpp/rdf/Namespace.cpp

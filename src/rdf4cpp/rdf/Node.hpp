@@ -46,9 +46,9 @@ protected:
 
     NodeBackendHandle handle_;
 
+public:
     explicit Node(NodeBackendHandle id) noexcept;
 
-public:
     /**
      * Registers this node in the given node storage (if it does not already exist)
      * @param node_storage node storage to register this node in

@@ -17,10 +17,18 @@ public:
     [[nodiscard]] Statement to_node_storage(storage::node::DynNodeStorage node_storage) const {
         Statement st;
         auto it = st.begin();
-        for (const auto &item : *this) {
+        for (auto const &item : *this) {
             *(it++) = item.to_node_storage(node_storage);
         }
+        return st;
+    }
 
+    [[nodiscard]] Statement try_get_in_node_storage(storage::node::DynNodeStorage node_storage) const noexcept {
+        Statement st;
+        auto it = st.begin();
+        for (auto const &item : *this) {
+            *(it++) = item.try_get_in_node_storage(node_storage);
+        }
         return st;
     }
 };

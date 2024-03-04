@@ -3,60 +3,48 @@
 
 #include <rdf4cpp/rdf/Graph.hpp>
 #include <rdf4cpp/rdf/Quad.hpp>
-#include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
-#include <rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.hpp>
+#include <rdf4cpp/rdf/query/QuadPattern.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
+
+#include <dice/sparse-map/sparse_map.hpp>
 
 #include <memory>
 #include <utility>
 
-
 namespace rdf4cpp::rdf {
 
-class Graph;
 
-class Dataset {
-    using DatasetStorage = ::rdf4cpp::rdf::storage::tuple::DatasetStorage;
-    using NodeStorage = storage::node::NodeStorage;
-    friend class Graph;
+struct Dataset {
+    using value_type = std::pair<IRI, Graph>;
+    using iterator = void;
+    using const_iterator = iterator;
+    using sentinel = std::default_sentinel_t;
+    using reference = void;
+    using pointer = void;
 
-    DatasetStorage dataset_storage;
+    struct solution_sequence {};
 
-    explicit Dataset(DatasetStorage dataset_storage);
+private:
+    storage::node::DynNodeStorage node_storage_;
+    dice::sparse_map::sparse_map<storage::node::identifier::NodeBackendID, Graph> graphs_;
 
 public:
-    template<typename BackendImpl, typename... Args>
-    static inline Dataset new_instance(Args... args) {
-        return {DatasetStorage::new_instance<BackendImpl>(args...)};
-    }
+    explicit Dataset(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
 
-    explicit Dataset(NodeStorage node_storage = NodeStorage::default_instance());
+    void add(Quad const &quad);
 
-    void add(const Quad &quad);
-
-    [[nodiscard]] bool contains(const Quad &quad) const;
-
-    [[nodiscard]] query::SolutionSequence match(const query::QuadPattern &quad_pattern) const;
+    [[nodiscard]] bool contains(Quad const &quad) const noexcept;
 
     [[nodiscard]] size_t size() const;
-
-    [[nodiscard]] size_t size(const IRI &graph_name) const;
-
-    Graph graph(const IRI &graph_name);
+    [[nodiscard]] size_t size(IRI const &graph_name) const;
 
     Graph graph();
-
-    using const_interator = DatasetStorage::const_iterator;
-
-    using iterator = const_interator;
+    Graph graph(IRI const &graph_name);
 
     [[nodiscard]] iterator begin() const;
+    [[nodiscard]] sentinel end() const;
 
-    [[nodiscard]] iterator end() const;
-
-    DatasetStorage &backend();
-
-    [[nodiscard]] const DatasetStorage &backend() const;
+    [[nodiscard]] solution_sequence match(query::QuadPattern const &quad_pattern) const noexcept;
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

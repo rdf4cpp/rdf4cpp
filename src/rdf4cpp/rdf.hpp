@@ -2,7 +2,7 @@
 #define RDF4CPP_RDF_HPP
 
 #include <rdf4cpp/rdf/ClosedNamespace.hpp>
-//#include <rdf4cpp/rdf/Dataset.hpp>
+#include <rdf4cpp/rdf/Dataset.hpp>
 #include <rdf4cpp/rdf/Namespace.hpp>
 #include <rdf4cpp/rdf/Node.hpp>
 #include <rdf4cpp/rdf/namespaces.hpp>

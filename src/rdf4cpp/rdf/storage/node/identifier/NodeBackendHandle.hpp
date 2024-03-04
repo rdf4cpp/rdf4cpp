@@ -2,9 +2,7 @@
 #define RDF4CPP_NODEBACKENDHANDLE_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/NodeID.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/NodeStorageID.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendID.hpp>
 #include <rdf4cpp/rdf/storage/node/view/BNodeBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/IRIBackendView.hpp>
 #include <rdf4cpp/rdf/storage/node/view/LiteralBackendView.hpp>
@@ -19,33 +17,16 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  * It consists of a NodeID, a RDFNodeType, a NodeStorageID and free tagging bits.
  */
 struct NodeBackendHandle {
-    using underlying_id_type = uint64_t;
-    static constexpr size_t id_width = 64;
-
 private:
-    struct __attribute__((__packed__)) id_parts {
-        NodeID node_id_;
-        RDFNodeType node_type_: 2;
-        uint8_t inlined_: 1;
-        uint16_t free_tagging_bits_: 13;
-
-        static_assert(NodeID::width + 2 + 1 + 13 == 64);
-    };
-
-    union __attribute__((packed)) id_type {
-        underlying_id_type underlying_: id_width;
-        id_parts parts_;
-    };
-
-    id_type id_;
+    NodeBackendID id_;
     DynNodeStorage storage_;
 
 
 public:
     NodeBackendHandle() noexcept = default;
 
-    NodeBackendHandle(underlying_id_type const underlying_id,
-                      DynNodeStorage storage) noexcept : id_{.underlying_ = underlying_id},
+    NodeBackendHandle(NodeBackendID id,
+                      DynNodeStorage storage) noexcept : id_{id},
                                                          storage_{storage} {
     }
 
@@ -60,8 +41,8 @@ public:
                       RDFNodeType const node_type,
                       DynNodeStorage storage,
                       bool const inlined = false,
-                      uint16_t const tagging_bits = 0) noexcept : id_{.parts_{node_id, node_type, inlined, tagging_bits}},
-                      storage_{storage} {
+                      uint16_t const tagging_bits = 0) noexcept : id_{node_id, node_type, inlined, tagging_bits},
+                                                                  storage_{storage} {
         assert(tagging_bits < (1 << 13));
     }
 
@@ -70,7 +51,7 @@ public:
      * @return RDFNodeType
      */
     [[nodiscard]] constexpr RDFNodeType type() const noexcept {
-        return id_.parts_.node_type_;
+        return id_.type();
     }
 
     /**
@@ -78,7 +59,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool is_iri() const noexcept {
-        return id_.parts_.node_type_ == RDFNodeType::IRI;
+        return id_.is_iri();
     }
 
     /**
@@ -86,7 +67,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool is_literal() const noexcept {
-        return id_.parts_.node_type_ == RDFNodeType::Literal;
+        return id_.is_literal();
     }
 
     /**
@@ -94,7 +75,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool is_blank_node() const noexcept {
-        return id_.parts_.node_type_ == RDFNodeType::BNode;
+        return id_.is_blank_node();
     }
 
     /**
@@ -102,7 +83,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool is_variable() const noexcept {
-        return id_.parts_.node_type_ == RDFNodeType::Variable;
+        return id_.is_variable();
     }
 
     /**
@@ -110,7 +91,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr bool null() const noexcept {
-        return id_.parts_.node_id_.null();
+        return id_.null();
     }
 
     /**
@@ -118,14 +99,14 @@ public:
      * @return
      */
     [[nodiscard]] constexpr NodeID node_id() const noexcept {
-        return id_.parts_.node_id_;
+        return id_.node_id();
     }
 
     /**
      * @return Whether the LiteralID is an inlined value or a normal node storage ID
      */
     [[nodiscard]] constexpr bool is_inlined() const noexcept {
-        return id_.parts_.inlined_;
+        return id_.is_inlined();
     }
 
     /**
@@ -133,7 +114,7 @@ public:
      * @return
      */
     [[nodiscard]] constexpr uint16_t free_tagging_bits() const noexcept {
-        return id_.parts_.free_tagging_bits_;
+        return id_.free_tagging_bits();
     }
 
     /**
@@ -141,16 +122,11 @@ public:
      * @param new_value
      */
     constexpr void set_free_tagging_bits(uint16_t new_value) noexcept {
-        assert(new_value < (1 << 13));
-        id_.parts_.free_tagging_bits_ = new_value;
+        id_.set_free_tagging_bits(new_value);
     }
 
-    /**
-     * Retrieve underlying 64 bit data
-     * @return
-     */
-    [[nodiscard]] underlying_id_type id_to_underlying() const noexcept {
-        return id_.underlying_;
+    [[nodiscard]] NodeBackendID id() const noexcept {
+        return id_;
     }
 
     [[nodiscard]] DynNodeStorage storage() const noexcept {
@@ -158,11 +134,11 @@ public:
     }
 
     constexpr std::strong_ordering operator<=>(NodeBackendHandle const &other) const noexcept {
-        return std::tie(id_.underlying_, storage_) <=> std::tie(other.id_.underlying_, other.storage_);
+        return std::tie(id_, storage_) <=> std::tie(other.id_, other.storage_);
     }
 
     constexpr bool operator==(NodeBackendHandle const &other) const noexcept {
-        return std::tie(id_.underlying_, storage_) == std::tie(other.id_.underlying_, other.storage_);
+        return std::tie(id_, storage_) == std::tie(other.id_, other.storage_);
     }
 
     /**
@@ -171,8 +147,8 @@ public:
      * @return
      */
     [[nodiscard]] view::IRIBackendView iri_backend() const noexcept {
-        assert(id_.parts_.node_type_ == RDFNodeType::IRI);
-        return storage_.find_iri_backend(id_.parts_.node_id_);
+        assert(id_.is_iri());
+        return storage_.find_iri_backend(id_.node_id());
     }
 
     /**
@@ -181,8 +157,8 @@ public:
      * @return
      */
     [[nodiscard]] view::LiteralBackendView literal_backend() const noexcept {
-        assert(id_.parts_.node_type_ == RDFNodeType::Literal);
-        return storage_.find_literal_backend(id_.parts_.node_id_);
+        assert(id_.is_literal());
+        return storage_.find_literal_backend(id_.node_id());
     }
 
     /**
@@ -191,8 +167,8 @@ public:
      * @return
      */
     [[nodiscard]] view::BNodeBackendView bnode_backend() const noexcept {
-        assert(id_.parts_.node_type_ == RDFNodeType::BNode);
-        return storage_.find_bnode_backend(id_.parts_.node_id_);
+        assert(id_.is_blank_node());
+        return storage_.find_bnode_backend(id_.node_id());
     }
 
     /**
@@ -201,8 +177,8 @@ public:
      * @return
      */
     [[nodiscard]] view::VariableBackendView variable_backend() const noexcept {
-        assert(id_.parts_.node_type_ == RDFNodeType::Variable);
-        return storage_.find_variable_backend(id_.parts_.node_id_);
+        assert(id_.is_variable());
+        return storage_.find_variable_backend(id_.node_id());
     }
 };
 
@@ -227,7 +203,7 @@ static_assert(sizeof(NodeBackendHandle) == 3 * sizeof(void *));
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle> {
     static inline size_t dice_hash(rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle const &x) noexcept {
-        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::make_tuple(x.id_to_underlying(), x.storage()));
+        return dice::hash::dice_hash_templates<Policy>::dice_hash(std::make_tuple(x.id(), x.storage()));
     }
 };
 

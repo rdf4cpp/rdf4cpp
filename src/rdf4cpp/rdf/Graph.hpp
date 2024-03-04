@@ -3,52 +3,148 @@
 
 #include <rdf4cpp/rdf/Statement.hpp>
 #include <rdf4cpp/rdf/query/TriplePattern.hpp>
-#include <rdf4cpp/rdf/storage/tuple/DatasetStorage.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
-#include <memory>
-#include <utility>
+#include <dice/sparse-map/sparse_set.hpp>
 
 namespace rdf4cpp::rdf {
 
-class Dataset;
+struct Graph {
+    using value_type = Statement;
+    using allocator_type = std::allocator<Statement>;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+    using reference = Statement const &;
+    using const_reference = reference;
+    using pointer = Statement const *;
+    using const_pointer = pointer;
 
-class Graph {
-    friend class Dataset;
-    using DatasetStorage = ::rdf4cpp::rdf::storage::tuple::DatasetStorage;
-    using NodeStorage = storage::node::NodeStorage;
+private:
+    struct triple {
+        storage::node::identifier::NodeBackendID subject;
+        storage::node::identifier::NodeBackendID predicate;
+        storage::node::identifier::NodeBackendID object;
 
-    DatasetStorage dataset_storage;
-    IRI graph_name;
+        bool operator==(triple const &) const noexcept = default;
+    };
 
-    Graph(DatasetStorage dataset_backend, const IRI &graph_name);
+    struct triple_hash {
+        size_t operator()(triple const &trip) const noexcept {
+            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::make_tuple(trip.subject, trip.predicate, trip.object));
+        }
+    };
+
+    using triple_storage_type = dice::sparse_map::sparse_set<triple, triple_hash>;
 
 public:
-    template<typename BackendImpl, typename... Args>
-    static inline Graph new_instance(Args... args) {
-        DatasetStorage dataset_backend = DatasetStorage::new_instance<BackendImpl>(args...);
-        return {dataset_backend, IRI::default_graph(dataset_backend.node_storage())};
-    }
+    using sentinel = std::default_sentinel_t;
 
-    explicit Graph(NodeStorage node_storage = NodeStorage::default_instance());
+    struct iterator {
+        using iterator_category = std::input_iterator_tag;
+        using value_type = Statement;
+        using difference_type = ptrdiff_t;
+        using pointer = Statement const *;
+        using reference = Statement const &;
 
-    explicit Graph(const IRI &graph_name, NodeStorage node_storage = NodeStorage::default_instance());
+    private:
+        typename triple_storage_type::const_iterator iter_;
+        typename triple_storage_type::const_iterator end_;
+        Graph const *parent_;
 
-    void add(const Statement &statement);
+        Statement cur_;
 
-    [[nodiscard]] bool contains(const Statement &statement) const;
+    public:
+        iterator(typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end, Graph const *parent) noexcept;
 
-    [[nodiscard]] query::SolutionSequence match(const query::TriplePattern &triple_pattern) const;
+        iterator &operator++() noexcept;
+        reference operator*() const noexcept;
+        pointer operator->() const noexcept;
 
-    [[nodiscard]] size_t size() const;
+        bool operator==(sentinel) const noexcept;
+        bool operator!=(sentinel) const noexcept;
+    };
 
-    Dataset dataset();
+    using const_iterator = iterator;
 
-    [[nodiscard]] const IRI &name() const;
+    struct solution_iterator {
+        using iterator_category = std::input_iterator_tag;
+        using value_type = Statement;
+        using difference_type = ptrdiff_t;
+        using pointer = Statement const *;
+        using reference = Statement const &;
 
-    DatasetStorage &backend();
+    private:
+        typename triple_storage_type::const_iterator iter_;
+        typename triple_storage_type::const_iterator end_;
+        Graph const *parent_;
 
-    [[nodiscard]] const DatasetStorage &backend() const;
+        query::TriplePattern pat_;
+        Statement cur_;
+
+        bool check_solution() noexcept;
+        void forward_to_solution() noexcept;
+
+    public:
+        solution_iterator(typename triple_storage_type::const_iterator beg,
+                          typename triple_storage_type::const_iterator end,
+                          Graph const *parent,
+                          query::TriplePattern const &pat) noexcept;
+
+        solution_iterator &operator++() noexcept;
+        reference operator*() const noexcept;
+        pointer operator->() const noexcept;
+
+        bool operator==(sentinel) const noexcept;
+        bool operator!=(sentinel) const noexcept;
+    };
+
+    struct solution_sequence {
+        using value_type = Statement;
+        using allocator_type = std::allocator<Statement>;
+        using size_type = size_t;
+        using difference_type = ptrdiff_t;
+        using reference = Statement const &;
+        using const_reference = reference;
+        using pointer = Statement const *;
+        using const_pointer = pointer;
+        using iterator = solution_iterator;
+        using const_iterator = solution_iterator;
+
+    private:
+        iterator beg_;
+
+    public:
+        explicit solution_sequence(iterator beg) noexcept : beg_{beg} {
+        }
+
+        [[nodiscard]] iterator begin() const noexcept {
+            return beg_;
+        }
+
+        [[nodiscard]] sentinel end() const noexcept {
+            return sentinel{};
+        }
+    };
+
+private:
+    storage::node::DynNodeStorage node_storage_;
+    triple_storage_type triples_;
+
+    static storage::node::identifier::NodeBackendID to_node_id(Node node) noexcept;
+    Node to_node(storage::node::identifier::NodeBackendID id) const noexcept;
+
+public:
+    explicit Graph(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+
+    void add(Statement const &statement);
+
+    [[nodiscard]] size_t size() const noexcept;
+    [[nodiscard]] bool contains(Statement const &statement) const noexcept;
+
+    [[nodiscard]] solution_sequence match(query::TriplePattern const &triple_pattern) const noexcept;
+
+    [[nodiscard]] iterator begin() const noexcept;
+    [[nodiscard]] sentinel end() const noexcept;
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.
