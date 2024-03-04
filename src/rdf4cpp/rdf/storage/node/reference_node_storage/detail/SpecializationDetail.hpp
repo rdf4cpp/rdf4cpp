@@ -3,52 +3,11 @@
 
 #include <tuple>
 #include <utility>
+#include <dice/template-library/tuple_algorithm.hpp>
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::storage::node::reference_node_storage::specialization_detail {
-
-template<typename Tuple, typename Acc, typename FoldF, size_t ...Ixs>
-constexpr Acc tuple_type_fold_impl(std::index_sequence<Ixs...>, Acc init, FoldF f) noexcept {
-    ((init = f.template operator()<std::tuple_element_t<Ixs, Tuple>>(std::move(init))), ...);
-    return init;
-}
-
-template<typename Tuple, typename Acc, typename FoldF, size_t ...Ixs>
-constexpr Acc tuple_fold_impl(std::index_sequence<Ixs...>, Tuple const &tuple, Acc init, FoldF f) noexcept {
-    ((init = f(std::move(init), std::get<Ixs>(tuple))), ...);
-    return init;
-}
-
-template<typename Tuple, typename F, size_t ...Ixs>
-constexpr void tuple_for_each_impl(std::index_sequence<Ixs...>, Tuple &&tuple, F f) {
-    (f(std::get<Ixs>(std::forward<Tuple>(tuple))), ...);
-}
-
-template<typename Tuple, typename F, size_t ...Ixs>
-constexpr void tuple_type_for_each_impl(std::index_sequence<Ixs...>, F f) {
-    (f.template operator()<std::tuple_element_t<Ixs, Tuple>>(), ...);
-}
-
-template<typename Tuple, typename Acc, typename FoldF>
-constexpr Acc tuple_type_fold(Acc &&init, FoldF &&f) noexcept {
-    return tuple_type_fold_impl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, std::forward<Acc>(init), std::forward<FoldF>(f));
-}
-
-template<typename Tuple, typename Acc, typename FoldF>
-constexpr Acc tuple_fold(Tuple const &tuple, Acc &&init, FoldF &&f) noexcept {
-    return tuple_fold_impl(std::make_index_sequence<std::tuple_size_v<std::remove_cvref_t<Tuple>>>{}, tuple, std::forward<Acc>(init), std::forward<FoldF>(f));
-}
-
-template<typename Tuple, typename F>
-constexpr void tuple_for_each(Tuple &&tuple, F &&f) {
-    return tuple_for_each_impl(std::make_index_sequence<std::tuple_size_v<std::remove_cvref_t<Tuple>>>{}, std::forward<Tuple>(tuple), std::forward<F>(f));
-}
-
-template<typename Tuple, typename F>
-constexpr void tuple_type_for_each(F &&f) {
-    return tuple_type_for_each_impl<Tuple>(std::make_index_sequence<std::tuple_size_v<Tuple>>{}, std::forward<F>(f));
-}
 
 /**
  * Generates a storage specialization lookup-table for the reference node storages.
@@ -63,7 +22,7 @@ template<typename Tuple>
 static consteval std::array<bool, 1 << identifier::LiteralType::width> make_storage_specialization_lut() noexcept {
     std::array<bool, 1 << identifier::LiteralType::width> ret{};
 
-    tuple_type_for_each<Tuple>([&]<typename T>() {
+    dice::template_library::tuple_type_for_each<Tuple>([&]<typename T>() {
         ret[T::backend_type::literal_type::fixed_id.to_underlying()] = true;
     });
 

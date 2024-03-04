@@ -24,6 +24,7 @@ find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
+find_package(dice-template-library QUIET)
 
 include(FetchContent)
 
@@ -79,6 +80,16 @@ if (NOT dice-sparse-map_FOUND)
             GIT_SHALLOW TRUE)
 
     FetchContent_MakeAvailable(fetchdice-sparse-map)
+endif ()
+
+if (NOT dice-template-library_FOUND)
+    FetchContent_Declare(
+            fetchdice-template-library
+            GIT_REPOSITORY https://github.com/dice-group/dice-template-library.git
+            GIT_TAG v1.4.0
+            GIT_SHALLOW TRUE)
+
+    FetchContent_MakeAvailable(fetchdice-template-library)
 endif ()
 
 
@@ -237,6 +248,7 @@ target_link_libraries(rdf4cpp
         Boost::headers
         dice-hash::dice-hash
         dice-sparse-map::dice-sparse-map
+        dice-template-library::dice-template-library
         PRIVATE
         re2::re2
         OpenSSL::Crypto
