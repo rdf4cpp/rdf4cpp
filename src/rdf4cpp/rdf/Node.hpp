@@ -2,6 +2,7 @@
 #define RDF4CPP_NODE_HPP
 
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
@@ -22,6 +23,9 @@ struct NodeScope;
 struct NodeGenerator;
 } // namespace bnode_mngt
 
+
+inline constexpr storage::node::DynNodeStorage keep_node_storage{nullptr};
+
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
  * <p><b>Please note:</b> The edges of an RDF Graph, dubbed <span>Predicate</span>s, are <span>IRI</span>s. As such the same resource can also be used as a node.
@@ -37,8 +41,9 @@ class Node {
 protected:
     using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
     using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;
-    using NodeStorage = rdf4cpp::rdf::storage::node::NodeStorage;
+    using DynNodeStorage = rdf4cpp::rdf::storage::node::DynNodeStorage;
     using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
+
     NodeBackendHandle handle_;
 
     explicit Node(NodeBackendHandle id) noexcept;
@@ -49,17 +54,15 @@ public:
      * @param node_storage node storage to register this node in
      * @return this node but in node storage
      */
-    Node to_node_storage(NodeStorage &node_storage) const noexcept;
+    Node to_node_storage(DynNodeStorage node_storage) const noexcept;
 
     /**
      * Tries to retrieve this nodes equivalent node in the given node storage
      * @param node_storage node storage to try to retrieve the node from
      * @return this node but in node storage, or the null node if it does not exist in node_storage
      */
-    [[nodiscard]] Node try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
+    [[nodiscard]] Node try_get_in_node_storage(DynNodeStorage node_storage) const noexcept;
 
-    // TODO: revisit comparison implementation
-    // TODO: support comparison between NodeStorages
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
      * null() const <span>Node</span>s should only be used as temporary placeholders. They cannot be inserted into a Graph or Dataset.
@@ -145,7 +148,7 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal as_ebv(NodeStorage &node_storage = NodeStorage::default_instance()) const noexcept;
+    [[nodiscard]] Literal as_ebv(DynNodeStorage node_storage = keep_node_storage) const noexcept;
 
 
     /**

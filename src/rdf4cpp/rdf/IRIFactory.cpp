@@ -194,11 +194,11 @@ IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : pref
     }
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::NodeStorage &storage) const noexcept {
-    return create_and_validate(to_absolute(base_parts_cache, rel), storage);
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::node::DynNodeStorage node_storage) const noexcept {
+    return create_and_validate(to_absolute(base_parts_cache, rel), node_storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::NodeStorage &storage) const {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::node::DynNodeStorage node_storage) const {
     auto i = prefixes.find(prefix);
     if (i == prefixes.end()) {
         return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
@@ -211,19 +211,19 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
     deref.append(local);
 
     if (IRIView{deref}.is_relative()) {
-        return from_relative(deref, storage);
+        return from_relative(deref, node_storage);
     }
 
-    return create_and_validate(deref, storage);
+    return create_and_validate(deref, node_storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::NodeStorage &storage) noexcept {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::node::DynNodeStorage node_storage) noexcept {
     if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
         if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
             return nonstd::make_unexpected(e);
         }
     }
-    return IRI{iri, storage};
+    return IRI{iri, node_storage};
 }
 
 void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expanded) {

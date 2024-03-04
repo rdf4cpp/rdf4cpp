@@ -2,6 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 using namespace rdf4cpp::rdf;
 
@@ -45,7 +46,7 @@ TEST_CASE("Variable - Check for single node with anonymous false") {
 }
 
 TEST_CASE("Variable::find") {
-    auto nst = storage::node::NodeStorage::new_instance();
+    storage::node::reference_node_storage::SyncReferenceNodeStorageBackend nst;
     static constexpr std::string_view v = "var";
     static constexpr std::string_view v2 = "var2";
 

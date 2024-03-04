@@ -58,7 +58,7 @@ public:
      */
     static std::optional<Quad> create_validated(Node subject, Node predicate, Node object) noexcept;
 
-    [[nodiscard]] Quad to_node_storage(storage::node::NodeStorage &node_storage) const noexcept;
+    [[nodiscard]] Quad to_node_storage(storage::node::DynNodeStorage node_storage) const noexcept;
 
     bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;
     bool serialize_nquads(writer::BufWriterParts writer) const noexcept;

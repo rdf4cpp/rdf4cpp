@@ -4,7 +4,6 @@
 #include <atomic>
 #include <tuple>
 
-#include <rdf4cpp/rdf/storage/node/INodeStorageBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/IRIBackend.hpp>
@@ -12,13 +11,12 @@
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/VariableBackend.hpp>
 #include <rdf4cpp/rdf/storage/node/reference_node_storage/detail/SyncNodeTypeStorage.hpp>
 
-
 namespace rdf4cpp::rdf::storage::node::reference_node_storage {
 
 /**
  * Thread-safe reference implementation of a INodeStorageBackend.
  */
-struct SyncReferenceNodeStorageBackend : INodeStorageBackend {
+struct SyncReferenceNodeStorageBackend {
 private:
     SyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     SyncNodeTypeStorage<IRIBackend> iri_storage_;
@@ -51,30 +49,30 @@ private:
 public:
     SyncReferenceNodeStorageBackend() noexcept;
 
-    [[nodiscard]] size_t size() const noexcept override;
-    void shrink_to_fit() override;
+    [[nodiscard]] size_t size() const noexcept;
+    void shrink_to_fit();
 
-    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType datatype) const noexcept override;
+    [[nodiscard]] static bool has_specialized_storage_for(identifier::LiteralType datatype) noexcept;
 
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept override;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &view) noexcept override;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &view) noexcept;
 
-    [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept override;
-    [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept override;
+    [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept;
+    [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept;
 
-    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const override;
-    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const override;
+    [[nodiscard]] view::IRIBackendView find_iri_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend_view(identifier::NodeID id) const;
+    [[nodiscard]] view::VariableBackendView find_variable_backend_view(identifier::NodeID id) const;
 
-    bool erase_iri(identifier::NodeID id) noexcept override;
-    bool erase_literal(identifier::NodeID id) noexcept override;
-    bool erase_bnode(identifier::NodeID id) noexcept override;
-    bool erase_variable(identifier::NodeID id) noexcept override;
+    bool erase_iri(identifier::NodeID id) noexcept;
+    bool erase_literal(identifier::NodeID id) noexcept;
+    bool erase_bnode(identifier::NodeID id) noexcept;
+    bool erase_variable(identifier::NodeID id) noexcept;
 };
 
 }  // namespace rdf4cpp::rdf::storage::node::reference_node_storage

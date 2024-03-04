@@ -10,7 +10,7 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  * Specifies whether an RDF node is a Variable, BlankNode, IRI or Literal.
  * The ordering BNode, IRI, Literal is the same as in SPARQL operator<.
  */
-enum class RDFNodeType : uint8_t {
+enum struct RDFNodeType : uint8_t {
     BNode = 0,
     IRI,
     Literal,

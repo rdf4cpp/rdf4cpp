@@ -15,7 +15,7 @@ public:
     static constexpr std::string_view NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     static constexpr std::array<std::string_view, 22> SUFFIXES = {"HTML", "langString", "PlainLiteral", "type", "Property", "Statement", "subject", "predicate", "object", "Bag", "Seq", "Alt", "value", "List", "nil", "first", "rest", "XMLLiteral", "JSON", "CompoundLiteral", "language", "direction"};
 
-    explicit RDF(NodeStorage &node_storage = NodeStorage::default_instance());
+    explicit RDF(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
 
     IRI operator+(std::string_view suffix) const override;
 };

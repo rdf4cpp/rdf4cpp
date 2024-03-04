@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_LITERALID_HPP
 #define RDF4CPP_LITERALID_HPP
 
+#include <cstddef>
 #include <cassert>
 #include <compare>
 #include <cstdint>
@@ -11,49 +12,54 @@ namespace rdf4cpp::rdf::storage::node::identifier {
  * <p>LiteralIDs are available in the range [0,(2^42-1)].</P>
  */
 struct __attribute__((__packed__)) LiteralID {
-    static constexpr std::size_t width = 42;
+    static constexpr size_t width = 42;
     using underlying_type = uint64_t;
-    underlying_type value : width{};
 
-    constexpr LiteralID() = default;
+private:
+    underlying_type underlying: width;
+
+public:
+    constexpr LiteralID() noexcept = default;
 
     /**
      * Constructor
-     * @param value literal ID. MUST be smaller than 2^42. Bounds are not checked.
+     * @param underlying literal ID. MUST be smaller than 2^42. Bounds are not checked.
      */
-    constexpr explicit LiteralID(uint64_t value) noexcept : value(value) { assert(value < (1UL << 42)); }
-
-    constexpr std::strong_ordering operator<=>(LiteralID const &) const noexcept = default;
+    explicit constexpr LiteralID(underlying_type const underlying) noexcept : underlying{underlying} {
+        assert(underlying < (1UL << 42));
+    }
 
     constexpr LiteralID &operator++() noexcept {
-        ++value;
+        ++underlying;
         return *this;
     }
 
     [[nodiscard]] constexpr underlying_type to_underlying() const noexcept {
-        return value;
+        return underlying;
     }
 
     explicit operator underlying_type() const noexcept {
-        return value;
+        return underlying;
     }
 
     constexpr LiteralID operator++(int) noexcept {
         LiteralID new_literal_id{*this};
-        ++value;
+        ++underlying;
         return new_literal_id;
     }
 
     constexpr LiteralID &operator--() noexcept {
-        --value;
+        --underlying;
         return *this;
     }
 
     constexpr LiteralID operator--(int) noexcept {
         LiteralID new_literal_id{*this};
-        --value;
+        --underlying;
         return new_literal_id;
     }
+
+    constexpr std::strong_ordering operator<=>(LiteralID const &) const noexcept = default;
 };
 }  // namespace rdf4cpp::rdf::storage::node::identifier
 #endif  //RDF4CPP_LITERALID_HPP

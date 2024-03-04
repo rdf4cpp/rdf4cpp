@@ -14,14 +14,13 @@ public:
 
     [[nodiscard]] bool valid() const;
 
-    [[nodiscard]] Statement to_node_storage(storage::node::NodeStorage &node_storage) const {
+    [[nodiscard]] Statement to_node_storage(storage::node::DynNodeStorage node_storage) const {
         Statement st;
         auto it = st.begin();
-        for (const auto &item : (*this))
-            if (item.backend_handle().node_storage_id() == node_storage.id())
-                *(it++) = item;
-            else
-                *(it++) = item.to_node_storage(node_storage);
+        for (const auto &item : *this) {
+            *(it++) = item.to_node_storage(node_storage);
+        }
+
         return st;
     }
 };

@@ -5,16 +5,16 @@ rdf4cpp uses `NodeBackendHandle` – a 64 bit wide type – to identify `Node`s 
 The following figure gives an overview of its memory layout.
 ```
 LSB                                                          MSB
-┣━━━━━━━━━━━━━━━━ NodeBackendHandle (64 bit) ━━━━━━━━━━━━━━━━━━━┫
-├────────────── NodeID (48 bit) ───────────────┤├┤├────────┤├┤├─┤
-├───────── LiteralID (42 bit) ───────────┤├────┤^     ^     ^  ^
-                                            ^   |     |     |   |
-                                            |   |     |     |   free tagging bits (3 bit)
-                          LiteralType (6 bit)   |     |     |
-                                                |     |     inlining tagging bit (1 bit)
-                                                |     |
-                                                |     NodeStorageID (10 bit)
-                                                |
+┣━━━━━━━━━━━━━━━━ NodeBackendHandle (64 bit) ━━━━━━━━━━━━━━━━━━━━┫
+├────────────── NodeID (48 bit) ───────────────┤├─┤├┤├───────────┤
+├───────── LiteralID (42 bit) ───────────┤├────┤^  ^        ^
+                                            ^   |  |        |
+                                            |   |  |        free tagging bits (13 bit)
+                          LiteralType (6 bit)   |  |        
+                                                |  |        
+                                                |  |   
+                                                |  | inlining tagging bit (1 bit)
+                                                |   
                                                 NodeType (2 bit)                                                                                               
 ```
 

@@ -1,13 +1,10 @@
 #ifndef RDF4CPP_NODEID_HPP
 #define RDF4CPP_NODEID_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
-
 #include <rdf4cpp/rdf/datatypes/xsd.hpp>
 #include <rdf4cpp/rdf/datatypes/rdf.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/RDFNodeType.hpp>
 
 #include <cassert>
 #include <compare>
@@ -18,8 +15,8 @@ namespace rdf4cpp::rdf::storage::node::identifier {
 /**
  * NodeID is an 48 bit identifier for a Node given a NodeManager. If the Node is a Literal, The 48 bits consist of a LiteralID (42 bits) and a LiteralType (6 bits).
  */
-class __attribute__((__packed__)) NodeID {
-public:
+struct __attribute__((__packed__)) NodeID {
+    using underlying_type = uint64_t;
     static constexpr size_t width = 48;
 
     static std::pair<NodeID, std::string_view> const default_graph_iri;
@@ -32,20 +29,16 @@ public:
     static LiteralID const min_literal_id;
 
 private:
-    struct __attribute__((__packed__)) FullLiteralID {
-        LiteralID::underlying_type literal_id : LiteralID::width;
-        LiteralType::underlying_type literal_type : LiteralType::width;
+    struct __attribute__((__packed__)) literal_id_parts {
+        LiteralID::underlying_type id_: LiteralID::width;
+        LiteralType::underlying_type type_: LiteralType::width;
     };
 
+    static_assert(sizeof(literal_id_parts) == 6);
+
     union __attribute__((__packed__)) {
-        /**
-         * The actual 48 bit identifier.
-         */
-        uint64_t value_ : width;
-        /**
-         * Combined Literal ID consisting of LiteralID and literal_type.
-         */
-        FullLiteralID literal_;
+        underlying_type underlying_: width;
+        literal_id_parts literal_parts_;
     };
 
 public:
@@ -55,74 +48,48 @@ public:
      * Constructs a LiteralID from a single unsigned integer.
      * @param value literal ID. MUST be smaller than 2^48. Bounds are not checked.
      */
-    constexpr explicit NodeID(uint64_t value) noexcept : value_(value) { assert(value < (1UL << 48)); }
+    explicit constexpr NodeID(underlying_type const underlying) noexcept : underlying_{underlying} {
+        assert(underlying < (1UL << 48));
+    }
 
-    /**
-     * Constructor to be used for NodeIDs of Literals.
-     * @param literal_id the LiteralID
-     * @param literal_type the LiteralType
-     */
-    constexpr NodeID(LiteralID literal_id, LiteralType literal_type) noexcept : literal_{literal_id.value, literal_type.to_underlying()} {}
+    constexpr NodeID(LiteralID const literal_id, LiteralType const literal_type) noexcept
+        : literal_parts_{literal_id.to_underlying(), literal_type.to_underlying()} {
+    }
 
     /**
      * Get LiteralID. This method does not check if the NodeID actually represents a literal.
      * @return
      */
-    [[nodiscard]] constexpr LiteralID literal_id() const noexcept { return LiteralID{literal_.literal_id}; }
+    [[nodiscard]] constexpr LiteralID literal_id() const noexcept {
+        return LiteralID{literal_parts_.id_};
+    }
 
     /**
      * Get LiteralType. This method does not check if the NodeID actually represents a literal.
      * @return
      */
-    [[nodiscard]] constexpr LiteralType literal_type() const noexcept { return LiteralType::from_underlying(literal_.literal_type); }
-    [[nodiscard]] constexpr uint64_t value() const noexcept { return value_; }
-
-    explicit operator uint64_t() const noexcept { return value_; }
-
-    constexpr std::strong_ordering operator<=>(NodeID const &other) const noexcept { return value_ <=> other.value_; }
-
-    constexpr bool operator==(NodeID const &other) const noexcept { return value_ == other.value_; }
-
-    /**
-     * Increment value (not literal_id).
-     */
-    constexpr NodeID &operator++() noexcept {
-        ++value_;
-        return *this;
+    [[nodiscard]] constexpr LiteralType literal_type() const noexcept {
+        return LiteralType{literal_parts_.type_};
     }
 
-    /**
-     * Increment value (not literal_id).
-     */
-    constexpr NodeID operator++(int) noexcept {
-        NodeID new_node_id{*this};
-        ++value_;
-        return new_node_id;
+    [[nodiscard]] constexpr underlying_type to_underlying() const noexcept {
+        return underlying_;
     }
 
-    /**
-     * Decrement value (not literal_id).
-     */
-    constexpr NodeID &operator--() noexcept {
-        --value_;
-        return *this;
-    }
-
-    /**
-     * Decrement value (not literal_id).
-     */
-    constexpr NodeID operator--(int) noexcept {
-        NodeID new_node_id{*this};
-        --value_;
-        return new_node_id;
-    }
-
-    /**
-     * null NodeID that MUST NOT identify any resource.
-     * @return
-     */
     [[nodiscard]] constexpr bool null() const noexcept {
-        return value_ == 0;
+        return underlying_ == 0;
+    }
+
+    explicit operator underlying_type() const noexcept {
+        return underlying_;
+    }
+
+    constexpr std::strong_ordering operator<=>(NodeID const &other) const noexcept {
+        return underlying_ <=> other.underlying_;
+    }
+
+    constexpr bool operator==(NodeID const &other) const noexcept {
+        return underlying_ == other.underlying_;
     }
 };
 
@@ -138,10 +105,10 @@ static_assert(sizeof(NodeID) == 6);
  * @return the LiteralType associated with that IRI
  */
 constexpr LiteralType iri_node_id_to_literal_type(NodeID const id) noexcept {
-    auto const value = id.value();
+    auto const value = id.to_underlying();
 
     return value < datatypes::registry::min_dynamic_datatype_id && value != 0
-                   ? LiteralType::from_underlying(static_cast<LiteralType::underlying_type>(value))
+                   ? static_cast<LiteralType>(value)
                    : LiteralType::other();
 }
 
@@ -176,14 +143,14 @@ inline constexpr LiteralID NodeID::min_literal_id{1};
 template<>
 struct std::hash<rdf4cpp::rdf::storage::node::identifier::NodeID> {
     size_t operator()(rdf4cpp::rdf::storage::node::identifier::NodeID const id) const noexcept {
-        return std::hash<uint64_t>{}(id.value());
+        return std::hash<uint64_t>{}(id.to_underlying());
     }
 };
 
 template<typename Policy>
 struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::node::identifier::NodeID> {
     static size_t dice_hash(rdf4cpp::rdf::storage::node::identifier::NodeID const id) noexcept {
-        return dice_hash_templates<Policy>::dice_hash(id.value());
+        return dice_hash_templates<Policy>::dice_hash(id.to_underlying());
     }
 };
 #endif

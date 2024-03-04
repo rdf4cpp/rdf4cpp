@@ -25,7 +25,6 @@ struct NodeScope;
  * Generating nodes is always thread safe.
  */
 struct NodeGenerator {
-    using NodeStorage = storage::node::NodeStorage;
 private:
     friend struct NodeScope;
 
@@ -34,7 +33,7 @@ private:
 
     explicit NodeGenerator(std::unique_ptr<IIdGenerator> &&generator, std::unique_ptr<INodeFactory> &&factory) noexcept;
 
-    [[nodiscard]] Node generate_node_impl(NodeScope const *scope, NodeStorage &node_storage);
+    [[nodiscard]] Node generate_node_impl(NodeScope const *scope, storage::node::DynNodeStorage node_storage);
 public:
     NodeGenerator(NodeGenerator &&other) noexcept = default;
 
@@ -132,7 +131,7 @@ public:
      * @param node_storage the node storage in which the new node is placed
      * @return the generated node
      */
-    [[nodiscard]] Node generate_node(NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] Node generate_node(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

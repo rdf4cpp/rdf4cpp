@@ -53,7 +53,7 @@ void SyncReferenceNodeStorageBackend::shrink_to_fit() {
     });
 }
 
-bool SyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) const noexcept {
+bool SyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) noexcept {
     static constexpr auto specialization_lut = specialization_detail::make_storage_specialization_lut<decltype(specialized_literal_storage_)>();
     return specialization_lut[datatype.to_underlying()];
 }

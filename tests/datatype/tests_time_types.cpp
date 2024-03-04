@@ -3,6 +3,7 @@
 #include <doctest/doctest.h>
 #include <format>
 #include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 template<class Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
@@ -161,7 +162,7 @@ TEST_CASE("datatype gYearMonth") {
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("32767-12").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1-14:00").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));
+    CHECK(storage::node::reference_node_storage::SyncReferenceNodeStorageBackend::has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("01-00"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("-32768-01"), std::runtime_error);
@@ -219,7 +220,7 @@ TEST_CASE("datatype date") {
     CHECK(Literal::make_typed<datatypes::xsd::Date>("2042-12-31").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::Date>("2042-12-31+14:00").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::Date>("2042-12-31-14:00").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::Date::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::Date::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-01-00"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Date>("2042-00-01"), std::runtime_error);
@@ -306,7 +307,7 @@ TEST_CASE("datatype dateTime") {
     CHECK(Literal::make_typed<datatypes::xsd::DateTime>("32767-12-31T23:59:59.000").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::DateTime>("-32767-01-01T00:00:00.000-14:00").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::DateTime>("32767-12-31T23:59:59.999+14:00").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DateTime::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::DateTime::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T-10:00:00.000"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTime>("2042-05-05T25:00:00.000"), std::runtime_error);
@@ -364,7 +365,7 @@ TEST_CASE("datatype dateTimeStamp") {
     CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("32767-12-31T23:59:59.000Z").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::DateTimeStamp>("-32767-01-01T00:00:00.000-14:00").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::DateTimeStamp>("32767-12-31T23:59:59.999+14:00").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DateTimeStamp::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::DateTimeStamp::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T-10:00:00.000Z"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DateTimeStamp>("2042-05-05T25:00:00.000Z"), std::runtime_error);
@@ -405,7 +406,7 @@ TEST_CASE("datatype duration") {
     CHECK(Literal::make_typed<datatypes::xsd::Duration>("P1M").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::Duration>("P365D").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::Duration>("P5000D").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::Duration::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::Duration::fixed_id));
 
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::Duration>(""), std::runtime_error);
@@ -436,7 +437,7 @@ TEST_CASE("datatype dayTimeDuration") {
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::days{-1}, "-P1D", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds::max(), "P106751991167DT7H12M55.807S", std::partial_ordering::equivalent);
     CHECK(Literal::make_typed<datatypes::xsd::DayTimeDuration>("P500DT42M").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::DayTimeDuration::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::DayTimeDuration::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>(""), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::DayTimeDuration>("P"), std::runtime_error);
@@ -462,7 +463,7 @@ TEST_CASE("datatype yearMonthDuration") {
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::years{-1} + std::chrono::months{-1}, "-P1Y1M", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::YearMonthDuration>(std::chrono::months::max(), "P768614336404564650Y7M", std::partial_ordering::equivalent);
     CHECK(Literal::make_typed<datatypes::xsd::YearMonthDuration>("P500Y30M").is_inlined());
-    CHECK(storage::node::NodeStorage::default_instance().has_specialized_storage_for(datatypes::xsd::YearMonthDuration::fixed_id));
+    CHECK(storage::node::default_node_storage.has_specialized_storage_for(datatypes::xsd::YearMonthDuration::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>(""), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::YearMonthDuration>("P"), std::runtime_error);

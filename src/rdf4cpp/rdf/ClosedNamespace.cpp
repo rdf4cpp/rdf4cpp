@@ -3,7 +3,6 @@
 namespace rdf4cpp::rdf {
 
 IRI ClosedNamespace::operator+(std::string_view suffix) const {
-    [[maybe_unused]] auto ns = this->node_storage().upgrade();
     if (auto found = cache_.find(suffix); found != cache_.end()) {
         return IRI{found->second};
     } else {

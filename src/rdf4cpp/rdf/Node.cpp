@@ -15,7 +15,7 @@ Node Node::make_null() noexcept {
     return Node{};
 }
 
-Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
+Node Node::to_node_storage(DynNodeStorage node_storage) const noexcept {
     switch (handle_.type()) {
         case RDFNodeType::Variable: {
             return query::Variable{handle_}.to_node_storage(node_storage);
@@ -36,7 +36,7 @@ Node Node::to_node_storage(Node::NodeStorage &node_storage) const noexcept {
     }
 }
 
-Node Node::try_get_in_node_storage(NodeStorage const &node_storage) const noexcept {
+Node Node::try_get_in_node_storage(DynNodeStorage node_storage) const noexcept {
     switch (handle_.type()) {
         case RDFNodeType::Variable: {
             return query::Variable{handle_}.try_get_in_node_storage(node_storage);
@@ -174,7 +174,7 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
 }
 
 bool Node::operator==(const Node &other) const noexcept {
-    if (!this->is_literal() && !other.is_literal() && this->backend_handle().node_storage_id() == other.backend_handle().node_storage_id()) {
+    if (!this->is_literal() && !other.is_literal() && this->backend_handle().storage() == other.backend_handle().storage()) {
         // this short check does not work for Literals, because Literals that contain the same value as different Datatypes have different backend_handles.
         return this->backend_handle() == other.backend_handle();
     }
@@ -238,7 +238,7 @@ util::TriBool Node::ebv() const noexcept {
     return Literal{handle_}.ebv();
 }
 
-Literal Node::as_ebv(NodeStorage &node_storage) const noexcept {
+Literal Node::as_ebv(DynNodeStorage node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 

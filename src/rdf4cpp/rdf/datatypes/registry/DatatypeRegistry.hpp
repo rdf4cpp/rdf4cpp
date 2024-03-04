@@ -463,9 +463,9 @@ public:
          * @return inlined LiteralID or std::nullopt
          */
         static constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
-            if ((id.value & mask_inlined()) != 0)
+            if ((id.to_underlying() & mask_inlined()) != 0)
                 return std::nullopt;
-            return storage::node::identifier::LiteralID{id.value | (tag << shift())};
+            return storage::node::identifier::LiteralID{id.to_underlying() | (tag << shift())};
         }
 
         /**
@@ -474,8 +474,8 @@ public:
          * @return [language_tag_id, base_literal_id]
          */
         static constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
-            uint64_t t = (id.value & mask_inlined()) >> shift();
-            uint64_t i = id.value & mask_base_id();
+            uint64_t const t = (id.to_underlying() & mask_inlined()) >> shift();
+            uint64_t const i = id.to_underlying() & mask_base_id();
             return std::pair{t, storage::node::identifier::LiteralID{i}};
         }
     };

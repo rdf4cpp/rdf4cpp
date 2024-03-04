@@ -3,10 +3,8 @@
 
 #include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
 #include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
 
-namespace rdf4cpp::rdf::storage::node {
-class NodeStorage;
-} // rdf4cpp::rdf::storage::node
 
 namespace rdf4cpp::rdf::bnode_mngt {
 
@@ -21,7 +19,7 @@ struct INodeFactory {
 
     [[nodiscard]] virtual storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
                                                                                  NodeScope const *scope,
-                                                                                 storage::node::NodeStorage &node_storage) noexcept = 0;
+                                                                                 storage::node::DynNodeStorage node_storage) noexcept = 0;
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

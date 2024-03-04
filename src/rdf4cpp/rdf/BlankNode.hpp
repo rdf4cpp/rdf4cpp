@@ -21,7 +21,7 @@ public:
     /**
      * Constructs a bnode from an identifier
      */
-    explicit BlankNode(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
+    explicit BlankNode(std::string_view identifier, DynNodeStorage node_storage = storage::node::default_node_storage);
 
     /**
      * Constructs the null-bnode
@@ -31,10 +31,10 @@ public:
     /**
      * Constructs a bnode from an identifier
      */
-    [[nodiscard]] static BlankNode make(std::string_view identifier, NodeStorage &node_storage = NodeStorage::default_instance());
+    [[nodiscard]] static BlankNode make(std::string_view identifier, DynNodeStorage node_storage = storage::node::default_node_storage);
 
-    BlankNode to_node_storage(NodeStorage &node_storage) const noexcept;
-    [[nodiscard]] BlankNode try_get_in_node_storage(NodeStorage const &node_storage) const noexcept;
+    BlankNode to_node_storage(DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] BlankNode try_get_in_node_storage(DynNodeStorage node_storage) const noexcept;
 
     /**
      * searches for a bnode in the specified node storage and returns it.
@@ -43,7 +43,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static BlankNode find(std::string_view identifier, const NodeStorage& node_storage = NodeStorage::default_instance()) noexcept;
+    [[nodiscard]] static BlankNode find(std::string_view identifier, DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
 
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.

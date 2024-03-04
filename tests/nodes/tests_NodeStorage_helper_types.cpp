@@ -62,7 +62,7 @@ TEST_SUITE("NodeStorage helper types") {
         using namespace rdf4cpp::rdf;
         using namespace rdf4cpp::rdf::storage::node;
 
-        NodeStorage ns = NodeStorage::new_instance();
+        NodeStorage auto ns = reference_node_storage::SyncReferenceNodeStorageBackend{};
 
         auto l1 = Literal::make_simple("Spherical Cow", ns);
         auto l2 = Literal::make_simple("Spherical Cow", ns);

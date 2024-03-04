@@ -32,7 +32,7 @@ std::optional<Quad> Quad::create_validated(Node subject, Node predicate, Node ob
     }
 }
 
-Quad Quad::to_node_storage(storage::node::NodeStorage &node_storage) const noexcept {
+Quad Quad::to_node_storage(storage::node::DynNodeStorage node_storage) const noexcept {
     Quad qu;
     auto it = qu.begin();
     for (auto const item : *this) {

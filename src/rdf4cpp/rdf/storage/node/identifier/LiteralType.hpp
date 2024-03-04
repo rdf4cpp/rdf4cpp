@@ -19,27 +19,23 @@ struct __attribute__((__packed__)) LiteralType {
     static constexpr size_t numeric_tagging_bit_pos = 5;
 
 private:
-    uint8_t underlying: 6;
+    uint8_t underlying_: width;
 
 public:
-    static constexpr LiteralType other() noexcept {
-        LiteralType ret;
-        ret.underlying = 0;
-        return ret;
+    constexpr LiteralType() noexcept = default;
+
+    explicit constexpr LiteralType(underlying_type const underlying) noexcept : underlying_{underlying} {
+        assert((underlying & 0b1100'0000) == 0);
     }
 
-    static constexpr LiteralType from_underlying(underlying_type const underlying) noexcept {
-        assert((underlying & 0b1100'0000) == 0);
-        LiteralType ret;
-        ret.underlying = underlying;
-
-        return ret;
+    static constexpr LiteralType other() noexcept {
+        return LiteralType{0};
     }
 
     static constexpr LiteralType from_parts(bool const is_numeric, uint8_t const type_id) noexcept {
         assert(is_numeric || type_id != 0);
         assert((type_id & 0b1110'0000) == 0);
-        return LiteralType::from_underlying(type_id | (is_numeric << numeric_tagging_bit_pos));
+        return LiteralType{static_cast<underlying_type>(type_id | (is_numeric << numeric_tagging_bit_pos))};
     }
 
     [[nodiscard]] constexpr bool is_fixed() const noexcept {
@@ -47,15 +43,19 @@ public:
     }
 
     [[nodiscard]] constexpr bool is_numeric() const noexcept {
-        return this->underlying & (1 << numeric_tagging_bit_pos);
+        return underlying_ & (1 << numeric_tagging_bit_pos);
     }
 
     [[nodiscard]] constexpr uint8_t type_id() const noexcept {
-        return this->underlying & ~(1 << numeric_tagging_bit_pos);
+        return underlying_ & ~(1 << numeric_tagging_bit_pos);
     }
 
     [[nodiscard]] constexpr underlying_type to_underlying() const noexcept {
-        return this->underlying;
+        return underlying_;
+    }
+
+    explicit constexpr operator underlying_type() const noexcept {
+        return underlying_;
     }
 
     constexpr std::strong_ordering operator<=>(LiteralType const &other) const noexcept = default;

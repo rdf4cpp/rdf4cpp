@@ -10,8 +10,8 @@ BNodeFactory &BNodeFactory::default_instance() noexcept {
 }
 
 storage::node::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &generator,
-                                                                             NodeScope const *scope,
-                                                                             storage::node::NodeStorage &node_storage) noexcept {
+                                                                     NodeScope const *scope,
+                                                                     storage::node::DynNodeStorage node_storage) noexcept {
     size_t const buf_sz = generator.max_generated_id_size();
     auto buf = std::make_unique<char[]>(buf_sz);
     auto *end = generator.generate_to_buf(buf.get());
@@ -29,7 +29,7 @@ storage::node::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerato
         }
     }();
 
-    return storage::node::identifier::NodeBackendHandle{id, storage::node::identifier::RDFNodeType::BNode, node_storage.id()};
+    return storage::node::identifier::NodeBackendHandle{id, storage::node::identifier::RDFNodeType::BNode, node_storage};
 }
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

@@ -13,8 +13,8 @@ namespace rdf4cpp::rdf::namespaces::util {
 
 template<typename NamespaceClass>
 struct NamespaceInstance {
-    static NamespaceClass &instance(storage::node::NodeStorage &node_storage = storage::node::NodeStorage::default_instance()) {
-        static std::mutex instances_mutex;
+    static NamespaceClass &instance(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage) {
+        /*static std::mutex instances_mutex;
         static dice::sparse_map::sparse_map<uint16_t, NamespaceClass, dice::hash::DiceHashwyhash<uint16_t>> instances;
 
         uint16_t const node_storage_id = node_storage.id().value;
@@ -32,7 +32,7 @@ struct NamespaceInstance {
         }
 
         auto [it, inserted] = instances.emplace(node_storage_id, node_storage);
-        return it.value();
+        return it.value();*/ // TODO
     }
 };
 }  // namespace rdf4cpp::rdf::namespaces::util
