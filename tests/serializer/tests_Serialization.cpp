@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include "rdf4cpp.hpp"
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 enum struct OutputFormat {
     NTriples,

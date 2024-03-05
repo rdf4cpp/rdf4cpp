@@ -1,4 +1,4 @@
-#include <rdf4cpp/rdf.hpp>
+#include "rdf4cpp.hpp"
 
 #include <cassert>
 #include <iostream>

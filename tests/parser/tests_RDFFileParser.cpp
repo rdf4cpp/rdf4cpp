@@ -1,8 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
+#include "rdf4cpp.hpp"
+#include <rdf4cpp/parser/RDFFileParser.hpp>
 
 TEST_SUITE("RDFFileParser") {
     TEST_CASE("not existing file") {

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <rdf4cpp/rdf.hpp>
+#include "rdf4cpp.hpp"
 
 
 int main(int argc, char *argv[]) {

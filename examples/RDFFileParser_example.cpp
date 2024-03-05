@@ -1,5 +1,5 @@
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/parser/RDFFileParser.hpp>
+#include "rdf4cpp.hpp"
+#include <rdf4cpp/parser/RDFFileParser.hpp>
 
 int main() {
     // read file

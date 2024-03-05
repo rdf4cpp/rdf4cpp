@@ -2,8 +2,8 @@
 
 #include <doctest/doctest.h>
 #include <format>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include "rdf4cpp.hpp"
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 template<class Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {

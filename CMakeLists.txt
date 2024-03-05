@@ -24,6 +24,7 @@ find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
+find_package(dice-template-library QUIET)
 
 include(FetchContent)
 
@@ -81,8 +82,18 @@ if (NOT dice-sparse-map_FOUND)
     FetchContent_MakeAvailable(fetchdice-sparse-map)
 endif ()
 
+if (NOT dice-template-library_FOUND)
+    FetchContent_Declare(
+            fetchdice-template-library
+            GIT_REPOSITORY https://github.com/dice-group/dice-template-library.git
+            GIT_TAG v1.4.0
+            GIT_SHALLOW TRUE)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/rdf/version.hpp)
+    FetchContent_MakeAvailable(fetchdice-template-library)
+endif ()
+
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
 set(serd_source_files
         include/serd/serd.h
@@ -125,83 +136,83 @@ list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
-        src/rdf4cpp/rdf/BlankNode.cpp
-        src/rdf4cpp/rdf/ClosedNamespace.cpp
-        src/rdf4cpp/rdf/Dataset.cpp
-        src/rdf4cpp/rdf/Graph.cpp
-        src/rdf4cpp/rdf/IRI.cpp
-        src/rdf4cpp/rdf/Literal.cpp
-        src/rdf4cpp/rdf/Namespace.cpp
-        src/rdf4cpp/rdf/Node.cpp
-        src/rdf4cpp/rdf/Quad.cpp
-        src/rdf4cpp/rdf/Statement.cpp
-        src/rdf4cpp/rdf/bnode_mngt/NodeGenerator.cpp
-        src/rdf4cpp/rdf/bnode_mngt/NodeScope.cpp
-        src/rdf4cpp/rdf/bnode_mngt/WeakNodeScope.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/SkolemIRIFactory.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/factory/BNodeFactory.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.cpp
-        src/rdf4cpp/rdf/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
-        src/rdf4cpp/rdf/datatypes/registry/DatatypeRegistry.cpp
-        src/rdf4cpp/rdf/datatypes/owl/Rational.cpp
-        src/rdf4cpp/rdf/datatypes/owl/Real.cpp
-        src/rdf4cpp/rdf/datatypes/rdf/LangString.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/Base64Binary.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/Boolean.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/Decimal.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/Double.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/Float.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/HexBinary.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/String.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/NonNegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/PositiveInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedByte.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedInt.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Byte.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Int.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Integer.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Long.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/integers/signed/Short.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Year.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Month.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Day.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/YearMonth.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/MonthDay.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Date.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Time.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/DateTime.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/DateTimeStamp.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/Duration.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.cpp
-        src/rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.cpp
-        src/rdf4cpp/rdf/namespaces/RDF.cpp
-        src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
-        src/rdf4cpp/rdf/parser/RDFFileParser.cpp
-        src/rdf4cpp/rdf/query/QuadPattern.cpp
-        src/rdf4cpp/rdf/query/Solution.cpp
-        src/rdf4cpp/rdf/query/TriplePattern.cpp
-        src/rdf4cpp/rdf/query/Variable.cpp
-        src/rdf4cpp/rdf/regex/Regex.cpp
-        src/rdf4cpp/rdf/regex/RegexReplacer.cpp
-        src/rdf4cpp/rdf/storage/NodeStorage.cpp
-        src/rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/view/BNodeBackendView.cpp
-        src/rdf4cpp/rdf/storage/view/IRIBackendView.cpp
-        src/rdf4cpp/rdf/storage/view/LiteralBackendView.cpp
-        src/rdf4cpp/rdf/storage/view/VariableBackendView.cpp
-        src/rdf4cpp/rdf/writer/SerializationState.cpp
-        src/rdf4cpp/rdf/IRIView.cpp
-        src/rdf4cpp/rdf/IRIFactory.cpp
-        private/rdf4cpp/rdf/parser/IStreamQuadIteratorSerdImpl.cpp
-        private/rdf4cpp/rdf/regex/RegexImpl.cpp
-        private/rdf4cpp/rdf/regex/RegexReplacerImpl.cpp
+        src/rdf4cpp/BlankNode.cpp
+        src/rdf4cpp/ClosedNamespace.cpp
+        src/rdf4cpp/Dataset.cpp
+        src/rdf4cpp/Graph.cpp
+        src/rdf4cpp/IRI.cpp
+        src/rdf4cpp/Literal.cpp
+        src/rdf4cpp/Namespace.cpp
+        src/rdf4cpp/Node.cpp
+        src/rdf4cpp/Quad.cpp
+        src/rdf4cpp/Statement.cpp
+        src/rdf4cpp/bnode_mngt/NodeGenerator.cpp
+        src/rdf4cpp/bnode_mngt/NodeScope.cpp
+        src/rdf4cpp/bnode_mngt/WeakNodeScope.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/factory/SkolemIRIFactory.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/factory/BNodeFactory.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/scope/ReferenceNodeScope.cpp
+        src/rdf4cpp/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
+        src/rdf4cpp/datatypes/registry/DatatypeRegistry.cpp
+        src/rdf4cpp/datatypes/owl/Rational.cpp
+        src/rdf4cpp/datatypes/owl/Real.cpp
+        src/rdf4cpp/datatypes/rdf/LangString.cpp
+        src/rdf4cpp/datatypes/xsd/Base64Binary.cpp
+        src/rdf4cpp/datatypes/xsd/Boolean.cpp
+        src/rdf4cpp/datatypes/xsd/Decimal.cpp
+        src/rdf4cpp/datatypes/xsd/Double.cpp
+        src/rdf4cpp/datatypes/xsd/Float.cpp
+        src/rdf4cpp/datatypes/xsd/HexBinary.cpp
+        src/rdf4cpp/datatypes/xsd/String.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/NonNegativeInteger.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/PositiveInteger.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/UnsignedByte.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/UnsignedInt.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/UnsignedLong.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_negative/UnsignedShort.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_positive/NegativeInteger.cpp
+        src/rdf4cpp/datatypes/xsd/integers/non_positive/NonPositiveInteger.cpp
+        src/rdf4cpp/datatypes/xsd/integers/signed/Byte.cpp
+        src/rdf4cpp/datatypes/xsd/integers/signed/Int.cpp
+        src/rdf4cpp/datatypes/xsd/integers/signed/Integer.cpp
+        src/rdf4cpp/datatypes/xsd/integers/signed/Long.cpp
+        src/rdf4cpp/datatypes/xsd/integers/signed/Short.cpp
+        src/rdf4cpp/datatypes/xsd/time/Year.cpp
+        src/rdf4cpp/datatypes/xsd/time/Month.cpp
+        src/rdf4cpp/datatypes/xsd/time/Day.cpp
+        src/rdf4cpp/datatypes/xsd/time/YearMonth.cpp
+        src/rdf4cpp/datatypes/xsd/time/MonthDay.cpp
+        src/rdf4cpp/datatypes/xsd/time/Date.cpp
+        src/rdf4cpp/datatypes/xsd/time/Time.cpp
+        src/rdf4cpp/datatypes/xsd/time/DateTime.cpp
+        src/rdf4cpp/datatypes/xsd/time/DateTimeStamp.cpp
+        src/rdf4cpp/datatypes/xsd/time/Duration.cpp
+        src/rdf4cpp/datatypes/xsd/time/DayTimeDuration.cpp
+        src/rdf4cpp/datatypes/xsd/time/YearMonthDuration.cpp
+        src/rdf4cpp/namespaces/RDF.cpp
+        src/rdf4cpp/parser/IStreamQuadIterator.cpp
+        src/rdf4cpp/parser/RDFFileParser.cpp
+        src/rdf4cpp/query/QuadPattern.cpp
+        src/rdf4cpp/query/Solution.cpp
+        src/rdf4cpp/query/TriplePattern.cpp
+        src/rdf4cpp/query/Variable.cpp
+        src/rdf4cpp/regex/Regex.cpp
+        src/rdf4cpp/regex/RegexReplacer.cpp
+        src/rdf4cpp/storage/NodeStorage.cpp
+        src/rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/storage/view/BNodeBackendView.cpp
+        src/rdf4cpp/storage/view/IRIBackendView.cpp
+        src/rdf4cpp/storage/view/LiteralBackendView.cpp
+        src/rdf4cpp/storage/view/VariableBackendView.cpp
+        src/rdf4cpp/writer/SerializationState.cpp
+        src/rdf4cpp/IRIView.cpp
+        src/rdf4cpp/IRIFactory.cpp
+        private/rdf4cpp/parser/IStreamQuadIteratorSerdImpl.cpp
+        private/rdf4cpp/regex/RegexImpl.cpp
+        private/rdf4cpp/regex/RegexReplacerImpl.cpp
         ${serd_source_files}
 )
 
@@ -223,6 +234,7 @@ target_link_libraries(rdf4cpp
         Boost::headers
         dice-hash::dice-hash
         dice-sparse-map::dice-sparse-map
+        dice-template-library::dice-template-library
         PRIVATE
         re2::re2
         OpenSSL::Crypto

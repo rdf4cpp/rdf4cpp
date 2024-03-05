@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf/query/TriplePattern.hpp>
+#include <rdf4cpp/query/TriplePattern.hpp>
 
 using namespace rdf4cpp::rdf;
 

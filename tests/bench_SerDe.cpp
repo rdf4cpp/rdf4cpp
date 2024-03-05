@@ -2,8 +2,8 @@
 #include <nanobench.h>
 
 #include <filesystem>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include "rdf4cpp.hpp"
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 void download_swdf(std::filesystem::path const &base) {
     auto curl_cmd = std::format("wget -P '{}' https://hobbitdata.informatik.uni-leipzig.de/ISWC2020_Tentris/swdf.zip", base.c_str());
