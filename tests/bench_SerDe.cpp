@@ -3,7 +3,7 @@
 
 #include <filesystem>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 void download_swdf(std::filesystem::path const &base) {
     auto curl_cmd = std::format("wget -P '{}' https://hobbitdata.informatik.uni-leipzig.de/ISWC2020_Tentris/swdf.zip", base.c_str());
@@ -62,14 +62,14 @@ int main() {
 
     download_swdf(base);
 
-    auto ser_ns = storage::reference_node_storage::UnsyncReferenceNodeStorageBackend{};
+    auto ser_ns = storage::reference_node_storage::UnsyncReferenceNodeStorage{};
     Dataset ser_ds{ser_ns};
     deserialize(in_path, ser_ds, ser_ns); // prepare dataset for serialization bench
 
     ankerl::nanobench::Bench{}
             .unit("SWDF")
             .run("deserialization", [&in_path]() {
-                auto ns = storage::reference_node_storage::UnsyncReferenceNodeStorageBackend{};
+                auto ns = storage::reference_node_storage::UnsyncReferenceNodeStorage{};
                 Dataset ds{ns};
                 deserialize(in_path, ds, ns);
             })

@@ -10,7 +10,7 @@ namespace rdf4cpp {
 /**
  * std::format gets you a printable string.
  */
-enum class IRIFactoryError {
+enum struct IRIFactoryError {
     Ok,
     UnknownPrefix,
     Relative,
@@ -26,7 +26,8 @@ enum class IRIFactoryError {
 /**
  * wrapper around a std::string_view that allows to access it as its IRI components.
  */
-class IRIView {
+struct IRIView {
+private:
     std::string_view data;
 
 public:

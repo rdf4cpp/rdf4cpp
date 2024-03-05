@@ -25,7 +25,7 @@ void Dataset::add(Quad const &quad) {
         it = graphs_.emplace(to_node_id(g), node_storage_).first;
     }
 
-    it.value().add(Statement{quad.subject(), quad.predicate(), quad.object()});
+    it.value().add(quad.without_graph());
 }
 
 bool Dataset::contains(Quad const &quad) const noexcept {
@@ -36,7 +36,7 @@ bool Dataset::contains(Quad const &quad) const noexcept {
         return false;
     }
 
-    return it->second.contains(Statement{quad.subject(), quad.predicate(), quad.object()});
+    return it->second.contains(quad.without_graph());
 }
 
 Dataset::solution_sequence Dataset::match(query::QuadPattern const &pat) const noexcept {
@@ -213,7 +213,7 @@ Dataset::solution_iterator::solution_iterator(Dataset const *parent,
                                               typename storage_type::const_iterator beg,
                                               typename storage_type::const_iterator end) noexcept : parent_{parent}, pat_{pat}, giter_{beg}, gend_{end}, cur_{pat} {
     if (giter_ != gend_) {
-        auto const tpat = query::TriplePattern{pat_.subject(), pat_.predicate(), pat_.object()};
+        auto const &tpat = pat_.without_graph();
 
         if (pat_.graph().is_variable()) {
             iter_ = giter_->second.match(tpat).begin();
@@ -235,7 +235,7 @@ Dataset::solution_iterator &Dataset::solution_iterator::operator++() noexcept {
                 return *this;
             }
 
-            iter_ = giter_->second.match(query::TriplePattern{pat_.subject(), pat_.predicate(), pat_.object()}).begin();
+            iter_ = giter_->second.match(pat_.without_graph()).begin();
         }
     }
 

@@ -201,8 +201,8 @@ add_library(rdf4cpp
         src/rdf4cpp/regex/Regex.cpp
         src/rdf4cpp/regex/RegexReplacer.cpp
         src/rdf4cpp/storage/NodeStorage.cpp
-        src/rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
-        src/rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.cpp
+        src/rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.cpp
         src/rdf4cpp/storage/view/BNodeBackendView.cpp
         src/rdf4cpp/storage/view/IRIBackendView.cpp
         src/rdf4cpp/storage/view/LiteralBackendView.cpp

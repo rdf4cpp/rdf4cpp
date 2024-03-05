@@ -1,23 +1,22 @@
 #ifndef RDF4CPP_QUAD_HPP
 #define RDF4CPP_QUAD_HPP
 
+#include <rdf4cpp/Statement.hpp>
 #include <rdf4cpp/query/QuadPattern.hpp>
 
 namespace rdf4cpp {
-namespace writer {
-struct SerializationState;
-}
+
 /**
  * A Quad is an RDF statement which has an additional graph name.
  * Quads are typically used to identify a statement in a named Graph of a RDF Dataset. The Graph name can also be the default Graph.
  */
-class Quad : public query::QuadPattern {
+struct Quad : query::QuadPattern {
     // TODO: more type-specific functions for graph, subject, predicate, object
-public:
+
     /**
      * Initializes the Quad entries with null <div>Node</div>s
      */
-    Quad() = default;
+    Quad() noexcept = default;
 
     /**
      * The constructed Quad has the default Graph as graph name. The Quad is not validated.
@@ -25,7 +24,7 @@ public:
      * @param predicate IRI
      * @param object IRI, Literal or BlankNode
      */
-    Quad(Node subject, Node predicate, Node object);
+    Quad(Node subject, Node predicate, Node object) noexcept;
 
     /**
      * Construct a Quad. The Quad is not validated.
@@ -34,7 +33,7 @@ public:
      * @param predicate IRI
      * @param object IRI, Literal or BlankNode
      */
-    Quad(Node graph, Node subject, Node predicate, Node object);
+    Quad(Node graph, Node subject, Node predicate, Node object) noexcept;
 
 
     [[nodiscard]] bool valid() const noexcept;
@@ -58,7 +57,10 @@ public:
      */
     static std::optional<Quad> create_validated(Node subject, Node predicate, Node object) noexcept;
 
+    [[nodiscard]] Statement const &without_graph() const noexcept;
+
     [[nodiscard]] Quad to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] Quad try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 
     bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;
     bool serialize_nquads(writer::BufWriterParts writer) const noexcept;

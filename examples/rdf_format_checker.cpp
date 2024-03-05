@@ -3,7 +3,7 @@
 #include <sstream>
 
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 
 int main(int argc, char *argv[]) {
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     rdf4cpp::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
-    storage::reference_node_storage::UnsyncReferenceNodeStorageBackend nst;
+    storage::reference_node_storage::UnsyncReferenceNodeStorage nst;
     int c = 0;
 
     IStreamQuadIterator::state_type state{.node_storage = nst};

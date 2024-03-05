@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP
-#define RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP
+#ifndef RDF4CPP_SYNCREFERENCENODESTORAGE_HPP
+#define RDF4CPP_SYNCREFERENCENODESTORAGE_HPP
 
 #include <atomic>
 #include <tuple>
@@ -16,7 +16,7 @@ namespace rdf4cpp::storage::reference_node_storage {
 /**
  * Thread-safe reference implementation of a INodeStorageBackend.
  */
-struct SyncReferenceNodeStorageBackend {
+struct SyncReferenceNodeStorage {
 private:
     SyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     SyncNodeTypeStorage<IRIBackend> iri_storage_;
@@ -47,7 +47,7 @@ private:
                SyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
 public:
-    SyncReferenceNodeStorageBackend() noexcept;
+    SyncReferenceNodeStorage() noexcept;
 
     [[nodiscard]] size_t size() const noexcept;
     void shrink_to_fit();
@@ -75,5 +75,7 @@ public:
     bool erase_variable(identifier::NodeID id) noexcept;
 };
 
+static_assert(NodeStorage<SyncReferenceNodeStorage>);
+
 }  // namespace rdf4cpp::storage::reference_node_storage
-#endif  //RDF4CPP_SYNCREFERENCENODESTORAGEBACKEND_HPP
+#endif  //RDF4CPP_SYNCREFERENCENODESTORAGE_HPP

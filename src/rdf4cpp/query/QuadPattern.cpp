@@ -1,49 +1,55 @@
 #include "QuadPattern.hpp"
 
-namespace rdf4cpp::query {
-QuadPattern::operator std::string() const {
+#include <rdf4cpp/writer/WriteQuad.hpp>
 
-    return (graph().is_iri() and graph().null())  // Graph
-                    ? std::string{}
-                    : static_cast<std::string>(graph()) + " " +
-           static_cast<std::string>(subject()) + " " +    // Subject
-           static_cast<std::string>(predicate()) + " " +  // Predicate
-           static_cast<std::string>(object()) + " . ";    // Object
+namespace rdf4cpp::query {
+
+QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) noexcept : entries_{graph, subject, predicate, object} {
 }
-QuadPattern::QuadPattern(Node graph, Node subject, Node predicate, Node object) : entries_({graph, subject, predicate, object}) {}
-Node &QuadPattern::graph() { return entries_[0]; }
-const Node &QuadPattern::graph() const { return entries_[0]; }
-Node &QuadPattern::subject() { return entries_[1]; }
-const Node &QuadPattern::subject() const { return entries_[1]; }
-Node &QuadPattern::predicate() { return entries_[2]; }
-const Node &QuadPattern::predicate() const { return entries_[2]; }
-Node &QuadPattern::object() { return entries_[3]; }
-const Node &QuadPattern::object() const { return entries_[3]; }
-bool QuadPattern::valid() const {
-    return not(graph().null() or subject().null() or predicate().null() or object().null()) and
-           ((graph().is_iri() or graph().is_variable()) and
-            (not subject().is_literal()) and
-            (predicate().is_iri() or predicate().is_variable()));
+
+bool QuadPattern::valid() const noexcept {
+    return !graph().null() && (graph().is_iri() || graph().is_variable())
+            && !subject().null() && !subject().is_literal()
+            && !predicate().null() && (predicate().is_iri() || predicate().is_variable())
+            && !object().null();
 }
-QuadPattern::iterator QuadPattern::begin() { return entries_.begin(); }
-QuadPattern::const_iterator QuadPattern::begin() const { return entries_.begin(); }
-QuadPattern::iterator QuadPattern::end() { return entries_.end(); }
-QuadPattern::const_iterator QuadPattern::end() const { return entries_.end(); }
-QuadPattern::reverse_iterator QuadPattern::rbegin() { return entries_.rbegin(); }
-QuadPattern::const_reverse_iterator QuadPattern::rbegin() const { return entries_.rbegin(); }
-QuadPattern::reverse_iterator QuadPattern::rend() { return entries_.rend(); }
-QuadPattern::const_reverse_iterator QuadPattern::rend() const { return entries_.rend(); }
+
+QuadPattern::operator std::string() const {
+    auto s = writer::StringWriter::oneshot([this](auto &w) {
+        return writer::write_quad<writer::OutputFormat::NQuads>(*this, w, nullptr);
+    });
+
+    s.pop_back(); // remove newline
+    return s;
+}
+
 std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
     os << static_cast<std::string>(pattern);
     return os;
 }
-QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) const {
+
+QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     QuadPattern qp;
     auto it = qp.begin();
     for (const auto &item : *this) {
         *(it++) = item.to_node_storage(node_storage);
     }
-
     return qp;
 }
+
+QuadPattern QuadPattern::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+    QuadPattern qp;
+    auto it = qp.begin();
+    for (const auto &item : *this) {
+        *(it++) = item.try_get_in_node_storage(node_storage);
+    }
+    return qp;
+}
+
+TriplePattern const &QuadPattern::without_graph() const noexcept {
+    static_assert(sizeof(QuadPattern) == 4 * sizeof(Node));
+    static_assert(sizeof(TriplePattern) == 3 * sizeof(Node));
+    return *reinterpret_cast<TriplePattern const *>(entries_.data() + 1);
+}
+
 }  // namespace rdf4cpp::query

@@ -2,7 +2,7 @@
 #include <doctest/doctest.h>
 
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 #include <iostream>
 
@@ -38,7 +38,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
         size_t n = 0;
 
-        storage::NodeStorage auto ns = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        storage::NodeStorage auto ns = storage::reference_node_storage::SyncReferenceNodeStorage{};
         IStreamQuadIterator::state_type state{.node_storage = ns};
         for (auto qit = IStreamQuadIterator{iss, ParsingFlags::none(), &state}; qit != std::default_sentinel; ++qit) {
             CHECK(qit->has_value());

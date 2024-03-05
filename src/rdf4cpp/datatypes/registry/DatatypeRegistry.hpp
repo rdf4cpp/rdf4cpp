@@ -32,8 +32,7 @@ extern bool relaxed_parsing_mode;
  * Data types are registered by defining, implementing and specializing members of LiteralDatatype.
  * @see LiteralDatatype
  */
-class DatatypeRegistry {
-public:
+struct DatatypeRegistry {
     static constexpr size_t dynamic_datatype_offset = min_dynamic_datatype_id - 1;  // ids from 1 to n stored in places 0 to n-1
 
     /**
@@ -335,7 +334,8 @@ public:
     [[nodiscard]] static std::optional<DatatypeConverter> get_common_type_conversion(DatatypeIDView lhs_type_id, DatatypeIDView rhs_type_id) noexcept;
 
 public:
-    class LangTagInlines {
+    struct LangTagInlines {
+    private:
         /**
          * language tags to try to inline.
          * the vector can be modified at startup.

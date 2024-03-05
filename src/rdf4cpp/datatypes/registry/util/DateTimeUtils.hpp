@@ -30,7 +30,7 @@ using CheckedTimePointSys = std::chrono::time_point<std::chrono::system_clock, C
  * @param v
  * @return
  */
-template<class R>
+template<typename R>
 std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R> to_checked(std::chrono::duration<int64_t, R> v) noexcept {
     return std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R>{v.count()};
 }
@@ -41,7 +41,7 @@ std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R> to_checked(std
  * @param v
  * @return
  */
-template<class R>
+template<typename R>
 std::chrono::duration<int64_t, R> from_checked(std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R> v) noexcept {
     assert(!v.count().is_invalid());
     return std::chrono::duration<int64_t, R>{v.count().get_value()};
@@ -53,7 +53,7 @@ std::chrono::duration<int64_t, R> from_checked(std::chrono::duration<rdf4cpp::ut
  * @param v
  * @return
  */
-template<class C, class R>
+template<typename C, typename R>
 std::chrono::time_point<C, std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R>> to_checked(std::chrono::time_point<C, std::chrono::duration<int64_t, R>> v) noexcept {
     return std::chrono::time_point<C, std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R>>{to_checked(v.time_since_epoch())};
 }
@@ -65,7 +65,7 @@ std::chrono::time_point<C, std::chrono::duration<rdf4cpp::util::CheckedIntegral<
  * @param v
  * @return
  */
-template<class C, class R>
+template<typename C, typename R>
 std::chrono::time_point<C, std::chrono::duration<int64_t, R>> from_checked(std::chrono::time_point<C, std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, R>> v) noexcept {
     return std::chrono::time_point<C, std::chrono::duration<int64_t, R>>{from_checked(v.time_since_epoch())};
 }
@@ -87,7 +87,7 @@ bool fits_into(double d) {
     return true;
 }
 
-template<class ResultType, class ParsingType, char Separator, ConstexprString datatype>
+template<typename ResultType, typename ParsingType, char Separator, ConstexprString datatype>
 ResultType parse_date_time_fragment(std::string_view &s) {
     std::string_view res_s = s;
     if constexpr (Separator != '\0') {
@@ -100,7 +100,7 @@ ResultType parse_date_time_fragment(std::string_view &s) {
     return ResultType{from_chars<ParsingType, datatype>(res_s)};
 }
 
-template<class ResultType, class ParsingType, char Separator, ConstexprString datatype>
+template<typename ResultType, typename ParsingType, char Separator, ConstexprString datatype>
 std::optional<ResultType> parse_duration_fragment(std::string_view &s) {
     if (s.empty())
         return std::nullopt;
@@ -213,7 +213,7 @@ template<std::unsigned_integral T>
 constexpr T number_of_bits(T x) noexcept {
     return x < 2 ? x : 1 + number_of_bits(x >> 1);
 }
-template<class TimeType>
+template<typename TimeType>
     requires(sizeof(TimeType) <= 2)
 struct __attribute__((__packed__)) InliningHelper {
     uint16_t tz_offset;

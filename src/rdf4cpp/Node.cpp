@@ -9,24 +9,24 @@
 
 namespace rdf4cpp {
 
-Node::Node(Node::NodeBackendHandle id) noexcept : handle_(id) {}
+Node::Node(storage::identifier::NodeBackendHandle id) noexcept : handle_(id) {}
 
 Node Node::make_null() noexcept {
     return Node{};
 }
 
-Node Node::to_node_storage(DynNodeStorage node_storage) const noexcept {
+Node Node::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     switch (handle_.type()) {
-        case RDFNodeType::Variable: {
+        case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.to_node_storage(node_storage);
         }
-        case RDFNodeType::BNode: {
+        case storage::identifier::RDFNodeType::BNode: {
             return BlankNode{handle_}.to_node_storage(node_storage);
         }
-        case RDFNodeType::IRI: {
+        case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.to_node_storage(node_storage);
         }
-        case RDFNodeType::Literal: {
+        case storage::identifier::RDFNodeType::Literal: {
             return Literal{handle_}.to_node_storage(node_storage);
         }
         default: {
@@ -36,18 +36,18 @@ Node Node::to_node_storage(DynNodeStorage node_storage) const noexcept {
     }
 }
 
-Node Node::try_get_in_node_storage(DynNodeStorage node_storage) const noexcept {
+Node Node::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     switch (handle_.type()) {
-        case RDFNodeType::Variable: {
+        case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.try_get_in_node_storage(node_storage);
         }
-        case RDFNodeType::BNode: {
+        case storage::identifier::RDFNodeType::BNode: {
             return BlankNode{handle_}.try_get_in_node_storage(node_storage);
         }
-        case RDFNodeType::IRI: {
+        case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.try_get_in_node_storage(node_storage);
         }
-        case RDFNodeType::Literal: {
+        case storage::identifier::RDFNodeType::Literal: {
             return Literal{handle_}.try_get_in_node_storage(node_storage);
         }
         default: {
@@ -59,16 +59,16 @@ Node Node::try_get_in_node_storage(DynNodeStorage node_storage) const noexcept {
 
 bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
-        [[likely]] case RDFNodeType::IRI: {
+        [[likely]] case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.serialize(writer);
         }
-        case RDFNodeType::Variable: {
+        case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.serialize(writer);
         }
-        case RDFNodeType::BNode: {
+        case storage::identifier::RDFNodeType::BNode: {
             return BlankNode{handle_}.serialize(writer);
         }
-        case RDFNodeType::Literal: {
+        case storage::identifier::RDFNodeType::Literal: {
             return Literal{handle_}.serialize(writer);
         }
         default: {
@@ -79,16 +79,16 @@ bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
 }
 bool Node::serialize_short_form(writer::BufWriterParts const writer) const noexcept {
     switch (handle_.type()) {
-        [[likely]] case RDFNodeType::IRI: {
+        [[likely]] case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.serialize(writer);
         }
-        case RDFNodeType::Variable: {
+        case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.serialize(writer);
         }
-        case RDFNodeType::BNode: {
+        case storage::identifier::RDFNodeType::BNode: {
             return BlankNode{handle_}.serialize(writer);
         }
-        case RDFNodeType::Literal: {
+        case storage::identifier::RDFNodeType::Literal: {
             return Literal{handle_}.serialize_short_form(writer);
         }
         default: {
@@ -100,16 +100,16 @@ bool Node::serialize_short_form(writer::BufWriterParts const writer) const noexc
 
 Node::operator std::string() const noexcept {
     switch (handle_.type()) {
-        [[likely]] case RDFNodeType::IRI: {
+        [[likely]] case storage::identifier::RDFNodeType::IRI: {
             return std::string{IRI{handle_}};
         }
-        case RDFNodeType::Variable: {
+        case storage::identifier::RDFNodeType::Variable: {
             return std::string{query::Variable{handle_}};
         }
-        case RDFNodeType::BNode: {
+        case storage::identifier::RDFNodeType::BNode: {
             return std::string{BlankNode{handle_}};
         }
-        case RDFNodeType::Literal: {
+        case storage::identifier::RDFNodeType::Literal: {
             return std::string{Literal{handle_}};
         }
         default: {
@@ -157,13 +157,13 @@ std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
         return type_comp;
     } else {
         switch (this->handle_.type()) {
-            case RDFNodeType::IRI:
+            case storage::identifier::RDFNodeType::IRI:
                 return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case RDFNodeType::BNode:
+            case storage::identifier::RDFNodeType::BNode:
                 return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case RDFNodeType::Literal:
+            case storage::identifier::RDFNodeType::Literal:
                 return Literal{handle_}.compare_with_extensions(Literal{other.handle_});
-            case RDFNodeType::Variable:
+            case storage::identifier::RDFNodeType::Variable:
                 return this->handle_.variable_backend() <=> other.handle_.variable_backend();
             default:{
                 assert(false); // this will never be reached because RDFNodeType has only 4 values.
@@ -223,10 +223,10 @@ std::ostream &operator<<(std::ostream &os, Node const &node) {
 
     return os;
 }
-const Node::NodeBackendHandle &Node::backend_handle() const noexcept {
+storage::identifier::NodeBackendHandle const &Node::backend_handle() const noexcept {
     return handle_;
 }
-Node::NodeBackendHandle &Node::backend_handle() noexcept {
+storage::identifier::NodeBackendHandle &Node::backend_handle() noexcept {
     return handle_;
 }
 
@@ -238,7 +238,7 @@ TriBool Node::ebv() const noexcept {
     return Literal{handle_}.ebv();
 }
 
-Literal Node::as_ebv(DynNodeStorage node_storage) const noexcept {
+Literal Node::as_ebv(storage::DynNodeStorage node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 

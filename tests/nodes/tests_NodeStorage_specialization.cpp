@@ -2,8 +2,8 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 #include <array>
 #include <iostream>
@@ -13,11 +13,17 @@ using namespace storage;
 using namespace datatypes;
 
 int main(int argc, char **argv) {
-    /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::SyncReferenceNodeStorage syncns{};
+        default_node_storage = syncns;
+        doctest::Context{argc, argv}.run();
+    }
 
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());*/
-    doctest::Context{argc, argv}.run(); // TODO
+    {
+        reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
+        default_node_storage = unsyncns;
+        doctest::Context{argc, argv}.run();
+    }
 }
 
 template<typename It>

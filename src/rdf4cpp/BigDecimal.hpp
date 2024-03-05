@@ -12,14 +12,14 @@
 #include "Expected.hpp"
 
 namespace rdf4cpp {
-enum class RoundingMode {
+enum struct RoundingMode {
     Floor,
     Ceil,
     Round,
     Trunc,
 };
 
-enum class DecimalError {
+enum struct DecimalError {
     Overflow,
     NotDefined,  // aka NotANumber
 };
@@ -29,20 +29,21 @@ concept BigDecimalBaseType = std::numeric_limits<T>::is_specialized && !std::flo
 
 template<BigDecimalBaseType UnscaledValue_t = boost::multiprecision::cpp_int, BigDecimalBaseType Exponent_t = uint32_t>
     requires(!std::signed_integral<Exponent_t> && !std::unsigned_integral<UnscaledValue_t>)
-class BigDecimal {
+struct BigDecimal {
     // the entire class is loosely based on OpenJDKs BigDecimal: https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/master/src/java.base/share/classes/java/math/BigDecimal.java
 
+private:
     UnscaledValue_t unscaled_value;
     Exponent_t exponent;
 
     static constexpr uint32_t base = 10;
 
-    enum class OverflowMode {
+    enum struct OverflowMode {
         Checked,
         UndefinedBehavior,
     };
 
-    template<OverflowMode m, class T>
+    template<OverflowMode m, typename T>
     static constexpr bool add_checked(const T &a, const T &b, T &result) noexcept {
         if constexpr (std::is_integral_v<T> && m == OverflowMode::Checked) {
             return __builtin_add_overflow(a, b, &result);
@@ -52,7 +53,7 @@ class BigDecimal {
         }
     }
 
-    template<OverflowMode m, class T>
+    template<OverflowMode m, typename T>
     static constexpr bool sub_checked(const T &a, const T &b, T &result) noexcept {
         if constexpr (std::is_integral_v<T> && m == OverflowMode::Checked) {
             return __builtin_sub_overflow(a, b, &result);
@@ -62,7 +63,7 @@ class BigDecimal {
         }
     }
 
-    template<OverflowMode m, class T>
+    template<OverflowMode m, typename T>
     static constexpr bool mul_checked(const T &a, const T &b, T &result) noexcept {
         if constexpr (std::is_integral_v<T> && m == OverflowMode::Checked) {
             return __builtin_mul_overflow(a, b, &result);
@@ -72,7 +73,7 @@ class BigDecimal {
         }
     }
 
-    template<OverflowMode m, class T>
+    template<OverflowMode m, typename T>
     static constexpr bool pow_checked(const T &a, unsigned int b, T &result) noexcept {
         if constexpr (std::is_integral_v<T>) {
             T r = 1;
@@ -87,7 +88,7 @@ class BigDecimal {
         }
     }
 
-    template<OverflowMode m, class To, class From>
+    template<OverflowMode m, typename To, typename From>
     static constexpr bool cast_checked(const From &f, To &result) noexcept {
         if constexpr (std::is_integral_v<To> && std::is_integral_v<From> && m == OverflowMode::Checked) {
             if (!std::in_range<To>(f))
@@ -825,39 +826,39 @@ public:
     }
 };
 
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 std::string to_string(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return static_cast<std::string>(r);
 }
 
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> pow(const BigDecimal<UnscaledValue_t, Exponent_t> &r, unsigned int n) noexcept {
     return r.pow(n);
 }
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> round(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.round(RoundingMode::Round);
 }
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> floor(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.round(RoundingMode::Floor);
 }
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> ceil(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.round(RoundingMode::Ceil);
 }
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> trunc(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.round(RoundingMode::Trunc);
 }
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> abs(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.abs();
 }
 }  // namespace rdf4cpp
 
 #ifndef DOXYGEN_PARSER
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 struct std::hash<rdf4cpp::BigDecimal<UnscaledValue_t, Exponent_t>> {
     size_t operator()(const rdf4cpp::BigDecimal<UnscaledValue_t, Exponent_t> &r) const {
         return r.hash();
@@ -879,7 +880,7 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::BigDecimal<U, E>> {
 };
 #endif
 
-template<class UnscaledValue_t, class Exponent_t>
+template<typename UnscaledValue_t, typename Exponent_t>
 class std::numeric_limits<rdf4cpp::BigDecimal<UnscaledValue_t, Exponent_t>> {
 public:
     using BigDecimal = rdf4cpp::BigDecimal<UnscaledValue_t, Exponent_t>;

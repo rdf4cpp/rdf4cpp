@@ -6,25 +6,24 @@
 
 namespace rdf4cpp::parser {
 /**
-     * Similar to rdf4cpp::parser::IStreamQuadIterator
-     * Parses the file by the given path and tries to extract Quads given in TURTLE format.
-     *
-     * @note the iterator _starts on_ the first Quad
-     * @note An exhausted iterator becomes the end-of-stream iterator.
-     * @warning The value pointed to by an end-of-stream iterator is undefined
-     *
-     * @example
-     * @code
-     * for (const auto& e : rdf4cpp::parser::RDFFileParser{"somewhere.ttl"}) {
-     *  if (e.has_value())
-     *     std::cout << e.value();
-     *  else
-     *     std::cout << e.error();
-     * }
-     * @endcode
-     */
-class RDFFileParser {
-public:
+ * Similar to rdf4cpp::parser::IStreamQuadIterator
+ * Parses the file by the given path and tries to extract Quads given in TURTLE format.
+ *
+ * @note the iterator _starts on_ the first Quad
+ * @note An exhausted iterator becomes the end-of-stream iterator.
+ * @warning The value pointed to by an end-of-stream iterator is undefined
+ *
+ * @example
+ * @code
+ * for (const auto& e : rdf4cpp::parser::RDFFileParser{"somewhere.ttl"}) {
+ *  if (e.has_value())
+ *     std::cout << e.value();
+ *  else
+ *     std::cout << e.error();
+ * }
+ * @endcode
+ */
+struct RDFFileParser {
     using value_type = Quad;
     using state_type = IStreamQuadIterator::state_type;
     using flags_type = IStreamQuadIterator::flags_type;
@@ -43,8 +42,10 @@ public:
                            flags_type flags = flags_type::none(),
                            state_type *state = nullptr);
 
-    class iterator {
-        friend class RDFFileParser;
+    struct iterator {
+        friend struct RDFFileParser;
+
+    private:
         friend bool operator==(const RDFFileParser::iterator &iter, std::default_sentinel_t) noexcept;
         FILE *stream_;
         std::unique_ptr<IStreamQuadIterator> iter_;

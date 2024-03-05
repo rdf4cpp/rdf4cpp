@@ -11,12 +11,12 @@
 #include <string>
 
 namespace rdf4cpp {
-class Literal;
-class BlankNode;
-class IRI;
+struct Literal;
+struct BlankNode;
+struct IRI;
 namespace query {
-class Variable;
-}
+struct Variable;
+} // namespace rdf4cpp
 
 namespace bnode_mngt {
 struct NodeScope;
@@ -34,34 +34,30 @@ inline constexpr storage::DynNodeStorage keep_node_storage{nullptr};
  *
  * @warning This type is a POD.
  */
-class Node {
+struct Node {
+private:
     friend struct bnode_mngt::NodeScope;
     friend struct bnode_mngt::NodeGenerator;
 
 protected:
-    using NodeBackendHandle = rdf4cpp::storage::identifier::NodeBackendHandle;
-    using NodeID = rdf4cpp::storage::identifier::NodeID;
-    using DynNodeStorage = rdf4cpp::storage::DynNodeStorage;
-    using RDFNodeType = rdf4cpp::storage::identifier::RDFNodeType;
-
-    NodeBackendHandle handle_;
+    storage::identifier::NodeBackendHandle handle_;
 
 public:
-    explicit Node(NodeBackendHandle id) noexcept;
+    explicit Node(storage::identifier::NodeBackendHandle id) noexcept;
 
     /**
      * Registers this node in the given node storage (if it does not already exist)
      * @param node_storage node storage to register this node in
      * @return this node but in node storage
      */
-    Node to_node_storage(DynNodeStorage node_storage) const noexcept;
+    Node to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 
     /**
      * Tries to retrieve this nodes equivalent node in the given node storage
      * @param node_storage node storage to try to retrieve the node from
      * @return this node but in node storage, or the null node if it does not exist in node_storage
      */
-    [[nodiscard]] Node try_get_in_node_storage(DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] Node try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
@@ -148,7 +144,7 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal as_ebv(DynNodeStorage node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ebv(storage::DynNodeStorage node_storage = keep_node_storage) const noexcept;
 
 
     /**
@@ -188,7 +184,7 @@ public:
      * This function is unsafe! Make sure this is not null() const.
      * @return its NodeBackendHandle.
      */
-    [[nodiscard]] const NodeBackendHandle &backend_handle() const noexcept;
+    [[nodiscard]] storage::identifier::NodeBackendHandle const &backend_handle() const noexcept;
 
     /**
      * Exposes the NodeBackendHandle.
@@ -196,7 +192,7 @@ public:
      * This function is unsafe! Make sure this is not null() const.
      * @return its NodeBackendHandle.
      */
-    [[nodiscard]] NodeBackendHandle &backend_handle() noexcept;
+    [[nodiscard]] storage::identifier::NodeBackendHandle &backend_handle() noexcept;
 };
 }  // namespace rdf4cpp
 

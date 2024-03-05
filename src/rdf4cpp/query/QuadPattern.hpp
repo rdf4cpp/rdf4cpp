@@ -2,6 +2,7 @@
 #define RDF4CPP_QUADPATTERN_HPP
 
 #include <rdf4cpp/Node.hpp>
+#include <rdf4cpp/query/TriplePattern.hpp>
 
 #include <array>
 #include <ostream>
@@ -15,52 +16,67 @@ namespace rdf4cpp::query {
  *
  * @see <https://www.w3.org/TR/sparql11-query/#defn_TriplePattern>
  */
-class QuadPattern {
+struct QuadPattern {
     // TODO: adjust API to Quad
-protected:
-    using Entries_t = std::array<Node, 4>;
 
-    Entries_t entries_{};
+    using value_type = Node;
+    using reference = value_type &;
+    using const_reference = value_type const &;
+    using pointer = value_type *;
+    using const_pointer = value_type const *;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+
+protected:
+    using storage_type = std::array<Node, 4>;
+    storage_type entries_{};
 
 public:
-    QuadPattern() = default;
-    QuadPattern(Node graph, Node subject, Node predicate, Node object);
+    QuadPattern() noexcept = default;
+    QuadPattern(Node graph, Node subject, Node predicate, Node object) noexcept;
 
-    [[nodiscard]] Node &graph();
-    [[nodiscard]] const Node &graph() const;
+    [[nodiscard]] reference graph() noexcept { return entries_[0]; }
+    [[nodiscard]] const_reference graph() const noexcept { return entries_[0]; }
 
-    [[nodiscard]] Node &subject();
-    [[nodiscard]] const Node &subject() const;
+    [[nodiscard]] reference subject() noexcept { return entries_[1]; }
+    [[nodiscard]] const_reference subject() const noexcept { return entries_[1]; }
 
-    [[nodiscard]] Node &predicate();
-    [[nodiscard]] const Node &predicate() const;
+    [[nodiscard]] reference predicate() noexcept { return entries_[2]; }
+    [[nodiscard]] const_reference predicate() const noexcept { return entries_[2]; }
 
-    [[nodiscard]] Node &object();
-    [[nodiscard]] const Node &object() const;
+    [[nodiscard]] reference object() noexcept { return entries_[3]; }
+    [[nodiscard]] const_reference object() const noexcept { return entries_[3]; }
 
-    [[nodiscard]] bool valid() const;
+    [[nodiscard]] reference operator[](size_type ix) noexcept { return entries_[ix]; }
+    [[nodiscard]] const_reference operator[](size_type ix) const noexcept { return entries_[ix]; }
 
-    typedef typename Entries_t::iterator iterator;
-    typedef typename Entries_t::const_iterator const_iterator;
-    typedef typename Entries_t::reverse_iterator reverse_iterator;
-    typedef typename Entries_t::const_reverse_iterator const_reverse_iterator;
+    [[nodiscard]] size_type size() const noexcept { return entries_.size(); }
 
-    [[nodiscard]] iterator begin();
-    [[nodiscard]] const_iterator begin() const;
-    [[nodiscard]] iterator end();
-    [[nodiscard]] const_iterator end() const;
-    [[nodiscard]] reverse_iterator rbegin();
-    [[nodiscard]] const_reverse_iterator rbegin() const;
-    [[nodiscard]] reverse_iterator rend();
-    [[nodiscard]] const_reverse_iterator rend() const;
+    [[nodiscard]] bool valid() const noexcept;
 
-    auto operator<=>(const QuadPattern &rhs) const = default;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
+    using reverse_iterator = typename storage_type::reverse_iterator;
+    using const_reverse_iterator = typename storage_type::const_reverse_iterator;
+
+    [[nodiscard]] iterator begin() noexcept { return entries_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept { return entries_.begin(); }
+    [[nodiscard]] iterator end() noexcept { return entries_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return entries_.end(); }
+    [[nodiscard]] reverse_iterator rbegin() noexcept { return entries_.rbegin(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return entries_.rbegin(); }
+    [[nodiscard]] reverse_iterator rend() noexcept { return entries_.rend(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return entries_.rend(); }
+
+    [[nodiscard]] TriplePattern const &without_graph() const noexcept;
+
+    auto operator<=>(QuadPattern const &rhs) const = default;
 
     [[nodiscard]] explicit operator std::string() const;
+    friend std::ostream &operator<<(std::ostream &os, QuadPattern const &pattern);
 
-    friend std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern);
-
-    [[nodiscard]] QuadPattern to_node_storage(storage::DynNodeStorage node_storage) const;
+    [[nodiscard]] QuadPattern to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] QuadPattern try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 };
 }  // namespace rdf4cpp::query
 

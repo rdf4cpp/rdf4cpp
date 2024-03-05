@@ -145,7 +145,7 @@ private:
     }
 
 
-    friend class DatatypeRegistry;
+    friend struct DatatypeRegistry;
 
 public:
     template<ConversionTable Table>

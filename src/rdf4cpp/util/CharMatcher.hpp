@@ -8,7 +8,7 @@
  */
 namespace rdf4cpp::util::char_matcher_detail {
 
-template<class T>
+template<typename T>
 concept CharMatcher = requires(const T a, int c) {{a.match(c)} -> std::same_as<bool>; };
 
 /**
@@ -139,7 +139,7 @@ struct IPrivateMatcher {
  * @param s
  * @return
  */
-template<CharMatcher M, class S>
+template<CharMatcher M, typename S>
 bool match(const M &m, S s) noexcept {
     for (int c : s) {
         if (!m.match(c))

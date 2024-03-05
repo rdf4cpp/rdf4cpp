@@ -8,7 +8,8 @@ namespace rdf4cpp::util {
  * @tparam I Integer type to wrap
  */
 template<std::integral I>
-class CheckedIntegral {
+struct CheckedIntegral {
+private:
     I value;
     bool invalid = false;
 

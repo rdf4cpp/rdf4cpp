@@ -3,55 +3,57 @@
 #include <rdf4cpp/writer/TryWrite.hpp>
 
 namespace rdf4cpp::query {
-Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::identifier::RDFNodeType::Variable, {}}) {}
-Variable::Variable(std::string_view name, bool anonymous, DynNodeStorage node_storage)
-    : Node{NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
-                             storage::identifier::RDFNodeType::Variable,
-                             node_storage}} {}
-Variable::Variable(Node::NodeBackendHandle handle) noexcept : Node{handle} {}
+Variable::Variable() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::identifier::RDFNodeType::Variable, {}}} {
+}
 
-Variable Variable::make_named(std::string_view name, DynNodeStorage node_storage) {
+Variable::Variable(std::string_view name, bool anonymous, storage::DynNodeStorage node_storage)
+    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
+                                                  storage::identifier::RDFNodeType::Variable,
+                                                  node_storage}} {}
+Variable::Variable(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {}
+
+Variable Variable::make_named(std::string_view name, storage::DynNodeStorage node_storage) {
     return Variable{name, false, node_storage};
 }
 
-Variable Variable::make_anonymous(std::string_view name, DynNodeStorage node_storage) {
+Variable Variable::make_anonymous(std::string_view name, storage::DynNodeStorage node_storage) {
     return Variable{name, true, node_storage};
 }
 
-Variable Variable::to_node_storage(DynNodeStorage node_storage) const noexcept {
+Variable Variable::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     if (handle_.storage().backend() == node_storage.backend()) {
         return *this;
     }
 
     auto const node_id = node_storage.find_or_make_id(handle_.variable_backend());
-    return Variable{NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
 }
 
-Variable Variable::try_get_in_node_storage(DynNodeStorage node_storage) const noexcept {
+Variable Variable::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     if (handle_.storage().backend() == node_storage.backend()) {
         return *this;
     }
 
     auto const node_id = node_storage.find_id(handle_.variable_backend());
-    if (node_id == NodeID{}) {
+    if (node_id == storage::identifier::NodeID{}) {
         return Variable{};
     }
 
-    return Variable{NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
 }
 
-Variable Variable::find(std::string_view name, bool anonymous, DynNodeStorage node_storage) noexcept {
+Variable Variable::find(std::string_view name, bool anonymous, storage::DynNodeStorage node_storage) noexcept {
     auto nid = node_storage.find_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous});
 
     if (nid.null())
         return Variable{};
 
-    return Variable{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Variable, node_storage}};
 }
-Variable Variable::find_named(std::string_view name, DynNodeStorage node_storage) noexcept {
+Variable Variable::find_named(std::string_view name, storage::DynNodeStorage node_storage) noexcept {
     return find(name, false, node_storage);
 }
-Variable Variable::find_anonymous(std::string_view name, DynNodeStorage node_storage) noexcept {
+Variable Variable::find_anonymous(std::string_view name, storage::DynNodeStorage node_storage) noexcept {
     return find(name, true, node_storage);
 }
 
@@ -86,7 +88,7 @@ bool Variable::is_literal() const { return false; }
 bool Variable::is_variable() const { return true; }
 bool Variable::is_blank_node() const { return false; }
 bool Variable::is_iri() const { return false; }
-Node::RDFNodeType Variable::type() const { return RDFNodeType::Variable; }
+
 std::ostream &operator<<(std::ostream &os, Variable const &variable) {
     writer::BufOStreamWriter w{os};
     variable.serialize(w);

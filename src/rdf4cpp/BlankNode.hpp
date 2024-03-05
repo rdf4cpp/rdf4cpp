@@ -10,18 +10,19 @@ struct NodeGenerator;
 }
 
 namespace rdf4cpp {
-class BlankNode : public Node {
-    explicit BlankNode(NodeBackendHandle handle) noexcept;
-public:
+
+struct BlankNode : Node {
     /**
      * Constructs the null-bnode
      */
     BlankNode() noexcept;
 
+    explicit BlankNode(storage::identifier::NodeBackendHandle handle) noexcept;
+
     /**
      * Constructs a bnode from an identifier
      */
-    explicit BlankNode(std::string_view identifier, DynNodeStorage node_storage = storage::default_node_storage);
+    explicit BlankNode(std::string_view identifier, storage::DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs the null-bnode
@@ -31,10 +32,10 @@ public:
     /**
      * Constructs a bnode from an identifier
      */
-    [[nodiscard]] static BlankNode make(std::string_view identifier, DynNodeStorage node_storage = storage::default_node_storage);
+    [[nodiscard]] static BlankNode make(std::string_view identifier, storage::DynNodeStorage node_storage = storage::default_node_storage);
 
-    BlankNode to_node_storage(DynNodeStorage node_storage) const noexcept;
-    [[nodiscard]] BlankNode try_get_in_node_storage(DynNodeStorage node_storage) const noexcept;
+    BlankNode to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] BlankNode try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 
     /**
      * searches for a bnode in the specified node storage and returns it.
@@ -43,7 +44,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static BlankNode find(std::string_view identifier, DynNodeStorage node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static BlankNode find(std::string_view identifier, storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 
     /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
@@ -67,7 +68,8 @@ public:
     [[nodiscard]] bool is_variable() const noexcept;
     [[nodiscard]] bool is_blank_node() const noexcept;
     [[nodiscard]] bool is_iri() const noexcept;
-    friend class Node;
+
+    friend struct Node;
 };
 
 inline namespace shorthands {

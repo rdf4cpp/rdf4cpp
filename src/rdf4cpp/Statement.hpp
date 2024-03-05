@@ -5,32 +5,19 @@
 
 namespace rdf4cpp {
 
-class Statement : public query::TriplePattern {
+struct Statement : query::TriplePattern {
     // TODO: adjust API to Quad
-public:
-    Statement() = default;
 
-    Statement(Node subject, Node predicate, Node object);
+    Statement() noexcept = default;
+    Statement(Node subject, Node predicate, Node object) noexcept;
 
-    [[nodiscard]] bool valid() const;
+    [[nodiscard]] bool valid() const noexcept;
 
-    [[nodiscard]] Statement to_node_storage(storage::DynNodeStorage node_storage) const {
-        Statement st;
-        auto it = st.begin();
-        for (auto const &item : *this) {
-            *(it++) = item.to_node_storage(node_storage);
-        }
-        return st;
-    }
+    [[nodiscard]] Statement to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] Statement try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 
-    [[nodiscard]] Statement try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
-        Statement st;
-        auto it = st.begin();
-        for (auto const &item : *this) {
-            *(it++) = item.try_get_in_node_storage(node_storage);
-        }
-        return st;
-    }
+    bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;
+    bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
 };
 }  // namespace rdf4cpp
 #endif  //RDF4CPP_STATEMENT_HPP

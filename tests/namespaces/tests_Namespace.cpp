@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 using namespace rdf4cpp;
 
@@ -10,7 +10,7 @@ TEST_CASE("Namespace sanity check") {
     using namespace rdf4cpp;
 
     SUBCASE("closed NS") {
-        storage::reference_node_storage::SyncReferenceNodeStorageBackend ns;
+        storage::reference_node_storage::SyncReferenceNodeStorage ns;
         namespaces::RDF rdf{ns};
 
         auto rdf_property = rdf + "Property";
@@ -20,7 +20,7 @@ TEST_CASE("Namespace sanity check") {
     }
 
     SUBCASE("open NS") {
-        storage::reference_node_storage::SyncReferenceNodeStorageBackend ns;
+        storage::reference_node_storage::SyncReferenceNodeStorage ns;
         namespaces::XSD xsd{ns};
 
         CHECK_EQ((xsd + "AAAAAAAAA").identifier(), std::string{xsd.prefix} + "AAAAAAAAA"); // create

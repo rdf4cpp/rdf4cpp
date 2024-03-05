@@ -6,7 +6,12 @@
 #include <array>
 #include <ostream>
 
+namespace rdf4cpp::writer {
+struct SerializationState;
+} // namespace rdf4cpp::writer
+
 namespace rdf4cpp::query {
+
 /**
  * <div>TriplePattern</div> is modeled around SPARQL Triple patterns.
  *
@@ -15,52 +20,62 @@ namespace rdf4cpp::query {
  *
  * @see <https://www.w3.org/TR/2013/REC-sparql11-update-20130321/#def_datasetQuadPattern>
  */
-class TriplePattern {
+struct TriplePattern {
     // TODO: adjust API to Quad
+
+    using value_type = Node;
+    using reference = value_type &;
+    using const_reference = value_type const &;
+    using pointer = value_type *;
+    using const_pointer = value_type const *;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
+
 protected:
-    using Variable = rdf4cpp::query::Variable;
-
-    using Entries_t = std::array<Node, 3>;
-
-    Entries_t entries_;
+    using storage_type = std::array<Node, 3>;
+    storage_type entries_;
 
 public:
-    TriplePattern() = default;
+    TriplePattern() noexcept = default;
+    TriplePattern(Node subject, Node predicate, Node object) noexcept;
 
-    TriplePattern(Node subject, Node predicate, Node object);
+    [[nodiscard]] reference subject() noexcept { return entries_[0]; }
+    [[nodiscard]] const_reference subject() const noexcept { return entries_[0]; }
 
-    [[nodiscard]] Node &subject();
-    [[nodiscard]] const Node &subject() const;
+    [[nodiscard]] reference predicate() noexcept { return entries_[1]; }
+    [[nodiscard]] const_reference predicate() const noexcept { return entries_[1]; }
 
-    [[nodiscard]] Node &predicate();
-    [[nodiscard]] const Node &predicate() const;
+    [[nodiscard]] reference object() noexcept { return entries_[2]; }
+    [[nodiscard]] const_reference object() const noexcept { return entries_[2]; }
 
-    [[nodiscard]] Node &object();
-    [[nodiscard]] const Node &object() const;
+    [[nodiscard]] reference operator[](size_type ix) noexcept { return entries_[ix]; }
+    [[nodiscard]] const_reference operator[](size_type ix) const noexcept { return entries_[ix]; }
 
-    [[nodiscard]] bool valid() const;
+    [[nodiscard]] size_type size() const noexcept { return entries_.size(); }
 
-    typedef typename Entries_t::iterator iterator;
-    typedef typename Entries_t::const_iterator const_iterator;
-    typedef typename Entries_t::reverse_iterator reverse_iterator;
-    typedef typename Entries_t::const_reverse_iterator const_reverse_iterator;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
+    using reverse_iterator = typename storage_type::reverse_iterator;
+    using const_reverse_iterator = typename storage_type::const_reverse_iterator;
 
-    [[nodiscard]] iterator begin();
-    [[nodiscard]] const_iterator begin() const;
-    [[nodiscard]] iterator end();
-    [[nodiscard]] const_iterator end() const;
-    [[nodiscard]] reverse_iterator rbegin();
-    [[nodiscard]] const_reverse_iterator rbegin() const;
-    [[nodiscard]] reverse_iterator rend();
-    [[nodiscard]] const_reverse_iterator rend() const;
+    [[nodiscard]] iterator begin() noexcept { return entries_.begin(); }
+    [[nodiscard]] const_iterator begin() const noexcept { return entries_.begin(); }
+    [[nodiscard]] iterator end() noexcept { return entries_.end(); }
+    [[nodiscard]] const_iterator end() const noexcept { return entries_.end(); }
+    [[nodiscard]] reverse_iterator rbegin() noexcept { return entries_.rbegin(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return entries_.rbegin(); }
+    [[nodiscard]] reverse_iterator rend() noexcept { return entries_.rend(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return entries_.rend(); }
 
-    auto operator<=>(const TriplePattern &rhs) const = default;
+    [[nodiscard]] bool valid() const noexcept;
+
+    auto operator<=>(TriplePattern const &rhs) const = default;
 
     [[nodiscard]] explicit operator std::string() const;
+    friend std::ostream &operator<<(std::ostream &os, TriplePattern const &pattern);
 
-    friend std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern);
-
-    [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStorage node_storage) const;
+    [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] TriplePattern try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
 };
 }  // namespace rdf4cpp::query
 

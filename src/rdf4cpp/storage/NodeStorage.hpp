@@ -363,6 +363,11 @@ public:
 
 extern DynNodeStorage default_node_storage;
 
+/**
+ * Points the default_node_storage back to its original instance
+ */
+void reset_default_node_storage() noexcept;
+
 } // namespace rdf4cpp::storage
 
 template<typename Policy>

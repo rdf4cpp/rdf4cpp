@@ -1,11 +1,11 @@
-#include "UnsyncReferenceNodeStorageBackend.hpp"
+#include "UnsyncReferenceNodeStorage.hpp"
 
 #include <dice/template-library/tuple_algorithm.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/SpecializationDetail.hpp>
 
 namespace rdf4cpp::storage::reference_node_storage {
 
-UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept {
+UnsyncReferenceNodeStorage::UnsyncReferenceNodeStorage() noexcept {
     iri_storage_.mapping.reserve_until(identifier::NodeID::min_iri_id);
     bnode_storage_.mapping.reserve_until(identifier::NodeID::min_bnode_id);
     variable_storage_.mapping.reserve_until(identifier::NodeID::min_variable_id);
@@ -22,7 +22,7 @@ UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept 
     }
 }
 
-size_t UnsyncReferenceNodeStorageBackend::size() const noexcept {
+size_t UnsyncReferenceNodeStorage::size() const noexcept {
     return iri_storage_.mapping.size() +
            bnode_storage_.mapping.size() +
            variable_storage_.mapping.size() +
@@ -32,7 +32,7 @@ size_t UnsyncReferenceNodeStorageBackend::size() const noexcept {
            });
 }
 
-void UnsyncReferenceNodeStorageBackend::shrink_to_fit() {
+void UnsyncReferenceNodeStorage::shrink_to_fit() {
     iri_storage_.mapping.shrink_to_fit();
     bnode_storage_.mapping.shrink_to_fit();
     variable_storage_.mapping.shrink_to_fit();
@@ -43,7 +43,7 @@ void UnsyncReferenceNodeStorageBackend::shrink_to_fit() {
     });
 }
 
-bool UnsyncReferenceNodeStorageBackend::has_specialized_storage_for(identifier::LiteralType const datatype) noexcept {
+bool UnsyncReferenceNodeStorage::has_specialized_storage_for(identifier::LiteralType const datatype) noexcept {
     static constexpr auto specialization_lut = specialization_detail::make_storage_specialization_lut<decltype(specialized_literal_storage_)>();
     return specialization_lut[datatype.to_underlying()];
 }
@@ -71,7 +71,7 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_t
     }
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::LiteralBackendView const &view) noexcept {
     return view.visit(
             [this](view::LexicalFormLiteralBackendView const &lexical) noexcept {
                 auto const datatype = identifier::iri_node_id_to_literal_type(lexical.datatype_id);
@@ -88,27 +88,27 @@ identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::Lite
             });
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::IRIBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::IRIBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, iri_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::BNodeBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::BNodeBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, bnode_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::VariableBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::VariableBackendView const &view) noexcept {
     return lookup_or_insert_impl<true>(view, variable_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::BNodeBackendView const &view) const noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::BNodeBackendView const &view) const noexcept {
     return lookup_or_insert_impl<false>(view, bnode_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::IRIBackendView const &view) const noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::IRIBackendView const &view) const noexcept {
     return lookup_or_insert_impl<false>(view, iri_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::LiteralBackendView const &view) const noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::LiteralBackendView const &view) const noexcept {
     return view.visit(
             [this](view::LexicalFormLiteralBackendView const &lexical) {
                 assert(!this->has_specialized_storage_for(identifier::iri_node_id_to_literal_type(lexical.datatype_id)));
@@ -124,7 +124,7 @@ identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::LiteralBacke
             });
 }
 
-identifier::NodeID UnsyncReferenceNodeStorageBackend::find_id(view::VariableBackendView const &view) const noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::VariableBackendView const &view) const noexcept {
     return lookup_or_insert_impl<false>(view, variable_storage_);
 }
 
@@ -137,11 +137,11 @@ static typename NodeTypeStorage::backend_view_type find_backend_view(NodeTypeSto
     }
 }
 
-view::IRIBackendView UnsyncReferenceNodeStorageBackend::find_iri_backend_view(identifier::NodeID const id) const {
+view::IRIBackendView UnsyncReferenceNodeStorage::find_iri_backend_view(identifier::NodeID const id) const {
     return find_backend_view(iri_storage_, id);
 }
 
-view::LiteralBackendView UnsyncReferenceNodeStorageBackend::find_literal_backend_view(identifier::NodeID const id) const {
+view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend_view(identifier::NodeID const id) const {
     if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) {
             return find_backend_view(storage, id);
@@ -151,11 +151,11 @@ view::LiteralBackendView UnsyncReferenceNodeStorageBackend::find_literal_backend
     return find_backend_view(fallback_literal_storage_, id);
 }
 
-view::BNodeBackendView UnsyncReferenceNodeStorageBackend::find_bnode_backend_view(identifier::NodeID const id) const {
+view::BNodeBackendView UnsyncReferenceNodeStorage::find_bnode_backend_view(identifier::NodeID const id) const {
     return find_backend_view(bnode_storage_, id);
 }
 
-view::VariableBackendView UnsyncReferenceNodeStorageBackend::find_variable_backend_view(identifier::NodeID const id) const {
+view::VariableBackendView UnsyncReferenceNodeStorage::find_variable_backend_view(identifier::NodeID const id) const {
     return find_backend_view(variable_storage_, id);
 }
 
@@ -170,11 +170,11 @@ static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
     return true;
 }
 
-bool UnsyncReferenceNodeStorageBackend::erase_iri(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_iri(identifier::NodeID const id) noexcept {
     return erase_impl(iri_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorageBackend::erase_literal(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_literal(identifier::NodeID const id) noexcept {
     if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto &storage) noexcept {
             return erase_impl(storage, id);
@@ -184,15 +184,15 @@ bool UnsyncReferenceNodeStorageBackend::erase_literal(identifier::NodeID const i
     return erase_impl(fallback_literal_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorageBackend::erase_bnode(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_bnode(identifier::NodeID const id) noexcept {
     return erase_impl(bnode_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorageBackend::erase_variable(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_variable(identifier::NodeID const id) noexcept {
     return erase_impl(variable_storage_, id);
 }
 
-void UnsyncReferenceNodeStorageBackend::clear() noexcept {
+void UnsyncReferenceNodeStorage::clear() noexcept {
     iri_storage_.mapping.clear();
     bnode_storage_.mapping.clear();
     variable_storage_.mapping.clear();

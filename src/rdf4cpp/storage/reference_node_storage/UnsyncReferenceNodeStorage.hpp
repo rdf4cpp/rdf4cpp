@@ -1,5 +1,5 @@
-#ifndef RDF4CPP_UNSYNCREFERENCENODESTORAGEBACKEND_HPP
-#define RDF4CPP_UNSYNCREFERENCENODESTORAGEBACKEND_HPP
+#ifndef RDF4CPP_UNSYNCREFERENCENODESTORAGE_HPP
+#define RDF4CPP_UNSYNCREFERENCENODESTORAGE_HPP
 
 #include <cstdint>
 #include <tuple>
@@ -16,7 +16,7 @@ namespace rdf4cpp::storage::reference_node_storage {
 /**
  * NON-Thread-safe reference implementation of a INodeStorageBackend.
  */
-struct UnsyncReferenceNodeStorageBackend {
+struct UnsyncReferenceNodeStorage {
 private:
     UnsyncNodeTypeStorage<BNodeBackend> bnode_storage_;
     UnsyncNodeTypeStorage<IRIBackend> iri_storage_;
@@ -47,7 +47,7 @@ private:
                UnsyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
 public:
-    UnsyncReferenceNodeStorageBackend() noexcept;
+    UnsyncReferenceNodeStorage() noexcept;
 
     [[nodiscard]] size_t size() const noexcept;
     void shrink_to_fit();
@@ -77,6 +77,8 @@ public:
     void clear() noexcept;
 };
 
+static_assert(NodeStorage<UnsyncReferenceNodeStorage>);
+
 }  // namespace rdf4cpp::storage::reference_node_storage
 
-#endif  //RDF4CPP_UNSYNCREFERENCENODESTORAGEBACKEND_HPP
+#endif  //RDF4CPP_UNSYNCREFERENCENODESTORAGE_HPP

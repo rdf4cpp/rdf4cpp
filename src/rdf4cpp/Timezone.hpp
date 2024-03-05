@@ -9,9 +9,9 @@
 #include "rdf4cpp/datatypes/registry/util/CharConvExt.hpp"
 
 namespace rdf4cpp {
-class Timezone {
+struct Timezone {
     // heavily inspired by https://howardhinnant.github.io/date/tz.html#Examples
-public:
+
     std::chrono::minutes offset = std::chrono::minutes{0};
 
     static constexpr const char *begin_tokens = "Z+-";
@@ -77,17 +77,17 @@ public:
         return nullptr;
     }
 
-    template<class Duration>
+    template<typename Duration>
     [[nodiscard]] auto to_sys(const std::chrono::local_time<Duration> &tp) const noexcept {
         return std::chrono::sys_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp - offset).time_since_epoch()};
     }
 
-    template<class Duration>
+    template<typename Duration>
     [[nodiscard]] auto to_local(const std::chrono::sys_time<Duration> &tp) const noexcept {
         return std::chrono::local_time<std::common_type_t<Duration, std::chrono::seconds>>{(tp + offset).time_since_epoch()};
     }
 
-    template<class Duration>
+    template<typename Duration>
     [[nodiscard]] std::chrono::sys_info get_info(const std::chrono::sys_time<Duration> &) const noexcept {
         return std::chrono::sys_info{
                 std::chrono::sys_seconds{std::chrono::seconds{0l}},

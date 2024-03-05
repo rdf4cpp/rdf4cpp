@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 enum struct OutputFormat {
     NTriples,
@@ -117,7 +117,7 @@ TEST_CASE("basic ntriple") {
     CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        storage::reference_node_storage::UnsyncReferenceNodeStorageBackend ns{};
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_graph(ns).serialize(w);
     });
 
@@ -130,7 +130,7 @@ TEST_CASE("basic nquad") {
     CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> <http://ex/graph2> .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        storage::reference_node_storage::UnsyncReferenceNodeStorageBackend ns{};
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_dataset(ns).serialize(w);
     });
 
@@ -143,7 +143,7 @@ TEST_CASE("basic turtle") {
     CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        storage::reference_node_storage::UnsyncReferenceNodeStorageBackend ns{};
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_graph(ns).serialize_turtle(w);
     });
 
@@ -156,7 +156,7 @@ TEST_CASE("basic trig") {
     CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/graph2> {\n<http://ex/sub> a \"5\"^^xsd:int .\n}\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        storage::reference_node_storage::UnsyncReferenceNodeStorageBackend ns{};
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_dataset(ns).serialize_trig(w);
     });
 

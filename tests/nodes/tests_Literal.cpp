@@ -2,8 +2,8 @@
 #include <doctest/doctest.h>
 
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 #include <thread>
 
@@ -11,12 +11,17 @@ using namespace rdf4cpp;
 using namespace rdf4cpp::storage;
 
 int main(int argc, char **argv) {
-    /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::SyncReferenceNodeStorage syncns{};
+        default_node_storage = syncns;
+        doctest::Context{argc, argv}.run();
+    }
 
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());*/
-    // TODO
-    doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
+        default_node_storage = unsyncns;
+        doctest::Context{argc, argv}.run();
+    }
 }
 
 TEST_CASE("Literal - Check for only lexical form") {
@@ -828,7 +833,7 @@ TEST_CASE("UUID") {
 }
 
 TEST_CASE("to_node_storage") {
-    storage::reference_node_storage::SyncReferenceNodeStorageBackend ns2{};
+    storage::reference_node_storage::SyncReferenceNodeStorage ns2{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -906,7 +911,7 @@ TEST_CASE("to_node_storage") {
 }
 
 TEST_CASE("try_get_in_node_storage") {
-    auto ns2 = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+    auto ns2 = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -1023,7 +1028,7 @@ bool capabilities::Default<fake_datatype>::serialize_canonical_string(cpp_type c
 }
 struct FakeDatatype : rdf4cpp::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::datatypes::registry::fake_datatype> {};
 
-template<class T>
+template<typename T>
 struct get_find_values {};
 
 template<>
@@ -1060,7 +1065,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
     if constexpr (requires { get_find_values<T>::av; }) {
         static constexpr auto av = get_find_values<T>::av;
         static constexpr auto bv = get_find_values<T>::bv;
-        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
         CHECK(Literal::find_typed_from_value<T>(av, nst) == Literal{});
         Literal l = Literal::make_typed_from_value<T>(av, nst);
@@ -1069,14 +1074,14 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed_from_value<T>(bv, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inl; }) {
-        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
         auto l = Literal::find_typed_from_value<T>(get_find_values<T>::inl, nst);
         CHECK(l == Literal::make_typed_from_value<T>(get_find_values<T>::inl));
     }
     if constexpr (requires { get_find_values<T>::as; }) {
         static constexpr auto as = get_find_values<T>::as;
         static constexpr auto bs = get_find_values<T>::bs;
-        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
         CHECK(Literal::find_typed<T>(as, nst) == Literal{});
         Literal l = Literal::make_typed<T>(as, nst);
@@ -1085,7 +1090,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed<T>(bs, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inls; }) {
-        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
         auto l = Literal::find_typed<T>(get_find_values<T>::inls, nst);
         CHECK(l == Literal::make_typed<T>(get_find_values<T>::inls));
     }

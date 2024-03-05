@@ -3,9 +3,9 @@
 #include <doctest/doctest.h>
 #include <format>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
-template<class Datatype>
+template<typename Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
     using namespace rdf4cpp;
     // better output on failure than CHECK(a <=> b == res)
@@ -26,7 +26,7 @@ void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_
         CHECK(Literal::make_typed_from_value<Datatype>(a) <=> Literal::make_typed<Datatype>(b) == res);
     }
 }
-template<class Datatype>
+template<typename Datatype>
 void basic_test(std::string_view a, std::string_view b, std::partial_ordering res) {
     using namespace rdf4cpp;
     // better output on failure than CHECK(a <=> b == res)
@@ -162,7 +162,7 @@ TEST_CASE("datatype gYearMonth") {
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("32767-12").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1-14:00").is_inlined());
-    CHECK(storage::reference_node_storage::SyncReferenceNodeStorageBackend::has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));
+    CHECK(storage::reference_node_storage::SyncReferenceNodeStorage::has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));
     Literal a{};
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("01-00"), std::runtime_error);
     CHECK_THROWS_AS(a = Literal::make_typed<datatypes::xsd::GYearMonth>("-32768-01"), std::runtime_error);

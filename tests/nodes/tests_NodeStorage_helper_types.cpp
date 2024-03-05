@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp.hpp>
-#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 TEST_SUITE("NodeStorage helper types") {
     using namespace rdf4cpp::storage::reference_node_storage::detail;
@@ -62,7 +62,7 @@ TEST_SUITE("NodeStorage helper types") {
         using namespace rdf4cpp;
         using namespace rdf4cpp::storage;
 
-        NodeStorage auto ns = reference_node_storage::SyncReferenceNodeStorageBackend{};
+        NodeStorage auto ns = reference_node_storage::SyncReferenceNodeStorage{};
 
         auto l1 = Literal::make_simple("Spherical Cow", ns);
         auto l2 = Literal::make_simple("Spherical Cow", ns);
