@@ -7,50 +7,95 @@
 
 namespace rdf4cpp::rdf {
 
+storage::node::identifier::NodeBackendID Dataset::to_node_id(Node node) noexcept {
+    return node.backend_handle().id();
+}
+
+Node Dataset::to_node(storage::node::identifier::NodeBackendID id) const noexcept {
+    return Node{storage::node::identifier::NodeBackendHandle{id, node_storage_}};
+}
+
 Dataset::Dataset(storage::node::DynNodeStorage node_storage) : node_storage_{node_storage} {}
 
-void Dataset::add(const Quad &quad) {
-    dataset_storage.add(quad.to_node_storage(backend().node_storage()));
+void Dataset::add(Quad const &quad) {
+    auto const g = quad.graph().null() ? IRI::default_graph(node_storage_) : quad.graph().to_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(g));
+    if (it == graphs_.end()) {
+        it = graphs_.emplace(to_node_id(g), node_storage_).first;
+    }
+
+    it.value().add(Statement{quad.subject(), quad.predicate(), quad.object()});
 }
 
-bool Dataset::contains(const Quad &quad) const {
-    return dataset_storage.contains(quad.to_node_storage(backend().node_storage()));
+bool Dataset::contains(Quad const &quad) const noexcept {
+    auto const g = quad.graph().try_get_in_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(g));
+    if (it == graphs_.end()) {
+        return false;
+    }
+
+    return it->second.contains(Statement{quad.subject(), quad.predicate(), quad.object()});
 }
 
-query::SolutionSequence Dataset::match(const query::QuadPattern &quad_pattern) const {
-    return dataset_storage.match(quad_pattern.to_node_storage(backend().node_storage()));
+Dataset::solution_sequence Dataset::match(query::QuadPattern const &pat) const noexcept {
+    return solution_sequence{solution_iterator{this, pat, graphs_.begin(), graphs_.end()}};
 }
 
-size_t Dataset::size() const {
-    return dataset_storage.size();
+size_t Dataset::size() const noexcept {
+    return std::accumulate(graphs_.begin(), graphs_.end(), 0ul, [](auto acc, auto const &pair) noexcept {
+        return acc + pair.second.size();
+    });
 }
 
-size_t Dataset::size(const IRI &graph_name) const {
-    return dataset_storage.size(static_cast<IRI>(graph_name.to_node_storage(backend().node_storage())));
+size_t Dataset::size(IRI const &graph_name_) const noexcept {
+    auto const graph_name = graph_name_.try_get_in_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(graph_name));
+    if (it == graphs_.end()) {
+        return 0;
+    }
+
+    return it->second.size();
 }
 
-Graph Dataset::graph(const IRI &graph_name) {
-    return {dataset_storage, graph_name};
+Graph *Dataset::graph(Node const &graph_) {
+    auto const graph = graph_.try_get_in_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(graph));
+    if (it == graphs_.end()) {
+        return nullptr;
+    }
+
+    return &it.value();
 }
 
-Graph Dataset::graph() {
-    return {dataset_storage, IRI::default_graph(backend().node_storage())};
+Graph *Dataset::graph() {
+    return graph(IRI::default_graph(node_storage_));
 }
 
-Dataset::iterator Dataset::begin() const {
-    return dataset_storage.begin();
+Graph const *Dataset::graph(Node const &graph_) const {
+    auto const graph = graph_.try_get_in_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(graph));
+    if (it == graphs_.end()) {
+        return nullptr;
+    }
+
+    return &it.value();
 }
 
-Dataset::iterator Dataset::end() const {
-    return dataset_storage.end();
+Graph const *Dataset::graph() const {
+    return graph(IRI::default_graph(node_storage_));
 }
 
-Dataset::DatasetStorage &Dataset::backend() {
-    return dataset_storage;
+Dataset::iterator Dataset::begin() const noexcept {
+    return iterator{this, graphs_.begin(), graphs_.end()};
 }
 
-const Dataset::DatasetStorage &Dataset::backend() const {
-    return dataset_storage;
+Dataset::sentinel Dataset::end() const noexcept {
+    return sentinel{};
 }
 
 bool Dataset::serialize(writer::BufWriterParts const writer) const noexcept {
@@ -90,6 +135,113 @@ std::ostream &operator<<(std::ostream &os, Dataset const &ds) {
     ds.serialize(w);
     w.finalize();
     return os;
+}
+
+Dataset::iterator::iterator(Dataset const *parent,
+                            typename storage_type::const_iterator gbeg,
+                            typename storage_type::const_iterator gend) noexcept : parent_{parent}, giter_{gbeg}, gend_{gend} {
+    while (giter_ != gend_) {
+        iter_ = giter_->second.begin();
+        if (iter_ != std::default_sentinel) {
+            cur_ = Quad{parent_->to_node(giter_->first), iter_->subject(), iter_->predicate(), iter_->object()};
+            return;
+        }
+
+        ++giter_;
+    }
+}
+
+Dataset::iterator &Dataset::iterator::operator++() noexcept {
+    ++iter_;
+    while (iter_ == std::default_sentinel) {
+        ++giter_;
+        if (giter_ == gend_) {
+            return *this;
+        }
+
+        iter_ = giter_->second.begin();
+    }
+
+    cur_ = Quad{parent_->to_node(giter_->first), iter_->subject(), iter_->predicate(), iter_->object()};
+    return *this;
+}
+
+Dataset::iterator::reference Dataset::iterator::operator*() const noexcept {
+    return cur_;
+}
+
+Dataset::iterator::pointer Dataset::iterator::operator->() const noexcept {
+    return &cur_;
+}
+
+bool Dataset::iterator::operator==(Dataset::sentinel) const noexcept {
+    return giter_ == gend_;
+}
+
+bool Dataset::iterator::operator!=(Dataset::sentinel) const noexcept {
+    return !(*this == Dataset::sentinel{});
+}
+
+void Dataset::solution_iterator::fill_solution() noexcept {
+    if (iter_ != std::default_sentinel) {
+        if (pat_.graph().is_variable()) {
+            cur_[0] = parent_->to_node(giter_->first);
+            std::copy(iter_->begin(), iter_->end(), std::next(cur_.begin()));
+        } else {
+            std::copy(iter_->begin(), iter_->end(), cur_.begin());
+        }
+    }
+}
+
+Dataset::solution_iterator::solution_iterator(Dataset const *parent,
+                                              query::QuadPattern const &pat,
+                                              typename storage_type::const_iterator beg,
+                                              typename storage_type::const_iterator end) noexcept : parent_{parent}, pat_{pat}, giter_{beg}, gend_{end}, cur_{pat} {
+    if (giter_ != gend_) {
+        auto const tpat = query::TriplePattern{pat_.subject(), pat_.predicate(), pat_.object()};
+
+        if (pat_.graph().is_variable()) {
+            iter_ = giter_->second.match(tpat).begin();
+        } else if (auto const *g = parent_->graph(pat_.graph()); g != nullptr) {
+            iter_ = g->match(tpat).begin();
+        }
+    }
+
+    fill_solution();
+}
+
+Dataset::solution_iterator &Dataset::solution_iterator::operator++() noexcept {
+    ++iter_;
+
+    if (pat_.graph().is_variable()) {
+        while (iter_ == std::default_sentinel) {
+            ++giter_;
+            if (giter_ == gend_) {
+                return *this;
+            }
+
+            iter_ = giter_->second.match(query::TriplePattern{pat_.subject(), pat_.predicate(), pat_.object()}).begin();
+        }
+    }
+
+    fill_solution();
+    return *this;
+}
+
+Dataset::solution_iterator::reference Dataset::solution_iterator::operator*() const noexcept {
+    return cur_;
+}
+
+Dataset::solution_iterator::pointer Dataset::solution_iterator::operator->() const noexcept {
+    return &cur_;
+}
+
+bool Dataset::solution_iterator::operator==(Dataset::sentinel) const noexcept {
+    return iter_ == Dataset::sentinel{};
+}
+
+bool Dataset::solution_iterator::operator!=(Dataset::sentinel) const noexcept {
+    return !(*this == Dataset::sentinel{});
 }
 
 }  // namespace rdf4cpp::rdf

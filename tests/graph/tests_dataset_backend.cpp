@@ -3,11 +3,10 @@
 
 #include <rdf4cpp/rdf.hpp>
 
-using namespace rdf4cpp::rdf::storage::tuple;
 using namespace rdf4cpp::rdf;
 
 TEST_CASE("base functions") {
-    DefaultDatasetBackend set{};
+    Dataset set{};
     CHECK((set.begin() == set.end()));
     set.add(Quad{IRI{"www.example.com/sub"}, IRI{"www.example.com/pred"}, IRI{"www.example.com/obj"}});
     set.add(Quad{IRI{"www.example.com/graph"}, IRI{"www.example.com/sub"}, IRI{"www.example.com/pred"}, Literal::make_simple("some string")});

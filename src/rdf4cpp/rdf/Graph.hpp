@@ -3,9 +3,12 @@
 
 #include <rdf4cpp/rdf/Statement.hpp>
 #include <rdf4cpp/rdf/query/TriplePattern.hpp>
+#include <rdf4cpp/rdf/query/Solution.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
+#include <rdf4cpp/rdf/writer/SerializationState.hpp>
 
 #include <dice/sparse-map/sparse_set.hpp>
+
 
 namespace rdf4cpp::rdf {
 
@@ -20,17 +23,11 @@ struct Graph {
     using const_pointer = pointer;
 
 private:
-    struct triple {
-        storage::node::identifier::NodeBackendID subject;
-        storage::node::identifier::NodeBackendID predicate;
-        storage::node::identifier::NodeBackendID object;
-
-        bool operator==(triple const &) const noexcept = default;
-    };
+    using triple = std::array<storage::node::identifier::NodeBackendID, 3>;
 
     struct triple_hash {
         size_t operator()(triple const &trip) const noexcept {
-            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::make_tuple(trip.subject, trip.predicate, trip.object));
+            return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(trip);
         }
     };
 
@@ -43,18 +40,21 @@ public:
         using iterator_category = std::input_iterator_tag;
         using value_type = Statement;
         using difference_type = ptrdiff_t;
-        using pointer = Statement const *;
-        using reference = Statement const &;
+        using pointer = value_type const *;
+        using reference = value_type const &;
 
     private:
-        typename triple_storage_type::const_iterator iter_;
-        typename triple_storage_type::const_iterator end_;
         Graph const *parent_;
+        typename triple_storage_type::const_iterator iter_{};
+        typename triple_storage_type::const_iterator end_{};
 
         Statement cur_;
 
+        Statement to_statement(triple const &t) const noexcept;
+
     public:
-        iterator(typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end, Graph const *parent) noexcept;
+        iterator() noexcept = default;
+        iterator(Graph const *parent, typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end) noexcept;
 
         iterator &operator++() noexcept;
         reference operator*() const noexcept;
@@ -68,26 +68,22 @@ public:
 
     struct solution_iterator {
         using iterator_category = std::input_iterator_tag;
-        using value_type = Statement;
+        using value_type = query::Solution;
         using difference_type = ptrdiff_t;
-        using pointer = Statement const *;
-        using reference = Statement const &;
+        using pointer = value_type const *;
+        using reference = value_type const &;
 
     private:
-        typename triple_storage_type::const_iterator iter_;
-        typename triple_storage_type::const_iterator end_;
-        Graph const *parent_;
-
+        typename Graph::iterator iter_;
         query::TriplePattern pat_;
-        Statement cur_;
+        value_type cur_;
 
         bool check_solution() noexcept;
         void forward_to_solution() noexcept;
 
     public:
-        solution_iterator(typename triple_storage_type::const_iterator beg,
-                          typename triple_storage_type::const_iterator end,
-                          Graph const *parent,
+        solution_iterator() noexcept = default;
+        solution_iterator(typename Graph::iterator beg,
                           query::TriplePattern const &pat) noexcept;
 
         solution_iterator &operator++() noexcept;
@@ -100,15 +96,15 @@ public:
 
     struct solution_sequence {
         using value_type = Statement;
-        using allocator_type = std::allocator<Statement>;
         using size_type = size_t;
         using difference_type = ptrdiff_t;
-        using reference = Statement const &;
+        using reference = value_type const &;
         using const_reference = reference;
-        using pointer = Statement const *;
+        using pointer = value_type const *;
         using const_pointer = pointer;
         using iterator = solution_iterator;
         using const_iterator = solution_iterator;
+        using sentinel = sentinel;
 
     private:
         iterator beg_;
@@ -121,7 +117,7 @@ public:
             return beg_;
         }
 
-        [[nodiscard]] sentinel end() const noexcept {
+        [[nodiscard]] static sentinel end() noexcept {
             return sentinel{};
         }
     };

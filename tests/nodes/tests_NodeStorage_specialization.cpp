@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 template<typename It>
 void print_handles(It begin, It const end) {
     for (; begin != end; ++begin) {
-        std::cout << begin->id_to_underlying() << " ";
+        std::cout << begin->id().to_underlying() << " ";
     }
     std::cout << '\n';
 }

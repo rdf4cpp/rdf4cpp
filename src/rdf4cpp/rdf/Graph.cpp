@@ -20,7 +20,7 @@ Graph::Graph(storage::node::DynNodeStorage node_storage) noexcept : node_storage
 
 void Graph::add(Statement const &stmt_) {
     auto stmt = stmt_.to_node_storage(node_storage_);
-    triples_.emplace(to_node_id(stmt.subject()), to_node_id(stmt.predicate()), to_node_id(stmt.object()));
+    triples_.insert(triple{to_node_id(stmt.subject()), to_node_id(stmt.predicate()), to_node_id(stmt.object())});
 }
 
 bool Graph::contains(Statement const &stmt_) const noexcept {
@@ -29,7 +29,7 @@ bool Graph::contains(Statement const &stmt_) const noexcept {
 }
 
 Graph::iterator Graph::begin() const noexcept {
-    return iterator{triples_.begin(), triples_.end(), this};
+    return iterator{this, triples_.begin(), triples_.end()};
 }
 
 Graph::sentinel Graph::end() const noexcept {
@@ -37,7 +37,7 @@ Graph::sentinel Graph::end() const noexcept {
 }
 
 Graph::solution_sequence Graph::match(query::TriplePattern const &triple_pattern) const noexcept {
-    return solution_sequence{solution_iterator{triples_.begin(), triples_.end(), this, triple_pattern}};
+    return solution_sequence{solution_iterator{begin(), triple_pattern}};
 }
 
 size_t Graph::size() const noexcept {
@@ -86,18 +86,22 @@ std::ostream &operator<<(std::ostream &os, Graph const &graph) {
     return os;
 }
 
-Graph::iterator::iterator(typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end, Graph const *parent) noexcept : iter_{beg},
-                                                                                                                                                              end_{end},
-                                                                                                                                                              parent_{parent} {
+Statement Graph::iterator::to_statement(rdf4cpp::rdf::Graph::triple const &t) const noexcept {
+    return Statement{parent_->to_node(t[0]), parent_->to_node(t[1]), parent_->to_node(t[2])};
+}
+
+Graph::iterator::iterator(Graph const *parent, typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end) noexcept : parent_{parent},
+                                                                                                                                                              iter_{beg},
+                                                                                                                                                              end_{end} {
     if (iter_ != end_) {
-        cur_ = Statement{parent_->to_node(iter_->subject), parent_->to_node(iter_->predicate), parent_->to_node(iter_->object)};
+        cur_ = to_statement(*iter_);
     }
 }
 
 Graph::iterator &Graph::iterator::operator++() noexcept {
     ++iter_;
     if (iter_ != end_) {
-        cur_ = Statement{parent_->to_node(iter_->subject), parent_->to_node(iter_->predicate), parent_->to_node(iter_->object)};
+        cur_ = to_statement(*iter_);
     }
 
     return *this;
@@ -123,14 +127,11 @@ bool Graph::solution_iterator::check_solution() noexcept {
     auto pat_it = pat_.begin();
     auto out_it = cur_.begin();
 
-    Statement const stmt{parent_->to_node(iter_->subject),
-                         parent_->to_node(iter_->predicate),
-                         parent_->to_node(iter_->object)};
-
-    for (auto const x : stmt) {
-        if (pat_it->is_variable() || *pat_it == x) {
-            *out_it = x;
-        } else {
+    for (auto const x : *iter_) {
+        if (pat_it->is_variable()) {
+            out_it->second = x;
+            ++out_it;
+        } else if (*pat_it != x) {
             return false;
         }
 
@@ -141,23 +142,22 @@ bool Graph::solution_iterator::check_solution() noexcept {
 }
 
 void Graph::solution_iterator::forward_to_solution() noexcept {
-    while (iter_ != end_) {
-        if (check_solution()) {
-            return;
-        }
-
+    while (iter_ != std::default_sentinel && !check_solution()) {
         ++iter_;
     }
 }
 
-Graph::solution_iterator::solution_iterator(typename triple_storage_type::const_iterator beg, typename triple_storage_type::const_iterator end, Graph const *parent, query::TriplePattern const &pat) noexcept
-    : iter_{beg}, end_{end}, parent_{parent}, pat_{pat} {
+Graph::solution_iterator::solution_iterator(typename Graph::iterator beg,
+                                            query::TriplePattern const &pat) noexcept : iter_{beg},
+                                                                                        pat_{pat},
+                                                                                        cur_{pat} {
     forward_to_solution();
 }
 
 Graph::solution_iterator &Graph::solution_iterator::operator++() noexcept {
     ++iter_;
     forward_to_solution();
+    return *this;
 }
 
 Graph::solution_iterator::reference Graph::solution_iterator::operator*() const noexcept {
@@ -169,11 +169,11 @@ Graph::solution_iterator::pointer Graph::solution_iterator::operator->() const n
 }
 
 bool Graph::solution_iterator::operator==(Graph::sentinel) const noexcept {
-    return iter_ == end_;
+    return iter_ == Graph::sentinel{};
 }
 
 bool Graph::solution_iterator::operator!=(Graph::sentinel) const noexcept {
-    return !(*this == Graph::sentinel{});
+    return iter_ != Graph::sentinel{};
 }
 
 }  // namespace rdf4cpp::rdf

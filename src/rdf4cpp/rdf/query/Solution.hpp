@@ -1,48 +1,53 @@
 #ifndef RDF4CPP_SOLUTION_HPP
 #define RDF4CPP_SOLUTION_HPP
 
-
-#include <rdf4cpp/rdf/Quad.hpp>
 #include <rdf4cpp/rdf/query/QuadPattern.hpp>
+#include <rdf4cpp/rdf/query/TriplePattern.hpp>
 
 namespace rdf4cpp::rdf::query {
 
-class SolutionSequence;
-
-class Solution {
-    using Entries_t = std::vector<std::pair<Variable, Node>>;
-
-    std::vector<std::pair<Variable, Node>> partial_mapping;
-    friend class SolutionSequence;
-
-    static std::vector<Variable> extract_variables(const QuadPattern &quad);
+struct Solution {
+private:
+    using storage_type = std::vector<std::pair<Variable, Node>>;
 
 public:
-    Solution() = default;
+    using value_type = std::pair<Variable, Node>;
+    using reference = value_type &;
+    using const_reference = value_type const &;
+    using pointer = value_type *;
+    using const_pointer = value_type const *;
+    using iterator = typename storage_type::iterator;
+    using const_iterator = typename storage_type::const_iterator;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
 
-    explicit Solution(const std::vector<Variable> &variables);
-    explicit Solution(const QuadPattern &quad_pattern);
+private:
+    storage_type partial_mapping;
 
-    Node operator[](const Variable &variable) const;
+    template<typename Pat>
+    static std::vector<Variable> extract_variables(Pat const &pat);
 
-    const Node &operator[](size_t pos) const;
-    Node &operator[](size_t pos);
+public:
+    Solution() noexcept = default;
 
-    [[nodiscard]] const Variable &variable(size_t pos) const;
+    explicit Solution(std::vector<Variable> const &variables);
+    explicit Solution(QuadPattern const &qp);
+    explicit Solution(TriplePattern const &tp);
 
-    [[nodiscard]] size_t variable_count() const;
+    Node operator[](Variable const &variable) const noexcept;
 
-    [[nodiscard]] size_t bound_count() const;
+    Node const &operator[](size_t pos) const noexcept;
+    Node &operator[](size_t pos) noexcept;
 
-    typedef typename Entries_t::const_iterator const_iterator;
-    typedef const_iterator iterator;
-    typedef typename Entries_t::const_reverse_iterator const_reverse_iterator;
-    typedef const_reverse_iterator reverse_iterator;
+    [[nodiscard]] Variable const &variable(size_t pos) const noexcept;
 
-    [[nodiscard]] const_iterator begin() const;
-    [[nodiscard]] const_iterator end() const;
-    [[nodiscard]] const_reverse_iterator rbegin() const;
-    [[nodiscard]] const_reverse_iterator rend() const;
+    [[nodiscard]] size_t variable_count() const noexcept;
+    [[nodiscard]] size_t bound_count() const noexcept;
+
+    [[nodiscard]] iterator begin() noexcept;
+    [[nodiscard]] iterator end() noexcept;
+    [[nodiscard]] const_iterator begin() const noexcept;
+    [[nodiscard]] const_iterator end() const noexcept;
 };
 }  // namespace rdf4cpp::rdf::query
 
