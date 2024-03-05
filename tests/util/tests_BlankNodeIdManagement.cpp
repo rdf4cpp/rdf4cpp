@@ -5,8 +5,8 @@
 
 #include <tuple>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::bnode_mngt;
+using namespace rdf4cpp;
+using namespace rdf4cpp::bnode_mngt;
 
 TEST_SUITE("blank node id management") {
     TEST_CASE("blank node id generation") {

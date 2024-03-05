@@ -5,7 +5,7 @@
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -51,10 +51,10 @@ extern template struct LiteralDatatypeImpl<xsd_double,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Double : registry::LiteralDatatypeImpl<registry::xsd_double,
                                               registry::capabilities::Logical,
@@ -63,13 +63,13 @@ struct Double : registry::LiteralDatatypeImpl<registry::xsd_double,
                                               registry::capabilities::FixedId,
                                               registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Double const xsd_double_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_DOUBLE_HPP

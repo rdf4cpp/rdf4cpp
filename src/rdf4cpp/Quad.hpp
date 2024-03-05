@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/query/QuadPattern.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 namespace writer {
 struct SerializationState;
 }
@@ -65,11 +65,11 @@ public:
     bool serialize_turtle(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
     bool serialize_trig(writer::SerializationState &state, writer::BufWriterParts writer) const noexcept;
 };
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::Quad> {
-    static inline size_t dice_hash(rdf4cpp::rdf::Quad const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::Quad> {
+    static inline size_t dice_hash(rdf4cpp::Quad const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(x.graph(), x.subject(), x.predicate(), x.object()));
     }
 };

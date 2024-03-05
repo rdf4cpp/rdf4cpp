@@ -10,7 +10,7 @@
 #include <memory>
 #include <shared_mutex>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 struct ReferenceNodeScope : INodeScope {
 private:
@@ -65,6 +65,6 @@ public:
     void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) override;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_SCOPE_REFERENCESCOPEBASE_HPP

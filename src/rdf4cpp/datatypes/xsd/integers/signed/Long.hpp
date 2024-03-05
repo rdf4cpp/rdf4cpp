@@ -8,7 +8,7 @@
 
 #include <cstdint>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -48,10 +48,10 @@ extern template struct LiteralDatatypeImpl<xsd_long,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Long : registry::LiteralDatatypeImpl<registry::xsd_long,
                                             registry::capabilities::Logical,
@@ -61,13 +61,13 @@ struct Long : registry::LiteralDatatypeImpl<registry::xsd_long,
                                             registry::capabilities::FixedId,
                                             registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Long const xsd_long_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_LONG_HPP

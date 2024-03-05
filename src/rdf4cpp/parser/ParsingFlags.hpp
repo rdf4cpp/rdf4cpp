@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 /**
  * Note that the syntax flags are mutually exclusive.
@@ -80,6 +80,6 @@ constexpr ParsingFlags operator|(ParsingFlag const f1, ParsingFlag const f2) noe
     return ParsingFlags::none() | f1 | f2;
 }
 
-} // namespace rdf4cpp::rdf::parser
+} // namespace rdf4cpp::parser
 
 #endif  //RDF4CPP_PARSER_PARSINGFLAGS_HPP

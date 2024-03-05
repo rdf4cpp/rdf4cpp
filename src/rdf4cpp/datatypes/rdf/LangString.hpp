@@ -11,7 +11,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 struct LangStringRepr {
     std::string_view lexical_form;
     std::string_view language_tag;
@@ -58,35 +58,35 @@ extern template struct LiteralDatatypeImpl<rdf_lang_string,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::rdf {
+namespace rdf4cpp::datatypes::rdf {
 
 struct LangString : registry::LiteralDatatypeImpl<registry::rdf_lang_string,
                                                   registry::capabilities::Comparable,
                                                   registry::capabilities::FixedId,
                                                   registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::rdf
+}  // namespace rdf4cpp::datatypes::rdf
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline rdf::LangString const rdf_lang_string_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
-    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::datatypes::registry::LangStringRepr> {
+    static size_t dice_hash(rdf4cpp::datatypes::registry::LangStringRepr const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(x.lexical_form, x.language_tag));
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::datatypes::registry::LangStringRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::LangStringRepr const &x) const noexcept {
+struct std::hash<rdf4cpp::datatypes::registry::LangStringRepr> {
+    size_t operator()(rdf4cpp::datatypes::registry::LangStringRepr const &x) const noexcept {
         return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(x);
     }
 };

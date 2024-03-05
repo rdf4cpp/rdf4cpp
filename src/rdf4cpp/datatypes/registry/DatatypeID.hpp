@@ -15,7 +15,7 @@
 
 #include <rdf4cpp/storage/identifier/LiteralType.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 /**
  * A helper struct to visit all variants of either DatatypeID or DatatypeIDView
@@ -170,6 +170,6 @@ public:
     }
 };
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
 #endif  //RDF4CPP_REGISTRY_DATATYPEIRI_HPP

@@ -3,7 +3,7 @@
 
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_SUITE("owl:rational") {
     TEST_CASE("capabilities") {

@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -72,4 +72,4 @@ template struct LiteralDatatypeImpl<xsd_positive_integer,
                                     capabilities::FixedId,
                                     capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

@@ -4,7 +4,7 @@
 #include <fstream>
 
 int main(int argc, char *argv[]) {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
     Graph g;
 
     Dataset dataset = g.dataset();

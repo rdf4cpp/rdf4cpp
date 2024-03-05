@@ -5,7 +5,7 @@
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -36,23 +36,23 @@ extern template struct LiteralDatatypeImpl<xsd_string,
                                            capabilities::Comparable,
                                            capabilities::FixedId>;
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct String : registry::LiteralDatatypeImpl<registry::xsd_string,
                                               registry::capabilities::Logical,
                                               registry::capabilities::Comparable,
                                               registry::capabilities::FixedId> {};
 
-} // namespace rdf4cpp::rdf::datatypes::xsd
+} // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::String const xsd_string_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_STRING_HPP

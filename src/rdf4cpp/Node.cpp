@@ -7,7 +7,7 @@
 #include <rdf4cpp/query/Variable.hpp>
 
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 Node::Node(Node::NodeBackendHandle id) noexcept : handle_(id) {}
 
@@ -242,4 +242,4 @@ Literal Node::as_ebv(DynNodeStorage node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

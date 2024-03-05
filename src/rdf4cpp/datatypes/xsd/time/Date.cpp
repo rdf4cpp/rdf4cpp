@@ -2,15 +2,15 @@
 
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_string(std::string_view s) {
-    using namespace rdf::datatypes::registry::util;
+    using namespace datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
-    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
     if (registry::relaxed_parsing_mode && !date.ok())
@@ -52,8 +52,8 @@ capabilities::Inlineable<xsd_date>::cpp_type capabilities::Inlineable<xsd_date>:
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month} / std::chrono::day{i.day}, std::nullopt);
 }
 
-rdf::util::TimePoint date_to_tp(std::chrono::year_month_day d) noexcept {
-    return rdf::util::construct(d, rdf::util::TimePointReplacementTimeOfDay);
+    rdf4cpp::util::TimePoint date_to_tp(std::chrono::year_month_day d) noexcept {
+    return rdf4cpp::util::construct(d, rdf4cpp::util::TimePointReplacementTimeOfDay);
 }
 
 template<>
@@ -70,7 +70,7 @@ nonstd::expected<capabilities::Subtype<xsd_date>::cpp_type, DynamicError> capabi
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_date>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return rdf::datatypes::registry::util::compare_time_points(date_to_tp(lhs.first), lhs.second, date_to_tp(rhs.first), rhs.second);
+    return rdf4cpp::datatypes::registry::util::compare_time_points(date_to_tp(lhs.first), lhs.second, date_to_tp(rhs.first), rhs.second);
 }
 #endif
 
@@ -79,4 +79,4 @@ template struct LiteralDatatypeImpl<xsd_date,
                                     capabilities::FixedId,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

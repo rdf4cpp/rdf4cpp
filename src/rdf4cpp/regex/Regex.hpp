@@ -8,7 +8,7 @@
 #include <rdf4cpp/regex/RegexFlags.hpp>
 #include <rdf4cpp/regex/RegexReplacer.hpp>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 struct Regex {
     using value_type = char;
@@ -89,6 +89,6 @@ public:
     [[nodiscard]] replacer_type make_replacer(std::string_view rewrite) const;
 };
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex
 
 #endif  //RDF4CPP_RDF_REGEX_REGEX_HPP

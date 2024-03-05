@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/Namespace.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 /**
  * A ClosedNamespace can not be extended to more IRIs after construction.
@@ -41,6 +41,6 @@ struct ClosedNamespace : Namespace {
     void clear() const override;
 };
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 #endif  //RDF4CPP_CLOSEDNAMESPACE_HPP

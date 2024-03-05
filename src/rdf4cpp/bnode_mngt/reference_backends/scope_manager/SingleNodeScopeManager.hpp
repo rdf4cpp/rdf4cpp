@@ -4,7 +4,7 @@
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 #include <rdf4cpp/bnode_mngt/INodeScopeManager.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 /**
  * A scope manager that always gives you the same scope.
@@ -20,6 +20,6 @@ struct SingleNodeScopeManager : INodeScopeManager {
     }
 };
 
-} // namespace rdf4cpp::rdf::bnode_mngt
+} // namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_SINGLESCOPEMANAGER_HPP

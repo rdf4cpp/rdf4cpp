@@ -2,7 +2,7 @@
 
 #include <rdf4cpp/writer/TryWrite.hpp>
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 Variable::Variable() noexcept : Node(NodeBackendHandle{{}, storage::identifier::RDFNodeType::Variable, {}}) {}
 Variable::Variable(std::string_view name, bool anonymous, DynNodeStorage node_storage)
     : Node{NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
@@ -95,4 +95,4 @@ std::ostream &operator<<(std::ostream &os, Variable const &variable) {
     return os;
 }
 
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query

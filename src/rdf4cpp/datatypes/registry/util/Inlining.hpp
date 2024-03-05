@@ -6,7 +6,7 @@
 #include <cassert>
 #include <cstddef>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::datatypes::registry::util {
 
 namespace packing_detail {
 
@@ -183,6 +183,6 @@ constexpr T unpack_integral(P packed_value) noexcept {
     return unpack_integral<T, P::width>(packed_value);
 }
 
-} // namespace rdf4cpp::rdf::datatypes::registry::util
+} // namespace rdf4cpp::datatypes::registry::util
 
 #endif  //RDF4CPP_REGISTRY_UTIL_INLINING_HPP

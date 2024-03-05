@@ -4,7 +4,7 @@
 #include <dice/sparse-map/sparse_set.hpp>
 #include "IndexFreeList.hpp"
 
-namespace rdf4cpp::rdf::storage::reference_node_storage::detail {
+namespace rdf4cpp::storage::reference_node_storage::detail {
 
 /**
  * A bidirectional map from Id to Value
@@ -258,6 +258,6 @@ public:
     }
 };
 
-} // namespace rdf4cpp::rdf::storage::reference_node_storage::detail
+} // namespace rdf4cpp::storage::reference_node_storage::detail
 
 #endif // RDF4CPP_RDF_REFERENCENODESTORAGE_BIDIRFLATMAP_HPP

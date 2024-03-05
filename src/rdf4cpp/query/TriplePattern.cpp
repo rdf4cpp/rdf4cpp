@@ -1,6 +1,6 @@
 #include "TriplePattern.hpp"
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 TriplePattern::operator std::string() const {
     return static_cast<std::string>(subject()) + " " + static_cast<std::string>(predicate()) + " " + static_cast<std::string>(object()) + " . ";
 }
@@ -37,4 +37,4 @@ TriplePattern TriplePattern::to_node_storage(storage::DynNodeStorage node_storag
 
     return tp;
 }
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query

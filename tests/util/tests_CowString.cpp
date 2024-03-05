@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf::util;
+using namespace rdf4cpp::util;
 
 TEST_SUITE("CowString") {
     TEST_CASE("borrowed") {

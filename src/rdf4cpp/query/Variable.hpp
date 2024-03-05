@@ -4,7 +4,7 @@
 #include <ostream>
 #include <rdf4cpp/Node.hpp>
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 class Variable : public Node {
 protected:
     explicit Variable(Node::NodeBackendHandle handle) noexcept;
@@ -65,12 +65,12 @@ public:
     // todo unbound()
 };
 
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query
 
 template<>
-struct std::hash<rdf4cpp::rdf::query::Variable> {
-    inline size_t operator()(rdf4cpp::rdf::query::Variable const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::Node>()(v);
+struct std::hash<rdf4cpp::query::Variable> {
+    inline size_t operator()(rdf4cpp::query::Variable const &v) const noexcept {
+        return std::hash<rdf4cpp::Node>()(v);
     }
 };
 

@@ -2,13 +2,13 @@
 
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
-    auto tz = rdf::util::Timezone::parse_optional(s);
-    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s); //TODO buffer overread
+    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
+    auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s);
     return std::make_pair(year, tz);
 }
 
@@ -23,8 +23,8 @@ bool capabilities::Default<xsd_gYear>::serialize_canonical_string(cpp_type const
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYear>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    auto year_to_tp = [](std::chrono::year t) noexcept -> rdf::util::TimePoint {
-        return rdf::util::construct(t / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), rdf::util::TimePointReplacementTimeOfDay);
+    auto year_to_tp = [](std::chrono::year t) noexcept -> rdf4cpp::util::TimePoint {
+        return rdf4cpp::util::construct(t / rdf4cpp::util::TimePointReplacementDate.month() / rdf4cpp::util::TimePointReplacementDate.day(), rdf4cpp::util::TimePointReplacementTimeOfDay);
     };
     return registry::util::compare_time_points(year_to_tp(lhs.first), lhs.second, year_to_tp(rhs.first), rhs.second);
 }
@@ -48,7 +48,7 @@ capabilities::Inlineable<xsd_gYear>::cpp_type capabilities::Inlineable<xsd_gYear
 template<>
 template<>
 capabilities::Subtype<xsd_gYear>::super_cpp_type<0> capabilities::Subtype<xsd_gYear>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(value.first / rdf::util::TimePointReplacementDate.month() / rdf::util::TimePointReplacementDate.day(), value.second);
+    return std::make_pair(value.first / rdf4cpp::util::TimePointReplacementDate.month() / rdf4cpp::util::TimePointReplacementDate.day(), value.second);
 }
 
 template<>

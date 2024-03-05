@@ -6,14 +6,14 @@
 
 
 int main(int argc, char *argv[]) {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
     using namespace parser;
     if (argc != 2) {
         std::cerr << "usage: pass file to be checked as only parameter, found errors are written to stdout";
         return 1;
     }
 
-    rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode = true;
+    rdf4cpp::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
     auto nst = storage::NodeStorage::new_instance();

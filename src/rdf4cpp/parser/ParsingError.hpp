@@ -5,7 +5,7 @@
 #include <ostream>
 #include <string>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 /**
  * An error that might occur while parsing a turtle file
@@ -27,15 +27,15 @@ struct ParsingError {
     std::string message;
 };
 
-} // namespace rdf4cpp::rdf::parser
+} // namespace rdf4cpp::parser
 
 namespace std {
 
 template<>
-struct formatter<::rdf4cpp::rdf::parser::ParsingError::Type> : formatter<string_view> {
+struct formatter<::rdf4cpp::parser::ParsingError::Type> : formatter<string_view> {
     template<typename FmtCtx>
-    auto format(::rdf4cpp::rdf::parser::ParsingError::Type const &err, FmtCtx &ctx) const {
-        using ::rdf4cpp::rdf::parser::ParsingError;
+    auto format(::rdf4cpp::parser::ParsingError::Type const &err, FmtCtx &ctx) const {
+        using ::rdf4cpp::parser::ParsingError;
         switch (err) {
             case ParsingError::Type::Internal:
                 return format_to(ctx.out(), "internal error");
@@ -58,16 +58,16 @@ struct formatter<::rdf4cpp::rdf::parser::ParsingError::Type> : formatter<string_
 };
 
 template<>
-struct formatter<::rdf4cpp::rdf::parser::ParsingError> : formatter<string_view> {
+struct formatter<::rdf4cpp::parser::ParsingError> : formatter<string_view> {
     template<typename FmtCtx>
-    auto format(::rdf4cpp::rdf::parser::ParsingError const &err, FmtCtx &ctx) const {
+    auto format(::rdf4cpp::parser::ParsingError const &err, FmtCtx &ctx) const {
         return format_to(ctx.out(), "{}:{}({}): {}", err.line, err.col, err.error_type, err.message);
     }
 };
 
 } // namespace std
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 inline std::ostream &operator<<(std::ostream &os, ParsingError::Type const &error_type) {
     std::format_to(std::ostreambuf_iterator<char>{os}, "{}", error_type);
@@ -79,6 +79,6 @@ inline std::ostream &operator<<(std::ostream &os, ParsingError const &error) {
     return os;
 }
 
-} // namespace rdf4cpp::rdf::parser
+} // namespace rdf4cpp::parser
 
 #endif  //RDF4CPP_PARSER_PARSINGERROR_HPP

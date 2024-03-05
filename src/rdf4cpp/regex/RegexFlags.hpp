@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 enum struct RegexFlag : uint8_t {
     DotAll = 1 << 0,
@@ -57,6 +57,6 @@ constexpr RegexFlags operator|(RegexFlag const f1, RegexFlag const f2) noexcept 
     return RegexFlags::none() | f1 | f2;
 }
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex
 
 #endif  //RDF4CPP_RDF_REGEX_REGEXFLAGS_HPP

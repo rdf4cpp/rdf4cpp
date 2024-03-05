@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/ClosedNamespace.hpp>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 /**
  * A ClosedNamespace for http://id.loc.gov/ontologies/bflc/ version http://id.loc.gov/ontologies/bflc-1-2-0/
@@ -23,6 +23,6 @@ struct BFLC : ClosedNamespace {
     }
 };
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces
 
 #endif  //RDF4CPP_BFLC_HPP

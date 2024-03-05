@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
 
     Namespace ex("http://example.com/");
 

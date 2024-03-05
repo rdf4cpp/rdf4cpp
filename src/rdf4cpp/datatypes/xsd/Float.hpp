@@ -6,7 +6,7 @@
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/Double.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -58,10 +58,10 @@ extern template struct LiteralDatatypeImpl<xsd_float,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
                                              registry::capabilities::Logical,
@@ -71,13 +71,13 @@ struct Float : registry::LiteralDatatypeImpl<registry::xsd_float,
                                              registry::capabilities::FixedId,
                                              registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Float const xsd_float_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_FLOAT_HPP

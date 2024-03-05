@@ -4,7 +4,7 @@
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
 
-namespace rdf4cpp::rdf::writer {
+namespace rdf4cpp::writer {
 
 struct TypeIRIPrefix {
     std::string_view prefix;
@@ -67,6 +67,6 @@ static bool write_fixed_type_iri(datatypes::registry::LiteralType t, writer::Buf
     return write_str(">", writer);
 }
 
-} // namespace rdf4cpp::rdf::writer
+} // namespace rdf4cpp::writer
 
 #endif // RDF4CPP_PRIVATE_PREFIXES_HPP

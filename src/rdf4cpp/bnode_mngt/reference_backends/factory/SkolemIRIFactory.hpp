@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 /**
  * A factory that created Skolem IRIs.
@@ -23,6 +23,6 @@ public:
                                                                    storage::DynNodeStorage node_storage) noexcept override;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_FACTORY_IRINODEFACTORY_HPP

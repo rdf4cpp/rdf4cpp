@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_CHECKEDINT_HPP
 #define RDF4CPP_CHECKEDINT_HPP
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 /**
  * Wraps an integer type and keeps track of Overflows and similar Undefined Behavior.
  * Designed to be used in std::chrono::duration, but may be used standalone.
@@ -91,6 +91,6 @@ public:
     }
 };
 
-}  // namespace rdf4cpp::rdf::util
+}  // namespace rdf4cpp::util
 
 #endif  //RDF4CPP_CHECKEDINT_HPP

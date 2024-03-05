@@ -1,6 +1,6 @@
 #include <rdf4cpp/bnode_mngt/NodeGenerator.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 NodeGenerator::NodeGenerator(std::unique_ptr<IIdGenerator> &&generator, std::unique_ptr<INodeFactory> &&factory) noexcept : generator{std::move(generator)},
                                                                                                                             factory{std::move(factory)} {
@@ -37,4 +37,4 @@ Node NodeGenerator::generate_node(storage::DynNodeStorage node_storage) {
     return generate_node_impl(nullptr, node_storage);
 }
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt

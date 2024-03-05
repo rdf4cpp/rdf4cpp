@@ -4,7 +4,7 @@
 #include <rdf4cpp/storage/identifier/NodeID.hpp>
 #include <rdf4cpp/storage/view/LiteralBackendView.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 template<datatypes::FixedIdLiteralDatatype T>
 struct SpecializedLiteralBackend {
@@ -65,6 +65,6 @@ struct SpecializedLiteralBackend {
     };
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_RDF_STORAGE_REFERENCENODESTORAGE_SPECIALIZEDLITERALBACKEND_HPP

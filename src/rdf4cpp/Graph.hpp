@@ -10,7 +10,7 @@
 #include <dice/sparse-map/sparse_set.hpp>
 
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 struct Graph {
     using value_type = Statement;
@@ -178,6 +178,6 @@ public:
     // TODO: support union (+) and difference (-); open question: which graph name should be assigned?
     // TODO: add empty
 };
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 #endif  //RDF4CPP_GRAPH_HPP

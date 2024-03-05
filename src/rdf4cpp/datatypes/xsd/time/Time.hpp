@@ -9,12 +9,12 @@
 #include <rdf4cpp/util/Timezone.hpp>
 #include <rdf4cpp/datatypes/xsd/time/DateTime.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_time> {
-    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf4cpp::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_time> {
@@ -52,9 +52,9 @@ extern template struct LiteralDatatypeImpl<xsd_time,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Time : registry::LiteralDatatypeImpl<registry::xsd_time,
                                             registry::capabilities::Comparable,
@@ -62,13 +62,13 @@ struct Time : registry::LiteralDatatypeImpl<registry::xsd_time,
                                             registry::capabilities::Inlineable,
                                             registry::capabilities::Subtype> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Time const xsd_Time_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_TIME_HPP

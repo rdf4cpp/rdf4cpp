@@ -5,7 +5,7 @@
 
 #include <re2/re2.h>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 struct Regex::Impl {
     re2::RE2 regex;
@@ -16,6 +16,6 @@ struct Regex::Impl {
     [[nodiscard]] bool regex_search(std::string_view str) const noexcept;
 };
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex
 
 #endif  //RDF4CPP_RDF_UTIL_PRIVATE_REGEX_IMPL_HPP

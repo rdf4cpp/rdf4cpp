@@ -8,7 +8,7 @@
 #include <array>
 #include <iostream>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 using namespace storage;
 using namespace datatypes;
 
@@ -243,9 +243,9 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         auto h = l.backend_handle();
         if (!h.is_inlined())
             return h;
-        auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
+        auto [_, id] = rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
         auto node_id = storage::identifier::NodeID{id, h.node_id().literal_type()};
-        return rdf4cpp::rdf::storage::identifier::NodeBackendHandle{node_id,
+        return rdf4cpp::storage::identifier::NodeBackendHandle{node_id,
                                                                           storage::identifier::RDFNodeType::Literal,
                                                                           h.storage()};
     };

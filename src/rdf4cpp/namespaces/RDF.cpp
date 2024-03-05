@@ -2,7 +2,7 @@
 
 #include <charconv>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 RDF::RDF(storage::DynNodeStorage node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {}
 
@@ -22,4 +22,4 @@ IRI RDF::operator+(std::string_view suffix) const {
     return ClosedNamespace::operator+(suffix);
 }
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces

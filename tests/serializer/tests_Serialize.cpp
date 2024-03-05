@@ -6,7 +6,7 @@
 #include <format>
 #include <random>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_SUITE("Serialize") {
     template<typename NodeT>
@@ -45,7 +45,7 @@ TEST_SUITE("Serialize") {
     }
 
     TEST_CASE("Serialize Literal") {
-        using namespace rdf4cpp::rdf::datatypes;
+        using namespace rdf4cpp::datatypes;
 
         SUBCASE("xsd:string") {
             auto lit = Literal::make_simple("simple");
@@ -94,7 +94,7 @@ TEST_SUITE("Serialize") {
 
     TEST_CASE("Reserialize NTriples StringWriter") {
         auto do_test = [](auto triples) {
-            using namespace rdf4cpp::rdf::parser;
+            using namespace rdf4cpp::parser;
 
             std::string buf;
             buf.reserve(256);
@@ -127,7 +127,7 @@ TEST_SUITE("Serialize") {
 
     TEST_CASE("Reserialize NTriples BufCFileWriter") {
         auto do_test = [](auto triples) {
-            using namespace rdf4cpp::rdf::parser;
+            using namespace rdf4cpp::parser;
             std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-cfile-{}", std::random_device{}());
 
             {
@@ -176,7 +176,7 @@ TEST_SUITE("Serialize") {
 
     TEST_CASE("Reserialize NTriples BufOStreamWriter") {
         auto do_test = [](auto triples) {
-            using namespace rdf4cpp::rdf::parser;
+            using namespace rdf4cpp::parser;
             std::filesystem::path const path = std::format("/tmp/rdf4cpp-ser-ostream-{}", std::random_device{}());
 
             {

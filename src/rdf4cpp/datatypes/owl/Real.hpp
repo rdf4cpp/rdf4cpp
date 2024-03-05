@@ -6,7 +6,7 @@
 
 #include <boost/multiprecision/cpp_bin_float.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 inline constexpr util::ConstexprString owl_real{"http://www.w3.org/2002/07/owl#real"};
 
@@ -43,23 +43,23 @@ extern template struct LiteralDatatypeImpl<owl_real,
                                            capabilities::Numeric,
                                            capabilities::Comparable>;
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::owl {
+namespace rdf4cpp::datatypes::owl {
 
 struct Real : registry::LiteralDatatypeImpl<registry::owl_real,
                                             registry::capabilities::Logical,
                                             registry::capabilities::Numeric,
                                             registry::capabilities::Comparable> {};
 
-} // rdf4cpp::rdf::datatypes::owl
+} // rdf4cpp::datatypes::owl
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline owl::Real const owl_real_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_OWL_REAL_HPP

@@ -4,7 +4,7 @@
 #include <rdf4cpp/storage/view/IRIBackendView.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/ConstString.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 struct IRIBackend {
     using view_type = view::IRIBackendView;
@@ -22,6 +22,6 @@ struct IRIBackend {
     }
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_IRIBACKEND_HPP

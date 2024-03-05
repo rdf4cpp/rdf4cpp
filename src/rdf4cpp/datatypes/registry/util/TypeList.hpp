@@ -7,7 +7,7 @@
 #include <optional>
 #include <type_traits>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::datatypes::registry::util {
 
 namespace type_list_detail {
 
@@ -220,6 +220,6 @@ struct all_types_same<> : std::true_type {};
 template<typename T, typename... Ts>
 struct all_types_same<T, Ts...> : std::bool_constant<(std::is_same_v<T, Ts> && ...)> {};
 
-} // namespace rdf4cpp::rdf::datatypes::registry::util {
+} // namespace rdf4cpp::datatypes::registry::util {
 
 #endif  //RDF4CPP_REGISTRY_UTIL_TYPE_LIST_HPP

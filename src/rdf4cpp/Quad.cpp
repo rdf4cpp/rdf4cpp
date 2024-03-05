@@ -3,7 +3,7 @@
 #include <rdf4cpp/writer/OutputFormat.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 Quad::Quad(Node subject, Node predicate, Node object) : QuadPattern(IRI::default_graph(), subject, predicate, object) {}
 Quad::Quad(Node graph, Node subject, Node predicate, Node object) : QuadPattern(graph, subject, predicate, object) {}
 
@@ -156,4 +156,4 @@ bool Quad::serialize_trig(writer::SerializationState &state, writer::BufWriterPa
     return serialize<writer::OutputFormat::TriG>(*this, writer, &state);
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

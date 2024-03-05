@@ -2,7 +2,7 @@
 
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 ReferenceNodeScopeManager &ReferenceNodeScopeManager::default_instance() noexcept {
     static ReferenceNodeScopeManager instance_;
@@ -19,4 +19,4 @@ NodeScope &ReferenceNodeScopeManager::scope(std::string_view name) noexcept {
     return it.value();
 }
 
-} // namespace rdf4cpp::rdf::bnode_mngt
+} // namespace rdf4cpp::bnode_mngt

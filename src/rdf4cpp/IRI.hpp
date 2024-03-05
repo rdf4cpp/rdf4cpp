@@ -5,7 +5,7 @@
 #include <rdf4cpp/Node.hpp>
 #include <rdf4cpp/datatypes/registry/DatatypeID.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 /**
  * IRI Resource node.
@@ -114,12 +114,12 @@ inline namespace shorthands {
 IRI operator""_iri(char const *str, size_t len);
 
 }  // namespace shorthands
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 template<>
-struct std::hash<rdf4cpp::rdf::IRI> {
-    inline size_t operator()(rdf4cpp::rdf::IRI const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::Node>()(v);
+struct std::hash<rdf4cpp::IRI> {
+    inline size_t operator()(rdf4cpp::IRI const &v) const noexcept {
+        return std::hash<rdf4cpp::Node>()(v);
     }
 };
 

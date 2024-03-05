@@ -4,7 +4,7 @@
 #include <rdf4cpp/storage/view/VariableBackendView.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/ConstString.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 struct VariableBackend {
     using view_type = view::VariableBackendView;
@@ -25,6 +25,6 @@ struct VariableBackend {
     }
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_VARIABLEBACKEND_HPP

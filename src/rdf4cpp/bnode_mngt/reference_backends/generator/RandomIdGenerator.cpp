@@ -3,7 +3,7 @@
 #include <array>
 #include <algorithm>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 namespace generator_detail {
 
@@ -37,4 +37,4 @@ char RandomIdGenerator::next_char() {
 }
 
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt

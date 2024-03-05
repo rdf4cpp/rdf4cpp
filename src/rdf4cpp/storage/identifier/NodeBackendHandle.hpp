@@ -11,7 +11,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 /**
  * NodeBackendHandle is a a 64 bit wide type that is used to identify \ref Node "Nodes" stored at the backend.
  * It consists of a NodeID, a RDFNodeType, a NodeStorageID and free tagging bits.
@@ -197,19 +197,19 @@ static_assert(sizeof(NodeBackendHandle) == 3 * sizeof(void *));
                              lit_handle.storage()};
 }
 
-}  // namespace rdf4cpp::rdf::storage::identifier
+}  // namespace rdf4cpp::storage::identifier
 
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::identifier::NodeBackendHandle> {
-    static inline size_t dice_hash(rdf4cpp::rdf::storage::identifier::NodeBackendHandle const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::identifier::NodeBackendHandle> {
+    static inline size_t dice_hash(rdf4cpp::storage::identifier::NodeBackendHandle const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::make_tuple(x.id(), x.storage()));
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::storage::identifier::NodeBackendHandle> {
-    inline size_t operator()(rdf4cpp::rdf::storage::identifier::NodeBackendHandle const &v) const noexcept {
+struct std::hash<rdf4cpp::storage::identifier::NodeBackendHandle> {
+    inline size_t operator()(rdf4cpp::storage::identifier::NodeBackendHandle const &v) const noexcept {
         return ::dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(v);
     }
 };

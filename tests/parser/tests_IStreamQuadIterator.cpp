@@ -6,8 +6,8 @@
 
 #include <iostream>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::parser;
+using namespace rdf4cpp;
+using namespace rdf4cpp::parser;
 
 TEST_SUITE("IStreamQuadIterator") {
 

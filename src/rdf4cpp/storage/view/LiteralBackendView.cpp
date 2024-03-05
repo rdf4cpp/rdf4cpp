@@ -2,7 +2,7 @@
 
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::storage::view {
+namespace rdf4cpp::storage::view {
 
 size_t LexicalFormLiteralBackendView::hash() const noexcept {
     return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(std::tie(datatype_id,
@@ -30,4 +30,4 @@ ValueLiteralBackendView &&LiteralBackendView::get_value() && {
     return std::get<ValueLiteralBackendView>(std::move(this->inner));
 }
 
-}  // namespace rdf4cpp::rdf::storage::view
+}  // namespace rdf4cpp::storage::view

@@ -2,14 +2,14 @@
 
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
     using namespace registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
-    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     auto date = year / month;
     if (!date.ok()) {
@@ -50,8 +50,8 @@ capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    auto ym_to_tp = [](std::chrono::year_month t) noexcept -> rdf::util::TimePoint {
-        return rdf::util::construct(t / std::chrono::last, rdf::util::TimePointReplacementTimeOfDay);
+    auto ym_to_tp = [](std::chrono::year_month t) noexcept -> rdf4cpp::util::TimePoint {
+        return rdf4cpp::util::construct(t / std::chrono::last, rdf4cpp::util::TimePointReplacementTimeOfDay);
     };
     return registry::util::compare_time_points(ym_to_tp(lhs.first), lhs.second, ym_to_tp(rhs.first), rhs.second);
 }
@@ -74,4 +74,4 @@ template struct LiteralDatatypeImpl<xsd_gYearMonth,
                                     capabilities::FixedId,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

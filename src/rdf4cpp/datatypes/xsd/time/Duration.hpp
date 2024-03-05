@@ -9,7 +9,7 @@
 #include <rdf4cpp/util/Timezone.hpp>
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -39,23 +39,23 @@ extern template struct LiteralDatatypeImpl<xsd_duration,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Duration : registry::LiteralDatatypeImpl<registry::xsd_duration,
                                                 registry::capabilities::Comparable,
                                                 registry::capabilities::FixedId,
                                                 registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Duration const xsd_Duration_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy, typename A, typename B>

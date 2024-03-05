@@ -9,8 +9,8 @@
 #include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage;
+using namespace rdf4cpp;
+using namespace rdf4cpp::storage;
 
 int main(int argc, char **argv) {
     /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 }
 
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 constexpr static util::ConstexprString Incomparable{"Incomparable"};
 
@@ -43,13 +43,13 @@ inline capabilities::Default<Incomparable>::cpp_type capabilities::Default<Incom
     }
 }
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 using Incomparable = registry::LiteralDatatypeImpl<registry::Incomparable>;
 
-} // rdf4cpp::rdf::datatypes::xsd
+} // rdf4cpp::datatypes::xsd
 
 
 
@@ -73,7 +73,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("nulls") {
             CHECK(Literal{} <=> Literal{} == std::partial_ordering::equivalent);
             CHECK(Literal{} <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
         }
 
         SUBCASE("inconvertibility") {
@@ -91,7 +91,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("conversion") {
             CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Integer>(10) == std::partial_ordering::less);
             CHECK(Literal::make_typed_from_value<Integer>(0) <=> Literal::make_typed_from_value<Float>(1.2f) == std::partial_ordering::less);
-            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)) == std::partial_ordering::equivalent);
+            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)) == std::partial_ordering::equivalent);
         }
     }
 
@@ -104,7 +104,7 @@ TEST_SUITE("comparisions") {
             CHECK(Literal::make_typed_from_value<Float>(10.f).compare_with_extensions(Literal::make_typed_from_value<Incomparable>(1)) == std::weak_ordering::less);
 
             // reason: decimal has fixed id and any fixed id type is always less than a dynamic one
-            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(10.0))) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(10.0))) == std::weak_ordering::greater);
         }
 
         SUBCASE("nulls") {
@@ -118,10 +118,10 @@ TEST_SUITE("comparisions") {
         SUBCASE("test type ordering extensions") {
             // expected: string < float < decimal < integer < int
 
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
 
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);

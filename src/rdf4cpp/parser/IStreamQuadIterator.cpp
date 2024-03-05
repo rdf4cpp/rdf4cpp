@@ -7,7 +7,7 @@
 #include <fcntl.h>
 #endif //__has_include
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 /**
  * Adaptor function so that serd can read from std::istreams.
@@ -102,4 +102,4 @@ FILE *fopen_fastseq(char const *path, char const *mode) noexcept {
     return fd;
 }
 
-}  // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::parser

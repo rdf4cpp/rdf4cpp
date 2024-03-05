@@ -7,7 +7,7 @@
 #include <rdf4cpp/datatypes/xsd.hpp>
 #include <rdf4cpp/storage/identifier/LiteralType.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage::specialization_detail {
+namespace rdf4cpp::storage::reference_node_storage::specialization_detail {
 
 /**
  * Generates a storage specialization lookup-table for the reference node storages.
@@ -39,7 +39,7 @@ static consteval std::array<bool, 1 << identifier::LiteralType::width> make_stor
  */
 template<typename S, typename F>
 decltype(auto) visit_specialized(S &&container, identifier::LiteralType const datatype, F f) {
-    using namespace rdf4cpp::rdf::datatypes;
+    using namespace rdf4cpp::datatypes;
 
     // manually translate runtime knowledge to compiletime
     // can probably be done using metaprogramming, but this is faster
@@ -86,6 +86,6 @@ decltype(auto) visit_specialized(S &&container, identifier::LiteralType const da
     }
 }
 
-} // rdf4cpp::rdf::storage::reference_node_storage::specialization_detail
+} // rdf4cpp::storage::reference_node_storage::specialization_detail
 
 #endif  //RDF4CPP_REFERENCENODESTORAGE_COMMON_HPP

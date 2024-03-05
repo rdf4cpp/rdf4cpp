@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/bnode_mngt/INodeFactory.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 /**
  * A factory that created BlankNodes.
@@ -17,6 +17,6 @@ struct BNodeFactory final : INodeFactory {
                                                                    storage::DynNodeStorage node_storage) noexcept override;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_UNSCOPEDBNODEFACADE_HPP

@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 namespace encode_decode_detail {
@@ -251,4 +251,4 @@ template struct LiteralDatatypeImpl<xsd_base64_binary,
                                     capabilities::FixedId>;
 
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry

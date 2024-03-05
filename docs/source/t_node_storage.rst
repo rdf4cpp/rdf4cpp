@@ -5,7 +5,7 @@ Node Storage
  - `INodeStorage` is an abstract class that node storage backends must implement.
  - Identifiers for Nodes and their properties are found in :doc:`t_NodeBackendHandle`
  - A reference implementation of a thread-safe node storage backend based on `tsl::sparse_map` is provided
-   at :class:`rdf4cpp::rdf::storage::reference_node_storage::ReferenceNodeStorageBackend`
+   at :class:`rdf4cpp::storage::reference_node_storage::ReferenceNodeStorageBackend`
  - :doc:`t_node_storage_view` contains proxy classes to access information about a node stored in an implementation-specific
    backend.
 
@@ -19,16 +19,16 @@ _______________________________________________
  - `Literals` can be stored either as their canonical lexical form or as values
     - when trying to store `Literals` as values the implementation is
       required to accurately report which `Literal` types can be stored as
-      values via :func:`rdf4cpp::rdf::storage::INodeStorageBackend::has_specialized_storage_for`. **Inaccurate
+      values via :func:`rdf4cpp::storage::INodeStorageBackend::has_specialized_storage_for`. **Inaccurate
       reporting will result in undefined behaviour.**
     - Warning: `Literals` that have value storage are assumed to never need escaping when converting them to their
       n-triples string representation. I.e. the output of their corresponding `to_string` function will be used
       without escaping it.
-    - see :class:`rdf4cpp::rdf::storage::reference_node_storage::ReferenceNodeStorageBackend` for details
- - Some `IRIs` are reserved by default (see :var:`rdf4cpp::rdf::datatypes::registry::reserved_datatype_ids`)
+    - see :class:`rdf4cpp::storage::reference_node_storage::ReferenceNodeStorageBackend` for details
+ - Some `IRIs` are reserved by default (see :var:`rdf4cpp::datatypes::registry::reserved_datatype_ids`)
    these `IRIs` *must always* be present in the `NodeStorage`
    and assigned the given `NodeID`. **Not upholding this invariant results in undefined behaviour.
-   See :class:`rdf4cpp::rdf::storage::reference_node_storage::ReferenceNodeStorageBackend`
+   See :class:`rdf4cpp::storage::reference_node_storage::ReferenceNodeStorageBackend`
    for the expected usage.**
 
 General Notes for Implementors

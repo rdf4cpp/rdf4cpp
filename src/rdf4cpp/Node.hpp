@@ -10,7 +10,7 @@
 #include <optional>
 #include <string>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 class Literal;
 class BlankNode;
 class IRI;
@@ -39,10 +39,10 @@ class Node {
     friend struct bnode_mngt::NodeGenerator;
 
 protected:
-    using NodeBackendHandle = rdf4cpp::rdf::storage::identifier::NodeBackendHandle;
-    using NodeID = rdf4cpp::rdf::storage::identifier::NodeID;
-    using DynNodeStorage = rdf4cpp::rdf::storage::DynNodeStorage;
-    using RDFNodeType = rdf4cpp::rdf::storage::identifier::RDFNodeType;
+    using NodeBackendHandle = rdf4cpp::storage::identifier::NodeBackendHandle;
+    using NodeID = rdf4cpp::storage::identifier::NodeID;
+    using DynNodeStorage = rdf4cpp::storage::DynNodeStorage;
+    using RDFNodeType = rdf4cpp::storage::identifier::RDFNodeType;
 
     NodeBackendHandle handle_;
 
@@ -198,18 +198,18 @@ public:
      */
     [[nodiscard]] NodeBackendHandle &backend_handle() noexcept;
 };
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 template<>
-struct std::hash<rdf4cpp::rdf::Node> {
-    inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::storage::identifier::NodeBackendHandle>()(v.backend_handle());
+struct std::hash<rdf4cpp::Node> {
+    inline size_t operator()(rdf4cpp::Node const &v) const noexcept {
+        return std::hash<rdf4cpp::storage::identifier::NodeBackendHandle>()(v.backend_handle());
     }
 };
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::Node> {
-    static inline size_t dice_hash(rdf4cpp::rdf::Node const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::Node> {
+    static inline size_t dice_hash(rdf4cpp::Node const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(x.backend_handle());
     }
 };

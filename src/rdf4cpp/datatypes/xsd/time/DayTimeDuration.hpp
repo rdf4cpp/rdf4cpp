@@ -9,7 +9,7 @@
 #include <rdf4cpp/util/Timezone.hpp>
 #include <rdf4cpp/datatypes/xsd/time/Duration.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -52,9 +52,9 @@ extern template struct LiteralDatatypeImpl<xsd_dayTimeDuration,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct DayTimeDuration : registry::LiteralDatatypeImpl<registry::xsd_dayTimeDuration,
                                                        registry::capabilities::Comparable,
@@ -62,13 +62,13 @@ struct DayTimeDuration : registry::LiteralDatatypeImpl<registry::xsd_dayTimeDura
                                                        registry::capabilities::Inlineable,
                                                        registry::capabilities::Subtype> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::DayTimeDuration const xsd_DaysTimeDuration_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_DAYTIMEDURATION_HPP

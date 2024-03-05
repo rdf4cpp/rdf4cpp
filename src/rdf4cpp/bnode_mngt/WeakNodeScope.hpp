@@ -6,7 +6,7 @@
 #include <functional>
 #include <optional>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 namespace identifier {
 
@@ -72,11 +72,11 @@ public:
     auto operator<=>(WeakNodeScope const &other) const noexcept = default;
 };
 
-} // rdf4cpp::rdf::bnode_mngt
+} // rdf4cpp::bnode_mngt
 
 template<>
-struct std::hash<rdf4cpp::rdf::bnode_mngt::WeakNodeScope> {
-    size_t operator()(rdf4cpp::rdf::bnode_mngt::WeakNodeScope const &scope) const noexcept;
+struct std::hash<rdf4cpp::bnode_mngt::WeakNodeScope> {
+    size_t operator()(rdf4cpp::bnode_mngt::WeakNodeScope const &scope) const noexcept;
 };
 
 #endif // RDF4CPP_RDF_UTIL_WEAKBLANKNODEIDSCOPE_HPP

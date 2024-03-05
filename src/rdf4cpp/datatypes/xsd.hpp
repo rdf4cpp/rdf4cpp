@@ -43,7 +43,7 @@
  * Namespace where datatypes from XSD are implemented.
  * @see https://www.w3.org/TR/xmlschema-2/#built-in-datatypes
  */
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 //
 }
 

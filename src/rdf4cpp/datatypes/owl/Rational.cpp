@@ -1,6 +1,6 @@
 #include "Rational.hpp"
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 static owl::Rational::cpp_type simplify(owl::Rational::cpp_type const &r) noexcept {
@@ -100,4 +100,4 @@ template struct LiteralDatatypeImpl<owl_rational,
                                     capabilities::Numeric,
                                     capabilities::Comparable>;
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry

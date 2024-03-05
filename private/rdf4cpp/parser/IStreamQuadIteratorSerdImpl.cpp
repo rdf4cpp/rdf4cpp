@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cstddef>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 std::string_view IStreamQuadIterator::Impl::node_into_string_view(SerdNode const *node) noexcept {
     return std::string_view{reinterpret_cast<char const *>(node->buf), node->n_bytes};
@@ -397,4 +397,4 @@ uint64_t IStreamQuadIterator::Impl::current_column() const noexcept {
     return serd_reader_get_current_col(this->reader);
 }
 
-}  // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::parser

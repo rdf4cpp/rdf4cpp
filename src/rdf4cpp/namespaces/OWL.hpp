@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/ClosedNamespace.hpp>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 /**
  * A ClosedNamespace for http://www.w3.org/2002/07/owl#
@@ -38,6 +38,6 @@ struct OWL : ClosedNamespace {
     }
 };
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces
 
 #endif  //RDF4CPP_OWL_HPP

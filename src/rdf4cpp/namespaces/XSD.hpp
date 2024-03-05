@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/Namespace.hpp>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 /**
  * A Namespace for http://www.w3.org/2001/XMLSchema#
@@ -15,6 +15,6 @@ struct XSD : Namespace {
     }
 };
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces
 
 #endif  //RDF4CPP_NAMESPACE_XSD_HPP

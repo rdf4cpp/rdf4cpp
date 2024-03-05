@@ -11,7 +11,7 @@
 
 #include <rdf4cpp/util/Expected.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 enum class RoundingMode {
     Floor,
     Ceil,
@@ -854,12 +854,12 @@ template<class UnscaledValue_t, class Exponent_t>
 BigDecimal<UnscaledValue_t, Exponent_t> abs(const BigDecimal<UnscaledValue_t, Exponent_t> &r) noexcept {
     return r.abs();
 }
-}  // namespace rdf4cpp::rdf::util
+}  // namespace rdf4cpp::util
 
 #ifndef DOXYGEN_PARSER
 template<class UnscaledValue_t, class Exponent_t>
-struct std::hash<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
-    size_t operator()(const rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t> &r) const {
+struct std::hash<rdf4cpp::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
+    size_t operator()(const rdf4cpp::util::BigDecimal<UnscaledValue_t, Exponent_t> &r) const {
         return r.hash();
     }
 };
@@ -872,17 +872,17 @@ struct dice::hash::dice_hash_overload<Policy, ::boost::multiprecision::cpp_int> 
 };
 
 template<typename Policy, typename U, typename E>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::BigDecimal<U, E>> {
-    static size_t dice_hash(rdf4cpp::rdf::util::BigDecimal<U, E> const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::BigDecimal<U, E>> {
+    static size_t dice_hash(rdf4cpp::util::BigDecimal<U, E> const &x) noexcept {
         return x.template hash<Policy>();
     }
 };
 #endif
 
 template<class UnscaledValue_t, class Exponent_t>
-class std::numeric_limits<rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
+class std::numeric_limits<rdf4cpp::util::BigDecimal<UnscaledValue_t, Exponent_t>> {
 public:
-    using BigDecimal = rdf4cpp::rdf::util::BigDecimal<UnscaledValue_t, Exponent_t>;
+    using BigDecimal = rdf4cpp::util::BigDecimal<UnscaledValue_t, Exponent_t>;
 
     static constexpr bool is_specialized = true;
     static constexpr bool is_signed = true;

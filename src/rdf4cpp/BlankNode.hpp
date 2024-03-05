@@ -5,11 +5,11 @@
 #include <rdf4cpp/Node.hpp>
 #include <rdf4cpp/util/TriBool.hpp>
 
-namespace rdf4cpp::rdf::util  {
+namespace rdf4cpp::util  {
 struct NodeGenerator;
 }
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 class BlankNode : public Node {
     explicit BlankNode(NodeBackendHandle handle) noexcept;
 public:
@@ -75,12 +75,12 @@ inline namespace shorthands {
 BlankNode operator""_bnode(char const *str, size_t len);
 
 }  // namespace shorthands
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 template<>
-struct std::hash<rdf4cpp::rdf::BlankNode> {
-    inline size_t operator()(rdf4cpp::rdf::BlankNode const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::Node>()(v);
+struct std::hash<rdf4cpp::BlankNode> {
+    inline size_t operator()(rdf4cpp::BlankNode const &v) const noexcept {
+        return std::hash<rdf4cpp::Node>()(v);
     }
 };
 

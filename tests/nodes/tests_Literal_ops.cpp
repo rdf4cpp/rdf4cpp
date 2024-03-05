@@ -6,7 +6,7 @@
 #include <charconv>
 #include <limits>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("Literal - logical ops") {
     SUBCASE("Literal - logical ops - results") {
@@ -160,8 +160,8 @@ TEST_CASE("Literal - logical ops") {
 
 TEST_CASE("Literal - numeric ops") {
     // simple promotion test cases
-    GENERATE_BINOP_TESTCASE(Float, 42.f, +, Decimal, rdf4cpp::rdf::util::BigDecimal{120.0}, Float, 162.f);
-    GENERATE_BINOP_TESTCASE(Decimal, rdf4cpp::rdf::util::BigDecimal{2.f}, *, Float, 120.0, Float, 240.f);
+    GENERATE_BINOP_TESTCASE(Float, 42.f, +, Decimal, rdf4cpp::util::BigDecimal{120.0}, Float, 162.f);
+    GENERATE_BINOP_TESTCASE(Decimal, rdf4cpp::util::BigDecimal{2.f}, *, Float, 120.0, Float, 240.f);
     GENERATE_BINOP_TESTCASE(Integer, 100, -, Float, 1.f, Float, 99.f);
     GENERATE_BINOP_TESTCASE(Float, 100.f, /, Integer, 2, Float, 50.f);
 
@@ -173,9 +173,9 @@ TEST_CASE("Literal - numeric ops") {
     GENERATE_BINOP_TESTCASE(Integer, 1, +, Integer , 2, Integer, 3);
     GENERATE_BINOP_TESTCASE(Integer, 12, -, Integer, 1, Integer, 11);
     GENERATE_BINOP_TESTCASE(Integer, 3, *, Integer, 6, Integer, 18);
-    GENERATE_BINOP_TESTCASE(Integer, 12, /, Integer, 4, Decimal, rdf4cpp::rdf::util::BigDecimal{3.0});
+    GENERATE_BINOP_TESTCASE(Integer, 12, /, Integer, 4, Decimal, rdf4cpp::util::BigDecimal{3.0});
     GENERATE_BINOP_TESTCASE(Int, 1, +, Integer, 3, Integer, 4);
-    GENERATE_BINOP_TESTCASE(Int, 1, +, Decimal, rdf4cpp::rdf::util::BigDecimal{2}, Decimal, rdf4cpp::rdf::util::BigDecimal{3});
+    GENERATE_BINOP_TESTCASE(Int, 1, +, Decimal, rdf4cpp::util::BigDecimal{2}, Decimal, rdf4cpp::util::BigDecimal{3});
     GENERATE_UNOP_TESTCASE(Integer, 1, +, Integer, 1);
     GENERATE_UNOP_TESTCASE(Integer, 1, -, Integer, -1);
 
@@ -227,7 +227,7 @@ TEST_CASE("Literal - numeric ops") {
 }
 
 // create fake hierarchy
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 constexpr static util::ConstexprString Z{"Z"};
 constexpr static util::ConstexprString Y{"Y"};
@@ -237,9 +237,9 @@ constexpr static util::ConstexprString B{"B"};
 constexpr static util::ConstexprString B2{"B2"};
 constexpr static util::ConstexprString C{"C"};
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 /**
  *       A   -->   Z
  *     |  |        |
@@ -263,9 +263,9 @@ using C = registry::LiteralDatatypeImpl<registry::C, registry::capabilities::Num
 
 using Z = registry::LiteralDatatypeImpl<registry::Z, registry::capabilities::Numeric, registry::capabilities::Comparable>;
 using Y = registry::LiteralDatatypeImpl<registry::Y, registry::capabilities::Numeric, registry::capabilities::Comparable, registry::capabilities::Subtype>;
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 // Z
 template<>
@@ -410,16 +410,16 @@ inline capabilities::Default<C>::cpp_type capabilities::Default<C>::from_string(
     }
 }
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 inline A const a_instance;
 inline B const b_instance;
 inline B2 const b2_instance;
 inline C const c_instance;
 inline Z const z_instance;
 inline Y const y_instance;
-} // namespace rdf4cpp::rdf::datatypes::xsd
+} // namespace rdf4cpp::datatypes::xsd
 
 #define GENERATE_HIERARCHY_TEST(lhs, rhs, expected) \
     GENERATE_BINOP_TESTCASE(lhs, 1, +, rhs, 1, expected, 2)

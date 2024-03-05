@@ -1,7 +1,7 @@
 #include <rdf4cpp/bnode_mngt/WeakNodeScope.hpp>
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 WeakNodeScope::WeakNodeScope(identifier::NodeScopeID backend_index, size_t generation) noexcept : backend_index_{backend_index},
                                                                                                   generation_{generation} {
@@ -40,4 +40,4 @@ NodeScope WeakNodeScope::upgrade() const {
     throw std::runtime_error{"WeakNodeScope lifetime error: referenced backend is no longer alive"};
 }
 
-} // namespace rdf4cpp::rdf::bnode_mngt
+} // namespace rdf4cpp::bnode_mngt

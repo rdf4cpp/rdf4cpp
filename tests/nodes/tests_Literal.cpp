@@ -7,8 +7,8 @@
 
 #include <thread>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage;
+using namespace rdf4cpp;
+using namespace rdf4cpp::storage;
 
 int main(int argc, char **argv) {
     /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
@@ -229,7 +229,7 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("non-integral") {
-                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.5));
+                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.5));
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK_EQ(lit2.template value<String>(), "1.5");
@@ -342,7 +342,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> flt") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK_EQ(lit2.datatype(), IRI{Float::identifier});
@@ -350,7 +350,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> dbl") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK_EQ(lit2.datatype(), IRI{Double::identifier});
@@ -358,7 +358,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> int") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.2));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.2));
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK_EQ(lit2.datatype(), IRI{Int::identifier});
@@ -485,7 +485,7 @@ TEST_CASE("Literal - casting") {
 }
 
 TEST_CASE("Literal - misc functions") {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
 
     SUBCASE("rand") {
         SUBCASE("same thread") {
@@ -1005,7 +1005,7 @@ TEST_CASE("try_get_in_node_storage") {
     }
 }
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 inline constexpr util::ConstexprString fake_datatype = "http://foo/bar";
 template<>
 struct DatatypeMapping<fake_datatype> {
@@ -1021,7 +1021,7 @@ bool capabilities::Default<fake_datatype>::serialize_canonical_string(cpp_type c
     return writer::write_str(s, writer);
 }
 }
-struct FakeDatatype : rdf4cpp::rdf::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::rdf::datatypes::registry::fake_datatype> {};
+struct FakeDatatype : rdf4cpp::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::datatypes::registry::fake_datatype> {};
 
 template<class T>
 struct get_find_values {};
@@ -1042,9 +1042,9 @@ struct get_find_values<datatypes::xsd::Int> {  // always inlined
 };
 template<>
 struct get_find_values<datatypes::xsd::Date> {  // inlined == has timezone
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::util::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::util::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
     static constexpr std::string_view as = "1342-5-4+1:0";
     static constexpr std::string_view bs = "1342-5-5+1:0";
     static constexpr std::string_view inls = "1342-5-6";

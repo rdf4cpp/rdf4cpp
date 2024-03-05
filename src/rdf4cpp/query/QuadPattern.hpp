@@ -6,7 +6,7 @@
 #include <array>
 #include <ostream>
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 /**
  * <div>QuadPattern</div> is modeled around SPARQL qual patterns.
  *
@@ -62,6 +62,6 @@ public:
 
     [[nodiscard]] QuadPattern to_node_storage(storage::DynNodeStorage node_storage) const;
 };
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query
 
 #endif  //RDF4CPP_QUADPATTERN_HPP

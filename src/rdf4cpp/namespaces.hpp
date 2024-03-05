@@ -13,7 +13,7 @@
 /**
  * This namespace contains common XML namespaces used for RDF standard vocabulary.
  */
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 }
 
 #endif  //RDF4CPP_NAMESPACES_HPP

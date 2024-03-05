@@ -4,7 +4,7 @@
 #include "UnsyncNodeTypeStorage.hpp"
 #include <shared_mutex>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 /**
  * Storage for one of the Node Backend types. Includes a shared mutex to synchronize access and bidirectional mappings between the Backend type and identifier::NodeID.
@@ -19,6 +19,6 @@ struct SyncNodeTypeStorage : UnsyncNodeTypeStorage<BackendType_t> {
     std::shared_mutex mutable mutex;
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_SYNCNODETYPESTORAGE_HPP

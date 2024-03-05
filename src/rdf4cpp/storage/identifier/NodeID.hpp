@@ -11,7 +11,7 @@
 #include <utility>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 /**
  * NodeID is an 48 bit identifier for a Node given a NodeManager. If the Node is a Literal, The 48 bits consist of a LiteralID (42 bits) and a LiteralType (6 bits).
  */
@@ -137,19 +137,19 @@ inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_data
 inline constexpr NodeID NodeID::min_variable_id{1};
 inline constexpr LiteralID NodeID::min_literal_id{1};
 
-}  // namespace rdf4cpp::rdf::storage::identifier
+}  // namespace rdf4cpp::storage::identifier
 
 #ifndef DOXYGEN_PARSER
 template<>
-struct std::hash<rdf4cpp::rdf::storage::identifier::NodeID> {
-    size_t operator()(rdf4cpp::rdf::storage::identifier::NodeID const id) const noexcept {
+struct std::hash<rdf4cpp::storage::identifier::NodeID> {
+    size_t operator()(rdf4cpp::storage::identifier::NodeID const id) const noexcept {
         return std::hash<uint64_t>{}(id.to_underlying());
     }
 };
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::identifier::NodeID> {
-    static size_t dice_hash(rdf4cpp::rdf::storage::identifier::NodeID const id) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::identifier::NodeID> {
+    static size_t dice_hash(rdf4cpp::storage::identifier::NodeID const id) noexcept {
         return dice_hash_templates<Policy>::dice_hash(id.to_underlying());
     }
 };

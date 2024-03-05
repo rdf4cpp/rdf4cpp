@@ -13,7 +13,7 @@
 #include <rdf4cpp/parser/ParsingState.hpp>
 #include <rdf4cpp/IRIFactory.hpp>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 /**
  * Identical semantics to fread.
@@ -134,6 +134,6 @@ public:
  */
 FILE *fopen_fastseq(char const *path, char const *mode) noexcept;
 
-}  // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::parser
 
 #endif  //RDF4CPP_PARSER_ISTREAMQUADITERATOR_HPP

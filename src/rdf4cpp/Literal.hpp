@@ -16,7 +16,7 @@
 #include <rdf4cpp/util/TriBool.hpp>
 #include <type_traits>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 enum struct FetchOrSerializeResult {
     Fetched,
@@ -658,10 +658,10 @@ public:
 
         if constexpr (std::same_as<T, Boolean>) {
             // any -> bool
-            rdf::util::TriBool t = this->ebv();
-            if (t == rdf::util::TriBool::Err)
+            rdf4cpp::util::TriBool t = this->ebv();
+            if (t == rdf4cpp::util::TriBool::Err)
                 return std::nullopt;
-            else if (t == rdf::util::TriBool::True)
+            else if (t == rdf4cpp::util::TriBool::True)
                 return true;
             else
                 return false;
@@ -1566,12 +1566,12 @@ Literal operator""_xsd_long(unsigned long long int i);
 Literal operator""_xsd_ulong(unsigned long long int i);
 
 }  // namespace shorthands
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 template<>
-struct std::hash<rdf4cpp::rdf::Literal> {
-    inline size_t operator()(rdf4cpp::rdf::Literal const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::Node>()(v);
+struct std::hash<rdf4cpp::Literal> {
+    inline size_t operator()(rdf4cpp::Literal const &v) const noexcept {
+        return std::hash<rdf4cpp::Node>()(v);
     }
 };
 

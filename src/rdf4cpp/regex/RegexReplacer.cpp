@@ -1,7 +1,7 @@
 #include "RegexReplacer.hpp"
 #include <rdf4cpp/regex/RegexReplacerImpl.hpp>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 RegexReplacer::RegexReplacer(std::unique_ptr<Impl> &&impl) noexcept : impl{std::move(impl)} {
 }
@@ -17,4 +17,4 @@ void RegexReplacer::regex_replace(std::string &str) const noexcept {
     }
 }
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex

@@ -13,7 +13,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/util/TypeList.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 namespace conversion_detail {
 
@@ -430,6 +430,6 @@ RuntimeConversionTable make_runtime_conversion_table_for() noexcept {
     return RuntimeConversionTable::from_concrete<convert_table_t>();
 }
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 #endif  //RDF4CPP_DATATYPECONVERSION_HPP

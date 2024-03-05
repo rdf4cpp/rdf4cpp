@@ -9,7 +9,7 @@
 #include <any>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::view {
+namespace rdf4cpp::storage::view {
 
 struct LexicalFormLiteralBackendView {
     identifier::NodeID datatype_id;
@@ -81,6 +81,6 @@ public:
     }
 };
 
-}  // namespace rdf4cpp::rdf::storage::view
+}  // namespace rdf4cpp::storage::view
 
 #endif  //RDF4CPP_LITERALBACKENDHANDLE_HPP

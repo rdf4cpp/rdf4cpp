@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 struct NodeScope;
 
@@ -18,6 +18,6 @@ struct INodeScopeManager {
     [[nodiscard]] virtual NodeScope &scope(std::string_view name) noexcept = 0;
 };
 
-} // namespace rdf4cpp::rdf::bnode_mngt
+} // namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_INODESCOPEMANAGER_HPP

@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 /**
  * Specifies whether an RDF node is a Variable, BlankNode, IRI or Literal.
  * The ordering BNode, IRI, Literal is the same as in SPARQL operator<.
@@ -36,7 +36,7 @@ inline std::string to_string(RDFNodeType const node_type) noexcept {
     return std::string{to_string_view(node_type)};
 }
 
-}  // namespace rdf4cpp::rdf::storage::identifier
+}  // namespace rdf4cpp::storage::identifier
 
 
 #endif  //RDF4CPP_RDFNODETYPE_HPP

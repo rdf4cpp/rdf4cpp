@@ -2,7 +2,7 @@
 #include <rdf4cpp/regex/RegexImpl.hpp>
 #include <rdf4cpp/regex/RegexReplacerImpl.hpp>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 Regex::Regex(std::string_view regex, flag_type const flags) : impl{std::make_unique<Impl>(regex, flags)} {
 }
@@ -23,4 +23,4 @@ RegexReplacer Regex::make_replacer(std::string_view const rewrite) const {
     return RegexReplacer{std::make_unique<RegexReplacer::Impl>(*this->impl, rewrite)};
 }
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex

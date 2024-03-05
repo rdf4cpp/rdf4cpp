@@ -1,6 +1,6 @@
 #include "Solution.hpp"
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 
 template<typename Pat>
 std::vector<Variable> Solution::extract_variables(Pat const &quad) {
@@ -73,4 +73,4 @@ Solution::const_iterator Solution::end() const noexcept {
     return partial_mapping.end();
 }
 
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query

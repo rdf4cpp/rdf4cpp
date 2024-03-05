@@ -9,7 +9,7 @@
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 namespace node_scope_detail {
 
@@ -189,11 +189,11 @@ public:
     bool operator!=(NodeScope const &other) const noexcept;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 template<>
-struct std::hash<rdf4cpp::rdf::bnode_mngt::NodeScope> {
-    size_t operator()(rdf4cpp::rdf::bnode_mngt::NodeScope const &scope) const noexcept;
+struct std::hash<rdf4cpp::bnode_mngt::NodeScope> {
+    size_t operator()(rdf4cpp::bnode_mngt::NodeScope const &scope) const noexcept;
 };
 
 #endif  //RDF4CPP_RDF_UTIL_BLANKNODEIDSCOPE_HPP

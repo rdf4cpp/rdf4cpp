@@ -2,7 +2,7 @@
 
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 BNodeFactory &BNodeFactory::default_instance() noexcept {
     static BNodeFactory instance;
@@ -32,4 +32,4 @@ storage::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &gen
     return storage::identifier::NodeBackendHandle{id, storage::identifier::RDFNodeType::BNode, node_storage};
 }
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt

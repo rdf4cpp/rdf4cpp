@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 /**
  * Represents a decoded base64 value as a sequence of bytes.
@@ -80,32 +80,32 @@ bool capabilities::Default<xsd_base64_binary>::serialize_canonical_string(cpp_ty
 extern template struct LiteralDatatypeImpl<xsd_base64_binary,
                                            capabilities::FixedId>;
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Base64Binary : registry::LiteralDatatypeImpl<registry::xsd_base64_binary,
                                                     registry::capabilities::FixedId> {};
 
-} // namespace rdf4cpp::rdf::datatypes::xsd
+} // namespace rdf4cpp::datatypes::xsd
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Base64Binary const xsd_base64_binary_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
-    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::datatypes::registry::Base64BinaryRepr> {
+    static size_t dice_hash(rdf4cpp::datatypes::registry::Base64BinaryRepr const &x) noexcept {
         return Policy::hash_bytes(reinterpret_cast<char const *>(x.bytes.data()), x.bytes.size());
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::Base64BinaryRepr const &x) const noexcept {
+struct std::hash<rdf4cpp::datatypes::registry::Base64BinaryRepr> {
+    size_t operator()(rdf4cpp::datatypes::registry::Base64BinaryRepr const &x) const noexcept {
         return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(x);
     }
 };

@@ -4,7 +4,7 @@
 #include <rdf4cpp/datatypes/owl/Rational.hpp>
 #include <rdf4cpp/datatypes/owl/Real.hpp>
 
-namespace rdf4cpp::rdf::datatypes::owl {
+namespace rdf4cpp::datatypes::owl {
 }
 
 #endif  //RDF4CPP_DATATYPES_OWL_HPP

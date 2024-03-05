@@ -5,7 +5,7 @@
 
 #include <type_traits>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 /**
  * Mapping type_iri -> c++ datatype
@@ -177,5 +177,5 @@ struct DatatypeSubtypeRank<type_iri, std::enable_if_t<!std::is_same_v<typename D
 };
 
 }  // namespace detail_rank
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 #endif  //RDF4CPP_DATATYPEMAPPING_HPP

@@ -1,6 +1,6 @@
 #include "QuadPattern.hpp"
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 QuadPattern::operator std::string() const {
 
     return (graph().is_iri() and graph().null())  // Graph
@@ -46,4 +46,4 @@ QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) c
 
     return qp;
 }
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query

@@ -6,7 +6,7 @@
 #include <compare>
 #include <cstdint>
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 /**
  * <p>An LiteralID identifies a Literal of a given type (e.g. xsd:integer, xsd:string, etc.) within a given NodeStorage.</p>
  * <p>LiteralIDs are available in the range [0,(2^42-1)].</P>
@@ -61,5 +61,5 @@ public:
 
     constexpr std::strong_ordering operator<=>(LiteralID const &) const noexcept = default;
 };
-}  // namespace rdf4cpp::rdf::storage::identifier
+}  // namespace rdf4cpp::storage::identifier
 #endif  //RDF4CPP_LITERALID_HPP

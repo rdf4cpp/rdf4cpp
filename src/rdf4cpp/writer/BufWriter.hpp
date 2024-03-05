@@ -9,7 +9,7 @@
 #include <string_view>
 #include <system_error>
 
-namespace rdf4cpp::rdf::writer {
+namespace rdf4cpp::writer {
 
 /**
  * A cursor into a buffer
@@ -237,7 +237,7 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
         StringWriter w{s};
 
         if (!std::invoke(std::forward<F>(f), w)) {
-            throw std::runtime_error{"rdf4cpp::rdf::writer::StringWriter::oneshot failed"};
+            throw std::runtime_error{"rdf4cpp::writer::StringWriter::oneshot failed"};
         }
 
         w.finalize(); // cannot fail
@@ -315,6 +315,6 @@ struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     }
 };
 
-} // namespace rdf4cpp::rdf::writer
+} // namespace rdf4cpp::writer
 
 #endif  // RDF4CPP_BUFWRITER_HPP

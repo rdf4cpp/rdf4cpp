@@ -2,7 +2,7 @@
 #include <rdf4cpp/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 /**
  * For general correctness reasoning, see NodeStorage. This implementation is very similar.
@@ -195,13 +195,13 @@ bool NodeScope::operator!=(NodeScope const &other) const noexcept {
     return this->backend_index_ != other.backend_index_;
 }
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
-size_t std::hash<rdf4cpp::rdf::bnode_mngt::NodeScope>::operator()(rdf4cpp::rdf::bnode_mngt::NodeScope const &scope) const noexcept {
+size_t std::hash<rdf4cpp::bnode_mngt::NodeScope>::operator()(rdf4cpp::bnode_mngt::NodeScope const &scope) const noexcept {
     return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(scope.backend_index_.to_underlying());
 }
 
-size_t std::hash<rdf4cpp::rdf::bnode_mngt::WeakNodeScope>::operator()(rdf4cpp::rdf::bnode_mngt::WeakNodeScope const &scope) const noexcept {
+size_t std::hash<rdf4cpp::bnode_mngt::WeakNodeScope>::operator()(rdf4cpp::bnode_mngt::WeakNodeScope const &scope) const noexcept {
     return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(
             std::make_pair(scope.backend_index_.to_underlying(), scope.generation_));
 }

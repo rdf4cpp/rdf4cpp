@@ -3,7 +3,7 @@
 #include <dice/template-library/tuple_algorithm.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/SpecializationDetail.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept {
     iri_storage_.mapping.reserve_until(identifier::NodeID::min_iri_id);
@@ -192,4 +192,4 @@ bool UnsyncReferenceNodeStorageBackend::erase_variable(identifier::NodeID const 
     return erase_impl(variable_storage_, id);
 }
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage

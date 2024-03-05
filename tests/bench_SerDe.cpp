@@ -14,7 +14,7 @@ void download_swdf(std::filesystem::path const &base) {
     std::system(unzip_cmd.c_str());
 }
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 void deserialize(std::filesystem::path const &in_path, Dataset &ds, storage::DynNodeStorage node_storage) {
     FILE *in_file = parser::fopen_fastseq(in_path.c_str(), "r");

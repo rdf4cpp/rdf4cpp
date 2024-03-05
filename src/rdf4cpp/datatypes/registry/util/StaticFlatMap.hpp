@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::datatypes::registry::util {
 
 /**
  * A map with fixed/static (maximum) capacity that can be used in constexpr contexts
@@ -75,6 +75,6 @@ struct StaticFlatMap {
 template<typename ...Ps>
 StaticFlatMap(Ps &&...) -> StaticFlatMap<std::common_type_t<typename std::remove_cvref_t<Ps>::first_type...>, std::common_type_t<typename std::remove_cvref_t<Ps>::second_type...>, sizeof...(Ps)>;
 
-} // rdf4cpp::rdf::datatypes::registry::util
+} // rdf4cpp::datatypes::registry::util
 
 #endif  //RDF4CPP_REGISTRY_UTIL_STATICFLATMAP_HPP

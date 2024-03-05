@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <regex>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -114,17 +114,17 @@ nonstd::expected<capabilities::Numeric<xsd_decimal>::abs_result_cpp_type, Dynami
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::round_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::round(cpp_type const &operand) noexcept {
-    return operand.round(rdf4cpp::rdf::util::RoundingMode::Round);
+    return operand.round(rdf4cpp::util::RoundingMode::Round);
 }
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::floor_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::floor(cpp_type const &operand) noexcept {
-    return operand.round(rdf4cpp::rdf::util::RoundingMode::Floor);
+    return operand.round(rdf4cpp::util::RoundingMode::Floor);
 }
 
 template<>
 nonstd::expected<capabilities::Numeric<xsd_decimal>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_decimal>::ceil(cpp_type const &operand) noexcept {
-    return operand.round(rdf4cpp::rdf::util::RoundingMode::Ceil);
+    return operand.round(rdf4cpp::util::RoundingMode::Ceil);
 }
 
 template<>
@@ -145,4 +145,4 @@ template struct LiteralDatatypeImpl<xsd_decimal,
                                     capabilities::Promotable,
                                     capabilities::FixedId>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

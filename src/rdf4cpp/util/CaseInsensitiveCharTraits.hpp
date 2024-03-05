@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 
 /**
  * Case insensitive char traits.
@@ -64,6 +64,6 @@ struct CiCharTraits : std::char_traits<char> {
  */
 using CiStringView = std::basic_string_view<char, CiCharTraits>;
 
-}  //namespace rdf4cpp::rdf::util
+}  //namespace rdf4cpp::util
 
 #endif  //RDF4CPP_RDF_UTIL_CASEINSENSITIVECHARTRAITS_HPP

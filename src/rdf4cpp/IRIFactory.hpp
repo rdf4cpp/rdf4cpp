@@ -9,7 +9,7 @@
 #include <rdf4cpp/util/Expected.hpp>
 #include <rdf4cpp/IRIView.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 /**
  * Stores a base IRI and a prefix map and allows to create IRIs by possibly applying both.
  */
@@ -89,5 +89,5 @@ public:
     [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 };
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 #endif  //RDF4CPP_IRIFACTORY_HPP

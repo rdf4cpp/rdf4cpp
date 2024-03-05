@@ -5,7 +5,7 @@
 #include <string_view>
 #include <variant>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 
 /**
  * Tags to control the construction of CowStrings
@@ -203,6 +203,6 @@ public:
     }
 };
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::util
 
 #endif  //RDF4CPP_UTIL_COWSTRING_HPP

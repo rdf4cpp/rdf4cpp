@@ -11,7 +11,7 @@
 #include <memory>
 #include <utility>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 
 struct Dataset {
@@ -180,5 +180,5 @@ public:
 };
 
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 #endif  //RDF4CPP_DATASET_HPP

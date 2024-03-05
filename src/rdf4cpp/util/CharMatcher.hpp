@@ -6,7 +6,7 @@
 /**
  * purpose-build for IRIView::quick_validate and only included there.
  */
-namespace rdf4cpp::rdf::util::char_matcher_detail {
+namespace rdf4cpp::util::char_matcher_detail {
 
 template<class T>
 concept CharMatcher = requires(const T a, int c) {{a.match(c)} -> std::same_as<bool>; };

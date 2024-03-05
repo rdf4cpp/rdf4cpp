@@ -4,7 +4,7 @@
 #include <rdf4cpp/query/QuadPattern.hpp>
 #include <rdf4cpp/query/TriplePattern.hpp>
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 
 struct Solution {
 private:
@@ -49,6 +49,6 @@ public:
     [[nodiscard]] const_iterator begin() const noexcept;
     [[nodiscard]] const_iterator end() const noexcept;
 };
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query
 
 #endif  //RDF4CPP_SOLUTION_HPP

@@ -5,7 +5,7 @@
 
 #include <utility>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 storage::identifier::NodeBackendID Graph::to_node_id(Node node) noexcept {
     return node.backend_handle().id();
@@ -86,7 +86,7 @@ std::ostream &operator<<(std::ostream &os, Graph const &graph) {
     return os;
 }
 
-Statement Graph::iterator::to_statement(rdf4cpp::rdf::Graph::triple const &t) const noexcept {
+Statement Graph::iterator::to_statement(rdf4cpp::Graph::triple const &t) const noexcept {
     return Statement{parent_->to_node(t[0]), parent_->to_node(t[1]), parent_->to_node(t[2])};
 }
 
@@ -176,4 +176,4 @@ bool Graph::solution_iterator::operator!=(Graph::sentinel) const noexcept {
     return iter_ != Graph::sentinel{};
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

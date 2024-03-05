@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <format>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::datatypes::registry::util {
 
 /**
  * Parses a valid string representation of a integral number
@@ -206,6 +206,6 @@ bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noe
     return to_chars_canonical(value, writer);
 }
 
-} // namespace rdf4cpp::rdf::datatypes::registry::util
+} // namespace rdf4cpp::datatypes::registry::util
 
 #endif  //RDF4CPP_REGISTRY_CHARCONVEXT_HPP

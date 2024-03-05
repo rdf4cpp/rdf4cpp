@@ -2,7 +2,7 @@
 
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -10,7 +10,7 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
     using namespace registry::util;
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
-    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
@@ -59,14 +59,14 @@ capabilities::Inlineable<xsd_time>::cpp_type capabilities::Inlineable<xsd_time>:
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_time>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return registry::util::compare_time_points(rdf::util::construct(rdf::util::TimePointReplacementDate, lhs.first), lhs.second,
-                                                 rdf::util::construct(rdf::util::TimePointReplacementDate, rhs.first), rhs.second);
+    return registry::util::compare_time_points(rdf4cpp::util::construct(rdf4cpp::util::TimePointReplacementDate, lhs.first), lhs.second,
+                                               rdf4cpp::util::construct(rdf4cpp::util::TimePointReplacementDate, rhs.first), rhs.second);
 }
 
 template<>
 template<>
 capabilities::Subtype<xsd_time>::super_cpp_type<0> capabilities::Subtype<xsd_time>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(rdf::util::construct(rdf::util::TimePointReplacementDate, value.first), value.second);
+    return std::make_pair(rdf4cpp::util::construct(rdf4cpp::util::TimePointReplacementDate, value.first), value.second);
 }
 
 template<>
@@ -81,4 +81,4 @@ template struct LiteralDatatypeImpl<xsd_time,
                                     capabilities::FixedId,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

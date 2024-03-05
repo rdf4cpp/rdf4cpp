@@ -7,7 +7,7 @@
 #include <optional>
 #include <string_view>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 /**
  * Base backend interface for NodeScopes.
@@ -44,6 +44,6 @@ struct INodeScope {
     virtual void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) = 0;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_INODESCOPE_HPP

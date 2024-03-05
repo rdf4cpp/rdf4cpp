@@ -6,7 +6,7 @@
 
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 struct ReferenceNodeScopeManager : INodeScopeManager {
     using node_scope_storage_type = dice::sparse_map::sparse_map<
@@ -21,6 +21,6 @@ struct ReferenceNodeScopeManager : INodeScopeManager {
     NodeScope &scope(std::string_view name) noexcept override;
 };
 
-} // namespace rdf4cpp::rdf::bnode_mngt
+} // namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_REFERENCENODESCOPEMANAGER_HPP

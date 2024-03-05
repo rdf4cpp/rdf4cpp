@@ -12,7 +12,7 @@
 #include <rdf4cpp/Quad.hpp>
 #include <rdf4cpp/parser/IStreamQuadIterator.hpp>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 struct IStreamQuadIterator::Impl {
     using flags_type = IStreamQuadIterator::flags_type;
@@ -86,6 +86,6 @@ public:
     [[nodiscard]] uint64_t current_column() const noexcept;
 };
 
-}  // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::parser
 
 #endif  // RDF4CPP_PARSER_PRIVATE_IMPL_HPP

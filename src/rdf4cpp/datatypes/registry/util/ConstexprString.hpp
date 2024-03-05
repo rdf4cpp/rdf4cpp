@@ -8,7 +8,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::datatypes::registry::util {
+namespace rdf4cpp::datatypes::registry::util {
 /**
  * Literal class type that wraps a constant expression string.
  *
@@ -74,11 +74,11 @@ struct ConstexprStringHolder {
     static constexpr auto value = Data;
 };
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::util
+}  // namespace rdf4cpp::datatypes::registry::util
 
 template<size_t N>
-struct std::formatter<rdf4cpp::rdf::datatypes::registry::util::ConstexprString<N>> : std::formatter<std::string_view> {
-    auto format(rdf4cpp::rdf::datatypes::registry::util::ConstexprString<N> const &s, format_context& ctx) const {
+struct std::formatter<rdf4cpp::datatypes::registry::util::ConstexprString<N>> : std::formatter<std::string_view> {
+    auto format(rdf4cpp::datatypes::registry::util::ConstexprString<N> const &s, format_context& ctx) const {
         return formatter<string_view>::format(static_cast<std::string_view>(s), ctx);
     }
 };

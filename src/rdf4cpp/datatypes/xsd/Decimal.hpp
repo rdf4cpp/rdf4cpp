@@ -11,14 +11,14 @@
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_decimal> {
     // needs at least 18 decimal digits of precision
     // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
-    using cpp_datatype = rdf4cpp::rdf::util::BigDecimal<>;
+    using cpp_datatype = rdf4cpp::util::BigDecimal<>;
 };
 
 template<>
@@ -81,10 +81,10 @@ extern template struct LiteralDatatypeImpl<xsd_decimal,
                                            capabilities::Promotable,
                                            capabilities::FixedId>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                                registry::capabilities::Logical,
@@ -93,13 +93,13 @@ struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                                registry::capabilities::Promotable,
                                                registry::capabilities::FixedId> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Decimal const xsd_decimal_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_DECIMAL_HPP

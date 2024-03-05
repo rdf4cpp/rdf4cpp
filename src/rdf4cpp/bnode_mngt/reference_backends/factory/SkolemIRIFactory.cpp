@@ -1,6 +1,6 @@
 #include <rdf4cpp/bnode_mngt/reference_backends/factory/SkolemIRIFactory.hpp>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 SkolemIRIFactory::SkolemIRIFactory(std::string iri_prefix) noexcept : iri_prefix{std::move(iri_prefix)} {
 }
@@ -19,4 +19,4 @@ storage::identifier::NodeBackendHandle SkolemIRIFactory::make_node(IIdGenerator 
     return storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage};
 }
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt

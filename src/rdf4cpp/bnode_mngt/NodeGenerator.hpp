@@ -12,7 +12,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 struct NodeScope;
 
@@ -134,6 +134,6 @@ public:
     [[nodiscard]] Node generate_node(storage::DynNodeStorage node_storage = storage::default_node_storage);
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_RDF_UTIL_BLANKNODEMANAGER_HPP

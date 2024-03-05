@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage::detail {
+namespace rdf4cpp::storage::reference_node_storage::detail {
 
     /**
      * A constant-size (i.e. non-growing), heap-allocated string type
@@ -102,6 +102,6 @@ namespace rdf4cpp::rdf::storage::reference_node_storage::detail {
 
     using ConstString = BasicConstString<char>;
 
-} // namespace rdf4cpp::rdf::storage::reference_node_storage::detail
+} // namespace rdf4cpp::storage::reference_node_storage::detail
 
 #endif // RDF4CPP_REFERENCENODESTORAGE_CONSTSTRING_HPP

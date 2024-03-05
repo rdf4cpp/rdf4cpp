@@ -1,6 +1,6 @@
 #include "HexBinary.hpp"
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 namespace encode_decode_detail {
@@ -138,4 +138,4 @@ bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type 
 template struct LiteralDatatypeImpl<xsd_hex_binary,
                                     capabilities::FixedId>;
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry

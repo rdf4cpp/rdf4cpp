@@ -1,6 +1,6 @@
 #include "DatatypeRegistry.hpp"
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 bool relaxed_parsing_mode = false;
 
@@ -242,4 +242,4 @@ std::optional<DatatypeRegistry::DatatypeConverter> DatatypeRegistry::get_common_
     }
 }
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry

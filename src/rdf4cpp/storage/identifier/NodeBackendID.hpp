@@ -4,7 +4,7 @@
 #include "NodeID.hpp"
 #include "RDFNodeType.hpp"
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 
 struct NodeBackendID {
     using underlying_type = uint64_t;
@@ -144,18 +144,18 @@ public:
 
 static_assert(sizeof(NodeBackendID) == sizeof(void *));
 
-} // namespace rdf4cpp::rdf::storage::identifier
+} // namespace rdf4cpp::storage::identifier
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::identifier::NodeBackendID> {
-    static inline size_t dice_hash(rdf4cpp::rdf::storage::identifier::NodeBackendID const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::identifier::NodeBackendID> {
+    static inline size_t dice_hash(rdf4cpp::storage::identifier::NodeBackendID const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(x.to_underlying());
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::storage::identifier::NodeBackendID> {
-    inline size_t operator()(rdf4cpp::rdf::storage::identifier::NodeBackendID const &v) const noexcept {
+struct std::hash<rdf4cpp::storage::identifier::NodeBackendID> {
+    inline size_t operator()(rdf4cpp::storage::identifier::NodeBackendID const &v) const noexcept {
         return ::dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(v);
     }
 };

@@ -2,7 +2,7 @@
 #include <rdf4cpp/writer/Prefixes.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
 
-namespace rdf4cpp::rdf::writer {
+namespace rdf4cpp::writer {
 
 bool SerializationState::begin(BufWriterParts const writer) noexcept {
     for (auto const &p : iri_prefixes) {
@@ -31,4 +31,4 @@ bool SerializationState::flush(BufWriterParts const writer) noexcept {
     return true;
 }
 
-} // namespace rdf4cpp::rdf::writer
+} // namespace rdf4cpp::writer

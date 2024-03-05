@@ -3,7 +3,7 @@
 
 #include <array>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 
 /**
  * @brief Represents a boolean with three states
@@ -106,6 +106,6 @@ constexpr TriBool partial_weak_ordering_eq(std::partial_ordering const l, std::w
     return l == r;
 }
 
-} // namespace rdf4cpp::rdf::util
+} // namespace rdf4cpp::util
 
 #endif // RDF4CPP_UTIL_TRIBOOL_HPP

@@ -36,7 +36,7 @@ for any given datatype.
 The following example defines a simplified version of `xsd:int` using only the default capability.
 
 ```c++
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
     inline constexpr util::ConstexprString basic_int = "http://basic-url.com#int";
         
     template<>
@@ -73,7 +73,7 @@ using [Literal::value](../../Literal.hpp). The functions and mappings that need 
 
 #### Logical capability example
 ```c++
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
     inline constexpr util::ConstexprString basic_int = "http://basic-url.com#int";
         
     template<>

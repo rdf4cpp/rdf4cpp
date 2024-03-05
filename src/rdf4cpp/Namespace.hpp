@@ -9,7 +9,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 /**
  * Namespace provides a simple tool to create IRIs from a certain namespace and vocabulary. Each Namespace instance maintains an internal cache to save roundtrip to storage::NodeStorage.<br/>
@@ -69,6 +69,6 @@ public:
      */
     virtual void clear() const;
 };
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 
 #endif  //RDF4CPP_NAMESPACE_HPP

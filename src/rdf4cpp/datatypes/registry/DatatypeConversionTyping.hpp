@@ -10,7 +10,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeID.hpp>
 #include <rdf4cpp/datatypes/registry/util/TypeList.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 /**
  * A conversion from a source_type to a target_type
@@ -206,6 +206,6 @@ public:
     }
 };
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 #endif  //RDF4CPP_DATATYPECONVERSIONTYPING_HPP

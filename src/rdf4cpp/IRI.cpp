@@ -7,7 +7,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 IRI::IRI(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
 IRI::IRI() noexcept : Node{NodeBackendHandle{{}, storage::identifier::RDFNodeType::IRI, {}}} {}
@@ -143,4 +143,4 @@ IRI operator""_iri(char const *str, size_t const len) {
 
 }  // namespace shorthands
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

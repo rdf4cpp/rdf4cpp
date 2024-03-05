@@ -10,12 +10,12 @@
 #include <rdf4cpp/datatypes/xsd/time/DateTime.hpp>
 #include <rdf4cpp/util/Timezone.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTimeStamp> {
-    using cpp_datatype = rdf::util::ZonedTime;
+    using cpp_datatype = rdf4cpp::util::ZonedTime;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_dateTimeStamp> {
@@ -53,9 +53,9 @@ extern template struct LiteralDatatypeImpl<xsd_dateTimeStamp,
                                            capabilities::Subtype,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct DateTimeStamp : registry::LiteralDatatypeImpl<registry::xsd_dateTimeStamp,
                                                      registry::capabilities::Comparable,
@@ -70,19 +70,19 @@ struct DateTimeStamp : registry::LiteralDatatypeImpl<registry::xsd_dateTimeStamp
     static constexpr util::Timezone inlining_default_timezone = util::Timezone();
 };
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::DateTimeStamp const xsd_DateTimeStamp_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::ZonedTime> {
-    static size_t dice_hash(rdf4cpp::rdf::util::ZonedTime const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::ZonedTime> {
+    static size_t dice_hash(rdf4cpp::util::ZonedTime const &x) noexcept {
         auto tp = x.get_sys_time().time_since_epoch().count();
         auto off = x.get_time_zone().offset.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(tp, off));

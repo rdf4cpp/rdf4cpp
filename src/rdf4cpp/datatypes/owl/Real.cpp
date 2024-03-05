@@ -1,6 +1,6 @@
 #include "Real.hpp"
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -54,4 +54,4 @@ template struct LiteralDatatypeImpl<owl_real,
                                     capabilities::Numeric,
                                     capabilities::Comparable>;
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry

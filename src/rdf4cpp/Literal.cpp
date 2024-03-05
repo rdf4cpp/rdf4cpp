@@ -22,7 +22,7 @@
 
 #include <openssl/evp.h>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     auto const it = std::find_if(std::execution::unseq, lexical_form.begin(), lexical_form.end(), [](char const ch) noexcept {
@@ -31,12 +31,12 @@ static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_fo
 
     return it != lexical_form.end();
 }
-} // namespace rdf4cpp::rdf
+} // namespace rdf4cpp
 
 #ifdef __AVX2__
 #include <immintrin.h>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 bool Literal::lexical_form_needs_escape(std::string_view lexical_form) noexcept {
     // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     __m256i const masks[4]{_mm256_set1_epi8('"'),
@@ -61,14 +61,14 @@ bool Literal::lexical_form_needs_escape(std::string_view lexical_form) noexcept 
 }
 } // rdf4cpp::rdf
 #else
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
     return lexical_form_needs_escape_non_simd(lexical_form);
 }
-} // namespace rdf4cpp::rdf
+} // namespace rdf4cpp
 #endif
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 template<typename T, typename S>
 static std::string run_serialize(S serialize, T const &value) {
@@ -185,7 +185,7 @@ Literal Literal::make_string_like_copy_lang_tag(std::string_view str, Literal co
 }
 
 Literal Literal::lang_tagged_get_de_inlined() const noexcept {
-    auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
+    auto [_, id] = rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
     return Literal{NodeBackendHandle{NodeID{id, this->handle_.node_id().literal_type()},
                                      handle_.type(),
                                      handle_.storage()}};
@@ -467,7 +467,7 @@ Literal Literal::find_simple(std::string_view lexical_form, DynNodeStorage node_
     return Literal{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
 }
 
-Literal Literal::find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, rdf4cpp::rdf::Node::DynNodeStorage node_storage) noexcept {
+Literal Literal::find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, rdf4cpp::Node::DynNodeStorage node_storage) noexcept {
     auto esc = lexical_form_needs_escape(lexical_form);
     auto nid = node_storage.find_id(storage::view::LexicalFormLiteralBackendView{
             storage::identifier::NodeID::rdf_langstring_iri.first, lexical_form, lang_tag, esc});
@@ -645,8 +645,8 @@ Literal Literal::as_simplified_lexical_form(DynNodeStorage node_storage) const n
 std::string_view Literal::language_tag() const noexcept {
     if (this->datatype_eq<datatypes::rdf::LangString>()) {
         if (this->is_inlined()) {
-            auto [tag, _] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(this->handle_.node_id().literal_id());
-            return rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::inlined_to_tag(tag);
+            auto [tag, _] = rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(this->handle_.node_id().literal_id());
+            return rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::inlined_to_tag(tag);
         }
         return handle_.literal_backend().get_lexical().language_tag;
     }
@@ -2301,8 +2301,8 @@ Literal Literal::sha512(DynNodeStorage node_storage) const {
 Literal Literal::now(DynNodeStorage node_storage) noexcept {
     auto n = std::chrono::floor<std::chrono::milliseconds>(std::chrono::system_clock::now());
     util::Timezone tz{};
-    rdf::util::TimePoint t = tz.to_local(n);
-    rdf::util::OptionalTimezone opt = std::nullopt;
+    rdf4cpp::util::TimePoint t = tz.to_local(n);
+    rdf4cpp::util::OptionalTimezone opt = std::nullopt;
     return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
 }
 
@@ -2408,7 +2408,7 @@ Literal Literal::as_seconds(DynNodeStorage node_storage) const noexcept {
     auto r = this->seconds();
     if (!r.has_value())
         return Literal{};
-    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf::util::BigDecimal<>{r->count(), 3}, select_node_storage(node_storage));
+    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf4cpp::util::BigDecimal<>{r->count(), 3}, select_node_storage(node_storage));
 }
 
 std::optional<util::Timezone> Literal::timezone() const noexcept {
@@ -2532,4 +2532,4 @@ Literal operator""_xsd_ulong(unsigned long long int i) {
 }
 
 }  // namespace shorthands
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

@@ -5,7 +5,7 @@
 
 #include <utility>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 storage::identifier::NodeBackendID Dataset::to_node_id(Node node) noexcept {
     return node.backend_handle().id();
@@ -244,4 +244,4 @@ bool Dataset::solution_iterator::operator!=(Dataset::sentinel) const noexcept {
     return !(*this == Dataset::sentinel{});
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

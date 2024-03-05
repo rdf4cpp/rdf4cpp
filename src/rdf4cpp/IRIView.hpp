@@ -6,7 +6,7 @@
 #include <string>
 #include <string_view>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 /**
  * std::format gets you a printable string.
  */
@@ -198,38 +198,38 @@ public:
 }
 
 template<>
-struct std::formatter<rdf4cpp::rdf::IRIFactoryError> : std::formatter<string_view> {
-    auto format(rdf4cpp::rdf::IRIFactoryError p, format_context& ctx) const {
+struct std::formatter<rdf4cpp::IRIFactoryError> : std::formatter<string_view> {
+    auto format(rdf4cpp::IRIFactoryError p, format_context& ctx) const {
         std::string_view s{};
         switch (p) {
-            case rdf4cpp::rdf::IRIFactoryError::Ok:
+            case rdf4cpp::IRIFactoryError::Ok:
                 s = "Ok";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::UnknownPrefix:
+            case rdf4cpp::IRIFactoryError::UnknownPrefix:
                 s = "UnknownPrefix";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::Relative:
+            case rdf4cpp::IRIFactoryError::Relative:
                 s = "Relative";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidScheme:
+            case rdf4cpp::IRIFactoryError::InvalidScheme:
                 s = "InvalidScheme";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidUserinfo:
+            case rdf4cpp::IRIFactoryError::InvalidUserinfo:
                 s = "InvalidUserinfo";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidHost:
+            case rdf4cpp::IRIFactoryError::InvalidHost:
                 s = "InvalidHost";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidPort:
+            case rdf4cpp::IRIFactoryError::InvalidPort:
                 s = "InvalidPort";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidPath:
+            case rdf4cpp::IRIFactoryError::InvalidPath:
                 s = "InvalidPath";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidQuery:
+            case rdf4cpp::IRIFactoryError::InvalidQuery:
                 s = "InvalidQuery";
                 break;
-            case rdf4cpp::rdf::IRIFactoryError::InvalidFragment:
+            case rdf4cpp::IRIFactoryError::InvalidFragment:
                 s = "InvalidFragment";
                 break;
             default:

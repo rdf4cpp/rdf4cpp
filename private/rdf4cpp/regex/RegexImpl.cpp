@@ -1,6 +1,6 @@
 #include "RegexImpl.hpp"
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 namespace detail {
 
@@ -36,4 +36,4 @@ bool Regex::Impl::regex_search(std::string_view const str) const noexcept {
     return RE2::PartialMatch(str, this->regex);
 }
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex

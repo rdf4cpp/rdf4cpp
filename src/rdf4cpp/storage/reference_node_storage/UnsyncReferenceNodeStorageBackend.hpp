@@ -11,7 +11,7 @@
 #include <rdf4cpp/storage/reference_node_storage/VariableBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/UnsyncNodeTypeStorage.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 /**
  * NON-Thread-safe reference implementation of a INodeStorageBackend.
@@ -75,6 +75,6 @@ public:
     bool erase_variable(identifier::NodeID id) noexcept;
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_UNSYNCREFERENCENODESTORAGEBACKEND_HPP

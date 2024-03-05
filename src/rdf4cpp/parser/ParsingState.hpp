@@ -13,7 +13,7 @@
 #include <string_view>
 #include <optional>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 
 /**
  * The publicly known internal state of the IStreamQuadIterator.
@@ -57,6 +57,6 @@ struct ParsingState {
     blank_node_scope_manager_type *blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance();
 };
 
-}  //namespace rdf4cpp::rdf::parser
+}  //namespace rdf4cpp::parser
 
 #endif  //RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP

@@ -15,7 +15,7 @@
 #include <string_view>
 #include <type_traits>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 namespace capabilities {
 
@@ -411,5 +411,5 @@ private:
     [[maybe_unused]] std::nullptr_t const init_dummy = init();
 };
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 #endif  //RDF4CPP_LITERALDATATYPEIMPL_HPP

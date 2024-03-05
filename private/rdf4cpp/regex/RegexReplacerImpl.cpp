@@ -4,7 +4,7 @@
 #include <cctype>
 #include <sstream>
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 namespace detail {
 
@@ -82,5 +82,5 @@ void RegexReplacer::Impl::regex_replace(std::string &str) const noexcept {
     RE2::GlobalReplace(&str, this->regex->regex, this->rewrite);
 }
 
-}  // namespace rdf4cpp::rdf::regex
+}  // namespace rdf4cpp::regex
 

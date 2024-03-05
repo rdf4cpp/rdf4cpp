@@ -8,7 +8,7 @@
 
 #include <memory>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 /**
  * Storage for one of the Node Backend types. Includes bidirectional mappings between the Backend type and identifier::NodeID,
@@ -91,6 +91,6 @@ public:
     detail::BiDirFlatMap<backend_id_type, backend_type, backend_view_type, backend_hasher, backend_equal> mapping;
 };
 
-}  // namespace rdf4cpp::rdf::storage::reference_node_storage
+}  // namespace rdf4cpp::storage::reference_node_storage
 
 #endif  //RDF4CPP_UNSYNCNODETYPESTORAGE_HPP

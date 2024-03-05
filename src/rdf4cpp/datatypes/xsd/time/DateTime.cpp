@@ -2,18 +2,18 @@
 
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime>::from_string(std::string_view s) {
-    using namespace rdf::datatypes::registry::util;
+    using namespace datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T', identifier>(s);
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
-    auto tz = rdf::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
     if (registry::relaxed_parsing_mode && !date.ok())
@@ -41,7 +41,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
         }
     }
 
-    return std::make_pair(rdf::util::construct(date, time), tz);
+    return std::make_pair(rdf4cpp::util::construct(date, time), tz);
 }
 
 template<>
@@ -66,12 +66,12 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dateT
 
 template<>
 capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
-    return std::make_pair(rdf::util::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
+    return std::make_pair(rdf4cpp::util::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
 }
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_dateTime>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    return rdf::datatypes::registry::util::compare_time_points(lhs.first, lhs.second, rhs.first, rhs.second);
+    return rdf4cpp::datatypes::registry::util::compare_time_points(lhs.first, lhs.second, rhs.first, rhs.second);
 }
 #endif
 
@@ -79,4 +79,4 @@ template struct LiteralDatatypeImpl<xsd_dateTime,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
                                     capabilities::Inlineable>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

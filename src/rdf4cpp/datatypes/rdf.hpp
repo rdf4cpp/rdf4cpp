@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/datatypes/rdf/LangString.hpp>
 
-namespace rdf4cpp::rdf::datatypes::rdf {
+namespace rdf4cpp::datatypes::rdf {
 }
 
 #endif  // RDF4CPP_DATATYPES_RDF_HPP

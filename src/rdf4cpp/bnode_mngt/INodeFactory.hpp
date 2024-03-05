@@ -6,7 +6,7 @@
 #include <rdf4cpp/storage/identifier/NodeBackendHandle.hpp>
 
 
-namespace rdf4cpp::rdf::bnode_mngt {
+namespace rdf4cpp::bnode_mngt {
 
 struct NodeScope;
 
@@ -22,6 +22,6 @@ struct INodeFactory {
                                                                                  storage::DynNodeStorage node_storage) noexcept = 0;
 };
 
-}  //namespace rdf4cpp::rdf::bnode_mngt
+}  //namespace rdf4cpp::bnode_mngt
 
 #endif  //RDF4CPP_RDF_BNODEMANAGEMENT_INODEFACADE

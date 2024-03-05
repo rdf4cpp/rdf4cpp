@@ -11,8 +11,8 @@
 #include <iostream>
 #include <thread>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage;
+using namespace rdf4cpp;
+using namespace rdf4cpp::storage;
 using namespace std::chrono_literals;
 
 struct SlowDestructingBackend : reference_node_storage::SyncReferenceNodeStorageBackend {

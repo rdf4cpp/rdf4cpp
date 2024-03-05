@@ -5,7 +5,7 @@
 #include <rdf4cpp/storage/view/LiteralBackendView.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/ConstString.hpp>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage {
+namespace rdf4cpp::storage::reference_node_storage {
 
 struct FallbackLiteralBackend {
     using view_type = view::LexicalFormLiteralBackendView;
@@ -40,6 +40,6 @@ struct FallbackLiteralBackend {
     }
 };
 
-}  // namespace rdf4cpp::rdf::storage::view
+}  // namespace rdf4cpp::storage::view
 
 #endif  //RDF4CPP_FALLBACKLITERALBACKEND_HPP

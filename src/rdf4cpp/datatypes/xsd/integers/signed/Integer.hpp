@@ -8,7 +8,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -65,10 +65,10 @@ extern template struct LiteralDatatypeImpl<xsd_integer,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct Integer : registry::LiteralDatatypeImpl<registry::xsd_integer,
                                                registry::capabilities::Logical,
@@ -78,13 +78,13 @@ struct Integer : registry::LiteralDatatypeImpl<registry::xsd_integer,
                                                registry::capabilities::FixedId,
                                                registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::Integer const xsd_intenger_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_XSD_INTEGER_HPP

@@ -4,9 +4,9 @@
 #include <cstdio>
 #include <rdf4cpp/parser/IStreamQuadIterator.hpp>
 
-namespace rdf4cpp::rdf::parser {
+namespace rdf4cpp::parser {
 /**
-     * Similar to rdf4cpp::rdf::parser::IStreamQuadIterator
+     * Similar to rdf4cpp::parser::IStreamQuadIterator
      * Parses the file by the given path and tries to extract Quads given in TURTLE format.
      *
      * @note the iterator _starts on_ the first Quad
@@ -15,7 +15,7 @@ namespace rdf4cpp::rdf::parser {
      *
      * @example
      * @code
-     * for (const auto& e : rdf4cpp::rdf::parser::RDFFileParser{"somewhere.ttl"}) {
+     * for (const auto& e : rdf4cpp::parser::RDFFileParser{"somewhere.ttl"}) {
      *  if (e.has_value())
      *     std::cout << e.value();
      *  else
@@ -81,6 +81,6 @@ public:
 [[nodiscard]] bool operator==(const RDFFileParser::iterator &iter, std::default_sentinel_t s) noexcept;
 [[nodiscard]] bool operator==(std::default_sentinel_t s, const RDFFileParser::iterator &iter) noexcept;
 
-}  // namespace rdf4cpp::rdf::parser
+}  // namespace rdf4cpp::parser
 
 #endif  //RDF4CPP_RDFFILEPARSER_HPP

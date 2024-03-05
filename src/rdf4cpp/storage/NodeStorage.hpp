@@ -9,7 +9,7 @@
 #include <rdf4cpp/storage/view/VariableBackendView.hpp>
 #include <rdf4cpp/storage/view/IRIBackendView.hpp>
 
-namespace rdf4cpp::rdf::storage {
+namespace rdf4cpp::storage {
 
 template<typename NS>
 concept NodeStorage = requires (NS ns_mut,
@@ -363,18 +363,18 @@ public:
 
 extern DynNodeStorage default_node_storage;
 
-} // namespace rdf4cpp::rdf::storage
+} // namespace rdf4cpp::storage
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::storage::DynNodeStorage> {
-    static inline size_t dice_hash(rdf4cpp::rdf::storage::DynNodeStorage const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::DynNodeStorage> {
+    static inline size_t dice_hash(rdf4cpp::storage::DynNodeStorage const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(x.backend());
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::storage::DynNodeStorage> {
-    inline size_t operator()(rdf4cpp::rdf::storage::DynNodeStorage const &v) const noexcept {
+struct std::hash<rdf4cpp::storage::DynNodeStorage> {
+    inline size_t operator()(rdf4cpp::storage::DynNodeStorage const &v) const noexcept {
         return ::dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(v);
     }
 };

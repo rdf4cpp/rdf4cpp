@@ -8,7 +8,7 @@
 #include <rdf4cpp/datatypes/registry/util/StaticFlatMap.hpp>
 #include <rdf4cpp/storage/identifier/LiteralType.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 using storage::identifier::LiteralType;
 
@@ -123,6 +123,6 @@ inline constexpr uint64_t min_dynamic_datatype_id =
         48;
 #endif
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
 #endif  //RDF4CPP_REGISTRY_FIXED_ID_MAPPINGS_HPP

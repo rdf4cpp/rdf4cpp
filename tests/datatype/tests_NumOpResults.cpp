@@ -7,7 +7,7 @@
 #include <limits>
 #include <iostream>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 using namespace datatypes::xsd;
 using datatypes::DynamicError;
 

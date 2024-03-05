@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/ClosedNamespace.hpp>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 /**
  * A ClosedNamespace for https://www.w3.org/TR/rdf-schema/
@@ -20,6 +20,6 @@ public:
     }
 };
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces
 
 #endif  //RDF4CPP_RDFS_HPP

@@ -3,7 +3,7 @@
 #include <ranges>
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -95,4 +95,4 @@ template struct LiteralDatatypeImpl<xsd_yearMonthDuration,
                                     capabilities::FixedId,
                                     capabilities::Inlineable,
                                     capabilities::Subtype>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

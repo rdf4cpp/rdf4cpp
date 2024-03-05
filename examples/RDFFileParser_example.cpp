@@ -3,7 +3,7 @@
 
 int main() {
     // read file
-    for (const auto &v : rdf4cpp::rdf::parser::RDFFileParser{"./RDFFileParser_simple.ttl"}) {
+    for (const auto &v : rdf4cpp::parser::RDFFileParser{"./RDFFileParser_simple.ttl"}) {
         if (v.has_value())  // check if parser returns a successful read value
             std::cout << v.value() << "\n";
         else  // or an error

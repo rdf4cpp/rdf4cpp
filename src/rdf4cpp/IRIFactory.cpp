@@ -2,7 +2,7 @@
 
 #include <rdf4cpp/datatypes/registry/DatatypeRegistry.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 /**
 * turns the parts of a IRI back into a full IRI.
@@ -218,7 +218,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
 }
 
 nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::DynNodeStorage node_storage) noexcept {
-    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
+    if (!rdf4cpp::datatypes::registry::relaxed_parsing_mode) {
         if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
             return nonstd::make_unexpected(e);
         }
@@ -244,7 +244,7 @@ std::string_view IRIFactory::get_base() const noexcept {
 }
 
 IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
-    if (!rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode) {
+    if (!rdf4cpp::datatypes::registry::relaxed_parsing_mode) {
         if (auto const e = IRIView{b}.quick_validate(); e != IRIFactoryError::Ok) {
             return e;
         }
@@ -254,4 +254,4 @@ IRIFactoryError IRIFactory::set_base(std::string_view b) noexcept {
     return IRIFactoryError::Ok;
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

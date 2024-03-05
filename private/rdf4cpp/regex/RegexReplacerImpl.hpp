@@ -4,7 +4,7 @@
 #include <rdf4cpp/regex/RegexReplacer.hpp>
 #include "RegexImpl.hpp"
 
-namespace rdf4cpp::rdf::regex {
+namespace rdf4cpp::regex {
 
 struct RegexReplacer::Impl {
     Regex::Impl const *regex;
@@ -14,6 +14,6 @@ struct RegexReplacer::Impl {
     void regex_replace(std::string &str) const noexcept;
 };
 
-}  //namespace rdf4cpp::rdf::regex
+}  //namespace rdf4cpp::regex
 
 #endif   //RDF4CPP_RDF_UTIL_PRIVATE_REGEXREPLACER_IMPL_HPP

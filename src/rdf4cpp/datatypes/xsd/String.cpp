@@ -1,6 +1,6 @@
 #include "String.hpp"
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -14,4 +14,4 @@ template struct LiteralDatatypeImpl<xsd_string,
                                     capabilities::Comparable,
                                     capabilities::FixedId>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

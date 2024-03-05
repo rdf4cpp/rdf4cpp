@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf::datatypes::xsd;
+using namespace rdf4cpp::datatypes::xsd;
 
 // ascii -> value
 // note: modified to decode '=' to 0 because the original table is not supposed to be used to decode padding hextets

@@ -8,7 +8,7 @@
 #include <dice/hash.hpp>
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 
-namespace rdf4cpp::rdf::util {
+namespace rdf4cpp::util {
 class Timezone {
     // heavily inspired by https://howardhinnant.github.io/date/tz.html#Examples
 public:
@@ -119,26 +119,26 @@ using ZonedTime = std::chrono::zoned_time<std::chrono::milliseconds, Timezone>;
 constexpr std::chrono::year_month_day TimePointReplacementDate = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
 constexpr std::chrono::milliseconds TimePointReplacementTimeOfDay{0};
 
-constexpr rdf::util::TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) noexcept {
+constexpr util::TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) noexcept {
     auto sd = static_cast<std::chrono::local_days>(date);
-    auto ms = static_cast<rdf::util::TimePoint>(sd);
+    auto ms = static_cast<util::TimePoint>(sd);
     ms += time_of_day;
     return ms;
 }
 
-}  // namespace rdf4cpp::rdf::util
+}  // namespace rdf4cpp::util
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::Timezone> {
-    static size_t dice_hash(rdf4cpp::rdf::util::Timezone const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::Timezone> {
+    static size_t dice_hash(rdf4cpp::util::Timezone const &x) noexcept {
         auto off = x.offset.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
     }
 };
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::OptionalTimezone> {
-    static size_t dice_hash(rdf4cpp::rdf::util::OptionalTimezone const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::OptionalTimezone> {
+    static size_t dice_hash(rdf4cpp::util::OptionalTimezone const &x) noexcept {
         auto off = x.has_value() ? x->offset.count() : std::chrono::minutes{std::chrono::hours{15}}.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
     }

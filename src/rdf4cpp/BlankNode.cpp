@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/writer/TryWrite.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::identifier::RDFNodeType::BNode, {}}} {}
 BlankNode::BlankNode(std::string_view identifier, DynNodeStorage node_storage)
     : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
@@ -124,4 +124,4 @@ BlankNode operator""_bnode(char const *str, size_t len) {
 }
 
 }  // namespace literals
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

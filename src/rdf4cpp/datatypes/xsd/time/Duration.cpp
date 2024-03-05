@@ -3,7 +3,7 @@
 #include <ranges>
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
@@ -155,13 +155,13 @@ capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_du
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_duration>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    static constexpr std::array<rdf::util::TimePoint, 4> to_compare{
-            rdf::util::construct(std::chrono::year{1696} / 9 / 1, std::chrono::milliseconds{0}),
-            rdf::util::construct(std::chrono::year{1697} / 2 / 1, std::chrono::milliseconds{0}),
-            rdf::util::construct(std::chrono::year{1903} / 3 / 1, std::chrono::milliseconds{0}),
-            rdf::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
+    static constexpr std::array<rdf4cpp::util::TimePoint, 4> to_compare{
+            rdf4cpp::util::construct(std::chrono::year{1696} / 9 / 1, std::chrono::milliseconds{0}),
+            rdf4cpp::util::construct(std::chrono::year{1697} / 2 / 1, std::chrono::milliseconds{0}),
+            rdf4cpp::util::construct(std::chrono::year{1903} / 3 / 1, std::chrono::milliseconds{0}),
+            rdf4cpp::util::construct(std::chrono::year{1903} / 7 / 1, std::chrono::milliseconds{0}),
     };
-    auto cmp = [lhs, rhs](rdf::util::TimePoint tp) {
+    auto cmp = [lhs, rhs](rdf4cpp::util::TimePoint tp) {
         auto l = registry::util::add_duration_to_date_time(tp, lhs);
         auto r = registry::util::add_duration_to_date_time(tp, rhs);
         if (l.time_since_epoch().count().is_invalid() || r.time_since_epoch().count().is_invalid())
@@ -181,4 +181,4 @@ template struct LiteralDatatypeImpl<xsd_duration,
                                     capabilities::Comparable,
                                     capabilities::FixedId,
                                     capabilities::Inlineable>;
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry

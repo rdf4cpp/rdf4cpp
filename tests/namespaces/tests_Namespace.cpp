@@ -4,10 +4,10 @@
 #include "rdf4cpp.hpp"
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("Namespace sanity check") {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
 
     SUBCASE("closed NS") {
         storage::reference_node_storage::SyncReferenceNodeStorageBackend ns;

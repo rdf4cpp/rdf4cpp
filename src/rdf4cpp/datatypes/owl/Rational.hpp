@@ -7,7 +7,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 inline constexpr util::ConstexprString owl_rational{"http://www.w3.org/2002/07/owl#rational"};
 
@@ -47,23 +47,23 @@ extern template struct LiteralDatatypeImpl<owl_rational,
                                            capabilities::Numeric,
                                            capabilities::Comparable>;
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
 
-namespace rdf4cpp::rdf::datatypes::owl {
+namespace rdf4cpp::datatypes::owl {
 
 struct Rational : registry::LiteralDatatypeImpl<registry::owl_rational,
                                                 registry::capabilities::Logical,
                                                 registry::capabilities::Numeric,
                                                 registry::capabilities::Comparable> {};
 
-} // rdf4cpp::rdf::datatypes::owl
+} // rdf4cpp::datatypes::owl
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline owl::Rational const owl_rational_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_OWL_RATIONAL_HPP

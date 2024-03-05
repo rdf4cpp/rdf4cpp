@@ -5,7 +5,7 @@
 #include <ranges>
 #include <vector>
 
-namespace rdf4cpp::rdf::storage::reference_node_storage::detail {
+namespace rdf4cpp::storage::reference_node_storage::detail {
 /**
  * A freelist for indices inside a vector.
  *
@@ -145,6 +145,6 @@ public:
     }
 };
 
-} // namespace rdf4cpp::rdf::storage::reference_node_storage::detail
+} // namespace rdf4cpp::storage::reference_node_storage::detail
 
 #endif // RDF4CPP_RDF_REFERENCENODESTORAGE_INDEXFREELIST_HPP

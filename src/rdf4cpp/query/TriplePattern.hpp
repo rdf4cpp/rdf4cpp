@@ -6,7 +6,7 @@
 #include <array>
 #include <ostream>
 
-namespace rdf4cpp::rdf::query {
+namespace rdf4cpp::query {
 /**
  * <div>TriplePattern</div> is modeled around SPARQL Triple patterns.
  *
@@ -18,7 +18,7 @@ namespace rdf4cpp::rdf::query {
 class TriplePattern {
     // TODO: adjust API to Quad
 protected:
-    using Variable = rdf4cpp::rdf::query::Variable;
+    using Variable = rdf4cpp::query::Variable;
 
     using Entries_t = std::array<Node, 3>;
 
@@ -62,7 +62,7 @@ public:
 
     [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStorage node_storage) const;
 };
-}  // namespace rdf4cpp::rdf::query
+}  // namespace rdf4cpp::query
 
 
 #endif  //RDF4CPP_TRIPLEPATTERN_HPP

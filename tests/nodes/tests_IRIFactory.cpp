@@ -5,7 +5,7 @@
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <array>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("IRIView") {
     CHECK(IRIView{"example"}.is_relative() == true);

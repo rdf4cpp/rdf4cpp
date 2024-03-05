@@ -4,7 +4,7 @@
 
 #include <rdf4cpp/util/CharMatcher.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 IRIView::IRIView(std::string_view iri) noexcept : data(iri) {
 }
 

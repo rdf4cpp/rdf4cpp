@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 /**
  * Represents a decoded xsd:hexBinary value as a byte sequence
@@ -83,33 +83,33 @@ bool capabilities::Default<xsd_hex_binary>::serialize_canonical_string(cpp_type 
 extern template struct LiteralDatatypeImpl<xsd_hex_binary,
                                            capabilities::FixedId>;
 
-} // namespace rdf4cpp::rdf::datatypes::registry
+} // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct HexBinary : registry::LiteralDatatypeImpl<registry::xsd_hex_binary,
                                                  registry::capabilities::FixedId> {};
 
-} // namespace rdf4cpp::rdf::datatypes::xsd
+} // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::HexBinary const xsd_hex_binary_instance;
 
-} // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+} // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
-    static size_t dice_hash(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::datatypes::registry::HexBinaryRepr> {
+    static size_t dice_hash(rdf4cpp::datatypes::registry::HexBinaryRepr const &x) noexcept {
         return Policy::hash_bytes(reinterpret_cast<char const *>(x.bytes.data()), x.bytes.size());
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::rdf::datatypes::registry::HexBinaryRepr> {
-    size_t operator()(rdf4cpp::rdf::datatypes::registry::HexBinaryRepr const &value) const noexcept {
+struct std::hash<rdf4cpp::datatypes::registry::HexBinaryRepr> {
+    size_t operator()(rdf4cpp::datatypes::registry::HexBinaryRepr const &value) const noexcept {
         return dice::hash::dice_hash_templates<dice::hash::Policies::wyhash>::dice_hash(value);
     }
 };

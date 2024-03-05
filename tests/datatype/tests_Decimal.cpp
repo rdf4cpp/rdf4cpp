@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("decimal capabilities") {
     static_assert(datatypes::LiteralDatatype<datatypes::xsd::Decimal>);

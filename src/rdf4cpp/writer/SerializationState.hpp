@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/Node.hpp>
 
-namespace rdf4cpp::rdf::writer {
+namespace rdf4cpp::writer {
 
 struct SerializationState {
     Node active_graph;
@@ -14,6 +14,6 @@ struct SerializationState {
     bool flush(BufWriterParts writer) noexcept;
 };
 
-}  // namespace rdf4cpp::rdf::writer
+}  // namespace rdf4cpp::writer
 
 #endif  //RDF4CPP_SERIALIZATIONSTATE_HPP

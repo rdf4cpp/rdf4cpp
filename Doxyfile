@@ -991,7 +991,7 @@ EXCLUDE_PATTERNS       =
 EXCLUDE_SYMBOLS        = mz::* \
                          dice::hash* \
                          *detail \
-                         rdf4cpp::rdf::datatypes::registry::detail_rank
+                         rdf4cpp::datatypes::registry::detail_rank
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include

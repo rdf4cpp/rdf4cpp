@@ -5,7 +5,7 @@
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 TEST_SUITE("NodeStorage helper types") {
-    using namespace rdf4cpp::rdf::storage::reference_node_storage::detail;
+    using namespace rdf4cpp::storage::reference_node_storage::detail;
 
     TEST_CASE("IndexFreeList") {
         IndexFreeList<> freelist;
@@ -59,8 +59,8 @@ TEST_SUITE("NodeStorage helper types") {
     }
 
     TEST_CASE("integration test") {
-        using namespace rdf4cpp::rdf;
-        using namespace rdf4cpp::rdf::storage;
+        using namespace rdf4cpp;
+        using namespace rdf4cpp::storage;
 
         NodeStorage auto ns = reference_node_storage::SyncReferenceNodeStorageBackend{};
 

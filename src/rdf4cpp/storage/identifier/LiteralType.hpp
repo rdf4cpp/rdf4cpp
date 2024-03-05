@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace rdf4cpp::rdf::storage::identifier {
+namespace rdf4cpp::storage::identifier {
 
 /**
  * <p>A literal type specifies the type of a literal. Types, which are not available within this enum class MUST be specified as LiteralType::OTHER.</p>
@@ -61,6 +61,6 @@ public:
     constexpr std::strong_ordering operator<=>(LiteralType const &other) const noexcept = default;
 };
 
-}  // namespace rdf4cpp::rdf::storage::identifier
+}  // namespace rdf4cpp::storage::identifier
 
 #endif  //RDF4CPP_LITERALTYPE_HPP

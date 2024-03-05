@@ -16,7 +16,7 @@
 #include <variant>
 #include <vector>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 /**
  * if true, parsing some invalid things does not result in an error. instead rdf4cpp tries to silently correct the data.
  * affected are:
@@ -726,5 +726,5 @@ DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
             }};
 }
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 #endif  //RDF4CPP_DATATYPEREGISTRY_HPP

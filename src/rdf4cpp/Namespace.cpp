@@ -1,6 +1,6 @@
 #include "Namespace.hpp"
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 Namespace::Namespace(std::string_view namespace_iri, storage::DynNodeStorage node_storage)
     : namespace_iri_{namespace_iri}, node_storage_{node_storage} {
@@ -14,7 +14,7 @@ storage::DynNodeStorage Namespace::node_storage() const {
     return node_storage_;
 }
 
-rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) const {
+IRI Namespace::operator+(std::string_view suffix) const {
     if (auto found = cache_.find(suffix); found != cache_.end()) {
         return IRI{storage::identifier::NodeBackendHandle{found->second, node_storage_}};
     } else {
@@ -32,4 +32,4 @@ void Namespace::clear() const {
     cache_.rehash(0);
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/query/TriplePattern.hpp>
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 class Statement : public query::TriplePattern {
     // TODO: adjust API to Quad
@@ -32,5 +32,5 @@ public:
         return st;
     }
 };
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp
 #endif  //RDF4CPP_STATEMENT_HPP

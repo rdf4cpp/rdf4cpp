@@ -9,12 +9,12 @@
 #include <rdf4cpp/util/Timezone.hpp>
 #include <dice/hash.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTime> {
-    using cpp_datatype = std::pair<rdf::util::TimePoint, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<rdf4cpp::util::TimePoint, rdf4cpp::util::OptionalTimezone>;
 };
 
 
@@ -39,28 +39,28 @@ extern template struct LiteralDatatypeImpl<xsd_dateTime,
                                            capabilities::FixedId,
                                            capabilities::Inlineable>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct DateTime : registry::LiteralDatatypeImpl<registry::xsd_dateTime,
                                                 registry::capabilities::Comparable,
                                                 registry::capabilities::FixedId,
                                                 registry::capabilities::Inlineable> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::DateTime const xsd_DateTime_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::rdf::util::TimePoint> {
-    static size_t dice_hash(rdf4cpp::rdf::util::TimePoint const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::TimePoint> {
+    static size_t dice_hash(rdf4cpp::util::TimePoint const &x) noexcept {
         auto tp = x.time_since_epoch().count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(tp);
     }

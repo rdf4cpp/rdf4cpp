@@ -1,6 +1,6 @@
 #include "ClosedNamespace.hpp"
 
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 
 IRI ClosedNamespace::operator+(std::string_view suffix) const {
     if (auto found = cache_.find(suffix); found != cache_.end()) {
@@ -16,4 +16,4 @@ void ClosedNamespace::clear() const {
     // this should not be cleared
 }
 
-}  // namespace rdf4cpp::rdf
+}  // namespace rdf4cpp

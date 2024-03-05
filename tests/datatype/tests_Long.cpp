@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 using namespace datatypes;
 
 TEST_CASE("Datatype Long") {

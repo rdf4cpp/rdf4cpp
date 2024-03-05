@@ -18,7 +18,7 @@
 /**
  * In this namespace the implementations of core RDF Concepts are defined. Class names are equal to terms defined in <a href="https://www.w3.org/TR/2014/REC-rdf11-concepts-20140225/#resources-and-statements">RDF 1.1 Concepts and Abstract Syntax"</a>.
  */
-namespace rdf4cpp::rdf {
+namespace rdf4cpp {
 }
 
 #endif  //RDF4CPP_RDF4CPP_HPP

@@ -2,7 +2,7 @@ Datatype Registry
 =================
 
 The datatype registry of rdf4cpp stores information about
-the registered :class:`rdf4cpp::rdf::Literal` datatypes. The registry's operations are split into two categories, namely
+the registered :class:`rdf4cpp::Literal` datatypes. The registry's operations are split into two categories, namely
 runtime and compiletime operations. The datatypes' information is  available at compiletime and is stored in the library's read-only segment.
 
 At runtime, the information about datatypes is type erased and stored in the DatatypeRegistry.
@@ -11,7 +11,7 @@ The type erasure is necessary, as the types of Literals are usually not availabl
 User Guide
 __________
 
-Every datatype has a base set of functions. These functions are defined by the concept :concept:`rdf4cpp::rdf::datatypes::LiteralDatatype`.
+Every datatype has a base set of functions. These functions are defined by the concept :concept:`rdf4cpp::datatypes::LiteralDatatype`.
 This concept provides the most basic set of functions that are required to interact with a value of a particular datatype.
 The requirements are enumerated in the following concept declaration, which can also be found in :file:`src/rdf4cpp/rdf/datatypes/LiteralDatatype.hpp`.
 Note that some entries are intentionally omitted for simplicity. ::
@@ -23,14 +23,14 @@ Note that some entries are intentionally omitted for simplicity. ::
                                   { LiteralDatatypeImpl::to_canonical_string(cpp_value) } -> std::convertible_to<std::string>;
                               };
 
-The :type:`rdf4cpp::rdf::datatypes::registry::capabilities::Default::cpp_type` defines the corresponding C++ type of each particular type. Examples:
+The :type:`rdf4cpp::datatypes::registry::capabilities::Default::cpp_type` defines the corresponding C++ type of each particular type. Examples:
 
  - xsd:string ~> std::string
  - xsd:int ~> int32_t
 
-Additionally, functions for converting this value _from_ and _to_ string have to be provided, i.e. :func:`rdf4cpp::rdf::datatypes::registry::capabilities::Default::from_string` and
-:func:`rdf4cpp::rdf::datatypes::registry::capabilities::Default::to_canonical_string`.
-This set of default functions and definitions is determined by a specialization of :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Default`
+Additionally, functions for converting this value _from_ and _to_ string have to be provided, i.e. :func:`rdf4cpp::datatypes::registry::capabilities::Default::from_string` and
+:func:`rdf4cpp::datatypes::registry::capabilities::Default::to_canonical_string`.
+This set of default functions and definitions is determined by a specialization of :struct:`rdf4cpp::datatypes::registry::capabilities::Default`
 for any given datatype.
 
 A basic datatype
@@ -38,7 +38,7 @@ A basic datatype
 
 The following example defines a simplified version of `xsd:int` using only the default capability. ::
 
-    namespace rdf4cpp::rdf::datatypes::registry {
+    namespace rdf4cpp::datatypes::registry {
         inline constexpr util::ConstexprString basic_int = "http://basic-url.com#int";
 
         template<>
@@ -68,18 +68,18 @@ Value Capabilities
 ------------------
 
 In addition to the default capability, there are also other capabilities that enable
-a datatype to be used in more complex scenarios, without having to manually extract it from a :class:`rdf4cpp::rdf::Literal`
-using :func:`rdf4cpp::rdf::Literal::value`. The functions and mappings that need to be specialized are found in the definition of each capability.
+a datatype to be used in more complex scenarios, without having to manually extract it from a :class:`rdf4cpp::Literal`
+using :func:`rdf4cpp::Literal::value`. The functions and mappings that need to be specialized are found in the definition of each capability.
 
-- :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Numeric` / :concept:`rdf4cpp::rdf::datatypes::NumericLiteralDatatype`: allows Literals to be used as numbers. For example, the datatypes that implement this capability enable Literals containing values of these datatypes to be added using the addition operator (`operator+`).
-- :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Logical` / :concept:`rdf4cpp::rdf::datatypes::LogicalLiteralDatatype`: associates Literals with an effective boolean value (`Literal::ebv`) and allows their values to participate in boolean operations (e.g., `operator&&`).
-- :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Comparable` / :concept:`rdf4cpp::rdf::datatypes::ComparableLiteralDatatype`: enables Literals to participate in comparison operations (`operator<=>`). For the comparisons, the semantics of the underlying value are used.
+- :struct:`rdf4cpp::datatypes::registry::capabilities::Numeric` / :concept:`rdf4cpp::datatypes::NumericLiteralDatatype`: allows Literals to be used as numbers. For example, the datatypes that implement this capability enable Literals containing values of these datatypes to be added using the addition operator (`operator+`).
+- :struct:`rdf4cpp::datatypes::registry::capabilities::Logical` / :concept:`rdf4cpp::datatypes::LogicalLiteralDatatype`: associates Literals with an effective boolean value (`Literal::ebv`) and allows their values to participate in boolean operations (e.g., `operator&&`).
+- :struct:`rdf4cpp::datatypes::registry::capabilities::Comparable` / :concept:`rdf4cpp::datatypes::ComparableLiteralDatatype`: enables Literals to participate in comparison operations (`operator<=>`). For the comparisons, the semantics of the underlying value are used.
 
 Logical capability example
 ++++++++++++++++++++++++++
 ::
 
-    namespace rdf4cpp::rdf::datatypes::registry {
+    namespace rdf4cpp::datatypes::registry {
         inline constexpr util::ConstexprString basic_int = "http://basic-url.com#int";
 
         template<>
@@ -119,19 +119,19 @@ As a result, searching for a particular datatype requires `O(log(n))` time.
 To avoid this overhead, datatypes can be assigned a fixed identifier. This identifier places them in a fixed location in the registry; hence, they can be found in `O(1)` time.
 To assign a fixed identifier to a datatype, two steps are required:
 
- 1. add an entry to the :var:`rdf4cpp::rdf::datatypes::registry::reserved_datatype_ids` map
- 2. add the :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::FixedId` capability to your type
+ 1. add an entry to the :var:`rdf4cpp::datatypes::registry::reserved_datatype_ids` map
+ 2. add the :struct:`rdf4cpp::datatypes::registry::capabilities::FixedId` capability to your type
 
 Value inlining
 --------------
 
 By default, values of literals are stored in the :doc:`t_node_storage`.
 However, to avoid the overhead of accessing it values of datatypes can also be packed
-into the 42-bit :class:`rdf4cpp::rdf::storage::identifier::LiteralID` (\ :doc:`t_NodeBackendHandle`\ ) of a
+into the 42-bit :class:`rdf4cpp::storage::identifier::LiteralID` (\ :doc:`t_NodeBackendHandle`\ ) of a
 node storage handle. In turn, the value can be directly extracted from the handle, without having to access the NodeStorage
 Value inlining requires the specific value to actually fit into the available 42 bits.
 However, it does not require that every possible value of a type fits into these available bits.
-To enable value inlining, the capability :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Inlineable` needs to be specialized.
+To enable value inlining, the capability :struct:`rdf4cpp::datatypes::registry::capabilities::Inlineable` needs to be specialized.
 Notes: Inlining requires the datatype to have a fixed id as well. Additionally, inlining capable literals
 are assumed to never need any form of escaping to convert them to their  n-triples string representation.
 I.e. the output of their corresponding `to_string` function will be used without escaping it.
@@ -174,14 +174,14 @@ Only provide the specialization for the needed relationship, i.e.
 Impl numericity vs Stub numericity
 ++++++++++++++++++++++++++++++++++
 
-Earlier, the capability :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Numeric` was mentioned.
+Earlier, the capability :struct:`rdf4cpp::datatypes::registry::capabilities::Numeric` was mentioned.
 A type implementing this capability is called `impl-numeric` as it implements all required numeric operations.
 There is also another kind of numericity; there are datatype that are numeric but do not explicitly implement the numeric operations.
 Instead, these datatypes rely on a supertype to implement the numeric operations for them.
 This is the case for the integer hierarchy in `xsd` as types derived from `xsd:integer` do
 not implement numeric operations themselves and instead rely on `xsd:integer` to perform them.
-These types are called `stub-numeric` and instead of implementing :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Numeric`
-they implement :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::StubNumeric` which forwards all operations to
+These types are called `stub-numeric` and instead of implementing :struct:`rdf4cpp::datatypes::registry::capabilities::Numeric`
+they implement :struct:`rdf4cpp::datatypes::registry::capabilities::StubNumeric` which forwards all operations to
 the specified `impl` type.
 
 Specializations for Promotions
@@ -219,8 +219,8 @@ the conversion `xsd:int` -> `xsd:float` can be though of as the conversion chain
 Specializing conversions
 ++++++++++++++++++++++++
 As mentioned above, the default conversions are obtained by `static_cast` and function composition.
-To implement custom conversion behaviour the functions of :struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Promotable` and
-:struct:`rdf4cpp::rdf::datatypes::registry::capabilities::Subtype` can be specialized. ::
+To implement custom conversion behaviour the functions of :struct:`rdf4cpp::datatypes::registry::capabilities::Promotable` and
+:struct:`rdf4cpp::datatypes::registry::capabilities::Subtype` can be specialized. ::
 
     template<>
     template<>
@@ -249,8 +249,8 @@ To implement custom conversion behaviour the functions of :struct:`rdf4cpp::rdf:
 Here, the template parameter `IX` determines the distance of the conversion being specialized.
 By default, the functions can only be specialized for `IX == 0`, i.e. we are specializing only the direct conversion (e.g. `xsd:decimal` -> `xsd:float`).
 By default, conversions for further distances will be derived by function composition. To specialize conversions to further distances (e.g. `xsd:decimal` -> `xsd:double`),
-:struct:`rdf4cpp::rdf::datatypes::registry::DatatypePromotionSpecializationOverride` or
-:struct:`rdf4cpp::rdf::datatypes::registry::DatatypeSupertypeSpecializationOverride`
+:struct:`rdf4cpp::datatypes::registry::DatatypePromotionSpecializationOverride` or
+:struct:`rdf4cpp::datatypes::registry::DatatypeSupertypeSpecializationOverride`
 need to be specialized first.
 
 For example: ::
@@ -351,17 +351,17 @@ This section briefly describes where the code that calculates conversion tables 
 First, during compiletime, all conversion tables and all conversions they contain are fully calculated. This is
 done in :file:`src/rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp` by traversing all outgoing edges for
 each type. The table is calculated in chunks of 1d slices of the table and then stitched together.
-:func:`rdf4cpp::rdf::datatypes::registry::conversion_detail::make_conversion_layer_impl` calculates one 1d slice out of the 2d conversion table.
+:func:`rdf4cpp::datatypes::registry::conversion_detail::make_conversion_layer_impl` calculates one 1d slice out of the 2d conversion table.
 This slice can consist of either only promotions or only supertype conversions.
 These 1d slices are then stitched together to form a full conversion table
-in :func:`rdf4cpp::rdf::datatypes::registry::conversion_detail::make_conversion_table`.
+in :func:`rdf4cpp::datatypes::registry::conversion_detail::make_conversion_table`.
 The resulting conversion table is a `type list` of `type lists` in the layout described above.
 Each inner type in the type lists is a struct with two static functions that perform the conversion in
 either direction.
 
 Second, once during the beginning of runtime, the calculated compiletime table is type erased and stored in the registry.
-This is done using :func:`rdf4cpp::rdf::datatypes::registry::RuntimeConversionTable::from_concrete`
-in :func:`rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::add`. Instead of being a `type list` of `type lists`
+This is done using :func:`rdf4cpp::datatypes::registry::RuntimeConversionTable::from_concrete`
+in :func:`rdf4cpp::datatypes::registry::DatatypeRegistry::add`. Instead of being a `type list` of `type lists`
 RuntimeConversionTables are a flattened 2d-`std::vector<>`.
 This runtime representation can be searched in mostly the same way as the compiletime version.
 
@@ -376,6 +376,6 @@ Defining Custom Capabilities
 Defining capabilities requires five things
  1. A template struct that can be specialized for datatypes (see existing capabilities)
  2. Corresponding type-erased functions in the datatype entries of the registry
- 3. Logic to transform the compiletime definitions to type-erased definitions for the registry (see :func:`rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::add`)
+ 3. Logic to transform the compiletime definitions to type-erased definitions for the registry (see :func:`rdf4cpp::datatypes::registry::DatatypeRegistry::add`)
  4. A concept for convenience (see LiteralDatatype for details)
- 5. Logic in :class:`rdf4cpp::rdf::Literal` that makes use of the new functions in the registry
+ 5. Logic in :class:`rdf4cpp::Literal` that makes use of the new functions in the registry

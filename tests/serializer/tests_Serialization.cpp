@@ -16,7 +16,7 @@ concept format_has_graph = (F == OutputFormat::NQuads || F == OutputFormat::TriG
 template<OutputFormat F>
 concept format_has_prefix = (F == OutputFormat::Turtle || F == OutputFormat::TriG);
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("Literal short type") {
     std::string buf;

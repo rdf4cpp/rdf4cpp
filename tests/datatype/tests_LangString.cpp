@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("rdf:langString") {
     Literal dummy;
@@ -44,7 +44,7 @@ TEST_CASE("rdf:langString") {
 }
 
 TEST_CASE("rdf::langString inlining") {
-    using namespace rdf4cpp::rdf::datatypes::registry;
+    using namespace rdf4cpp::datatypes::registry;
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(1) == 1);
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(2) == 2);
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(3) == 2);

@@ -9,12 +9,12 @@
 #include <rdf4cpp/util/Timezone.hpp>
 #include <rdf4cpp/datatypes/xsd/time/Date.hpp>
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_gMonthDay> {
-    using cpp_datatype = std::pair<std::chrono::month_day, rdf::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::month_day, rdf4cpp::util::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_gMonthDay> {
@@ -53,9 +53,9 @@ extern template struct LiteralDatatypeImpl<xsd_gMonthDay,
                                            capabilities::Inlineable,
                                            capabilities::Subtype>;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry
+}  // namespace rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 struct GMonthDay : registry::LiteralDatatypeImpl<registry::xsd_gMonthDay,
                                                  registry::capabilities::Comparable,
@@ -63,13 +63,13 @@ struct GMonthDay : registry::LiteralDatatypeImpl<registry::xsd_gMonthDay,
                                                  registry::capabilities::Inlineable,
                                                  registry::capabilities::Subtype> {};
 
-}  // namespace rdf4cpp::rdf::datatypes::xsd
+}  // namespace rdf4cpp::datatypes::xsd
 
 
-namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail {
+namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 [[maybe_unused]] inline xsd::GMonthDay const xsd_GMonthDay_instance;
 
-}  // namespace rdf4cpp::rdf::datatypes::registry::instantiation_detail
+}  // namespace rdf4cpp::datatypes::registry::instantiation_detail
 
 #endif  //RDF4CPP_MONTHDAY_HPP

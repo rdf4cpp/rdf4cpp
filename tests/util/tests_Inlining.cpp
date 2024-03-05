@@ -5,7 +5,7 @@
 
 #include <limits>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_SUITE("inlining util") {
     using namespace datatypes::registry::util;

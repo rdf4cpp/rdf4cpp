@@ -10,7 +10,7 @@
 #include <rdf4cpp/util/Expected.hpp>
 #include <rdf4cpp/writer/BufWriter.hpp>
 
-namespace rdf4cpp::rdf::datatypes {
+namespace rdf4cpp::datatypes {
 
 template<typename LiteralDatatypeImpl>
 concept LiteralDatatype = requires(LiteralDatatypeImpl, std::string_view sv, typename LiteralDatatypeImpl::cpp_type const &cpp_value, writer::BufWriterParts writer) {
@@ -144,5 +144,5 @@ concept IsInlineable = requires(typename LiteralDatatypeImpl::cpp_type const &va
 template<typename LiteralDatatypeImpl>
 concept InlineableLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && IsInlineable<LiteralDatatypeImpl>;
 
-}  // namespace rdf4cpp::rdf::datatypes
+}  // namespace rdf4cpp::datatypes
 #endif  //RDF4CPP_LITERALDATATYPE_HPP

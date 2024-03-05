@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/ClosedNamespace.hpp>
 
-namespace rdf4cpp::rdf::namespaces {
+namespace rdf4cpp::namespaces {
 
 /**
  * A ClosedNamespace for http://www.w3.org/1999/02/22-rdf-syntax-ns# <br/>
@@ -24,6 +24,6 @@ public:
     IRI operator+(std::string_view suffix) const override;
 };
 
-}  // namespace rdf4cpp::rdf::namespaces
+}  // namespace rdf4cpp::namespaces
 
 #endif  //RDF4CPP_NAMESPACE_RDF_HPP
