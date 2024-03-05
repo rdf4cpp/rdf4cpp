@@ -100,7 +100,7 @@ bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type co
 }
 
 struct __attribute__((__packed__)) InlinedDurationHelper {
-    static constexpr std::size_t width = storage::node::identifier::LiteralID::width;
+    static constexpr std::size_t width = storage::identifier::LiteralID::width;
     static constexpr int seconds_width = 25;
     static constexpr int months_with = width - seconds_width - 1;
 
@@ -121,7 +121,7 @@ private:
 static_assert(registry::util::number_of_bits<unsigned int>((std::chrono::years{1} + std::chrono::seconds{0}).count()) == 25);
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_duration>::try_into_inlined(cpp_type const &value) noexcept {
     auto ms = value.second;
     auto months = value.first;
     unsigned int sign = 0;
@@ -137,12 +137,12 @@ std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd
         return std::nullopt;
     if (months.count() & InlinedDurationHelper::months_mask)
         return std::nullopt;
-    return util::pack<storage::node::identifier::LiteralID>(InlinedDurationHelper{
+    return util::pack<storage::identifier::LiteralID>(InlinedDurationHelper{
             sign, static_cast<unsigned int>(sec.count()), static_cast<unsigned int>(months.count())});
 }
 
 template<>
-capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_duration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_duration>::cpp_type capabilities::Inlineable<xsd_duration>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<InlinedDurationHelper>(inlined);
     std::chrono::seconds sec{i.seconds};
     std::chrono::months months{i.months};

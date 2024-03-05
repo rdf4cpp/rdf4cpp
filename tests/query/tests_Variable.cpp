@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 using namespace rdf4cpp::rdf;
 
@@ -16,7 +16,7 @@ TEST_CASE("Variable - Check for single node with anonymous default") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::identifier::RDFNodeType::Variable);
 }
 
 TEST_CASE("Variable - Check for single node with anonymous true") {
@@ -29,7 +29,7 @@ TEST_CASE("Variable - Check for single node with anonymous true") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::identifier::RDFNodeType::Variable);
 }
 
 TEST_CASE("Variable - Check for single node with anonymous false") {
@@ -42,11 +42,11 @@ TEST_CASE("Variable - Check for single node with anonymous false") {
     CHECK(variable.is_variable());
     CHECK(not variable.is_iri());
     CHECK(variable.name() == "x");
-    CHECK(variable.type() == storage::node::identifier::RDFNodeType::Variable);
+    CHECK(variable.type() == storage::identifier::RDFNodeType::Variable);
 }
 
 TEST_CASE("Variable::find") {
-    storage::node::reference_node_storage::SyncReferenceNodeStorageBackend nst;
+    storage::reference_node_storage::SyncReferenceNodeStorageBackend nst;
     static constexpr std::string_view v = "var";
     static constexpr std::string_view v2 = "var2";
 

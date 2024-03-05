@@ -41,18 +41,18 @@ using IHelp = registry::util::InliningHelperPacked;
 static_assert(registry::util::number_of_bits(static_cast<unsigned int>(std::chrono::seconds{std::chrono::hours{24}}.count())) == 17);
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_time>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_time>::try_into_inlined(cpp_type const &value) noexcept {
     if ((value.first - std::chrono::floor<std::chrono::seconds>(value.first)) != std::chrono::milliseconds(0))
         return std::nullopt;
     auto sec = std::chrono::floor<std::chrono::seconds>(value.first);
     if (sec < std::chrono::seconds(0) || sec > std::chrono::hours(24))
         return std::nullopt; // should never happen
     IHelp i{static_cast<uint32_t>(sec.count()), value.second};
-    return util::pack<storage::node::identifier::LiteralID>(i);
+    return util::pack<storage::identifier::LiteralID>(i);
 }
 
 template<>
-capabilities::Inlineable<xsd_time>::cpp_type capabilities::Inlineable<xsd_time>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_time>::cpp_type capabilities::Inlineable<xsd_time>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<IHelp>(inlined);
     return std::make_pair(std::chrono::seconds(i.time_value), i.decode_tz());
 }

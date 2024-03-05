@@ -58,13 +58,13 @@ bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cp
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_yearMonthDuration>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_yearMonthDuration>::try_into_inlined(cpp_type const &value) noexcept {
     int64_t v = value.count();
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(v);
+    return util::try_pack_integral<storage::identifier::LiteralID>(v);
 }
 
 template<>
-capabilities::Inlineable<xsd_yearMonthDuration>::cpp_type capabilities::Inlineable<xsd_yearMonthDuration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_yearMonthDuration>::cpp_type capabilities::Inlineable<xsd_yearMonthDuration>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return std::chrono::months{util::unpack_integral<int64_t>(inlined)};
 }
 

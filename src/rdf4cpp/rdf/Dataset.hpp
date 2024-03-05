@@ -21,7 +21,7 @@ struct Dataset {
     using pointer = void;
 
 private:
-    using storage_type = dice::sparse_map::sparse_map<storage::node::identifier::NodeBackendID, Graph>;
+    using storage_type = dice::sparse_map::sparse_map<storage::identifier::NodeBackendID, Graph>;
 
 public:
     struct iterator {
@@ -116,14 +116,14 @@ public:
     };
 
 private:
-    storage::node::DynNodeStorage node_storage_;
+    storage::DynNodeStorage node_storage_;
     storage_type graphs_;
 
-    static storage::node::identifier::NodeBackendID to_node_id(Node node) noexcept;
-    Node to_node(storage::node::identifier::NodeBackendID id) const noexcept;
+    static storage::identifier::NodeBackendID to_node_id(Node node) noexcept;
+    Node to_node(storage::identifier::NodeBackendID id) const noexcept;
 
 public:
-    explicit Dataset(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+    explicit Dataset(storage::DynNodeStorage node_storage = storage::default_node_storage);
 
     void add(Quad const &quad);
 

@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 using namespace rdf4cpp::rdf;
 
@@ -13,7 +13,7 @@ TEST_CASE("Namespace life cycle") {
     // default node storage is initialized now
 
     {
-        storage::node::reference_node_storage::SyncReferenceNodeStorageBackend volatile_node_storage;
+        storage::reference_node_storage::SyncReferenceNodeStorageBackend volatile_node_storage;
         auto &rdf = namespaces::RDF::instance(volatile_node_storage);
         auto rdf_property = rdf + "Property";
         assert(rdf_property.identifier() == std::string{namespaces::RDF::NAMESPACE} + "Property");
@@ -22,7 +22,7 @@ TEST_CASE("Namespace life cycle") {
 
 
     {
-        storage::node::reference_node_storage::SyncReferenceNodeStorageBackend volatile_node_storage2;
+        storage::reference_node_storage::SyncReferenceNodeStorageBackend volatile_node_storage2;
         // volatile_node_storage2 should be able to have the same node_storage_id without any problem
         auto &rdf = namespaces::RDF::instance(volatile_node_storage2);
         // the NodeID used by Bag
@@ -31,10 +31,10 @@ TEST_CASE("Namespace life cycle") {
     }
 
     {
-        auto volatile_node_storage3 = std::make_unique<storage::node::reference_node_storage::SyncReferenceNodeStorageBackend>();
+        auto volatile_node_storage3 = std::make_unique<storage::reference_node_storage::SyncReferenceNodeStorageBackend>();
         auto &rdf = namespaces::RDF::instance(volatile_node_storage3);
 
-        volatile_node_storage3 = std::make_unique<storage::node::reference_node_storage::SyncReferenceNodeStorageBackend>();
+        volatile_node_storage3 = std::make_unique<storage::reference_node_storage::SyncReferenceNodeStorageBackend>();
 
         CHECK_THROWS(rdf + "Bag");
     }

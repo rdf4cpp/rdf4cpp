@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_DATATYPEREGISTRY_HPP
 #define RDF4CPP_DATATYPEREGISTRY_HPP
 
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralID.hpp>
 #include <rdf4cpp/rdf/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
@@ -41,8 +41,8 @@ public:
      */
     using factory_fptr_t = std::any (*)(std::string_view);
     using ebv_fptr_t = bool (*)(std::any const &) noexcept;
-    using try_into_inlined_fptr_t = std::optional<storage::node::identifier::LiteralID> (*)(std::any const &) noexcept;
-    using from_inlined_fptr_t = std::any (*)(storage::node::identifier::LiteralID) noexcept;
+    using try_into_inlined_fptr_t = std::optional<storage::identifier::LiteralID> (*)(std::any const &) noexcept;
+    using from_inlined_fptr_t = std::any (*)(storage::identifier::LiteralID) noexcept;
     using serialize_fptr_t = bool (*)(std::any const &, writer::BufWriterParts writer) noexcept;
 
     struct NumericOpResult {
@@ -413,7 +413,7 @@ public:
          * shift where the inlined tag is located
          */
         static constexpr uint64_t shift() noexcept {
-            return storage::node::identifier::LiteralID::width - inlined_size();
+            return storage::identifier::LiteralID::width - inlined_size();
         }
 
         /**
@@ -462,10 +462,10 @@ public:
          * @param tag
          * @return inlined LiteralID or std::nullopt
          */
-        static constexpr std::optional<storage::node::identifier::LiteralID> try_into_inlined(storage::node::identifier::LiteralID id, LangTagID tag) noexcept {
+        static constexpr std::optional<storage::identifier::LiteralID> try_into_inlined(storage::identifier::LiteralID id, LangTagID tag) noexcept {
             if ((id.to_underlying() & mask_inlined()) != 0)
                 return std::nullopt;
-            return storage::node::identifier::LiteralID{id.to_underlying() | (tag << shift())};
+            return storage::identifier::LiteralID{id.to_underlying() | (tag << shift())};
         }
 
         /**
@@ -473,10 +473,10 @@ public:
          * @param id
          * @return [language_tag_id, base_literal_id]
          */
-        static constexpr std::pair<LangTagID, storage::node::identifier::LiteralID> from_inlined(storage::node::identifier::LiteralID id) noexcept {
+        static constexpr std::pair<LangTagID, storage::identifier::LiteralID> from_inlined(storage::identifier::LiteralID id) noexcept {
             uint64_t const t = (id.to_underlying() & mask_inlined()) >> shift();
             uint64_t const i = id.to_underlying() & mask_base_id();
-            return std::pair{t, storage::node::identifier::LiteralID{i}};
+            return std::pair{t, storage::identifier::LiteralID{i}};
         }
     };
 };
@@ -717,11 +717,11 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
 template<datatypes::InlineableLiteralDatatype LiteralDatatype_t>
 DatatypeRegistry::InliningOps DatatypeRegistry::make_inlining_ops() noexcept {
     return InliningOps {
-            .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<storage::node::identifier::LiteralID> {
+            .try_into_inlined_fptr = [](std::any const &value) noexcept -> std::optional<storage::identifier::LiteralID> {
                 auto const &val = std::any_cast<typename LiteralDatatype_t::cpp_type>(value);
                 return LiteralDatatype_t::try_into_inlined(val);
             },
-            .from_inlined_fptr = [](storage::node::identifier::LiteralID inlined_value) noexcept -> std::any {
+            .from_inlined_fptr = [](storage::identifier::LiteralID inlined_value) noexcept -> std::any {
                 return LiteralDatatype_t::from_inlined(inlined_value);
             }};
 }

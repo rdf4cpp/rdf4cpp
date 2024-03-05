@@ -7,15 +7,15 @@
 
 namespace rdf4cpp::rdf {
 
-storage::node::identifier::NodeBackendID Dataset::to_node_id(Node node) noexcept {
+storage::identifier::NodeBackendID Dataset::to_node_id(Node node) noexcept {
     return node.backend_handle().id();
 }
 
-Node Dataset::to_node(storage::node::identifier::NodeBackendID id) const noexcept {
-    return Node{storage::node::identifier::NodeBackendHandle{id, node_storage_}};
+Node Dataset::to_node(storage::identifier::NodeBackendID id) const noexcept {
+    return Node{storage::identifier::NodeBackendHandle{id, node_storage_}};
 }
 
-Dataset::Dataset(storage::node::DynNodeStorage node_storage) : node_storage_{node_storage} {}
+Dataset::Dataset(storage::DynNodeStorage node_storage) : node_storage_{node_storage} {}
 
 void Dataset::add(Quad const &quad) {
     auto const g = quad.graph().null() ? IRI::default_graph(node_storage_) : quad.graph().to_node_storage(node_storage_);

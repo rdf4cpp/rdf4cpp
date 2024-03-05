@@ -294,11 +294,11 @@ target_link_libraries(tests_IStreamQuadIterator
         )
 add_test(NAME tests_IStreamQuadIterator COMMAND tests_IStreamQuadIterator)
 
-#add_executable(bench_SerDe bench_SerDe.cpp)
-#target_link_libraries(bench_SerDe
-#        nanobench::nanobench
-#        rdf4cpp
-#)
+add_executable(bench_SerDe bench_SerDe.cpp)
+target_link_libraries(bench_SerDe
+        nanobench::nanobench
+        rdf4cpp
+)
 
 add_executable(tests_RDFFileParser parser/tests_RDFFileParser.cpp)
 target_link_libraries(tests_RDFFileParser
@@ -365,13 +365,13 @@ target_link_libraries(tests_DBpediaMode
 set_property(TARGET tests_DBpediaMode PROPERTY CXX_STANDARD 20)
 add_test(NAME tests_DBpediaMode COMMAND tests_DBpediaMode)
 
-#add_executable(tests_Serialization serializer/tests_Serialization.cpp)
-#target_link_libraries(tests_Serialization
-#        doctest::doctest
-#        rdf4cpp
-#)
-#set_property(TARGET tests_Serialization PROPERTY CXX_STANDARD 20)
-#add_test(NAME tests_Serialization COMMAND tests_Serialization)
+add_executable(tests_Serialization serializer/tests_Serialization.cpp)
+target_link_libraries(tests_Serialization
+        doctest::doctest
+        rdf4cpp
+)
+set_property(TARGET tests_Serialization PROPERTY CXX_STANDARD 20)
+add_test(NAME tests_Serialization COMMAND tests_Serialization)
 
 # copy files for testing to the binary folder
 # file(COPY foldername DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

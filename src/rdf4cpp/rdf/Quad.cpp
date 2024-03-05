@@ -32,7 +32,7 @@ std::optional<Quad> Quad::create_validated(Node subject, Node predicate, Node ob
     }
 }
 
-Quad Quad::to_node_storage(storage::node::DynNodeStorage node_storage) const noexcept {
+Quad Quad::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     Quad qu;
     auto it = qu.begin();
     for (auto const item : *this) {
@@ -55,7 +55,7 @@ static bool write_pred(Node const pred, writer::BufWriterParts const writer) {
     assert(pred.is_iri());
 
     if constexpr (writer::format_has_prefix<F>) {
-        static constexpr storage::node::identifier::LiteralType rdf_type = datatypes::registry::reserved_datatype_ids[datatypes::registry::rdf_type];
+        static constexpr storage::identifier::LiteralType rdf_type = datatypes::registry::reserved_datatype_ids[datatypes::registry::rdf_type];
 
         if (iri_node_id_to_literal_type(pred.backend_handle().node_id()) == rdf_type) {
             return writer::write_str("a", writer);

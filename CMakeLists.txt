@@ -192,23 +192,17 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/parser/RDFFileParser.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp
         src/rdf4cpp/rdf/query/Solution.cpp
-        #src/rdf4cpp/rdf/query/SolutionSequence.cpp
         src/rdf4cpp/rdf/query/TriplePattern.cpp
         src/rdf4cpp/rdf/query/Variable.cpp
         src/rdf4cpp/rdf/regex/Regex.cpp
         src/rdf4cpp/rdf/regex/RegexReplacer.cpp
-        src/rdf4cpp/rdf/storage/node/NodeStorage.cpp
-        src/rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
-        src/rdf4cpp/rdf/storage/node/view/BNodeBackendView.cpp
-        src/rdf4cpp/rdf/storage/node/view/IRIBackendView.cpp
-        src/rdf4cpp/rdf/storage/node/view/LiteralBackendView.cpp
-        src/rdf4cpp/rdf/storage/node/view/VariableBackendView.cpp
-        #src/rdf4cpp/rdf/storage/tuple/DatasetStorage.cpp
-        #src/rdf4cpp/rdf/storage/tuple/DefaultDatasetBackend.cpp
-        #src/rdf4cpp/rdf/storage/tuple/DefaultSolutionSequenceBackend.cpp
-        #src/rdf4cpp/rdf/storage/tuple/IDatasetBackend.cpp
-        #src/rdf4cpp/rdf/storage/tuple/ISolutionSequenceBackend.cpp
+        src/rdf4cpp/rdf/storage/NodeStorage.cpp
+        src/rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.cpp
+        src/rdf4cpp/rdf/storage/view/BNodeBackendView.cpp
+        src/rdf4cpp/rdf/storage/view/IRIBackendView.cpp
+        src/rdf4cpp/rdf/storage/view/LiteralBackendView.cpp
+        src/rdf4cpp/rdf/storage/view/VariableBackendView.cpp
         src/rdf4cpp/rdf/writer/SerializationState.cpp
         src/rdf4cpp/rdf/IRIView.cpp
         src/rdf4cpp/rdf/IRIFactory.cpp

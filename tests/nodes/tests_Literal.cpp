@@ -2,13 +2,13 @@
 #include <doctest/doctest.h>
 
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 #include <thread>
 
 using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage::node;
+using namespace rdf4cpp::rdf::storage;
 
 int main(int argc, char **argv) {
     /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
@@ -52,7 +52,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         [[maybe_unused]] Literal no_discard_dummy;
         CHECK_THROWS_AS(no_discard_dummy = Literal::make_simple("\xc3\x28"), std::runtime_error);
         CHECK_THROWS_AS(no_discard_dummy = Literal::make_lang_tagged("\xc3\x28", "de"), std::runtime_error);
-        CHECK_EQ(Literal::make_simple_normalize("\u0174", storage::node::default_node_storage), Literal::make_simple_normalize("W\u0302", storage::node::default_node_storage));  // 2 different ways of writing Ŵ
+        CHECK_EQ(Literal::make_simple_normalize("\u0174", storage::default_node_storage), Literal::make_simple_normalize("W\u0302", storage::default_node_storage));  // 2 different ways of writing Ŵ
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
@@ -637,9 +637,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("123"_xsd_string).as_contains(Literal::make_lang_tagged("1", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("fo\u0174obar", "en", storage::node::default_node_storage)
+        CHECK(Literal::make_lang_tagged_normalize("fo\u0174obar", "en", storage::default_node_storage)
                       .as_contains(
-                              Literal::make_lang_tagged_normalize("foW\u0302o", "en", storage::node::default_node_storage))
+                              Literal::make_lang_tagged_normalize("foW\u0302o", "en", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -657,8 +657,8 @@ TEST_CASE("Literal - misc functions") {
 
         // unicode
         CHECK(Literal::make_simple_normalize("abc\U0001f34c\u0174",
-                                             storage::node::default_node_storage)
-                      .substr_before(Literal::make_simple_normalize("W\u0302", storage::node::default_node_storage)) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+                                             storage::default_node_storage)
+                      .substr_before(Literal::make_simple_normalize("W\u0302", storage::default_node_storage)) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("substr_after") {
@@ -675,8 +675,8 @@ TEST_CASE("Literal - misc functions") {
 
         // unicode
         CHECK(Literal::make_simple_normalize("a\U0001f34cb\u0174c\U0001f34c",
-                                             storage::node::default_node_storage)
-                      .substr_after(Literal::make_simple_normalize("W\u0302", storage::node::default_node_storage)) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+                                             storage::default_node_storage)
+                      .substr_after(Literal::make_simple_normalize("W\u0302", storage::default_node_storage)) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("str_start_with") {
@@ -689,8 +689,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("\u0174foobar", "en", storage::node::default_node_storage)
-                      .as_str_starts_with(Literal::make_simple_normalize("W\u0302foo", storage::node::default_node_storage))
+        CHECK(Literal::make_lang_tagged_normalize("\u0174foobar", "en", storage::default_node_storage)
+                      .as_str_starts_with(Literal::make_simple_normalize("W\u0302foo", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -704,8 +704,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("fooba\u0174r", "en", storage::node::default_node_storage)
-                      .as_str_ends_with(Literal::make_simple_normalize("baW\u0302r", storage::node::default_node_storage))
+        CHECK(Literal::make_lang_tagged_normalize("fooba\u0174r", "en", storage::default_node_storage)
+                      .as_str_ends_with(Literal::make_simple_normalize("baW\u0302r", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -828,7 +828,7 @@ TEST_CASE("UUID") {
 }
 
 TEST_CASE("to_node_storage") {
-    storage::node::reference_node_storage::SyncReferenceNodeStorageBackend ns2{};
+    storage::reference_node_storage::SyncReferenceNodeStorageBackend ns2{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -906,7 +906,7 @@ TEST_CASE("to_node_storage") {
 }
 
 TEST_CASE("try_get_in_node_storage") {
-    auto ns2 = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+    auto ns2 = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -1060,7 +1060,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
     if constexpr (requires { get_find_values<T>::av; }) {
         static constexpr auto av = get_find_values<T>::av;
         static constexpr auto bv = get_find_values<T>::bv;
-        auto nst = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
 
         CHECK(Literal::find_typed_from_value<T>(av, nst) == Literal{});
         Literal l = Literal::make_typed_from_value<T>(av, nst);
@@ -1069,14 +1069,14 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed_from_value<T>(bv, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inl; }) {
-        auto nst = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
         auto l = Literal::find_typed_from_value<T>(get_find_values<T>::inl, nst);
         CHECK(l == Literal::make_typed_from_value<T>(get_find_values<T>::inl));
     }
     if constexpr (requires { get_find_values<T>::as; }) {
         static constexpr auto as = get_find_values<T>::as;
         static constexpr auto bs = get_find_values<T>::bs;
-        auto nst = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
 
         CHECK(Literal::find_typed<T>(as, nst) == Literal{});
         Literal l = Literal::make_typed<T>(as, nst);
@@ -1085,7 +1085,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed<T>(bs, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inls; }) {
-        auto nst = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
         auto l = Literal::find_typed<T>(get_find_values<T>::inls, nst);
         CHECK(l == Literal::make_typed<T>(get_find_values<T>::inls));
     }

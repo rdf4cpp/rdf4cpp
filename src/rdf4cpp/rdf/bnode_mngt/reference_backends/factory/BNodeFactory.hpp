@@ -12,9 +12,9 @@ namespace rdf4cpp::rdf::bnode_mngt {
 struct BNodeFactory final : INodeFactory {
     static BNodeFactory &default_instance() noexcept;
 
-    [[nodiscard]] storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
+    [[nodiscard]] storage::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
                                                                          NodeScope const *scope,
-                                                                         storage::node::DynNodeStorage node_storage) noexcept override;
+                                                                         storage::DynNodeStorage node_storage) noexcept override;
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

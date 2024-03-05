@@ -6,11 +6,11 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage::node;
+using namespace rdf4cpp::rdf::storage;
 
 int main(int argc, char **argv) {
     /*NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
@@ -238,7 +238,7 @@ TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
 }
 
 TEST_CASE("node equality shortcut") {
-    auto s = storage::node::reference_node_storage::SyncReferenceNodeStorageBackend{};
+    auto s = storage::reference_node_storage::SyncReferenceNodeStorageBackend{};
 
     CHECK(IRI::make("https://ex") == IRI::make("https://ex"));
     CHECK(IRI::make("https://ex") != IRI::make("https://ex2"));

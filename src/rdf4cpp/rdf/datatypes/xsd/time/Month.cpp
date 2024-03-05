@@ -43,16 +43,16 @@ std::partial_ordering capabilities::Comparable<xsd_gMonth>::compare(cpp_type con
 using IHelp = registry::util::InliningHelper<uint8_t>;
 static_assert(registry::util::number_of_bits(12u) == 4);
 static_assert(sizeof(std::chrono::month) == 1);
-static_assert(sizeof(IHelp) * 8 < storage::node::identifier::LiteralID::width);
+static_assert(sizeof(IHelp) * 8 < storage::identifier::LiteralID::width);
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gMonth>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_gMonth>::try_into_inlined(cpp_type const &value) noexcept {
     IHelp i{static_cast<uint8_t>(static_cast<unsigned int>(value.first)), value.second};
-    return util::pack<storage::node::identifier::LiteralID>(i);
+    return util::pack<storage::identifier::LiteralID>(i);
 }
 
 template<>
-capabilities::Inlineable<xsd_gMonth>::cpp_type capabilities::Inlineable<xsd_gMonth>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_gMonth>::cpp_type capabilities::Inlineable<xsd_gMonth>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<IHelp>(inlined);
     return std::make_pair(std::chrono::month{i.time_value}, i.decode_tz());
 }

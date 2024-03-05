@@ -47,12 +47,12 @@ nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, Dynamic
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
-    return util::pack<storage::node::identifier::LiteralID>(value);
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
+    return util::pack<storage::identifier::LiteralID>(value);
 }
 
 template<>
-capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::node::identifier::LiteralID const inlined) noexcept {
+capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::identifier::LiteralID const inlined) noexcept {
     return util::unpack<cpp_type>(inlined);
 }
 #endif

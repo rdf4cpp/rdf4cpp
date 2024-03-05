@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     Graph g;
 
     Dataset dataset = g.dataset();
-    Dataset dataset2(storage::node::NodeStorage::new_instance());  // Dataset with an independent NodeStorage
+    Dataset dataset2(storage::NodeStorage::new_instance());  // Dataset with an independent NodeStorage
     std::cout << "dataset node storage id: " << dataset.backend().node_storage().id().value << std::endl;
     std::cout << "dataset2 node storage id: " << dataset2.backend().node_storage().id().value << std::endl;
 

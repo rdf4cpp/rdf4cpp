@@ -46,7 +46,7 @@ static consteval std::array<std::string_view, N> make_type_iri_buf(std::array<st
     }
 }
 
-static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::node::identifier::LiteralType::width, 0, datatypes::registry::reserved_datatype_ids.size()>();
+static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::identifier::LiteralType::width, 0, datatypes::registry::reserved_datatype_ids.size()>();
 
 } // namespace detail
 

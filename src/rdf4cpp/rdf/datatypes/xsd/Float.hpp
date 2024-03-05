@@ -44,10 +44,10 @@ template<>
 nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, DynamicError> capabilities::Numeric<xsd_float>::ceil(cpp_type const &operand) noexcept;
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept;
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept;
 
 template<>
-capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept;
+capabilities::Inlineable<xsd_float>::cpp_type capabilities::Inlineable<xsd_float>::from_inlined(storage::identifier::LiteralID inlined) noexcept;
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_float,

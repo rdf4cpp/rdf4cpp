@@ -1,8 +1,8 @@
 #ifndef RDF4CPP_NODE_HPP
 #define RDF4CPP_NODE_HPP
 
-#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
+#include <rdf4cpp/rdf/storage/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/identifier/NodeBackendHandle.hpp>
 #include <rdf4cpp/rdf/util/TriBool.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
@@ -24,7 +24,7 @@ struct NodeGenerator;
 } // namespace bnode_mngt
 
 
-inline constexpr storage::node::DynNodeStorage keep_node_storage{nullptr};
+inline constexpr storage::DynNodeStorage keep_node_storage{nullptr};
 
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
@@ -39,10 +39,10 @@ class Node {
     friend struct bnode_mngt::NodeGenerator;
 
 protected:
-    using NodeBackendHandle = rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle;
-    using NodeID = rdf4cpp::rdf::storage::node::identifier::NodeID;
-    using DynNodeStorage = rdf4cpp::rdf::storage::node::DynNodeStorage;
-    using RDFNodeType = rdf4cpp::rdf::storage::node::identifier::RDFNodeType;
+    using NodeBackendHandle = rdf4cpp::rdf::storage::identifier::NodeBackendHandle;
+    using NodeID = rdf4cpp::rdf::storage::identifier::NodeID;
+    using DynNodeStorage = rdf4cpp::rdf::storage::DynNodeStorage;
+    using RDFNodeType = rdf4cpp::rdf::storage::identifier::RDFNodeType;
 
     NodeBackendHandle handle_;
 
@@ -203,7 +203,7 @@ public:
 template<>
 struct std::hash<rdf4cpp::rdf::Node> {
     inline size_t operator()(rdf4cpp::rdf::Node const &v) const noexcept {
-        return std::hash<rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle>()(v.backend_handle());
+        return std::hash<rdf4cpp::rdf::storage::identifier::NodeBackendHandle>()(v.backend_handle());
     }
 };
 

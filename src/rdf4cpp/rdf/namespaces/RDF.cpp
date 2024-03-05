@@ -4,7 +4,7 @@
 
 namespace rdf4cpp::rdf::namespaces {
 
-RDF::RDF(storage::node::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
+RDF::RDF(storage::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
 
 IRI RDF::operator+(std::string_view suffix) const {
     if (suffix.starts_with('_')) {

@@ -5,8 +5,8 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/DatatypeID.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralID.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralType.hpp>
 #include <rdf4cpp/rdf/util/Expected.hpp>
 #include <rdf4cpp/rdf/writer/BufWriter.hpp>
 
@@ -128,16 +128,16 @@ concept SubtypedLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && requir
  */
 template<typename LiteralDatatypeImpl>
 concept HasFixedId = requires {
-                         { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::node::identifier::LiteralType>;
+                         { LiteralDatatypeImpl::fixed_id } -> std::convertible_to<storage::identifier::LiteralType>;
                      };
 
 template<typename LiteralDatatypeImpl>
 concept FixedIdLiteralDatatype = LiteralDatatype<LiteralDatatypeImpl> && HasFixedId<LiteralDatatypeImpl>;
 
 template<typename LiteralDatatypeImpl>
-concept IsInlineable = requires(typename LiteralDatatypeImpl::cpp_type const &value, storage::node::identifier::LiteralID inlined_value) {
+concept IsInlineable = requires(typename LiteralDatatypeImpl::cpp_type const &value, storage::identifier::LiteralID inlined_value) {
                            { LiteralDatatypeImpl::is_inlineable } -> std::convertible_to<std::true_type>;
-                           { LiteralDatatypeImpl::try_into_inlined(value) } -> std::convertible_to<std::optional<storage::node::identifier::LiteralID>>;
+                           { LiteralDatatypeImpl::try_into_inlined(value) } -> std::convertible_to<std::optional<storage::identifier::LiteralID>>;
                            { LiteralDatatypeImpl::from_inlined(inlined_value) } -> std::convertible_to<typename LiteralDatatypeImpl::cpp_type>;
                        };
 

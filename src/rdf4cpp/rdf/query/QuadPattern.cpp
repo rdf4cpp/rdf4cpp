@@ -37,7 +37,7 @@ std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
     os << static_cast<std::string>(pattern);
     return os;
 }
-QuadPattern QuadPattern::to_node_storage(storage::node::DynNodeStorage node_storage) const {
+QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) const {
     QuadPattern qp;
     auto it = qp.begin();
     for (const auto &item : *this) {

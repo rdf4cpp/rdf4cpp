@@ -23,7 +23,7 @@ struct Graph {
     using const_pointer = pointer;
 
 private:
-    using triple = std::array<storage::node::identifier::NodeBackendID, 3>;
+    using triple = std::array<storage::identifier::NodeBackendID, 3>;
 
     struct triple_hash {
         size_t operator()(triple const &trip) const noexcept {
@@ -123,14 +123,14 @@ public:
     };
 
 private:
-    storage::node::DynNodeStorage node_storage_;
+    storage::DynNodeStorage node_storage_;
     triple_storage_type triples_;
 
-    static storage::node::identifier::NodeBackendID to_node_id(Node node) noexcept;
-    Node to_node(storage::node::identifier::NodeBackendID id) const noexcept;
+    static storage::identifier::NodeBackendID to_node_id(Node node) noexcept;
+    Node to_node(storage::identifier::NodeBackendID id) const noexcept;
 
 public:
-    explicit Graph(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+    explicit Graph(storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 
     void add(Statement const &statement);
 

@@ -2,12 +2,12 @@
 
 namespace rdf4cpp::rdf {
 
-Namespace::Namespace(std::string_view namespace_iri, storage::node::DynNodeStorage node_storage)
+Namespace::Namespace(std::string_view namespace_iri, storage::DynNodeStorage node_storage)
     : namespace_iri_{namespace_iri}, node_storage_{node_storage} {}
 std::string_view Namespace::name_space() const noexcept {
     return namespace_iri_;
 }
-storage::node::DynNodeStorage Namespace::node_storage() const {
+storage::DynNodeStorage Namespace::node_storage() const {
     return node_storage_;
 }
 rdf4cpp::rdf::IRI rdf4cpp::rdf::Namespace::operator+(std::string_view suffix) const {

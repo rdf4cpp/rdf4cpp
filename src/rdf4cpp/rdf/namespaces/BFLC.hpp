@@ -14,7 +14,7 @@ public:
     static constexpr std::string_view NAMESPACE = "http://id.loc.gov/ontologies/bflc/";
     static constexpr std::array<std::string_view, 24> SUFFIXES = {"AppliesTo", "CreatorCharacteristic", "DemographicGroup", "Eidr", "EncodingLevel", "GrooveCutting", "ImageBitDepth", "MachineModel", "MetadataLicensor", "OperatingSystem", "PrimaryContribution", "ProgrammingLanguage", "Relation", "Relationship", "Relief", "SeriesAnalysis", "SeriesClassification", "SeriesNumbering", "SeriesNumberingPeculiarities", "SeriesProvider", "SeriesSequentialDesignation", "SeriesTracing", "SeriesTreatment", "TransliteratedTitle"};
 
-    explicit BFLC(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+    explicit BFLC(storage::DynNodeStorage node_storage = storage::default_node_storage);
 };
 
 }  // namespace rdf4cpp::rdf::namespaces

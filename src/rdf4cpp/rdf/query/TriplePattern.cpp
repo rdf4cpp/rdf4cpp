@@ -28,7 +28,7 @@ std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern) {
     os << static_cast<std::string>(pattern);
     return os;
 }
-TriplePattern TriplePattern::to_node_storage(storage::node::DynNodeStorage node_storage) const {
+TriplePattern TriplePattern::to_node_storage(storage::DynNodeStorage node_storage) const {
     TriplePattern tp;
     auto it = tp.begin();
     for (const auto &item : *this) {

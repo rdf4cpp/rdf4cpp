@@ -49,16 +49,16 @@ nonstd::expected<capabilities::Default<xsd_non_negative_integer>::cpp_type, Dyna
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_non_negative_integer>::try_into_inlined(cpp_type const &value) noexcept {
-    if (value >= (uint64_t{1} << storage::node::identifier::LiteralID::width)) {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_non_negative_integer>::try_into_inlined(cpp_type const &value) noexcept {
+    if (value >= (uint64_t{1} << storage::identifier::LiteralID::width)) {
         return std::nullopt;
     }
 
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(static_cast<uint64_t>(value));
+    return util::try_pack_integral<storage::identifier::LiteralID>(static_cast<uint64_t>(value));
 }
 
 template<>
-capabilities::Inlineable<xsd_non_negative_integer>::cpp_type capabilities::Inlineable<xsd_non_negative_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_non_negative_integer>::cpp_type capabilities::Inlineable<xsd_non_negative_integer>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return cpp_type{util::unpack_integral<uint64_t>(inlined)};
 }
 #endif

@@ -13,7 +13,7 @@ class XSD : public Namespace, public util::NamespaceInstance<XSD> {
 public:
     static constexpr std::string_view NAMESPACE = "http://xmlns.com/XSD/0.1/";
 
-    explicit XSD(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+    explicit XSD(storage::DynNodeStorage node_storage = storage::default_node_storage);
 };
 
 }  // namespace rdf4cpp::rdf::namespaces

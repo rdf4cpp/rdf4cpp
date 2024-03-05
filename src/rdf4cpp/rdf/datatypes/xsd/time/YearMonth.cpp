@@ -32,18 +32,18 @@ struct __attribute__((__packed__)) InliningHelperYearMonth {
     int16_t year;
     uint8_t month;
 };
-static_assert(sizeof(std::chrono::year_month) * 8 <= storage::node::identifier::LiteralID::width);
+static_assert(sizeof(std::chrono::year_month) * 8 <= storage::identifier::LiteralID::width);
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_gYearMonth>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_gYearMonth>::try_into_inlined(cpp_type const &value) noexcept {
     if (value.second.has_value())
         return std::nullopt;
-    return util::pack<storage::node::identifier::LiteralID>(InliningHelperYearMonth{static_cast<int16_t>(static_cast<int>(value.first.year())),
+    return util::pack<storage::identifier::LiteralID>(InliningHelperYearMonth{static_cast<int16_t>(static_cast<int>(value.first.year())),
                                                                                     static_cast<uint8_t>(static_cast<unsigned int>(value.first.month()))});
 }
 
 template<>
-capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_gYearMonth>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_gYearMonth>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     auto i = util::unpack<InliningHelperYearMonth>(inlined);
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month}, std::nullopt);
 }

@@ -14,7 +14,7 @@ public:
     static constexpr std::string_view NAMESPACE = "http://xmlns.com/foaf/0.1/";
     static constexpr std::array<std::string_view, 73> SUFFIXES = {"Person", "name", "homepage", "openid", "img", "Document", "Image", "mbox", "depiction", "Agent", "Group", "member", "workplaceHomepage", "membershipClass", "Organization", "OnlineAccount", "PersonalProfileDocument", "maker", "primaryTopic", "Project", "LabelProperty", "OnlineChatAccount", "account", "accountServiceHomepage", "accountName", "OnlineEcommerceAccount", "OnlineGamingAccount", "isPrimaryTopicOf", "knows", "made", "page", "weblog", "aimChatID", "based", "currentProject", "depicts", "familyName", "firstName", "focus", "gender", "givenName", "icqChatID", "interest", "jabberID", "lastName", "logo", "msnChatID", "myersBriggs", "nick", "pastProject", "phone", "plan", "publications", "schoolHomepage", "skypeID", "thumbnail", "tipjar", "title", "topic", "workInfoHomepage", "yahooChatID", "age", "birthday", "sha", "status", "dnaChecksum", "family", "fundedBy", "geekcode", "givenname", "holdsAccount", "surname", "theme"};
 
-    explicit FOAF(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+    explicit FOAF(storage::DynNodeStorage node_storage = storage::default_node_storage);
 };
 
 }  // namespace rdf4cpp::rdf::namespaces

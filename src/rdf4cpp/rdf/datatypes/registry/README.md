@@ -118,7 +118,7 @@ To assign a fixed identifier to a datatype, two steps are required:
 ### Value inlining
 By default, values of literals are stored in the [NodeStorage](../../storage/README.md). 
 However, to avoid the overhead of accessing it values of datatypes can also be packed
-into the 42-bit [LiteralID](../../storage/node/identifier/README.md) of a
+into the 42-bit [LiteralID](../../storage/identifier/README.md) of a
 node storage handle. In turn, the value can be directly extracted from the handle, without having to access the [NodeStorage](../../storage/README.md).
 Value inlining requires the specific value to actually fit into the available 42 bits.
 However, it does not require that every possible value of a type fits into these available bits.

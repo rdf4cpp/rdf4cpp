@@ -66,16 +66,16 @@ std::partial_ordering capabilities::Comparable<xsd_integer>::compare(cpp_type co
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_integer>::try_into_inlined(cpp_type const &value) noexcept {
-    if (auto const boundary = 1l << (storage::node::identifier::LiteralID::width - 1); value >= boundary || value < -boundary) [[unlikely]] {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_integer>::try_into_inlined(cpp_type const &value) noexcept {
+    if (auto const boundary = 1l << (storage::identifier::LiteralID::width - 1); value >= boundary || value < -boundary) [[unlikely]] {
         return std::nullopt;
     }
 
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(static_cast<int64_t>(value));
+    return util::try_pack_integral<storage::identifier::LiteralID>(static_cast<int64_t>(value));
 }
 
 template<>
-capabilities::Inlineable<xsd_integer>::cpp_type capabilities::Inlineable<xsd_integer>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_integer>::cpp_type capabilities::Inlineable<xsd_integer>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return cpp_type{util::unpack_integral<int64_t>(inlined)};
 }
 #endif

@@ -5,7 +5,7 @@
 #include <rdf4cpp/rdf/bnode_mngt/NodeGenerator.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/reference_backends/scope/ReferenceNodeScope.hpp>
 #include <rdf4cpp/rdf/bnode_mngt/WeakNodeScope.hpp>
-#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/NodeStorage.hpp>
 
 #include <string_view>
 
@@ -157,7 +157,7 @@ public:
      * @param node_storage where to place the generated node
      * @return the generated node
      */
-    [[nodiscard]] Node generate_node(NodeGenerator &generator = NodeGenerator::default_instance(), storage::node::DynNodeStorage node_storage = storage::node::default_node_storage) const;
+    [[nodiscard]] Node generate_node(NodeGenerator &generator = NodeGenerator::default_instance(), storage::DynNodeStorage node_storage = storage::default_node_storage) const;
 
     /**
      * Try to fetch a previously generated (and remembered) node by using the previously used label.
@@ -174,7 +174,7 @@ public:
      * @param node_storage where to place the newly generated node
      * @return either the found node or the newly generated node
      */
-    [[nodiscard]] Node get_or_generate_node(std::string_view label, NodeGenerator &generator = NodeGenerator::default_instance(), storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] Node get_or_generate_node(std::string_view label, NodeGenerator &generator = NodeGenerator::default_instance(), storage::DynNodeStorage node_storage = storage::default_node_storage);
 
     [[nodiscard]] std::optional<std::string_view> try_get_label(Node const &node) const noexcept;
 

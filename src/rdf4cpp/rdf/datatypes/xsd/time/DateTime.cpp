@@ -54,18 +54,18 @@ bool capabilities::Default<xsd_dateTime>::serialize_canonical_string(cpp_type co
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dateTime>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dateTime>::try_into_inlined(cpp_type const &value) noexcept {
     if (value.second.has_value())
         return std::nullopt;
     auto tp_sec = std::chrono::floor<std::chrono::seconds>(value.first);
     if ((value.first - tp_sec).count() != 0)
         return std::nullopt;
     auto s = static_cast<int64_t>(tp_sec.time_since_epoch().count());
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(s);
+    return util::try_pack_integral<storage::identifier::LiteralID>(s);
 }
 
 template<>
-capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return std::make_pair(rdf::util::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
 }
 

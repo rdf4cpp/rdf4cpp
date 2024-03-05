@@ -37,7 +37,7 @@ public:
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    explicit IRI(std::string_view iri, DynNodeStorage node_storage = storage::node::default_node_storage);
+    explicit IRI(std::string_view iri, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs the null-iri
@@ -49,13 +49,13 @@ public:
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    [[nodiscard]] static IRI make(std::string_view iri, DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static IRI make(std::string_view iri, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * creates a new IRI containing a random UUID (Universally Unique IDentifier)
      * @return UUID IRI
      */
-    [[nodiscard]] static IRI make_uuid(DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static IRI make_uuid(DynNodeStorage node_storage = storage::default_node_storage);
 
     IRI to_node_storage(DynNodeStorage node_storage) const noexcept;
     [[nodiscard]] IRI try_get_in_node_storage(DynNodeStorage node_storage) const noexcept;
@@ -67,7 +67,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static IRI find(std::string_view iri, DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+    [[nodiscard]] static IRI find(std::string_view iri, DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 private:
     /**
      * searches for a IRI in the specified node storage and returns it.
@@ -106,7 +106,7 @@ public:
      * @param node_storage  optional custom node_storage where the returned IRI lives
      * @return default graph IRI
      */
-    static IRI default_graph(DynNodeStorage node_storage = storage::node::default_node_storage);
+    static IRI default_graph(DynNodeStorage node_storage = storage::default_node_storage);
 };
 
 inline namespace shorthands {

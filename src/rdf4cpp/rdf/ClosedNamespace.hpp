@@ -19,7 +19,7 @@ public:
      */
     template<typename Suffixes>
         requires std::convertible_to<std::ranges::range_value_t<Suffixes>, std::string_view>
-    ClosedNamespace(std::string_view namespace_iri, Suffixes all_suffixes, storage::node::DynNodeStorage node_storage)
+    ClosedNamespace(std::string_view namespace_iri, Suffixes all_suffixes, storage::DynNodeStorage node_storage)
         : Namespace(namespace_iri, node_storage) {
         for (auto const &suffix : all_suffixes)
             this->cache_.emplace(suffix, IRI{namespace_iri_ + std::string{suffix}, node_storage}.backend_handle());

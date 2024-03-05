@@ -2,6 +2,6 @@
 
 namespace rdf4cpp::rdf::namespaces {
 
-OWL::OWL(storage::node::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
+OWL::OWL(storage::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
 
 }  // namespace rdf4cpp::rdf::namespaces

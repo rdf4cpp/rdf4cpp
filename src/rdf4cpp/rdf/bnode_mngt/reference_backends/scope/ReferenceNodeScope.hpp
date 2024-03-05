@@ -2,7 +2,7 @@
 #define RDF4CPP_RDF_BNODEMANAGEMENT_REFERENCEBACKENDS_SCOPE_REFERENCESCOPEBASE_HPP
 
 #include <rdf4cpp/rdf/bnode_mngt/INodeScope.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
+#include <rdf4cpp/rdf/storage/identifier/NodeBackendHandle.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
 #include <dice/hash.hpp>
@@ -46,12 +46,12 @@ private:
     std::shared_mutex mutable mutex_; // protects label_to_handle_ and handle_to_label_
 
     dice::sparse_map::sparse_map<PinnedString,
-                                 storage::node::identifier::NodeBackendHandle,
+                                 storage::identifier::NodeBackendHandle,
                                  dice::hash::DiceHashwyhash<std::string_view>,
                                  std::equal_to<>>
             label_to_handle_;
 
-    dice::sparse_map::sparse_map<storage::node::identifier::NodeBackendHandle,
+    dice::sparse_map::sparse_map<storage::identifier::NodeBackendHandle,
                                  std::string_view>
             handle_to_label_;
 
@@ -60,9 +60,9 @@ public:
     ReferenceNodeScope() = default;
     ReferenceNodeScope(ReferenceNodeScope &&other) noexcept;
 
-    [[nodiscard]] storage::node::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept override;
-    [[nodiscard]] std::optional<std::string_view> find_label(storage::node::identifier::NodeBackendHandle handle) const noexcept override;
-    void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) override;
+    [[nodiscard]] storage::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept override;
+    [[nodiscard]] std::optional<std::string_view> find_label(storage::identifier::NodeBackendHandle handle) const noexcept override;
+    void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) override;
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

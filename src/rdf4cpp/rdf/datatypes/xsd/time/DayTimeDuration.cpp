@@ -84,13 +84,13 @@ bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dayTimeDuration>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dayTimeDuration>::try_into_inlined(cpp_type const &value) noexcept {
     int64_t v = value.count();
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(v);
+    return util::try_pack_integral<storage::identifier::LiteralID>(v);
 }
 
 template<>
-capabilities::Inlineable<xsd_dayTimeDuration>::cpp_type capabilities::Inlineable<xsd_dayTimeDuration>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_dayTimeDuration>::cpp_type capabilities::Inlineable<xsd_dayTimeDuration>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return std::chrono::milliseconds{util::unpack_integral<int64_t>(inlined)};
 }
 

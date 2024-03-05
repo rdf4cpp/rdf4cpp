@@ -2,14 +2,14 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 #include <array>
 #include <iostream>
 
 using namespace rdf4cpp::rdf;
-using namespace storage::node;
+using namespace storage;
 using namespace datatypes;
 
 int main(int argc, char **argv) {
@@ -33,7 +33,7 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
     std::string const case_name{T::identifier};
 
     SUBCASE(case_name.c_str()) {
-        CHECK(storage::node::default_node_storage.has_specialized_storage_for(T::fixed_id));
+        CHECK(storage::default_node_storage.has_specialized_storage_for(T::fixed_id));
 
         std::array<identifier::NodeBackendHandle, N> assigned_ids;
 
@@ -244,9 +244,9 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         if (!h.is_inlined())
             return h;
         auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
-        auto node_id = storage::node::identifier::NodeID{id, h.node_id().literal_type()};
-        return rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle{node_id,
-                                                                          storage::node::identifier::RDFNodeType::Literal,
+        auto node_id = storage::identifier::NodeID{id, h.node_id().literal_type()};
+        return rdf4cpp::rdf::storage::identifier::NodeBackendHandle{node_id,
+                                                                          storage::identifier::RDFNodeType::Literal,
                                                                           h.storage()};
     };
 

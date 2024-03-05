@@ -2,6 +2,6 @@
 
 namespace rdf4cpp::rdf::namespaces {
 
-BFLC::BFLC(storage::node::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
+BFLC::BFLC(storage::DynNodeStorage node_storage) : ClosedNamespace(NAMESPACE, SUFFIXES, node_storage) {}
 
 }  // namespace rdf4cpp::rdf::namespaces

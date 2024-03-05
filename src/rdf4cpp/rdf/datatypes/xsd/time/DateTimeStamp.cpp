@@ -56,18 +56,18 @@ bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_ty
 }
 
 template<>
-std::optional<storage::node::identifier::LiteralID> capabilities::Inlineable<xsd_dateTimeStamp>::try_into_inlined(cpp_type const &value) noexcept {
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dateTimeStamp>::try_into_inlined(cpp_type const &value) noexcept {
     if (value.get_time_zone() != xsd::DateTimeStamp::inlining_default_timezone)
         return std::nullopt;
     auto tp_sec = std::chrono::floor<std::chrono::seconds>(value.get_sys_time());
     if ((value.get_sys_time() - tp_sec).count() != 0)
         return std::nullopt;
     auto s = static_cast<int64_t>(tp_sec.time_since_epoch().count());
-    return util::try_pack_integral<storage::node::identifier::LiteralID>(s);
+    return util::try_pack_integral<storage::identifier::LiteralID>(s);
 }
 
 template<>
-capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::node::identifier::LiteralID inlined) noexcept {
+capabilities::Inlineable<xsd_dateTimeStamp>::cpp_type capabilities::Inlineable<xsd_dateTimeStamp>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
     return rdf::util::ZonedTime{xsd::DateTimeStamp::inlining_default_timezone, rdf::util::TimePointSys{
                                                                                        std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}};
 }

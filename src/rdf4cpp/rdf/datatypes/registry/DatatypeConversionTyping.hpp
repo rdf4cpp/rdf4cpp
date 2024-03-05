@@ -123,7 +123,7 @@ private:
     {
         if (s_rank * max_p_rank > 0) {
             table.resize(s_rank * max_p_rank, RuntimeConversionEntry{
-                                                      .target_type_id = DatatypeID{storage::node::identifier::LiteralType{}},
+                                                      .target_type_id = DatatypeID{storage::identifier::LiteralType{}},
                                                       .convert = nullptr,
                                                       .inverted_convert = nullptr});
         }

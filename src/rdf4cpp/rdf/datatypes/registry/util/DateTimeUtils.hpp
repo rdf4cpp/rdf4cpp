@@ -240,7 +240,7 @@ struct __attribute__((__packed__)) InliningHelper {
     }
 };
 struct __attribute__((__packed__)) InliningHelperPacked {
-    static constexpr std::size_t width = storage::node::identifier::LiteralID::width;
+    static constexpr std::size_t width = storage::identifier::LiteralID::width;
     static constexpr std::size_t tv_width = width - 11;
 
     uint16_t tz_offset : 11;

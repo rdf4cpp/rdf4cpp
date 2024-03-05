@@ -7,7 +7,7 @@
 #include <rdf4cpp/rdf/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/Inlining.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralID.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralID.hpp>
 
 #include <cmath>
 #include <cstddef>
@@ -351,16 +351,16 @@ struct Inlineable {
 
     static constexpr std::true_type is_inlineable{};
 
-    static std::optional<storage::node::identifier::LiteralID> try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
+    static std::optional<storage::identifier::LiteralID> try_into_inlined([[maybe_unused]] cpp_type const &value) noexcept {
         if constexpr (std::integral<cpp_type>) {
-            return util::try_pack_integral<storage::node::identifier::LiteralID>(value);
+            return util::try_pack_integral<storage::identifier::LiteralID>(value);
         } else {
             static_assert(detail::always_false_v<cpp_type>, "to_inlined not implemented for inlineable type");
             return std::nullopt; // silence gcc no-return warning
         }
     }
 
-    static cpp_type from_inlined([[maybe_unused]] storage::node::identifier::LiteralID inlined) noexcept {
+    static cpp_type from_inlined([[maybe_unused]] storage::identifier::LiteralID inlined) noexcept {
         if constexpr (std::integral<cpp_type>) {
             return util::unpack_integral<cpp_type>(inlined);
         } else {

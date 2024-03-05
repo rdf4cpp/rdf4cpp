@@ -6,11 +6,11 @@
 
 #include <rdf4cpp/rdf/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/rdf/datatypes/registry/util/StaticFlatMap.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
-using storage::node::identifier::LiteralType;
+using storage::identifier::LiteralType;
 
 inline constexpr util::ConstexprString default_graph_iri{""};
 inline constexpr util::ConstexprString rdf_type{"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"};

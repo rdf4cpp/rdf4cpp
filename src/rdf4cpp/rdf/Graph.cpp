@@ -7,15 +7,15 @@
 
 namespace rdf4cpp::rdf {
 
-storage::node::identifier::NodeBackendID Graph::to_node_id(Node node) noexcept {
+storage::identifier::NodeBackendID Graph::to_node_id(Node node) noexcept {
     return node.backend_handle().id();
 }
 
-Node Graph::to_node(storage::node::identifier::NodeBackendID id) const noexcept {
-    return Node{storage::node::identifier::NodeBackendHandle{id, node_storage_}};
+Node Graph::to_node(storage::identifier::NodeBackendID id) const noexcept {
+    return Node{storage::identifier::NodeBackendHandle{id, node_storage_}};
 }
 
-Graph::Graph(storage::node::DynNodeStorage node_storage) noexcept : node_storage_{node_storage} {
+Graph::Graph(storage::DynNodeStorage node_storage) noexcept : node_storage_{node_storage} {
 }
 
 void Graph::add(Statement const &stmt_) {

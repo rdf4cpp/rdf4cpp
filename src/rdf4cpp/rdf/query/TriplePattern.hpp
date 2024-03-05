@@ -60,7 +60,7 @@ public:
 
     friend std::ostream &operator<<(std::ostream &os, const TriplePattern &pattern);
 
-    [[nodiscard]] TriplePattern to_node_storage(storage::node::DynNodeStorage node_storage) const;
+    [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStorage node_storage) const;
 };
 }  // namespace rdf4cpp::rdf::query
 

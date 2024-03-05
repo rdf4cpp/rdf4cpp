@@ -14,7 +14,7 @@ public:
 
     [[nodiscard]] bool valid() const;
 
-    [[nodiscard]] Statement to_node_storage(storage::node::DynNodeStorage node_storage) const {
+    [[nodiscard]] Statement to_node_storage(storage::DynNodeStorage node_storage) const {
         Statement st;
         auto it = st.begin();
         for (auto const &item : *this) {
@@ -23,7 +23,7 @@ public:
         return st;
     }
 
-    [[nodiscard]] Statement try_get_in_node_storage(storage::node::DynNodeStorage node_storage) const noexcept {
+    [[nodiscard]] Statement try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
         Statement st;
         auto it = st.begin();
         for (auto const &item : *this) {

@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
-    auto nst = storage::node::NodeStorage::new_instance();
+    auto nst = storage::NodeStorage::new_instance();
     int c = 0;
 
     IStreamQuadIterator::state_type state{.node_storage = nst};
@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
         ++i;
         ++c;
         if (c >= 1000) {
-            nst = storage::node::NodeStorage::new_instance();
+            nst = storage::NodeStorage::new_instance();
             state.node_storage = nst;
             c = 0;
         }

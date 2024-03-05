@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_NAMESPACEINSTANCE_HPP
 #define RDF4CPP_NAMESPACEINSTANCE_HPP
 
-#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/NodeStorage.hpp>
 
 #include <dice/sparse-map/sparse_map.hpp>
 #include <dice/hash.hpp>
@@ -13,7 +13,7 @@ namespace rdf4cpp::rdf::namespaces::util {
 
 template<typename NamespaceClass>
 struct NamespaceInstance {
-    static NamespaceClass &instance(storage::node::DynNodeStorage node_storage = storage::node::default_node_storage) {
+    static NamespaceClass &instance(storage::DynNodeStorage node_storage = storage::default_node_storage) {
         /*static std::mutex instances_mutex;
         static dice::sparse_map::sparse_map<uint16_t, NamespaceClass, dice::hash::DiceHashwyhash<uint16_t>> instances;
 

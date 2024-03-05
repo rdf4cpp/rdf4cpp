@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp/rdf/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 #include <atomic>
 #include <shared_mutex>
@@ -12,7 +12,7 @@
 #include <thread>
 
 using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage::node;
+using namespace rdf4cpp::rdf::storage;
 using namespace std::chrono_literals;
 
 struct SlowDestructingBackend : reference_node_storage::SyncReferenceNodeStorageBackend {

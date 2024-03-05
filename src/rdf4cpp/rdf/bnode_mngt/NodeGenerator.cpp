@@ -29,11 +29,11 @@ std::string NodeGenerator::generate_id() {
     return buf;
 }
 
-Node NodeGenerator::generate_node_impl(NodeScope const *scope, storage::node::DynNodeStorage node_storage) {
+Node NodeGenerator::generate_node_impl(NodeScope const *scope, storage::DynNodeStorage node_storage) {
     return Node{factory->make_node(*this->generator, scope, node_storage)};
 }
 
-Node NodeGenerator::generate_node(storage::node::DynNodeStorage node_storage) {
+Node NodeGenerator::generate_node(storage::DynNodeStorage node_storage) {
     return generate_node_impl(nullptr, node_storage);
 }
 

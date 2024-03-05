@@ -59,23 +59,23 @@ private:
     allocator_type<std::byte> alloc;
 
     metall::container::unordered_map<metall_string,
-                       storage::node::identifier::NodeBackendHandle,
+                       storage::identifier::NodeBackendHandle,
                        dice::hash::DiceHashwyhash<std::string_view>,
                        std::equal_to<>,
-                       allocator_type<std::pair<metall_string const, storage::node::identifier::NodeBackendHandle>>> label_to_storage;
+                       allocator_type<std::pair<metall_string const, storage::identifier::NodeBackendHandle>>> label_to_storage;
 
-    metall::container::unordered_map<storage::node::identifier::NodeBackendHandle,
+    metall::container::unordered_map<storage::identifier::NodeBackendHandle,
                        typename allocator_type<char>::const_pointer,
-                       dice::hash::DiceHashwyhash<storage::node::identifier::NodeBackendHandle>,
+                       dice::hash::DiceHashwyhash<storage::identifier::NodeBackendHandle>,
                        std::equal_to<>,
-                       allocator_type<std::pair<storage::node::identifier::NodeBackendHandle const, typename allocator_type<char>::const_pointer>>> storage_to_label;
+                       allocator_type<std::pair<storage::identifier::NodeBackendHandle const, typename allocator_type<char>::const_pointer>>> storage_to_label;
 public:
     explicit PersistableScope(allocator_type<std::byte> alloc) : alloc{alloc},
                                                                  label_to_storage{alloc},
                                                                  storage_to_label{alloc} {}
 
 
-    [[nodiscard]] std::optional<std::string_view> find_label(storage::node::identifier::NodeBackendHandle handle) const noexcept {
+    [[nodiscard]] std::optional<std::string_view> find_label(storage::identifier::NodeBackendHandle handle) const noexcept {
         if (auto it = this->storage_to_label.find(handle); it != this->storage_to_label.end()) {
             return std::string_view{std::to_address(it->second), std::strlen(std::to_address(it->second))};
         }
@@ -83,15 +83,15 @@ public:
         return std::nullopt;
     }
 
-    [[nodiscard]] storage::node::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept {
+    [[nodiscard]] storage::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept {
         if (auto it = this->label_to_storage.find(metall_string{label, alloc}); it != this->label_to_storage.end()) {
             return it->second;
         }
 
-        return storage::node::identifier::NodeBackendHandle{};
+        return storage::identifier::NodeBackendHandle{};
     }
 
-    void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) {
+    void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) {
         metall_string lab{label, alloc};
         auto const [it, inserted] = this->label_to_storage.emplace(lab, handle);
         assert(inserted);
@@ -105,15 +105,15 @@ struct PersistableScopeFrontent : INodeScope {
     PersistableScope *impl;
     explicit PersistableScopeFrontent(PersistableScope *impl) : impl{impl} {}
 
-    std::optional<std::string_view> find_label(storage::node::identifier::NodeBackendHandle handle) const noexcept override {
+    std::optional<std::string_view> find_label(storage::identifier::NodeBackendHandle handle) const noexcept override {
         return impl->find_label(handle);
     }
 
-    storage::node::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept override {
+    storage::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept override {
         return impl->find_node(label);
     }
 
-    void label_node(std::string_view label, storage::node::identifier::NodeBackendHandle handle) override {
+    void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) override {
         return impl->label_node(label, handle);
     }
 };

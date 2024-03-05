@@ -4,10 +4,10 @@
 #include <rdf4cpp/rdf/writer/TryWrite.hpp>
 
 namespace rdf4cpp::rdf {
-BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::node::identifier::RDFNodeType::BNode, {}}} {}
+BlankNode::BlankNode() noexcept : Node{NodeBackendHandle{{}, storage::identifier::RDFNodeType::BNode, {}}} {}
 BlankNode::BlankNode(std::string_view identifier, DynNodeStorage node_storage)
-    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
-                             storage::node::identifier::RDFNodeType::BNode,
+    : Node(NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
+                             storage::identifier::RDFNodeType::BNode,
                              node_storage}) {}
 BlankNode::BlankNode(Node::NodeBackendHandle handle) noexcept : Node(handle) {}
 
@@ -25,7 +25,7 @@ BlankNode BlankNode::to_node_storage(DynNodeStorage node_storage) const noexcept
     }
 
     auto const node_id = node_storage.find_or_make_id(handle_.bnode_backend());
-    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
 }
 
 BlankNode BlankNode::try_get_in_node_storage(DynNodeStorage node_storage) const noexcept {
@@ -38,14 +38,14 @@ BlankNode BlankNode::try_get_in_node_storage(DynNodeStorage node_storage) const 
         return BlankNode{};
     }
 
-    return BlankNode{NodeBackendHandle{node_id, storage::node::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
 }
 
 BlankNode BlankNode::find(std::string_view identifier, DynNodeStorage node_storage) noexcept {
-    auto nid = node_storage.find_id(storage::node::view::BNodeBackendView{identifier, std::nullopt});
+    auto nid = node_storage.find_id(storage::view::BNodeBackendView{identifier, std::nullopt});
     if (nid.null())
         return BlankNode{};
-    return BlankNode{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{NodeBackendHandle{nid, storage::identifier::RDFNodeType::BNode, node_storage}};
 }
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }

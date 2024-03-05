@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <variant>
 
-#include <rdf4cpp/rdf/storage/node/identifier/LiteralType.hpp>
+#include <rdf4cpp/rdf/storage/identifier/LiteralType.hpp>
 
 namespace rdf4cpp::rdf::datatypes::registry {
 
@@ -42,7 +42,7 @@ struct DatatypeIDVisitor {
     F map_fixed;
     D map_dynamic;
 
-    constexpr auto operator()(storage::node::identifier::LiteralType const fixed) noexcept(std::is_nothrow_invocable_v<F, storage::node::identifier::LiteralType const>) -> std::invoke_result_t<F, storage::node::identifier::LiteralType> {
+    constexpr auto operator()(storage::identifier::LiteralType const fixed) noexcept(std::is_nothrow_invocable_v<F, storage::identifier::LiteralType const>) -> std::invoke_result_t<F, storage::identifier::LiteralType> {
         return std::invoke(this->map_fixed, fixed);
     }
 
@@ -70,10 +70,10 @@ DatatypeIDVisitor(F, D) -> DatatypeIDVisitor<F, D>;
  */
 struct DatatypeIDView {
 private:
-    using variant_t = std::variant<storage::node::identifier::LiteralType, std::string_view>;
+    using variant_t = std::variant<storage::identifier::LiteralType, std::string_view>;
     variant_t inner;
 public:
-    constexpr DatatypeIDView(storage::node::identifier::LiteralType fixed) noexcept
+    constexpr DatatypeIDView(storage::identifier::LiteralType fixed) noexcept
         : inner{fixed} {
         assert(fixed.is_fixed());
     }
@@ -90,7 +90,7 @@ public:
         return this->inner.index() == 1;
     }
 
-    [[nodiscard]] constexpr storage::node::identifier::LiteralType get_fixed() const {
+    [[nodiscard]] constexpr storage::identifier::LiteralType get_fixed() const {
         return std::get<0>(this->inner);
     }
 
@@ -116,18 +116,18 @@ public:
  */
 struct DatatypeID {
 private:
-    using variant_t = std::variant<storage::node::identifier::LiteralType, std::string>;
+    using variant_t = std::variant<storage::identifier::LiteralType, std::string>;
     variant_t inner;
 public:
     explicit inline DatatypeID(DatatypeIDView const iri)
         : inner{visit(
                   DatatypeIDVisitor{
-                          [](storage::node::identifier::LiteralType fixed) { return variant_t{fixed}; },
+                          [](storage::identifier::LiteralType fixed) { return variant_t{fixed}; },
                           [](std::string_view other) { return variant_t{std::string{other}}; }},
                   iri)} {
     }
 
-    explicit inline DatatypeID(storage::node::identifier::LiteralType const fixed) noexcept
+    explicit inline DatatypeID(storage::identifier::LiteralType const fixed) noexcept
         : inner{fixed} {
     }
 
@@ -141,7 +141,7 @@ public:
 
     inline operator DatatypeIDView() const noexcept {
         return visit(DatatypeIDVisitor{
-                             [](storage::node::identifier::LiteralType fixed) { return DatatypeIDView{fixed}; },
+                             [](storage::identifier::LiteralType fixed) { return DatatypeIDView{fixed}; },
                              [](std::string const &other) { return DatatypeIDView{other}; }},
                      this->inner);
     }
@@ -154,7 +154,7 @@ public:
         return this->inner.index() == 1;
     }
 
-    [[nodiscard]] inline storage::node::identifier::LiteralType get_fixed() const {
+    [[nodiscard]] inline storage::identifier::LiteralType get_fixed() const {
         return std::get<0>(this->inner);
     }
 

@@ -113,7 +113,7 @@ private:
      */
     [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, DynNodeStorage node_storage) noexcept;
 
-    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::node::identifier::LiteralType fixed_id, DynNodeStorage node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::identifier::LiteralType fixed_id, DynNodeStorage node_storage) noexcept;
 
     /**
      * Creates an inlined Literal without any safety checks
@@ -121,7 +121,7 @@ private:
      * @param inlined_value a valid inlined value for the given datatype (identified via a fixed_id) packed into the lower LiteralID::width bits of the integer
      * @note inlined_values for a datatype can be obtained via Datatype::try_into_inlined(value) if the datatype is inlineable (see registry::capabilities::Inlineable)
      */
-    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::node::identifier::LiteralID inlined_value, storage::node::identifier::LiteralType fixed_id, DynNodeStorage node_storage) noexcept;
+    [[nodiscard]] static Literal make_inlined_typed_unchecked(storage::identifier::LiteralID inlined_value, storage::identifier::LiteralType fixed_id, DynNodeStorage node_storage) noexcept;
 
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
@@ -133,7 +133,7 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, DynNodeStorage node_storage) noexcept;
 
-    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, DynNodeStorage node_storage, storage::node::identifier::NodeID node_id) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, DynNodeStorage node_storage, storage::identifier::NodeID node_id) noexcept;
 
     /**
      * Creates a string like type with contents of str.
@@ -222,7 +222,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      * @throws std::runtime_error if lexical_form contains invalid unicode
      */
-    [[nodiscard]] static Literal make_simple(std::string_view lexical_form, DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static Literal make_simple(std::string_view lexical_form, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs a simple Literal from a lexical form. Datatype is `xsd:string`.
@@ -230,7 +230,7 @@ public:
      * @param lexical_form the lexical form
      * @param node_storage optional custom node_storage used to store the literal
      */
-    [[nodiscard]] static Literal make_simple_normalize(std::string_view lexical_form, DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static Literal make_simple_normalize(std::string_view lexical_form, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
@@ -240,7 +240,7 @@ public:
      * @throws std::runtime_error if lexical_form contains invalid unicode
      */
     [[nodiscard]] static Literal make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
-                                                  DynNodeStorage node_storage = storage::node::default_node_storage);
+                                                  DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs a Literal from a lexical form and a language tag. The datatype is `rdf:langString`.
@@ -250,7 +250,7 @@ public:
      * @param node_storage optional custom node_storage used to store the literal
      */
     [[nodiscard]] static Literal make_lang_tagged_normalize(std::string_view lexical_form, std::string_view lang_tag,
-                                                            DynNodeStorage node_storage = storage::node::default_node_storage);
+                                                            DynNodeStorage node_storage = storage::default_node_storage);
     /**
      * Constructs a Literal from a lexical form and a datatype.
      * @param lexical_form the lexical form
@@ -259,7 +259,7 @@ public:
      * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      */
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form, IRI const &datatype,
-                                            DynNodeStorage node_storage = storage::node::default_node_storage);
+                                            DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Constructs a Literal from a lexical form and a datatype provided as a template parameter.
@@ -270,7 +270,7 @@ public:
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed(std::string_view lexical_form,
-                                            DynNodeStorage node_storage = storage::node::default_node_storage) {
+                                            DynNodeStorage node_storage = storage::default_node_storage) {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             // see: https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal
@@ -317,7 +317,7 @@ public:
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed_from_value(typename T::cpp_type const &compatible_value,
-                                                       DynNodeStorage node_storage = storage::node::default_node_storage) noexcept {
+                                                       DynNodeStorage node_storage = storage::default_node_storage) noexcept {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged(compatible_value.lexical_form,
@@ -337,10 +337,10 @@ public:
 
         if constexpr (datatypes::HasFixedId<T>) {
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
-                return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::node::view::ValueLiteralBackendView{
+                return Literal{NodeBackendHandle{node_storage.find_or_make_id(storage::view::ValueLiteralBackendView{
                                                          .datatype = T::fixed_id,
                                                          .value = std::any{compatible_value}}),
-                                                 storage::node::identifier::RDFNodeType::Literal,
+                                                 storage::identifier::RDFNodeType::Literal,
                                                  node_storage}};
             }
         }
@@ -365,13 +365,13 @@ public:
      *
      * @return the literal form of the given boolean
      */
-    static Literal make_boolean(util::TriBool b, DynNodeStorage node_storage = storage::node::default_node_storage);
+    static Literal make_boolean(util::TriBool b, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * creates a new string Literal containing a random UUID (Universally Unique IDentifier)
      * @return UUID Literal
      */
-    [[nodiscard]] static Literal make_string_uuid(DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static Literal make_string_uuid(DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Generates a random double in the range [0.0, 1.0).
@@ -381,7 +381,7 @@ public:
      *
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
-    [[nodiscard]] static Literal generate_random_double(DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static Literal generate_random_double(DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * Generates a random double in the range [0.0, 1.0).
@@ -393,7 +393,7 @@ public:
      * @see https://www.w3.org/TR/sparql11-query/#idp2130040
      */
     template<typename Rng>
-    [[nodiscard]] static Literal generate_random_double(Rng &rng, DynNodeStorage node_storage = storage::node::default_node_storage) {
+    [[nodiscard]] static Literal generate_random_double(Rng &rng, DynNodeStorage node_storage = storage::default_node_storage) {
         // uniform_real_distribution does not have any state, therefore we can construct a new one for each call
         std::uniform_real_distribution<typename datatypes::xsd::Double::cpp_type> dist{0.0, 1.0};
         return Literal::make_typed_from_value<datatypes::xsd::Double>(dist(rng), node_storage);
@@ -413,7 +413,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static Literal find_simple(std::string_view lexical_form, DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+    [[nodiscard]] static Literal find_simple(std::string_view lexical_form, DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 
     /**
      * searches for a rdf::LangString Literal in the specified node storage and returns it.
@@ -422,7 +422,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static Literal find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+    [[nodiscard]] static Literal find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 
     /**
      * searches for a Literal of type T in the specified node storage and returns it.
@@ -435,7 +435,7 @@ public:
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal find_typed_from_value(typename T::cpp_type const &compatible_value,
-                                                       DynNodeStorage node_storage = storage::node::default_node_storage) noexcept {
+                                                       DynNodeStorage node_storage = storage::default_node_storage) noexcept {
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return find_lang_tagged(compatible_value.lexical_form,
                                     compatible_value.language_tag,
@@ -454,12 +454,12 @@ public:
 
         if constexpr (datatypes::HasFixedId<T>) {
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
-                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                auto nid = node_storage.find_id(storage::view::ValueLiteralBackendView{
                         .datatype = T::fixed_id,
                         .value = std::any{compatible_value}});
                 if (nid.null())
                     return Literal{};
-                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage}};
+                return Literal{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
             }
         }
 
@@ -473,7 +473,7 @@ public:
 
         auto const needs_escape = lexical_form_needs_escape(lex);
 
-        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+        auto nid = node_storage.find_id(storage::view::LexicalFormLiteralBackendView{
                 .datatype_id = dty,
                 .lexical_form = lex,
                 .language_tag = "",
@@ -481,7 +481,7 @@ public:
 
         if (nid.null())
             return Literal{};
-        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage}};
+        return Literal{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
     }
 
     /**
@@ -496,7 +496,7 @@ public:
     template<datatypes::LiteralDatatype T>
         requires(!std::same_as<T, datatypes::rdf::LangString>)
     [[nodiscard]] static Literal find_typed(std::string_view lexical_form,
-                                            DynNodeStorage node_storage = storage::node::default_node_storage) {
+                                            DynNodeStorage node_storage = storage::default_node_storage) {
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
             return find_simple(lexical_form, node_storage);
         }
@@ -511,12 +511,12 @@ public:
             }
 
             if (node_storage.has_specialized_storage_for(T::fixed_id)) {
-                auto nid = node_storage.find_id(storage::node::view::ValueLiteralBackendView{
+                auto nid = node_storage.find_id(storage::view::ValueLiteralBackendView{
                         .datatype = T::fixed_id,
                         .value = std::any{value}});
                 if (nid.null())
                     return Literal{};
-                return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage}};
+                return Literal{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
             }
         }
 
@@ -526,7 +526,7 @@ public:
 
         auto const needs_escape = lexical_form_needs_escape(lexical_form);
 
-        auto nid = node_storage.find_id(storage::node::view::LexicalFormLiteralBackendView{
+        auto nid = node_storage.find_id(storage::view::LexicalFormLiteralBackendView{
                 .datatype_id = dty,
                 .lexical_form = lexical_form,
                 .language_tag = "",
@@ -534,7 +534,7 @@ public:
 
         if (nid.null())
             return Literal{};
-        return Literal{NodeBackendHandle{nid, storage::node::identifier::RDFNodeType::Literal, node_storage}};
+        return Literal{NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
     }
 
     /**
@@ -942,10 +942,10 @@ public:
 
         auto const backend = handle_.literal_backend();
         return backend.visit(
-                [](storage::node::view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                [](storage::view::LexicalFormLiteralBackendView const &lexical) noexcept {
                     return T::from_string(lexical.lexical_form);
                 },
-                [](storage::node::view::ValueLiteralBackendView const &any) noexcept {
+                [](storage::view::ValueLiteralBackendView const &any) noexcept {
                     assert(any.datatype == T::datatype_id);
                     return std::any_cast<typename T::cpp_type>(any.value);
                 });
@@ -1332,7 +1332,7 @@ public:
      * @param string literal to encode
      * @return URL encoded string type literal
      */
-    [[nodiscard]] static Literal encode_for_uri(std::string_view string, DynNodeStorage node_storage = storage::node::default_node_storage);
+    [[nodiscard]] static Literal encode_for_uri(std::string_view string, DynNodeStorage node_storage = storage::default_node_storage);
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
      * @return URL encoded string type literal or the null literal if
@@ -1410,7 +1410,7 @@ public:
      * Note: will need to be buffered for each query, because each query has only one now.
      * @return std::chrono::system_clock::now() as xsd:dateTime
      */
-    [[nodiscard]] static Literal now(DynNodeStorage node_storage = storage::node::default_node_storage) noexcept;
+    [[nodiscard]] static Literal now(DynNodeStorage node_storage = storage::default_node_storage) noexcept;
 
     /**
      * returns the year part of this.
@@ -1521,7 +1521,7 @@ public:
     Literal operator!() const noexcept;
 
     friend class Node;
-    friend Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::node::DynNodeStorage node_storage) noexcept;
+    friend Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::DynNodeStorage node_storage) noexcept;
 };
 
 /**
@@ -1541,7 +1541,7 @@ public:
  *      - lang_tag is not xsd:string
  *      - lang_range is not xsd:string
  */
-[[nodiscard]] Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::node::DynNodeStorage node_storage = keep_node_storage) noexcept;
+[[nodiscard]] Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::DynNodeStorage node_storage = keep_node_storage) noexcept;
 
 inline namespace shorthands {
 

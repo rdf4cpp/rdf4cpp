@@ -12,7 +12,7 @@
 namespace rdf4cpp::rdf {
 
 /**
- * Namespace provides a simple tool to create IRIs from a certain namespace and vocabulary. Each Namespace instance maintains an internal cache to save roundtrip to storage::node::NodeStorage.<br/>
+ * Namespace provides a simple tool to create IRIs from a certain namespace and vocabulary. Each Namespace instance maintains an internal cache to save roundtrip to storage::NodeStorage.<br/>
  * Example:
  *  @code
  *  Namespace ex("http://example.com/);
@@ -29,13 +29,13 @@ protected:
     /**
      * NodeStorage from which IRI objects are created.
      */
-    storage::node::DynNodeStorage node_storage_;
+    storage::DynNodeStorage node_storage_;
 
     // TODO: a faster, less memory efficient map would be better.
     /**
      * Cache storing the <div>NodeBackendHandle</div> for prefixes. This saves roundtrips to NodeStorage.
      */
-    mutable dice::sparse_map::sparse_map<std::string, storage::node::identifier::NodeBackendHandle,
+    mutable dice::sparse_map::sparse_map<std::string, storage::identifier::NodeBackendHandle,
                                          dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>> cache_;
 
 public:
@@ -45,7 +45,7 @@ public:
      * @param node_storage where the IRIs will live
      */
     explicit Namespace(std::string_view namespace_iri,
-                       storage::node::DynNodeStorage node_storage = storage::node::default_node_storage);
+                       storage::DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * @return IRI string of the Namespace
@@ -55,7 +55,7 @@ public:
     /**
      * @return NodeStorage used to create <div>IRI</div>s from this Namespace.
      */
-    storage::node::DynNodeStorage node_storage() const;
+    storage::DynNodeStorage node_storage() const;
 
     /**
      * Create an IRI with the suffix added to the

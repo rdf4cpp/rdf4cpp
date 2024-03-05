@@ -2,8 +2,8 @@
 #define RDF4CPP_RDF_BNODEMANAGEMENT_INODEFACADE
 
 #include <rdf4cpp/rdf/bnode_mngt/IIdGenerator.hpp>
-#include <rdf4cpp/rdf/storage/node/NodeStorage.hpp>
-#include <rdf4cpp/rdf/storage/node/identifier/NodeBackendHandle.hpp>
+#include <rdf4cpp/rdf/storage/NodeStorage.hpp>
+#include <rdf4cpp/rdf/storage/identifier/NodeBackendHandle.hpp>
 
 
 namespace rdf4cpp::rdf::bnode_mngt {
@@ -17,9 +17,9 @@ struct NodeScope;
 struct INodeFactory {
     virtual ~INodeFactory() noexcept = default;
 
-    [[nodiscard]] virtual storage::node::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
+    [[nodiscard]] virtual storage::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
                                                                                  NodeScope const *scope,
-                                                                                 storage::node::DynNodeStorage node_storage) noexcept = 0;
+                                                                                 storage::DynNodeStorage node_storage) noexcept = 0;
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt
