@@ -1,17 +1,17 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
-#include <rdf4cpp/util/BigDecimal.hpp>
+#include "rdf4cpp/BigDecimal.hpp"
 
-using Dec = rdf4cpp::util::BigDecimal<>;
-using DecI = rdf4cpp::util::BigDecimal<int32_t, uint32_t>;
-using RoundingMode = rdf4cpp::util::RoundingMode;
+using Dec = rdf4cpp::BigDecimal<>;
+using DecI = rdf4cpp::BigDecimal<int32_t, uint32_t>;
+using RoundingMode = rdf4cpp::RoundingMode;
 
 TEST_CASE("basics") {
     SUBCASE("ctor and compare") {
-        static_assert(rdf4cpp::util::BigDecimalBaseType<uint32_t>);
-        static_assert(rdf4cpp::util::BigDecimalBaseType<int32_t>);
-        static_assert(rdf4cpp::util::BigDecimalBaseType<boost::multiprecision::cpp_int>);
+        static_assert(rdf4cpp::BigDecimalBaseType<uint32_t>);
+        static_assert(rdf4cpp::BigDecimalBaseType<int32_t>);
+        static_assert(rdf4cpp::BigDecimalBaseType<boost::multiprecision::cpp_int>);
         Dec d{500, 1};
         CHECK_GT(d, Dec{-500, 1});
         CHECK(Dec{-500, 1} < d);

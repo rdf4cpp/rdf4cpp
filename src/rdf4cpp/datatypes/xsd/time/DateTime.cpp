@@ -13,7 +13,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, 'T', identifier>(s);
     auto hours = parse_date_time_fragment<std::chrono::hours, unsigned int, ':', identifier>(s);
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
-    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
     if (registry::relaxed_parsing_mode && !date.ok())
@@ -41,7 +41,7 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
         }
     }
 
-    return std::make_pair(rdf4cpp::util::construct(date, time), tz);
+    return std::make_pair(rdf4cpp::util::construct_timepoint(date, time), tz);
 }
 
 template<>
@@ -66,7 +66,7 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dateT
 
 template<>
 capabilities::Inlineable<xsd_dateTime>::cpp_type capabilities::Inlineable<xsd_dateTime>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
-    return std::make_pair(rdf4cpp::util::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
+    return std::make_pair(rdf4cpp::TimePoint{std::chrono::seconds{util::unpack_integral<int64_t>(inlined)}}, std::nullopt);
 }
 
 template<>

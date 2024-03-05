@@ -5,20 +5,7 @@
 #include <string_view>
 #include <variant>
 
-namespace rdf4cpp::util {
-
-/**
- * Tags to control the construction of CowStrings
- */
-namespace ownership_tag {
-
-struct Owned {};
-struct Borrowed {};
-
-inline constexpr Borrowed borrowed;
-inline constexpr Owned owned;
-
-} // namespace ownership_tags
+namespace rdf4cpp {
 
 /**
  * A string-like type, that is either std::string_view (borrowed) or std::string (owned) with copy-on-write functionality.
@@ -33,15 +20,21 @@ struct CowString {
     using reverse_iterator = std::string_view::reverse_iterator;
     using size_type = std::string_view::size_type;
 
+    struct owned_tag {};
+    struct borrowed_tag {};
+
+    static constexpr owned_tag owned{};
+    static constexpr borrowed_tag borrowed{};
+
 private:
     using repr_t = std::variant<std::string, std::string_view>;
     repr_t data_;
 
 public:
-    constexpr CowString(ownership_tag::Borrowed, std::string_view const value) noexcept : data_{std::in_place_type<std::string_view>, value} {}
+    constexpr CowString(borrowed_tag, std::string_view const value) noexcept : data_{std::in_place_type<std::string_view>, value} {}
 
-    inline CowString(ownership_tag::Owned, std::string const &value) : data_{std::in_place_type<std::string>, value} {}
-    inline CowString(ownership_tag::Owned, std::string &&value) noexcept : data_{std::in_place_type<std::string>, std::move(value)} {}
+    CowString(owned_tag, std::string const &value) : data_{std::in_place_type<std::string>, value} {}
+    CowString(owned_tag, std::string &&value) noexcept : data_{std::in_place_type<std::string>, std::move(value)} {}
 
     [[nodiscard]] constexpr size_type size() const noexcept {
         return this->view().size();
@@ -120,7 +113,7 @@ public:
     /**
      * Converts this CowString into std::string by copy
      */
-    [[nodiscard]] inline std::string into_owned() const & noexcept {
+    [[nodiscard]] std::string into_owned() const & noexcept {
         if (this->is_borrowed()) {
             return std::string{this->get_borrowed()};
         }
@@ -131,7 +124,7 @@ public:
     /**
      * Converts this CowString into std::string (by move if the owned form is active)
      */
-    [[nodiscard]] inline std::string into_owned() && noexcept {
+    [[nodiscard]] std::string into_owned() && noexcept {
         if (this->is_borrowed()) {
             return std::string{this->get_borrowed()};
         }
@@ -143,7 +136,7 @@ public:
      * Returns a non-const reference to the owned form of the data (std::string)
      * Converts the data to the owned for if it is currently the borrowed form
      */
-    [[nodiscard]] inline std::string &to_mutable() noexcept {
+    [[nodiscard]] std::string &to_mutable() noexcept {
         if (this->is_borrowed()) {
             this->data_ = std::string{this->get_borrowed()};
         }
@@ -197,12 +190,12 @@ public:
         return lhs >= rhs.view();
     }
 
-    friend inline std::ostream &operator<<(std::ostream &os, CowString const &cow) {
+    friend std::ostream &operator<<(std::ostream &os, CowString const &cow) {
         os << cow.view();
         return os;
     }
 };
 
-} // namespace rdf4cpp::util
+} // namespace rdf4cpp
 
 #endif  //RDF4CPP_UTIL_COWSTRING_HPP

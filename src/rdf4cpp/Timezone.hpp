@@ -6,9 +6,9 @@
 #include <string_view>
 
 #include <dice/hash.hpp>
-#include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
+#include "rdf4cpp/datatypes/registry/util/CharConvExt.hpp"
 
-namespace rdf4cpp::util {
+namespace rdf4cpp {
 class Timezone {
     // heavily inspired by https://howardhinnant.github.io/date/tz.html#Examples
 public:
@@ -116,29 +116,33 @@ using TimePoint = std::chrono::time_point<std::chrono::local_t, std::chrono::mil
 using TimePointSys = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>;
 using ZonedTime = std::chrono::zoned_time<std::chrono::milliseconds, Timezone>;
 
-constexpr std::chrono::year_month_day TimePointReplacementDate = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
-constexpr std::chrono::milliseconds TimePointReplacementTimeOfDay{0};
+namespace util {
 
-constexpr util::TimePoint construct(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) noexcept {
+inline constexpr std::chrono::year_month_day time_point_replacement_date = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
+inline constexpr std::chrono::milliseconds time_point_replacement_time_of_day{0};
+
+constexpr TimePoint construct_timepoint(std::chrono::year_month_day date, std::chrono::milliseconds time_of_day) noexcept {
     auto sd = static_cast<std::chrono::local_days>(date);
-    auto ms = static_cast<util::TimePoint>(sd);
+    auto ms = static_cast<TimePoint>(sd);
     ms += time_of_day;
     return ms;
 }
 
-}  // namespace rdf4cpp::util
+} // namespace util
+
+}  // namespace rdf4cpp
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::Timezone> {
-    static size_t dice_hash(rdf4cpp::util::Timezone const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::Timezone> {
+    static size_t dice_hash(rdf4cpp::Timezone const &x) noexcept {
         auto off = x.offset.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
     }
 };
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::OptionalTimezone> {
-    static size_t dice_hash(rdf4cpp::util::OptionalTimezone const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::OptionalTimezone> {
+    static size_t dice_hash(rdf4cpp::OptionalTimezone const &x) noexcept {
         auto off = x.has_value() ? x->offset.count() : std::chrono::minutes{std::chrono::hours{15}}.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(off);
     }

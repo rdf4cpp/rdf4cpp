@@ -257,12 +257,12 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
     }
 }
 
-Literal Literal::make_boolean(util::TriBool const b, Node::DynNodeStorage node_storage) {
-    if (b == util::TriBool::Err) {
+Literal Literal::make_boolean(TriBool const b, Node::DynNodeStorage node_storage) {
+    if (b == TriBool::Err) {
         return Literal{};
     }
 
-    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(b == util::TriBool::True, node_storage);
+    return Literal::make_typed_from_value<datatypes::xsd::Boolean>(b == TriBool::True, node_storage);
 }
 
 Literal Literal::make_string_uuid(Node::DynNodeStorage node_storage) {
@@ -564,16 +564,16 @@ auto Literal::serialize_lexical_form_impl(C &&consume) const noexcept {
 
 // Using structs to ensure static-dispatch
 struct ConsumeSafe {
-    [[nodiscard]] util::CowString operator()(std::string_view lexical) const noexcept {
-        return util::CowString{util::ownership_tag::borrowed, lexical};
+    [[nodiscard]] CowString operator()(std::string_view lexical) const noexcept {
+        return CowString{CowString::borrowed, lexical};
     }
 
-    [[nodiscard]] util::CowString operator()(std::any const &value, datatypes::registry::DatatypeRegistry::serialize_fptr_t serialize) const noexcept {
+    [[nodiscard]] CowString operator()(std::any const &value, datatypes::registry::DatatypeRegistry::serialize_fptr_t serialize) const noexcept {
         auto s = writer::StringWriter::oneshot([&value, serialize](writer::StringWriter &w) noexcept {
             return serialize(value, w);
         });
 
-        return util::CowString{util::ownership_tag::owned, std::move(s)};
+        return CowString{CowString::owned, std::move(s)};
     }
 };
 
@@ -606,7 +606,7 @@ struct ConsumeSerialize {
     }
 };
 
-util::CowString Literal::lexical_form() const noexcept {
+CowString Literal::lexical_form() const noexcept {
     return serialize_lexical_form_impl<false>(ConsumeSafe{});
 }
 
@@ -624,7 +624,7 @@ Literal Literal::as_lexical_form(DynNodeStorage node_storage) const noexcept {
     return Literal::make_simple_unchecked(lex, needs_escape, select_node_storage(node_storage));
 }
 
-util::CowString Literal::simplified_lexical_form() const noexcept {
+CowString Literal::simplified_lexical_form() const noexcept {
     return serialize_lexical_form_impl<true>(ConsumeSafe{});
 }
 
@@ -662,17 +662,17 @@ Literal Literal::as_language_tag(Node::DynNodeStorage node_storage) const noexce
     return Literal::make_simple_unchecked(this->language_tag(), false, select_node_storage(node_storage));
 }
 
-util::TriBool Literal::language_tag_eq(std::string_view const lang_tag) const noexcept {
+TriBool Literal::language_tag_eq(std::string_view const lang_tag) const noexcept {
     if (!this->datatype_eq<datatypes::rdf::LangString>()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     return this->language_tag() == lang_tag;
 }
 
-util::TriBool Literal::language_tag_eq(Literal const &other) const noexcept {
+TriBool Literal::language_tag_eq(Literal const &other) const noexcept {
     if (!this->datatype_eq<datatypes::rdf::LangString>() || !other.datatype_eq<datatypes::rdf::LangString>()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     return this->language_tag() == other.language_tag();
@@ -1238,7 +1238,7 @@ std::weak_ordering Literal::compare_with_extensions(Literal const &other) const 
     }
 }
 
-util::TriBool Literal::eq(Literal const &other) const noexcept {
+TriBool Literal::eq(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
@@ -1246,11 +1246,11 @@ Literal Literal::as_eq(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->eq(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator==(Literal const &other) const noexcept {
+TriBool Literal::operator==(Literal const &other) const noexcept {
     return this->eq(other);
 }
 
-util::TriBool Literal::ne(Literal const &other) const noexcept {
+TriBool Literal::ne(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
@@ -1258,11 +1258,11 @@ Literal Literal::as_ne(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->ne(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator!=(Literal const &other) const noexcept {
+TriBool Literal::operator!=(Literal const &other) const noexcept {
     return this->ne(other);
 }
 
-util::TriBool Literal::lt(Literal const &other) const noexcept {
+TriBool Literal::lt(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
@@ -1270,11 +1270,11 @@ Literal Literal::as_lt(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->lt(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator<(Literal const &other) const noexcept {
+TriBool Literal::operator<(Literal const &other) const noexcept {
     return this->lt(other);
 }
 
-util::TriBool Literal::le(Literal const &other) const noexcept {
+TriBool Literal::le(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
@@ -1282,11 +1282,11 @@ Literal Literal::as_le(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->le(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator<=(Literal const &other) const noexcept {
+TriBool Literal::operator<=(Literal const &other) const noexcept {
     return this->le(other);
 }
 
-util::TriBool Literal::gt(Literal const &other) const noexcept {
+TriBool Literal::gt(Literal const &other) const noexcept {
     return util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
@@ -1294,11 +1294,11 @@ Literal Literal::as_gt(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->gt(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator>(Literal const &other) const noexcept {
+TriBool Literal::operator>(Literal const &other) const noexcept {
     return this->gt(other);
 }
 
-util::TriBool Literal::ge(Literal const &other) const noexcept {
+TriBool Literal::ge(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
 
@@ -1306,7 +1306,7 @@ Literal Literal::as_ge(Literal const &other, DynNodeStorage node_storage) const 
     return Literal::make_boolean(this->ge(other), select_node_storage(node_storage));
 }
 
-util::TriBool Literal::operator>=(Literal const &other) const noexcept {
+TriBool Literal::operator>=(Literal const &other) const noexcept {
     return this->ge(other);
 }
 
@@ -1473,10 +1473,10 @@ Literal Literal::sub(Literal const &other, DynNodeStorage node_storage) const no
         auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
         auto other_dt = other.cast_to_supertype_value<datatypes::xsd::DateTime>();
         if (this_dt.has_value() && other_dt.has_value()) {
-            datatypes::registry::util::CheckedZonedTime const this_tp{this_dt->second.has_value() ? *this_dt->second : util::Timezone{},
+            datatypes::registry::util::CheckedZonedTime const this_tp{this_dt->second.has_value() ? *this_dt->second : Timezone{},
                                                                       datatypes::registry::util::to_checked(this_dt->first)};
 
-            datatypes::registry::util::CheckedZonedTime const other_tp{other_dt->second.has_value() ? *other_dt->second : util::Timezone{},
+            datatypes::registry::util::CheckedZonedTime const other_tp{other_dt->second.has_value() ? *other_dt->second : Timezone{},
                                                                        datatypes::registry::util::to_checked(other_dt->first)};
 
             auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
@@ -1632,7 +1632,7 @@ Literal Literal::div(Literal const &other, DynNodeStorage node_storage) const no
         auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
         auto other_v = other.cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
         if (this_v.has_value() && other_v.has_value()) {
-            auto r = util::BigDecimal<>{this_v->count(), 0}.div_checked(util::BigDecimal<>{other_v->count(), 0}, 1000);
+            auto r = BigDecimal<>{this_v->count(), 0}.div_checked(BigDecimal<>{other_v->count(), 0}, 1000);
             if (!r.has_value())
                 return Literal{};
 
@@ -1644,7 +1644,7 @@ Literal Literal::div(Literal const &other, DynNodeStorage node_storage) const no
         auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
         auto other_v = other.cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
         if (this_v.has_value() && other_v.has_value()) {
-            auto r = util::BigDecimal<>{this_v->count(), 0}.div_checked(util::BigDecimal<>{other_v->count(), 0}, 1000);
+            auto r = BigDecimal<>{this_v->count(), 0}.div_checked(BigDecimal<>{other_v->count(), 0}, 1000);
             if (!r.has_value())
                 return Literal{};
 
@@ -1729,15 +1729,15 @@ Literal Literal::ceil(DynNodeStorage node_storage) const noexcept {
             select_node_storage(node_storage));
 }
 
-util::TriBool Literal::ebv() const noexcept {
+TriBool Literal::ebv() const noexcept {
     if (this->null()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const ebv = datatypes::registry::DatatypeRegistry::get_ebv(this->datatype_id());
 
     if (ebv == nullptr) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     return ebv(this->value());
@@ -1794,9 +1794,9 @@ Literal Literal::as_strlen(DynNodeStorage node_storage) const noexcept {
     return Literal::make_typed_from_value<datatypes::xsd::Integer>(datatypes::xsd::Integer::cpp_type{*len}, select_node_storage(node_storage));
 }
 
-util::TriBool Literal::language_tag_matches_range(std::string_view const lang_range) const noexcept {
+TriBool Literal::language_tag_matches_range(std::string_view const lang_range) const noexcept {
     if (!this->is_string_like()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     return lang_matches(this->language_tag(), lang_range);
@@ -1840,9 +1840,9 @@ static regex::Regex::flag_type translate_regex_flags(std::string_view const xpat
     });
 }
 
-util::TriBool Literal::regex_matches(regex::Regex const &pattern) const noexcept {
+TriBool Literal::regex_matches(regex::Regex const &pattern) const noexcept {
     if (!this->is_string_like()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const lex = this->lexical_form();
@@ -1936,9 +1936,9 @@ Literal Literal::regex_replace(Literal const &pattern, Literal const &replacemen
     return this->regex_replace(*repl, node_storage);
 }
 
-util::TriBool Literal::contains(std::string_view const needle) const noexcept {
+TriBool Literal::contains(std::string_view const needle) const noexcept {
     if (!this->is_string_like()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const s = this->lexical_form();
@@ -2037,9 +2037,9 @@ Literal Literal::substr_after(Literal const &needle, DynNodeStorage node_storage
     return this->substr_after(needle.lexical_form(), node_storage);
 }
 
-util::TriBool Literal::str_starts_with(std::string_view const needle) const noexcept {
+TriBool Literal::str_starts_with(std::string_view const needle) const noexcept {
     if (!this->is_string_like()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const s = this->lexical_form();
@@ -2076,9 +2076,9 @@ Literal Literal::as_str_starts_with(Literal const &needle, DynNodeStorage node_s
     return Literal::make_boolean(res, select_node_storage(node_storage));
 }
 
-util::TriBool Literal::str_ends_with(std::string_view needle) const noexcept {
+TriBool Literal::str_ends_with(std::string_view needle) const noexcept {
     if (!this->is_string_like()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const s = this->lexical_form();
@@ -2300,9 +2300,9 @@ Literal Literal::sha512(DynNodeStorage node_storage) const {
 
 Literal Literal::now(DynNodeStorage node_storage) noexcept {
     auto n = std::chrono::floor<std::chrono::milliseconds>(std::chrono::system_clock::now());
-    util::Timezone tz{};
-    rdf4cpp::util::TimePoint t = tz.to_local(n);
-    rdf4cpp::util::OptionalTimezone opt = std::nullopt;
+    Timezone tz{};
+    TimePoint t = tz.to_local(n);
+    OptionalTimezone opt = std::nullopt;
     return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(t, opt), node_storage);
 }
 
@@ -2408,10 +2408,10 @@ Literal Literal::as_seconds(DynNodeStorage node_storage) const noexcept {
     auto r = this->seconds();
     if (!r.has_value())
         return Literal{};
-    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf4cpp::util::BigDecimal<>{r->count(), 3}, select_node_storage(node_storage));
+    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf4cpp::BigDecimal<>{r->count(), 3}, select_node_storage(node_storage));
 }
 
-std::optional<util::Timezone> Literal::timezone() const noexcept {
+std::optional<Timezone> Literal::timezone() const noexcept {
     auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
     if (!casted.has_value())
         return std::nullopt;

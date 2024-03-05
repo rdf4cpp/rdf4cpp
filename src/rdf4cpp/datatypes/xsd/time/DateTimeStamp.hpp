@@ -8,14 +8,14 @@
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/time/DateTime.hpp>
-#include <rdf4cpp/util/Timezone.hpp>
+#include "rdf4cpp/Timezone.hpp"
 
 namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTimeStamp> {
-    using cpp_datatype = rdf4cpp::util::ZonedTime;
+    using cpp_datatype = rdf4cpp::ZonedTime;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_dateTimeStamp> {
@@ -67,7 +67,7 @@ struct DateTimeStamp : registry::LiteralDatatypeImpl<registry::xsd_dateTimeStamp
      * can be changed at compile time.
      * warning: loading a database that was saved with a different inlining_default_timezone is undefined behavior.
      */
-    static constexpr util::Timezone inlining_default_timezone = util::Timezone();
+    static constexpr Timezone inlining_default_timezone{};
 };
 
 }  // namespace rdf4cpp::datatypes::xsd
@@ -81,8 +81,8 @@ namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::ZonedTime> {
-    static size_t dice_hash(rdf4cpp::util::ZonedTime const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::ZonedTime> {
+    static size_t dice_hash(rdf4cpp::ZonedTime const &x) noexcept {
         auto tp = x.get_sys_time().time_since_epoch().count();
         auto off = x.get_time_zone().offset.count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(std::tie(tp, off));

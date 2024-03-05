@@ -3,11 +3,11 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using namespace rdf4cpp::util;
+using rdf4cpp::CowString;
 
 TEST_SUITE("CowString") {
     TEST_CASE("borrowed") {
-        CowString s{ownership_tag::borrowed, "Hello World"};
+        CowString s{CowString::borrowed, "Hello World"};
         CHECK(s == "Hello World");
         CHECK(s.view() == "Hello World");
 
@@ -18,7 +18,7 @@ TEST_SUITE("CowString") {
     }
 
     TEST_CASE("owned") {
-        CowString bull{ownership_tag::owned, "Moo!"};
+        CowString bull{CowString::owned, "Moo!"};
         CHECK(bull == "Moo!");
         CHECK(bull.view() == "Moo!");
 
@@ -30,14 +30,14 @@ TEST_SUITE("CowString") {
     }
 
     TEST_CASE("CowString equality") {
-        CowString calf1{ownership_tag::borrowed, "Moo?"};
-        CowString calf2{ownership_tag::owned, "Moo?"};
+        CowString calf1{CowString::borrowed, "Moo?"};
+        CowString calf2{CowString::owned, "Moo?"};
 
         CHECK(calf1 == calf2);
     }
 
     TEST_CASE("to_mutable") {
-        CowString buffalo{ownership_tag::borrowed, "spherical cow"};
+        CowString buffalo{CowString::borrowed, "spherical cow"};
 
         std::string _ignore;
         CHECK_THROWS(_ignore = buffalo.get_owned());

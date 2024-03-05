@@ -3,7 +3,7 @@
 #include <doctest/doctest.h>
 #include "rdf4cpp.hpp"
 
-using rdf4cpp::util::TriBool;
+using rdf4cpp::TriBool;
 
 TEST_SUITE("TriBool") {
 

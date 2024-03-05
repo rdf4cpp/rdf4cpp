@@ -9,7 +9,7 @@ template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
     using namespace registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
-    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     auto date = year / month;
     if (!date.ok()) {
@@ -50,8 +50,8 @@ capabilities::Inlineable<xsd_gYearMonth>::cpp_type capabilities::Inlineable<xsd_
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gYearMonth>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    auto ym_to_tp = [](std::chrono::year_month t) noexcept -> rdf4cpp::util::TimePoint {
-        return rdf4cpp::util::construct(t / std::chrono::last, rdf4cpp::util::TimePointReplacementTimeOfDay);
+    auto ym_to_tp = [](std::chrono::year_month t) noexcept -> rdf4cpp::TimePoint {
+        return rdf4cpp::util::construct_timepoint(t / std::chrono::last, rdf4cpp::util::time_point_replacement_time_of_day);
     };
     return registry::util::compare_time_points(ym_to_tp(lhs.first), lhs.second, ym_to_tp(rhs.first), rhs.second);
 }

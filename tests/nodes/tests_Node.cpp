@@ -73,7 +73,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("nulls") {
             CHECK(Literal{} <=> Literal{} == std::partial_ordering::equivalent);
             CHECK(Literal{} <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
         }
 
         SUBCASE("inconvertibility") {
@@ -91,7 +91,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("conversion") {
             CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Integer>(10) == std::partial_ordering::less);
             CHECK(Literal::make_typed_from_value<Integer>(0) <=> Literal::make_typed_from_value<Float>(1.2f) == std::partial_ordering::less);
-            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)) == std::partial_ordering::equivalent);
+            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)) == std::partial_ordering::equivalent);
         }
     }
 
@@ -104,7 +104,7 @@ TEST_SUITE("comparisions") {
             CHECK(Literal::make_typed_from_value<Float>(10.f).compare_with_extensions(Literal::make_typed_from_value<Incomparable>(1)) == std::weak_ordering::less);
 
             // reason: decimal has fixed id and any fixed id type is always less than a dynamic one
-            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(10.0))) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(10.0))) == std::weak_ordering::greater);
         }
 
         SUBCASE("nulls") {
@@ -118,10 +118,10 @@ TEST_SUITE("comparisions") {
         SUBCASE("test type ordering extensions") {
             // expected: string < float < decimal < integer < int
 
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
 
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
@@ -196,13 +196,13 @@ TEST_CASE("effective boolean value") {
     Node const null_lit = Literal{};
     Node const null_bnode = BlankNode{};
 
-    CHECK(iri.ebv() == util::TriBool::Err);
-    CHECK(bnode.ebv() == util::TriBool::Err);
-    CHECK(var.ebv() == util::TriBool::Err);
-    CHECK(falsy_lit.ebv() == util::TriBool::False);
-    CHECK(truthy_lit.ebv() == util::TriBool::True);
-    CHECK(null_lit.ebv() == util::TriBool::Err);
-    CHECK(null_bnode.ebv() == util::TriBool::Err);
+    CHECK(iri.ebv() == TriBool::Err);
+    CHECK(bnode.ebv() == TriBool::Err);
+    CHECK(var.ebv() == TriBool::Err);
+    CHECK(falsy_lit.ebv() == TriBool::False);
+    CHECK(truthy_lit.ebv() == TriBool::True);
+    CHECK(null_lit.ebv() == TriBool::Err);
+    CHECK(null_bnode.ebv() == TriBool::Err);
 }
 
 TEST_CASE("IRI UUID") {

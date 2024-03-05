@@ -6,7 +6,7 @@
 #include <boost/container/flat_map.hpp>
 
 #include <rdf4cpp/IRI.hpp>
-#include <rdf4cpp/util/Expected.hpp>
+#include "Expected.hpp"
 #include <rdf4cpp/IRIView.hpp>
 
 namespace rdf4cpp {

@@ -10,7 +10,7 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     using namespace datatypes::registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
-    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
     if (registry::relaxed_parsing_mode && !date.ok())
@@ -52,8 +52,8 @@ capabilities::Inlineable<xsd_date>::cpp_type capabilities::Inlineable<xsd_date>:
     return std::make_pair(std::chrono::year{i.year} / std::chrono::month{i.month} / std::chrono::day{i.day}, std::nullopt);
 }
 
-    rdf4cpp::util::TimePoint date_to_tp(std::chrono::year_month_day d) noexcept {
-    return rdf4cpp::util::construct(d, rdf4cpp::util::TimePointReplacementTimeOfDay);
+    rdf4cpp::TimePoint date_to_tp(std::chrono::year_month_day d) noexcept {
+    return rdf4cpp::util::construct_timepoint(d, rdf4cpp::util::time_point_replacement_time_of_day);
 }
 
 template<>

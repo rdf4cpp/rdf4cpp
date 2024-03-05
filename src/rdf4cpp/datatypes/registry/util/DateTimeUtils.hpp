@@ -8,7 +8,7 @@
 #include <dice/hash.hpp>
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 #include <rdf4cpp/util/CheckedInt.hpp>
-#include <rdf4cpp/util/Timezone.hpp>
+#include "rdf4cpp/Timezone.hpp"
 
 /**
  * @file
@@ -21,7 +21,7 @@ using CheckedMilliseconds = std::chrono::duration<rdf4cpp::util::CheckedIntegral
 using CheckedMonths = std::chrono::duration<rdf4cpp::util::CheckedIntegral<int64_t>, std::ratio<2629746>>;
 static_assert(std::same_as<std::chrono::months::period, CheckedMonths::period>);
 using CheckedTimePoint = std::chrono::time_point<std::chrono::local_t, CheckedMilliseconds>;
-using CheckedZonedTime = std::chrono::zoned_time<CheckedMilliseconds, rdf4cpp::util::Timezone>;
+using CheckedZonedTime = std::chrono::zoned_time<CheckedMilliseconds, rdf4cpp::Timezone>;
 using CheckedTimePointSys = std::chrono::time_point<std::chrono::system_clock, CheckedMilliseconds>;
 
 /**
@@ -142,15 +142,15 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds<datatype>(res_s);
 }
 
-inline bool in_ymd_bounds(rdf4cpp::util::TimePoint tp) noexcept {
-    static constexpr auto max = rdf4cpp::util::construct(std::chrono::year::max() / std::chrono::December / std::chrono::day{31},
-                                                              std::chrono::days{1} - std::chrono::milliseconds{1});
-    static constexpr auto min = rdf4cpp::util::construct(std::chrono::year::min() / std::chrono::January / std::chrono::day{1},
-                                                              std::chrono::milliseconds{0});
+inline bool in_ymd_bounds(rdf4cpp::TimePoint tp) noexcept {
+    static constexpr auto max = rdf4cpp::util::construct_timepoint(std::chrono::year::max() / std::chrono::December / std::chrono::day{31},
+                                                                   std::chrono::days{1} - std::chrono::milliseconds{1});
+    static constexpr auto min = rdf4cpp::util::construct_timepoint(std::chrono::year::min() / std::chrono::January / std::chrono::day{1},
+                                                                   std::chrono::milliseconds{0});
     return max >= tp && tp >= min;
 }
 
-inline CheckedTimePoint add_duration_to_date_time(rdf4cpp::util::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) noexcept {
+inline CheckedTimePoint add_duration_to_date_time(rdf4cpp::TimePoint tp, std::pair<std::chrono::months, std::chrono::milliseconds> d) noexcept {
     // only gets smaller, no overflow possible
     auto days = std::chrono::floor<std::chrono::days>(tp);
     auto time = tp - days;
@@ -177,9 +177,9 @@ inline CheckedTimePoint add_duration_to_date_time(rdf4cpp::util::TimePoint tp, s
     return date;
 }
 
-static inline std::partial_ordering compare_time_points(rdf4cpp::util::TimePoint a, std::optional<rdf4cpp::util::Timezone> atz,
-                                                        rdf4cpp::util::TimePoint b, std::optional<rdf4cpp::util::Timezone> btz) noexcept {
-    auto apply_timezone = [](CheckedTimePoint t, rdf4cpp::util::Timezone tz) noexcept -> CheckedTimePointSys {
+static inline std::partial_ordering compare_time_points(rdf4cpp::TimePoint a, std::optional<rdf4cpp::Timezone> atz,
+                                                        rdf4cpp::TimePoint b, std::optional<rdf4cpp::Timezone> btz) noexcept {
+    auto apply_timezone = [](CheckedTimePoint t, rdf4cpp::Timezone tz) noexcept -> CheckedTimePointSys {
         return CheckedZonedTime{tz, t}.get_sys_time();
     };
 
@@ -190,8 +190,8 @@ static inline std::partial_ordering compare_time_points(rdf4cpp::util::TimePoint
         if (btz.has_value()) {
             return a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, *btz).time_since_epoch().count();
         } else {
-            auto p14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::util::Timezone::max_value()).time_since_epoch().count();
-            auto m14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::util::Timezone::min_value()).time_since_epoch().count();
+            auto p14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::Timezone::max_value()).time_since_epoch().count();
+            auto m14 = a_sys.time_since_epoch().count() <=> apply_timezone(b_tp, rdf4cpp::Timezone::min_value()).time_since_epoch().count();
             if (p14 != m14)
                 return std::partial_ordering::unordered;
             return p14;
@@ -199,8 +199,8 @@ static inline std::partial_ordering compare_time_points(rdf4cpp::util::TimePoint
     } else {
         if (btz.has_value()) {
             CheckedTimePointSys b_sys = apply_timezone(b_tp, *btz);
-            auto p14 = apply_timezone(a_tp, rdf4cpp::util::Timezone::max_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
-            auto m14 = apply_timezone(a_tp, rdf4cpp::util::Timezone::min_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
+            auto p14 = apply_timezone(a_tp, rdf4cpp::Timezone::max_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
+            auto m14 = apply_timezone(a_tp, rdf4cpp::Timezone::min_value()).time_since_epoch().count() <=> b_sys.time_since_epoch().count();
             if (p14 != m14)
                 return std::partial_ordering::unordered;
             return p14;
@@ -219,24 +219,24 @@ struct __attribute__((__packed__)) InliningHelper {
     uint16_t tz_offset;
     TimeType time_value;
 
-    static constexpr int tz_shift = rdf4cpp::util::Timezone::max_value().offset.count() + 1;
-    static_assert(number_of_bits(static_cast<unsigned int>(rdf4cpp::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
+    static constexpr int tz_shift = rdf4cpp::Timezone::max_value().offset.count() + 1;
+    static_assert(number_of_bits(static_cast<unsigned int>(rdf4cpp::Timezone::max_value().offset.count() + tz_shift)) == 11);
 
-    static constexpr uint16_t encode_tz(rdf4cpp::util::OptionalTimezone tz) noexcept {
+    static constexpr uint16_t encode_tz(rdf4cpp::OptionalTimezone tz) noexcept {
         if (tz.has_value())
             return static_cast<uint16_t>(tz->offset.count() + tz_shift);
         else
             return 0;
     }
 
-    constexpr InliningHelper(TimeType t, rdf4cpp::util::OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
+    constexpr InliningHelper(TimeType t, rdf4cpp::OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
     }
 
-    [[nodiscard]] constexpr rdf4cpp::util::OptionalTimezone decode_tz() const noexcept {
+    [[nodiscard]] constexpr rdf4cpp::OptionalTimezone decode_tz() const noexcept {
         if (tz_offset == 0)
             return std::nullopt;
         else
-            return rdf4cpp::util::Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
+            return rdf4cpp::Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
     }
 };
 struct __attribute__((__packed__)) InliningHelperPacked {
@@ -250,24 +250,24 @@ private:
     [[maybe_unused]] uint32_t padding : 64 - width = 0;  // to make sure the rest of the int64 is 0
 
 public:
-    static constexpr int tz_shift = rdf4cpp::util::Timezone::max_value().offset.count() + 1;
-    static_assert(number_of_bits(static_cast<unsigned int>(rdf4cpp::util::Timezone::max_value().offset.count() + tz_shift)) == 11);
+    static constexpr int tz_shift = rdf4cpp::Timezone::max_value().offset.count() + 1;
+    static_assert(number_of_bits(static_cast<unsigned int>(rdf4cpp::Timezone::max_value().offset.count() + tz_shift)) == 11);
 
-    static constexpr uint16_t encode_tz(rdf4cpp::util::OptionalTimezone tz) noexcept {
+    static constexpr uint16_t encode_tz(rdf4cpp::OptionalTimezone tz) noexcept {
         if (tz.has_value())
             return static_cast<uint16_t>(tz->offset.count() + tz_shift);
         else
             return 0;
     }
 
-    constexpr InliningHelperPacked(uint32_t t, rdf4cpp::util::OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
+    constexpr InliningHelperPacked(uint32_t t, rdf4cpp::OptionalTimezone tz) noexcept : tz_offset(encode_tz(tz)), time_value(t) {
     }
 
-    [[nodiscard]] rdf4cpp::util::OptionalTimezone decode_tz() const noexcept {
+    [[nodiscard]] rdf4cpp::OptionalTimezone decode_tz() const noexcept {
         if (tz_offset == 0)
             return std::nullopt;
         else
-            return rdf4cpp::util::Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
+            return rdf4cpp::Timezone{std::chrono::minutes{static_cast<int>(tz_offset) - tz_shift}};
     }
 };
 

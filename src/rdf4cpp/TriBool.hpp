@@ -2,8 +2,10 @@
 #define RDF4CPP_UTIL_TRIBOOL_HPP
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
 
-namespace rdf4cpp::util {
+namespace rdf4cpp {
 
 /**
  * @brief Represents a boolean with three states
@@ -94,6 +96,8 @@ inline constexpr TriBool TriBool::True{TriBool::Value::True};
 inline constexpr TriBool TriBool::False{TriBool::Value::False};
 inline constexpr TriBool TriBool::Err{TriBool::Value::Err};
 
+namespace util {
+
 /**
  * @brief Checks whether the value of the partial_ordering (l) is equal to the value of the weak ordering (r)
  * @return TriBool::Err if l is unordered; otherwise return l == r
@@ -106,6 +110,8 @@ constexpr TriBool partial_weak_ordering_eq(std::partial_ordering const l, std::w
     return l == r;
 }
 
-} // namespace rdf4cpp::util
+} // namespace util
+
+} // namespace rdf4cpp
 
 #endif // RDF4CPP_UTIL_TRIBOOL_HPP

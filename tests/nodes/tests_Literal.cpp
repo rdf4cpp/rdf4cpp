@@ -229,7 +229,7 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("non-integral") {
-                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.5));
+                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.5));
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK_EQ(lit2.template value<String>(), "1.5");
@@ -342,7 +342,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> flt") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK_EQ(lit2.datatype(), IRI{Float::identifier});
@@ -350,7 +350,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> dbl") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK_EQ(lit2.datatype(), IRI{Double::identifier});
@@ -358,7 +358,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> int") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::util::BigDecimal(1.2));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.2));
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK_EQ(lit2.datatype(), IRI{Int::identifier});
@@ -599,7 +599,7 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("Hello", "en-US").as_language_tag_matches_range("en-US"_xsd_string).ebv());
         CHECK((5_xsd_int).as_language_tag_matches_range("*"_xsd_string).null());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range(""_xsd_string).ebv());
-        CHECK_EQ(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv(), TriBool::False);
     }
 
     static constexpr const char *case_number1 = "4.2";
@@ -723,7 +723,7 @@ TEST_CASE("Literal - misc functions") {
         // from https://www.w3.org/TR/xpath-functions/#func-matches
         CHECK(("abracadabra"_xsd_string).as_regex_matches("bra"_xsd_string).ebv());
         CHECK(("abracadabra"_xsd_string).as_regex_matches("^a.*a$"_xsd_string).ebv());
-        CHECK_EQ(("abracadabra"_xsd_string).as_regex_matches("^bra"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("abracadabra"_xsd_string).as_regex_matches("^bra"_xsd_string).ebv(), TriBool::False);
 
         std::string_view const poem = "<poem author=\"Wilhelm Busch\">\n"
                                       "Kaum hat dies der Hahn gesehen,\n"
@@ -733,9 +733,9 @@ TEST_CASE("Literal - misc functions") {
                                       "</poem>";
         auto const poem_lit = Literal::make_simple(poem);
 
-        CHECK_EQ(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv(), TriBool::False);
         //CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv()); TODO: support multiline flag
-        CHECK_EQ(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv(), TriBool::False);
         CHECK(poem_lit.as_regex_matches("kiki"_xsd_string, "i"_xsd_string).ebv());
 
         // check lang tag behaviour
@@ -764,7 +764,7 @@ TEST_CASE("Literal - misc functions") {
         // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
         //CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
 
-        CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), TriBool::False);
         CHECK(("Mr. B. Obama"_xsd_string).as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
 
         // check lang tag behaviour
@@ -824,7 +824,7 @@ TEST_CASE("UUID") {
 
     CHECK_EQ(uuid.datatype(), IRI{"http://www.w3.org/2001/XMLSchema#string"});
     CHECK_NE(uuid, uuid2);  // note: non-deterministic but should basically never fail
-    CHECK_EQ(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}), util::TriBool::True);
+    CHECK_EQ(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}), TriBool::True);
 }
 
 TEST_CASE("to_node_storage") {
@@ -1042,9 +1042,9 @@ struct get_find_values<datatypes::xsd::Int> {  // always inlined
 };
 template<>
 struct get_find_values<datatypes::xsd::Date> {  // inlined == has timezone
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::util::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
     static constexpr std::string_view as = "1342-5-4+1:0";
     static constexpr std::string_view bs = "1342-5-5+1:0";
     static constexpr std::string_view inls = "1342-5-6";

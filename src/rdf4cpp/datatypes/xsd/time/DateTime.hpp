@@ -6,7 +6,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/util/Timezone.hpp>
+#include "rdf4cpp/Timezone.hpp"
 #include <dice/hash.hpp>
 
 namespace rdf4cpp::datatypes::registry {
@@ -14,7 +14,7 @@ namespace rdf4cpp::datatypes::registry {
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_dateTime> {
-    using cpp_datatype = std::pair<rdf4cpp::util::TimePoint, rdf4cpp::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<rdf4cpp::TimePoint, rdf4cpp::OptionalTimezone>;
 };
 
 
@@ -59,8 +59,8 @@ namespace rdf4cpp::datatypes::registry::instantiation_detail {
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::util::TimePoint> {
-    static size_t dice_hash(rdf4cpp::util::TimePoint const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::TimePoint> {
+    static size_t dice_hash(rdf4cpp::TimePoint const &x) noexcept {
         auto tp = x.time_since_epoch().count();
         return dice::hash::dice_hash_templates<Policy>::dice_hash(tp);
     }

@@ -5,7 +5,7 @@
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/Float.hpp>
-#include <rdf4cpp/util/BigDecimal.hpp>
+#include "rdf4cpp/BigDecimal.hpp"
 
 #include <dice/hash.hpp>
 
@@ -18,7 +18,7 @@ template<>
 struct DatatypeMapping<xsd_decimal> {
     // needs at least 18 decimal digits of precision
     // see: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-decimal
-    using cpp_datatype = rdf4cpp::util::BigDecimal<>;
+    using cpp_datatype = rdf4cpp::BigDecimal<>;
 };
 
 template<>

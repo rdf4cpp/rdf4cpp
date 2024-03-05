@@ -230,9 +230,9 @@ Node::NodeBackendHandle &Node::backend_handle() noexcept {
     return handle_;
 }
 
-util::TriBool Node::ebv() const noexcept {
+TriBool Node::ebv() const noexcept {
     if (this->null() || !this->is_literal()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     return Literal{handle_}.ebv();

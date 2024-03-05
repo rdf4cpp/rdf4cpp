@@ -3,7 +3,7 @@
 
 #include <rdf4cpp/storage/NodeStorage.hpp>
 #include <rdf4cpp/storage/identifier/NodeBackendHandle.hpp>
-#include <rdf4cpp/util/TriBool.hpp>
+#include "TriBool.hpp"
 #include <rdf4cpp/writer/BufWriter.hpp>
 
 #include <memory>
@@ -143,7 +143,7 @@ public:
     /**
      * @return the effective boolean value of this
      */
-    [[nodiscard]] util::TriBool ebv() const noexcept;
+    [[nodiscard]] TriBool ebv() const noexcept;
 
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)

@@ -6,7 +6,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include <rdf4cpp/util/Timezone.hpp>
+#include "rdf4cpp/Timezone.hpp"
 #include <rdf4cpp/datatypes/xsd/time/DateTime.hpp>
 
 namespace rdf4cpp::datatypes::registry {
@@ -14,7 +14,7 @@ namespace rdf4cpp::datatypes::registry {
 #ifndef DOXYGEN_PARSER
 template<>
 struct DatatypeMapping<xsd_time> {
-    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf4cpp::util::OptionalTimezone>;
+    using cpp_datatype = std::pair<std::chrono::milliseconds, rdf4cpp::OptionalTimezone>;
 };
 template<>
 struct DatatypeSupertypeMapping<xsd_time> {

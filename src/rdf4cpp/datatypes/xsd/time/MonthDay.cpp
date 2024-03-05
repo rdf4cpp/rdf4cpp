@@ -15,7 +15,7 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
     s.remove_prefix(2);
 
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
-    auto tz = rdf4cpp::util::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = month / day;
     if (!date.ok()) {
@@ -55,8 +55,8 @@ capabilities::Inlineable<xsd_gMonthDay>::cpp_type capabilities::Inlineable<xsd_g
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
-    auto md_to_tp = [](std::chrono::month_day md) noexcept -> rdf4cpp::util::TimePoint {
-        return rdf4cpp::util::construct(rdf4cpp::util::TimePointReplacementDate.year() / md, rdf4cpp::util::TimePointReplacementTimeOfDay);
+    auto md_to_tp = [](std::chrono::month_day md) noexcept -> rdf4cpp::TimePoint {
+        return rdf4cpp::util::construct_timepoint(rdf4cpp::util::time_point_replacement_date.year() / md, rdf4cpp::util::time_point_replacement_time_of_day);
     };
     return registry::util::compare_time_points(md_to_tp(lhs.first), lhs.second, md_to_tp(rhs.first), rhs.second);
 }
@@ -64,7 +64,7 @@ std::partial_ordering capabilities::Comparable<xsd_gMonthDay>::compare(cpp_type 
 template<>
 template<>
 capabilities::Subtype<xsd_gMonthDay>::super_cpp_type<0> capabilities::Subtype<xsd_gMonthDay>::into_supertype<0>(cpp_type const &value) noexcept {
-    return std::make_pair(rdf4cpp::util::TimePointReplacementDate.year() / value.first, value.second);
+    return std::make_pair(rdf4cpp::util::time_point_replacement_date.year() / value.first, value.second);
 }
 
 template<>

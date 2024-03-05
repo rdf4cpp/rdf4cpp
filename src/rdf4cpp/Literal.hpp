@@ -12,8 +12,8 @@
 #include <rdf4cpp/datatypes/rdf.hpp>
 #include <rdf4cpp/datatypes/xsd.hpp>
 #include <rdf4cpp/regex/Regex.hpp>
-#include <rdf4cpp/util/CowString.hpp>
-#include <rdf4cpp/util/TriBool.hpp>
+#include "CowString.hpp"
+#include "TriBool.hpp"
 #include <type_traits>
 
 namespace rdf4cpp {
@@ -364,7 +364,7 @@ public:
      *
      * @return the literal form of the given boolean
      */
-    static Literal make_boolean(util::TriBool b, DynNodeStorage node_storage = storage::default_node_storage);
+    static Literal make_boolean(TriBool b, DynNodeStorage node_storage = storage::default_node_storage);
 
     /**
      * creates a new string Literal containing a random UUID (Universally Unique IDentifier)
@@ -658,10 +658,10 @@ public:
 
         if constexpr (std::same_as<T, Boolean>) {
             // any -> bool
-            rdf4cpp::util::TriBool t = this->ebv();
-            if (t == rdf4cpp::util::TriBool::Err)
+            TriBool t = this->ebv();
+            if (t == TriBool::Err)
                 return std::nullopt;
-            else if (t == rdf4cpp::util::TriBool::True)
+            else if (t == TriBool::True)
                 return true;
             else
                 return false;
@@ -778,7 +778,7 @@ public:
      * \endverbatim
      * @return lexical form
      */
-    [[nodiscard]] util::CowString lexical_form() const noexcept;
+    [[nodiscard]] CowString lexical_form() const noexcept;
 
     /**
      * Similar to Literal::lexical_form.
@@ -805,7 +805,7 @@ public:
      * Returns the simplified/more user friendly string version of this. This is for example used when casting numerics to string.
      * @return user friendly string representation
      */
-    [[nodiscard]] util::CowString simplified_lexical_form() const noexcept;
+    [[nodiscard]] CowString simplified_lexical_form() const noexcept;
 
     /**
      * Similar to Literal::simplified_lexical_form.
@@ -847,7 +847,7 @@ public:
      * @param lang_tag language tag to compare against
      * @return if this->language_tag() == lang_tag or error if this is not langString
      */
-    [[nodiscard]] util::TriBool language_tag_eq(std::string_view lang_tag) const noexcept;
+    [[nodiscard]] TriBool language_tag_eq(std::string_view lang_tag) const noexcept;
 
     /**
      * @param other literal to compare against
@@ -855,7 +855,7 @@ public:
      *      - this is not rdf:langString
      *      - other is not rdf:langString
      */
-    [[nodiscard]] util::TriBool language_tag_eq(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool language_tag_eq(Literal const &other) const noexcept;
 
     /**
      * @param lang_tag language tag to compare against
@@ -982,29 +982,29 @@ public:
      */
     [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool eq(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool eq(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_eq(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator==(Literal const &other) const noexcept;
+    TriBool operator==(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool ne(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool ne(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_ne(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator!=(Literal const &other) const noexcept;
+    TriBool operator!=(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool lt(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool lt(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_lt(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator<(Literal const &other) const noexcept;
+    TriBool operator<(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool le(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool le(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_le(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator<=(Literal const &other) const noexcept;
+    TriBool operator<=(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool gt(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool gt(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_gt(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator>(Literal const &other) const noexcept;
+    TriBool operator>(Literal const &other) const noexcept;
 
-    [[nodiscard]] util::TriBool ge(Literal const &other) const noexcept;
+    [[nodiscard]] TriBool ge(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_ge(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
-    util::TriBool operator>=(Literal const &other) const noexcept;
+    TriBool operator>=(Literal const &other) const noexcept;
 
     [[nodiscard]] bool eq_with_extensions(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_eq_with_extensions(Literal const &other, DynNodeStorage node_storage = keep_node_storage) const noexcept;
@@ -1086,7 +1086,7 @@ public:
      * @param lang_range a basic language range
      * @return whether the language tag of this matches the given lang range if this is string-like, otherwise Err
      */
-    [[nodiscard]] util::TriBool language_tag_matches_range(std::string_view lang_range) const noexcept;
+    [[nodiscard]] TriBool language_tag_matches_range(std::string_view lang_range) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
@@ -1111,7 +1111,7 @@ public:
      * @param pattern regex to match against
      * @return whether this' lexical form matches the regex or Err if this is not string-like
      */
-    [[nodiscard]] util::TriBool regex_matches(regex::Regex const &pattern) const noexcept;
+    [[nodiscard]] TriBool regex_matches(regex::Regex const &pattern) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-matches
@@ -1169,7 +1169,7 @@ public:
      * @param needle substring to search for in this
      * @return whether this' lexical form contains the given string or Err if this is not string-like
      */
-    [[nodiscard]] util::TriBool contains(std::string_view needle) const noexcept;
+    [[nodiscard]] TriBool contains(std::string_view needle) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-contains
@@ -1251,7 +1251,7 @@ public:
      * @return whether this' lexical form starts with needle or Err if
      *      - this is not string-like
      */
-    [[nodiscard]] util::TriBool str_starts_with(std::string_view needle) const noexcept;
+    [[nodiscard]] TriBool str_starts_with(std::string_view needle) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
@@ -1280,7 +1280,7 @@ public:
      * @return whether this' lexical form ends with needle or Err if
      *      - this is not string-like
      */
-    [[nodiscard]] util::TriBool str_ends_with(std::string_view needle) const noexcept;
+    [[nodiscard]] TriBool str_ends_with(std::string_view needle) const noexcept;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-ends-with
@@ -1481,7 +1481,7 @@ public:
      * returns the timezone offset part of this.
      * @return timezone or nullopt
      */
-    [[nodiscard]] std::optional<util::Timezone> timezone() const noexcept;
+    [[nodiscard]] std::optional<Timezone> timezone() const noexcept;
     /**
      * returns the timezone offset part of this.
      * @return offset as xsd::DayTimeDuration or null literal
@@ -1502,7 +1502,7 @@ public:
     /**
      * @return the effective boolean value of this
      */
-    [[nodiscard]] util::TriBool ebv() const noexcept;
+    [[nodiscard]] TriBool ebv() const noexcept;
 
     /**
      * Converts this literal to its effective boolean value

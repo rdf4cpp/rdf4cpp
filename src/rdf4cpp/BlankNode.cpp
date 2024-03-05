@@ -86,7 +86,8 @@ bool BlankNode::merge_eq(BlankNode const &other) const noexcept {
 
     return this_backend.identifier == other_backend.identifier && this_backend.scope == other_backend.scope;
 }
-util::TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
+
+TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
     if (this->handle_ == other.handle_) {
         return true;
     }
@@ -100,12 +101,12 @@ util::TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
 
     auto this_scope = this_backend.scope->try_upgrade();
     if (!this_scope.has_value()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto other_scope = other_backend.scope->try_upgrade();
     if (!other_scope.has_value()) {
-        return util::TriBool::Err;
+        return TriBool::Err;
     }
 
     auto const this_label = this_scope->try_get_label(*this);
