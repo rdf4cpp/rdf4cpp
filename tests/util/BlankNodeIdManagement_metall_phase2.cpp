@@ -24,6 +24,8 @@ int main(int argc, char **argv) {
 
         auto scope_id = *std::get<0>(manager.find<identifier::NodeScopeID>(scope_id_name));
         auto scope_impl_ptr = std::get<0>(manager.find<PersistableScope>(scope_name));
+        scope_impl_ptr->set_node_storage(storage::default_node_storage);
+
         NodeScope scope = NodeScope::new_instance_at<PersistableScopeFrontent>(scope_id, scope_impl_ptr);
 
         BlankNode bnode2 = scope.get_or_generate_node("abc", generator).as_blank_node();

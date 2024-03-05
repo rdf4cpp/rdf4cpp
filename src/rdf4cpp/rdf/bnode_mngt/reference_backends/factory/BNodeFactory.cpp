@@ -10,8 +10,8 @@ BNodeFactory &BNodeFactory::default_instance() noexcept {
 }
 
 storage::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &generator,
-                                                                     NodeScope const *scope,
-                                                                     storage::DynNodeStorage node_storage) noexcept {
+                                                               NodeScope const *scope,
+                                                               storage::DynNodeStorage node_storage) noexcept {
     size_t const buf_sz = generator.max_generated_id_size();
     auto buf = std::make_unique<char[]>(buf_sz);
     auto *end = generator.generate_to_buf(buf.get());
@@ -22,10 +22,10 @@ storage::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &gen
         if (scope != nullptr) {
             WeakNodeScope weak = scope->downgrade();
             return node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier,
-                                                                                      .scope = weak});
+                                                                                .scope = weak});
         } else {
             return node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier,
-                                                                                      .scope = std::nullopt});
+                                                                                .scope = std::nullopt});
         }
     }();
 

@@ -19,8 +19,8 @@ public:
     explicit SkolemIRIFactory(std::string iri_prefix) noexcept;
 
     [[nodiscard]] storage::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
-                                                                         NodeScope const *scope,
-                                                                         storage::DynNodeStorage node_storage) noexcept override;
+                                                                   NodeScope const *scope,
+                                                                   storage::DynNodeStorage node_storage) noexcept override;
 };
 
 }  //namespace rdf4cpp::rdf::bnode_mngt

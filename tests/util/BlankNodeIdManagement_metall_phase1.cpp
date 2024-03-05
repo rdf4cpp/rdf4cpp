@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         assert(bnode.identifier() == "0");
 
 
-        auto scope_impl_ptr = manager.construct<PersistableScope>(scope_name)(manager.get_allocator());
+        auto scope_impl_ptr = manager.construct<PersistableScope>(scope_name)(manager.get_allocator(), storage::default_node_storage);
         NodeScope scope = NodeScope::new_instance<PersistableScopeFrontent>(scope_impl_ptr);
         manager.construct<identifier::NodeScopeID>(scope_id_name)(scope.id()); // save id for later
 

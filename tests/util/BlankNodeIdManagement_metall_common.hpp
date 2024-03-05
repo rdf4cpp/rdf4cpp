@@ -59,24 +59,32 @@ private:
     allocator_type<std::byte> alloc;
 
     metall::container::unordered_map<metall_string,
-                       storage::identifier::NodeBackendHandle,
+                       storage::identifier::NodeBackendID,
                        dice::hash::DiceHashwyhash<std::string_view>,
                        std::equal_to<>,
-                       allocator_type<std::pair<metall_string const, storage::identifier::NodeBackendHandle>>> label_to_storage;
+                       allocator_type<std::pair<metall_string const, storage::identifier::NodeBackendID>>> label_to_storage;
 
-    metall::container::unordered_map<storage::identifier::NodeBackendHandle,
+    metall::container::unordered_map<storage::identifier::NodeBackendID,
                        typename allocator_type<char>::const_pointer,
-                       dice::hash::DiceHashwyhash<storage::identifier::NodeBackendHandle>,
+                       dice::hash::DiceHashwyhash<storage::identifier::NodeBackendID>,
                        std::equal_to<>,
-                       allocator_type<std::pair<storage::identifier::NodeBackendHandle const, typename allocator_type<char>::const_pointer>>> storage_to_label;
-public:
-    explicit PersistableScope(allocator_type<std::byte> alloc) : alloc{alloc},
-                                                                 label_to_storage{alloc},
-                                                                 storage_to_label{alloc} {}
+                       allocator_type<std::pair<storage::identifier::NodeBackendID const, typename allocator_type<char>::const_pointer>>> storage_to_label;
 
+    storage::DynNodeStorage node_storage_;
+
+public:
+    explicit PersistableScope(allocator_type<std::byte> alloc, storage::DynNodeStorage node_storage = storage::default_node_storage) : alloc{alloc},
+                                                                                                                                       label_to_storage{alloc},
+                                                                                                                                       storage_to_label{alloc},
+                                                                                                                                       node_storage_{node_storage} {
+    }
+
+    void set_node_storage(storage::DynNodeStorage node_storage) {
+        node_storage_ = node_storage;
+    }
 
     [[nodiscard]] std::optional<std::string_view> find_label(storage::identifier::NodeBackendHandle handle) const noexcept {
-        if (auto it = this->storage_to_label.find(handle); it != this->storage_to_label.end()) {
+        if (auto it = this->storage_to_label.find(handle.id()); it != this->storage_to_label.end()) {
             return std::string_view{std::to_address(it->second), std::strlen(std::to_address(it->second))};
         }
 
@@ -85,7 +93,7 @@ public:
 
     [[nodiscard]] storage::identifier::NodeBackendHandle find_node(std::string_view label) const noexcept {
         if (auto it = this->label_to_storage.find(metall_string{label, alloc}); it != this->label_to_storage.end()) {
-            return it->second;
+            return storage::identifier::NodeBackendHandle{it->second, node_storage_};
         }
 
         return storage::identifier::NodeBackendHandle{};
@@ -93,10 +101,10 @@ public:
 
     void label_node(std::string_view label, storage::identifier::NodeBackendHandle handle) {
         metall_string lab{label, alloc};
-        auto const [it, inserted] = this->label_to_storage.emplace(lab, handle);
+        auto const [it, inserted] = this->label_to_storage.emplace(lab, handle.id());
         assert(inserted);
 
-        auto const [_, inserted2] = this->storage_to_label.emplace(handle, it->first.c_str());
+        auto const [_, inserted2] = this->storage_to_label.emplace(handle.id(), it->first.c_str());
         assert(inserted2);
     }
 };

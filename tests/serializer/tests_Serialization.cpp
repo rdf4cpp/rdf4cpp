@@ -77,7 +77,7 @@ Graph get_graph(storage::DynNodeStorage node_storage) {
     return gd;
 }
 Dataset get_dataset(storage::DynNodeStorage node_storage) {
-    Dataset gd{};
+    Dataset gd{node_storage};
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     gd.add(q);
     q.graph() = IRI::make("http://ex/graph2");
