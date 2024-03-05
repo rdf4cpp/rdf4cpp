@@ -2,7 +2,7 @@ Identifiers Used to Store Nodes
 ===============================
 
 `NodeBackendHandle` (192 bit)
-____________________________-
+_____________________________
 
 rdf4cpp uses `NodeBackendHandle` – a 192 bit wide type – to uniquely identify all `Node`s.
 It consists of a `NodeBackendID` (64 bit), an instance-pointer to a node storage (64 bit),
