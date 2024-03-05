@@ -49,13 +49,6 @@ target_link_libraries(tests_Node
         )
 add_test(NAME tests_Node COMMAND tests_Node)
 
-#add_executable(tests_NodeStorage_lifetime nodes/tests_NodeStorage_lifetime.cpp)
-#target_link_libraries(tests_NodeStorage_lifetime
-#        doctest::doctest
-#        rdf4cpp
-#        )
-#add_test(NAME tests_NodeStorage_lifetime COMMAND tests_NodeStorage_lifetime)
-
 add_executable(tests_NodeStorage_helper_types nodes/tests_NodeStorage_helper_types.cpp)
 target_link_libraries(tests_NodeStorage_helper_types
         doctest::doctest
