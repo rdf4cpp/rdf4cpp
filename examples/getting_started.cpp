@@ -1,4 +1,4 @@
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 
 int main() {
     using namespace rdf4cpp;

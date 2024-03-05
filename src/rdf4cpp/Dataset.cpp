@@ -60,7 +60,7 @@ size_t Dataset::size(IRI const &graph_name_) const noexcept {
     return it->second.size();
 }
 
-Graph *Dataset::graph(Node const &graph_) {
+Graph *Dataset::find_graph(Node const &graph_) {
     auto const graph = graph_.try_get_in_node_storage(node_storage_);
 
     auto it = graphs_.find(to_node_id(graph));
@@ -71,11 +71,11 @@ Graph *Dataset::graph(Node const &graph_) {
     return &it.value();
 }
 
-Graph *Dataset::graph() {
-    return graph(IRI::default_graph(node_storage_));
+Graph *Dataset::find_graph() {
+    return find_graph(IRI::default_graph(node_storage_));
 }
 
-Graph const *Dataset::graph(Node const &graph_) const {
+Graph const *Dataset::find_graph(Node const &graph_) const {
     auto const graph = graph_.try_get_in_node_storage(node_storage_);
 
     auto it = graphs_.find(to_node_id(graph));
@@ -86,7 +86,22 @@ Graph const *Dataset::graph(Node const &graph_) const {
     return &it.value();
 }
 
-Graph const *Dataset::graph() const {
+Graph const *Dataset::find_graph() const {
+    return find_graph(IRI::default_graph(node_storage_));
+}
+
+Graph &Dataset::graph(Node const &graph_) {
+    auto const graph = graph_.to_node_storage(node_storage_);
+
+    auto it = graphs_.find(to_node_id(graph));
+    if (it == graphs_.end()) {
+        it = graphs_.emplace(to_node_id(graph), Graph{node_storage_}).first;
+    }
+
+    return it.value();
+}
+
+Graph &Dataset::graph() {
     return graph(IRI::default_graph(node_storage_));
 }
 
@@ -202,7 +217,7 @@ Dataset::solution_iterator::solution_iterator(Dataset const *parent,
 
         if (pat_.graph().is_variable()) {
             iter_ = giter_->second.match(tpat).begin();
-        } else if (auto const *g = parent_->graph(pat_.graph()); g != nullptr) {
+        } else if (auto const *g = parent_->find_graph(pat_.graph()); g != nullptr) {
             iter_ = g->match(tpat).begin();
         }
     }

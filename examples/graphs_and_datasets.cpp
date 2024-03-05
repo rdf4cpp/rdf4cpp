@@ -1,16 +1,13 @@
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 
 #include <iostream>
 #include <fstream>
 
 int main(int argc, char *argv[]) {
     using namespace rdf4cpp;
-    Graph g;
 
-    Dataset dataset = g.dataset();
-    Dataset dataset2(storage::NodeStorage::new_instance());  // Dataset with an independent NodeStorage
-    std::cout << "dataset node storage id: " << dataset.backend().node_storage().id().value << std::endl;
-    std::cout << "dataset2 node storage id: " << dataset2.backend().node_storage().id().value << std::endl;
+    Dataset dataset;
+    auto &g = dataset.graph(IRI{"http://named_graph.com"});
 
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_lang_tagged("text", "en")});
     g.add({IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_lang_tagged("text", "fr")});
@@ -19,16 +16,14 @@ int main(int argc, char *argv[]) {
 
     dataset.add({IRI{"http://named_graph.com"}, IRI{"http://example.com"}, IRI{"http://example.com"}, Literal::make_simple("text")});
 
-    std::cout << "dataset string: \n" << g.dataset() << std::endl;
-
     query::TriplePattern triple_pattern{query::Variable("x"), IRI{"http://example.com"}, query::Variable{"z"}};
     std::cout << triple_pattern.subject() << std::endl;
     std::cout << triple_pattern.predicate() << std::endl;
     std::cout << triple_pattern.object() << std::endl;
-    query::SolutionSequence solutions = g.match(triple_pattern);
 
     std::cout << "g size " << g.size() << std::endl;
 
+    Graph::solution_sequence solutions = g.match(triple_pattern);
     for (const auto &solution : solutions) {
         std::cout << "bound variables: " << solution.bound_count() << std::endl;
 
@@ -39,20 +34,7 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         Dataset ds2;
-        std::ifstream ifs{argv[1]};
-
-        if (!ifs.is_open()) {
-            std::cerr << "unable to open provided file\n";
-            return 1;
-        }
-
-        for (parser::IStreamQuadIterator qit{ifs}; qit != std::default_sentinel; ++qit) {
-            if (qit->has_value()) {
-                ds2.add(qit->value());
-            } else {
-                std::cerr << qit->error() << '\n';
-            }
-        }
+        ds2.load_rdf_data(argv[1]);
 
         std::cout << "ds2 from " << argv[1] << ":" << std::endl;
         std::cout << ds2 << std::endl;

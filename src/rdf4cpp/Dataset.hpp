@@ -15,10 +15,14 @@ namespace rdf4cpp {
 
 
 struct Dataset {
-    using value_type = std::pair<IRI, Graph>;
+    using value_type = Quad;
     using sentinel = std::default_sentinel_t;
-    using reference = void; // TODO
-    using pointer = void;
+    using reference = Quad const &;
+    using const_reference = reference;
+    using pointer = Quad const *;
+    using const_pointer = pointer;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
 
 private:
     using storage_type = dice::sparse_map::sparse_map<storage::identifier::NodeBackendID, Graph>;
@@ -97,7 +101,7 @@ public:
         using const_pointer = pointer;
         using iterator = solution_iterator;
         using const_iterator = solution_iterator;
-        using sentinel = sentinel;
+        using sentinel = std::default_sentinel_t;
 
     private:
         iterator beg_;
@@ -132,17 +136,36 @@ public:
     [[nodiscard]] size_t size() const noexcept;
     [[nodiscard]] size_t size(IRI const &graph_name) const noexcept;
 
-    Graph *graph(Node const &graph);
-    Graph *graph();
+    Graph *find_graph(Node const &graph);
+    Graph *find_graph();
 
-    Graph const *graph(Node const &graph) const;
-    Graph const *graph() const;
+    Graph const *find_graph(Node const &graph) const;
+    Graph const *find_graph() const;
 
+    Graph &graph(Node const &graph);
+    Graph &graph();
 
     [[nodiscard]] iterator begin() const noexcept;
     [[nodiscard]] sentinel end() const noexcept;
 
     [[nodiscard]] solution_sequence match(query::QuadPattern const &quad_pattern) const noexcept;
+
+    template<typename ErrF = decltype([](parser::ParsingError) noexcept {})>
+    void load_rdf_data(std::string const &file_path,
+                       parser::ParsingFlags flags = parser::ParsingFlags::none(),
+                       ErrF &&errf = {}) noexcept requires std::invocable<decltype(errf), parser::ParsingError> {
+
+        parser::ParsingState state{.node_storage = node_storage_};
+        parser::RDFFileParser parser{file_path, flags, &state};
+
+        for (auto const &quad : parser) {
+            if (quad.has_value()) {
+                add(*quad);
+            } else {
+                std::invoke(errf, quad.error());
+            }
+        }
+    }
 
     /**
      * Serialize this dataset as <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.

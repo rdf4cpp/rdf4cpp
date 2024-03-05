@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 
 #include <doctest/doctest.h>
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 

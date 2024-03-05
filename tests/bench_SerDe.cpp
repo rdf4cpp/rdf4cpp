@@ -2,7 +2,7 @@
 #include <nanobench.h>
 
 #include <filesystem>
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 void download_swdf(std::filesystem::path const &base) {

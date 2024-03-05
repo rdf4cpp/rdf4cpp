@@ -192,4 +192,15 @@ bool UnsyncReferenceNodeStorageBackend::erase_variable(identifier::NodeID const 
     return erase_impl(variable_storage_, id);
 }
 
+void UnsyncReferenceNodeStorageBackend::clear() noexcept {
+    iri_storage_.mapping.clear();
+    bnode_storage_.mapping.clear();
+    variable_storage_.mapping.clear();
+    fallback_literal_storage_.mapping.clear();
+
+    dice::template_library::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+        storage.mapping.clear();
+    });
+}
+
 }  // namespace rdf4cpp::storage::reference_node_storage

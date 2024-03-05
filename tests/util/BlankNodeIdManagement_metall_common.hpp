@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_BLANKNODEIDMANAGEMENT_METALL_COMMON_HPP
 #define RDF4CPP_BLANKNODEIDMANAGEMENT_METALL_COMMON_HPP
 
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <charconv>
 #include <limits>
 

@@ -5,7 +5,7 @@
 #include <unordered_set>
 
 #include <doctest/doctest.h>
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 

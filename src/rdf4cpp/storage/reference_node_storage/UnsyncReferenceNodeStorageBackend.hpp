@@ -73,6 +73,8 @@ public:
     bool erase_literal(identifier::NodeID id) noexcept;
     bool erase_bnode(identifier::NodeID id) noexcept;
     bool erase_variable(identifier::NodeID id) noexcept;
+
+    void clear() noexcept;
 };
 
 }  // namespace rdf4cpp::storage::reference_node_storage

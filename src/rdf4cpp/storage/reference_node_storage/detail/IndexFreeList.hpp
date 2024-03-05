@@ -143,6 +143,10 @@ public:
             next_free_ix_ = ix;
         }
     }
+
+    void clear() noexcept {
+        occupied_bitmap_.clear();
+    }
 };
 
 } // namespace rdf4cpp::storage::reference_node_storage::detail

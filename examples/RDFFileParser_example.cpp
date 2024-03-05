@@ -1,4 +1,4 @@
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <rdf4cpp/parser/RDFFileParser.hpp>
 
 int main() {
@@ -7,7 +7,7 @@ int main() {
         if (v.has_value())  // check if parser returns a successful read value
             std::cout << v.value() << "\n";
         else  // or an error
-            std::cout << v.error() << "\n";
+            std::cerr << v.error() << "\n";
     }
     return 0;
 }

@@ -256,6 +256,12 @@ public:
         value.reset();
         freelist_.vacate(ix);
     }
+
+    void clear() noexcept {
+        forward_.clear();
+        backward_.clear();
+        freelist_.clear();
+    }
 };
 
 } // namespace rdf4cpp::storage::reference_node_storage::detail

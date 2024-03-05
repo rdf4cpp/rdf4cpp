@@ -6,6 +6,7 @@
 #include <rdf4cpp/query/Solution.hpp>
 #include <rdf4cpp/writer/BufWriter.hpp>
 #include <rdf4cpp/writer/SerializationState.hpp>
+#include <rdf4cpp/parser/RDFFileParser.hpp>
 
 #include <dice/sparse-map/sparse_set.hpp>
 
@@ -14,7 +15,6 @@ namespace rdf4cpp {
 
 struct Graph {
     using value_type = Statement;
-    using allocator_type = std::allocator<Statement>;
     using size_type = size_t;
     using difference_type = ptrdiff_t;
     using reference = Statement const &;
@@ -104,7 +104,7 @@ public:
         using const_pointer = pointer;
         using iterator = solution_iterator;
         using const_iterator = solution_iterator;
-        using sentinel = sentinel;
+        using sentinel = std::default_sentinel_t;
 
     private:
         iterator beg_;
@@ -141,6 +141,23 @@ public:
 
     [[nodiscard]] iterator begin() const noexcept;
     [[nodiscard]] sentinel end() const noexcept;
+
+    template<typename ErrF = decltype([](parser::ParsingError) noexcept {})>
+    void load_rdf_data(std::string const &file_path,
+                       parser::ParsingFlags flags = parser::ParsingFlags::none(),
+                       ErrF &&errf = {}) noexcept requires std::invocable<decltype(errf), parser::ParsingError> {
+
+        parser::ParsingState state{.node_storage = node_storage_};
+        parser::RDFFileParser parser{file_path, flags, &state};
+
+        for (auto const &quad : parser) {
+            if (quad.has_value()) {
+                add(Statement{quad->subject(), quad->predicate(), quad->object()});
+            } else {
+                std::invoke(errf, quad.error());
+            }
+        }
+    }
 
     /**
      * Serialize this graph as <a href="https://www.w3.org/TR/n-triples/">N-Triples</a>.

@@ -2,7 +2,7 @@
 
 #include <doctest/doctest.h>
 #include <format>
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
 
 template<class Datatype>

@@ -2,7 +2,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "rdf4cpp.hpp"
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
 
 
 int main(int argc, char *argv[]) {
@@ -16,7 +17,7 @@ int main(int argc, char *argv[]) {
     rdf4cpp::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
-    auto nst = storage::NodeStorage::new_instance();
+    storage::reference_node_storage::UnsyncReferenceNodeStorageBackend nst;
     int c = 0;
 
     IStreamQuadIterator::state_type state{.node_storage = nst};
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
         ++i;
         ++c;
         if (c >= 1000) {
-            nst = storage::NodeStorage::new_instance();
+            nst.clear();
             state.node_storage = nst;
             c = 0;
         }
