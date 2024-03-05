@@ -16,14 +16,9 @@ For both storage parts, reference implementations are provided and used as a sen
 NodeStorage
 ___________
 
-`NodeStorage`\ s store information about RDF `Node`\ s. By default, there is only one default NodeStorage which is automatically used.
+`NodeStorage`s store information about RDF `Node`s. By default, there is only one default NodeStorage which is automatically used
+(it lives at `rdf4cpp::storage::default_node_storage`).
 The constructors of `BlankNode`, `IRI`, `Literal` and `Variable` optionally allow to use another `NodeStorage`.
-The `ReferenceNodeStorageBackend` implementation of the `NodeStorage` backend `INodeStorageBackend` which is used by default is thread-safe.
+The `SyncReferenceNodeStorage` implementation of the `NodeStorage` concept, which is used by default, is thread-safe.
+Whereas the `UnsyncReferenceNodeStorage` implementation is not.
 For more details, consult :doc:`t_node_storage`.
-
-Tuple Storage
-_____________
-
-Tuple Storage is still WIP.
-A first draft can be found at :ref:`namespace_rdf4cpp__rdf__storage__tuple`.
-Implementation may be subject to future change.
