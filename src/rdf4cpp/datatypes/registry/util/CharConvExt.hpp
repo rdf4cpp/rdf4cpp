@@ -189,7 +189,7 @@ bool to_chars_canonical(F const value, writer::BufWriterParts const writer) noex
 template<std::floating_point F>
 bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noexcept {
     if (value == 0) {
-        return std::signbit(value) ? "-0" : "0";
+        return std::signbit(value) ? writer::write_str("-0", writer) : writer::write_str("0", writer);
     }
 
     if (auto const abs = std::abs(value); abs >= 0.000001 && abs < 1000000) {

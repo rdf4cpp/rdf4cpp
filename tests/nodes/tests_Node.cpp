@@ -16,13 +16,16 @@ int main(int argc, char **argv) {
     {
         reference_node_storage::SyncReferenceNodeStorage syncns{};
         default_node_storage = syncns;
-        doctest::Context{argc, argv}.run();
+        auto ret = doctest::Context{argc, argv}.run();
+        if (ret != 0) {
+            return ret;
+        }
     }
 
     {
         reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
         default_node_storage = unsyncns;
-        doctest::Context{argc, argv}.run();
+        return doctest::Context{argc, argv}.run();
     }
 }
 
