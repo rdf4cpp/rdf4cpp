@@ -147,6 +147,7 @@ bool match(const M &m, S s) noexcept {
     }
     return true;
 }
-}
+
+} // namespace rdf4cpp::util::char_matcher_detail
 
 #endif  //RDF4CPP_CHARMATCHER_HPP
