@@ -1,5 +1,6 @@
 #include "UnsyncReferenceNodeStorageBackend.hpp"
 
+#include <dice/template-library/tuple_algorithm.hpp>
 #include <rdf4cpp/storage/reference_node_storage/detail/SpecializationDetail.hpp>
 
 namespace rdf4cpp::rdf::storage::reference_node_storage {
@@ -10,7 +11,7 @@ UnsyncReferenceNodeStorageBackend::UnsyncReferenceNodeStorageBackend() noexcept 
     variable_storage_.mapping.reserve_until(identifier::NodeID::min_variable_id);
     fallback_literal_storage_.mapping.reserve_until(identifier::NodeID::min_literal_id);
 
-    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+    dice::template_library::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
         storage.mapping.reserve_until(identifier::NodeID::min_literal_id);
     });
 
@@ -26,7 +27,7 @@ size_t UnsyncReferenceNodeStorageBackend::size() const noexcept {
            bnode_storage_.mapping.size() +
            variable_storage_.mapping.size() +
            fallback_literal_storage_.mapping.size() +
-           specialization_detail::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
+           dice::template_library::tuple_fold(specialized_literal_storage_, 0, [](auto acc, auto const &storage) noexcept {
                return acc + storage.mapping.size();
            });
 }
@@ -37,7 +38,7 @@ void UnsyncReferenceNodeStorageBackend::shrink_to_fit() {
     variable_storage_.mapping.shrink_to_fit();
     fallback_literal_storage_.mapping.shrink_to_fit();
 
-    specialization_detail::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
+    dice::template_library::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
         storage.mapping.shrink_to_fit();
     });
 }
