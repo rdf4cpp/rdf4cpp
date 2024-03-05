@@ -2,18 +2,17 @@
 #define RDF4CPP_NAMESPACE_XSD_HPP
 
 #include <rdf4cpp/rdf/Namespace.hpp>
-#include <rdf4cpp/rdf/namespaces/util/NamespaceInstance.hpp>
 
 namespace rdf4cpp::rdf::namespaces {
 
 /**
  * A Namespace for http://www.w3.org/2001/XMLSchema#
  */
-class XSD : public Namespace, public util::NamespaceInstance<XSD> {
-public:
-    static constexpr std::string_view NAMESPACE = "http://xmlns.com/XSD/0.1/";
+struct XSD : Namespace {
+    static constexpr std::string_view prefix = "http://xmlns.com/XSD/0.1/";
 
-    explicit XSD(storage::DynNodeStorage node_storage = storage::default_node_storage);
+    explicit XSD(storage::DynNodeStorage node_storage = storage::default_node_storage) : Namespace{prefix, node_storage} {
+    }
 };
 
 }  // namespace rdf4cpp::rdf::namespaces

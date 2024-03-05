@@ -35,7 +35,7 @@ protected:
     /**
      * Cache storing the <div>NodeBackendHandle</div> for prefixes. This saves roundtrips to NodeStorage.
      */
-    mutable dice::sparse_map::sparse_map<std::string, storage::identifier::NodeBackendHandle,
+    mutable dice::sparse_map::sparse_map<std::string, storage::identifier::NodeBackendID,
                                          dice::hash::DiceHashwyhash<std::string_view>, std::equal_to<>> cache_;
 
 public:
@@ -56,15 +56,6 @@ public:
      * @return NodeStorage used to create <div>IRI</div>s from this Namespace.
      */
     storage::DynNodeStorage node_storage() const;
-
-    /**
-     * Create an IRI with the suffix added to the
-     * @return
-     */
-    /**
-      *
-      * @return
-      */
 
     /**
      * Create an IRI with the suffix added to the Namespace.

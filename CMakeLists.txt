@@ -180,14 +180,7 @@ add_library(rdf4cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/Duration.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/DayTimeDuration.cpp
         src/rdf4cpp/rdf/datatypes/xsd/time/YearMonthDuration.cpp
-        src/rdf4cpp/rdf/namespaces/BFLC.cpp
-        src/rdf4cpp/rdf/namespaces/FOAF.cpp
-        src/rdf4cpp/rdf/namespaces/MADSRDF.cpp
-        src/rdf4cpp/rdf/namespaces/OWL.cpp
-        src/rdf4cpp/rdf/namespaces/PREMIS3.cpp
         src/rdf4cpp/rdf/namespaces/RDF.cpp
-        src/rdf4cpp/rdf/namespaces/RDFS.cpp
-        src/rdf4cpp/rdf/namespaces/XSD.cpp
         src/rdf4cpp/rdf/parser/IStreamQuadIterator.cpp
         src/rdf4cpp/rdf/parser/RDFFileParser.cpp
         src/rdf4cpp/rdf/query/QuadPattern.cpp

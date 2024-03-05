@@ -314,12 +314,12 @@ target_link_libraries(tests_Serialize
 )
 add_test(NAME tests_Serialize COMMAND tests_Serialize)
 
-add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
-target_link_libraries(tests_Namespace_life_cycle
+add_executable(tests_Namespace namespaces/tests_Namespace.cpp)
+target_link_libraries(tests_Namespace
         doctest::doctest
         rdf4cpp
         )
-add_test(NAME tests_Namespace_life_cycle COMMAND tests_Namespace_life_cycle)
+add_test(NAME tests_Namespace COMMAND tests_Namespace)
 
 add_executable(tests_NodeStorage_specialization nodes/tests_NodeStorage_specialization.cpp)
 target_link_libraries(tests_NodeStorage_specialization

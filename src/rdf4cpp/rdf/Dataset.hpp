@@ -17,7 +17,7 @@ namespace rdf4cpp::rdf {
 struct Dataset {
     using value_type = std::pair<IRI, Graph>;
     using sentinel = std::default_sentinel_t;
-    using reference = void;
+    using reference = void; // TODO
     using pointer = void;
 
 private:
