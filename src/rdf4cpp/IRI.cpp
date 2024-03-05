@@ -15,13 +15,13 @@ IRI::IRI(storage::identifier::NodeBackendHandle handle) noexcept : Node(handle) 
 IRI::IRI() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::identifier::RDFNodeType::IRI, {}}} {
 }
 
-IRI::IRI(std::string_view iri, storage::DynNodeStorage node_storage)
+IRI::IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage)
     : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = iri}),
                                                   storage::identifier::RDFNodeType::IRI,
                                                   node_storage}} {
 }
 
-IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStorage node_storage) noexcept
+IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept
     : IRI{visit(datatypes::registry::DatatypeIDVisitor{
                         [&](storage::identifier::LiteralType const fixed) -> IRI {
                             return IRI{storage::identifier::NodeBackendHandle{storage::identifier::literal_type_to_iri_node_id(fixed),
@@ -38,11 +38,11 @@ IRI IRI::make_null() noexcept {
     return IRI{};
 }
 
-IRI IRI::make(std::string_view iri, storage::DynNodeStorage node_storage) {
+IRI IRI::make(std::string_view iri, storage::DynNodeStoragePtr node_storage) {
     return IRI{iri, node_storage};
 }
 
-IRI IRI::make_uuid(storage::DynNodeStorage node_storage) {
+IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
     boost::uuids::random_generator_mt19937 gen{};
     boost::uuids::uuid u = gen();
     std::stringstream stream{};
@@ -50,8 +50,8 @@ IRI IRI::make_uuid(storage::DynNodeStorage node_storage) {
     return IRI{stream.view(), node_storage};
 }
 
-IRI IRI::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
-    if (handle_.storage().backend() == node_storage.backend()) {
+IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+    if (handle_.storage() == node_storage) {
         return *this;
     }
 
@@ -59,8 +59,8 @@ IRI IRI::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
     return IRI{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage}};
 }
 
-IRI IRI::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
-    if (handle_.storage().backend() == node_storage.backend()) {
+IRI IRI::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+    if (handle_.storage() == node_storage) {
         return *this;
     }
 
@@ -72,13 +72,13 @@ IRI IRI::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noe
     return IRI{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage}};
 }
 
-IRI IRI::find(std::string_view iri, storage::DynNodeStorage node_storage) noexcept {
+IRI IRI::find(std::string_view iri, storage::DynNodeStoragePtr node_storage) noexcept {
     auto nid = node_storage.find_id(storage::view::IRIBackendView{iri});
     if (nid.null())
         return IRI{};
     return IRI{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::IRI, node_storage}};
 }
-IRI IRI::find(datatypes::registry::DatatypeIDView id, storage::DynNodeStorage node_storage) noexcept {
+IRI IRI::find(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept {
     return visit(datatypes::registry::DatatypeIDVisitor{
                              [&](storage::identifier::LiteralType const fixed) -> IRI {
                                  return IRI{storage::identifier::NodeBackendHandle{storage::identifier::literal_type_to_iri_node_id(fixed),
@@ -126,7 +126,7 @@ bool IRI::is_blank_node() const noexcept { return false; }
 bool IRI::is_iri() const noexcept { return true; }
 
 
-IRI IRI::default_graph(storage::DynNodeStorage node_storage) {
+IRI IRI::default_graph(storage::DynNodeStoragePtr node_storage) {
     return IRI{"", node_storage};
 }
 std::ostream &operator<<(std::ostream &os, IRI const &iri) {

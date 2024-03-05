@@ -15,7 +15,7 @@ Node Node::make_null() noexcept {
     return Node{};
 }
 
-Node Node::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+Node Node::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     switch (handle_.type()) {
         case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.to_node_storage(node_storage);
@@ -36,7 +36,7 @@ Node Node::to_node_storage(storage::DynNodeStorage node_storage) const noexcept 
     }
 }
 
-Node Node::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+Node Node::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     switch (handle_.type()) {
         case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.try_get_in_node_storage(node_storage);
@@ -238,7 +238,7 @@ TriBool Node::ebv() const noexcept {
     return Literal{handle_}.ebv();
 }
 
-Literal Node::as_ebv(storage::DynNodeStorage node_storage) const noexcept {
+Literal Node::as_ebv(storage::DynNodeStoragePtr node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 

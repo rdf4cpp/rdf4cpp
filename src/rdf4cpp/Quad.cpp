@@ -39,7 +39,7 @@ Statement const &Quad::without_graph() const noexcept {
     return *reinterpret_cast<Statement const *>(entries_.data() + 1);
 }
 
-Quad Quad::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+Quad Quad::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     Quad qu;
     auto it = qu.begin();
     for (auto const item : *this) {
@@ -48,7 +48,7 @@ Quad Quad::to_node_storage(storage::DynNodeStorage node_storage) const noexcept 
     return qu;
 }
 
-Quad Quad::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+Quad Quad::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     Quad qu;
     auto it = qu.begin();
     for (auto const item : *this) {

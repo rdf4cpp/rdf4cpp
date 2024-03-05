@@ -29,7 +29,7 @@ struct PREMIS3 : ClosedNamespace {
                                                                   "signature", "size", "startDate", "storedAt", "terms",
                                                                   "validationRules", "version"};
 
-    explicit PREMIS3(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit PREMIS3(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

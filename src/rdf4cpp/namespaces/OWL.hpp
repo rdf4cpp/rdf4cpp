@@ -34,7 +34,7 @@ struct OWL : ClosedNamespace {
                                                                   "Thing", "topDataProperty", "topObjectProperty", "TransitiveProperty",
                                                                   "unionOf", "versionInfo", "versionIRI", "withRestrictions"};
 
-    explicit OWL(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit OWL(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

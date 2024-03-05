@@ -194,11 +194,11 @@ IRIFactory::IRIFactory(prefix_map_type &&prefixes, std::string_view base) : pref
     }
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::DynNodeStorage node_storage) const noexcept {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_relative(std::string_view rel, storage::DynNodeStoragePtr node_storage) const noexcept {
     return create_and_validate(to_absolute(base_parts_cache, rel), node_storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::DynNodeStorage node_storage) const {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view prefix, std::string_view local, storage::DynNodeStoragePtr node_storage) const {
     auto i = prefixes.find(prefix);
     if (i == prefixes.end()) {
         return nonstd::make_unexpected(IRIFactoryError::UnknownPrefix);
@@ -217,7 +217,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::from_prefix(std::string_view 
     return create_and_validate(deref, node_storage);
 }
 
-nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::DynNodeStorage node_storage) noexcept {
+nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::string_view iri, storage::DynNodeStoragePtr node_storage) noexcept {
     if (!rdf4cpp::datatypes::registry::relaxed_parsing_mode) {
         if (auto const e = IRIView{iri}.quick_validate(); e != IRIFactoryError::Ok) {
             return nonstd::make_unexpected(e);

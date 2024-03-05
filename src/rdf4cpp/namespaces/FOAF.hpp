@@ -27,7 +27,7 @@ struct FOAF : ClosedNamespace {
                                                                   "age", "birthday", "sha", "status", "dnaChecksum", "family",
                                                                   "fundedBy", "geekcode", "givenname", "holdsAccount", "surname", "theme"};
 
-    explicit FOAF(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit FOAF(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

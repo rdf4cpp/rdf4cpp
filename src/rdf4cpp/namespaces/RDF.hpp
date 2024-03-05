@@ -19,7 +19,7 @@ public:
                                                                   "XMLLiteral", "JSON", "CompoundLiteral",
                                                                   "language", "direction"};
 
-    explicit RDF(storage::DynNodeStorage node_storage = storage::default_node_storage);
+    explicit RDF(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     IRI operator+(std::string_view suffix) const override;
 };

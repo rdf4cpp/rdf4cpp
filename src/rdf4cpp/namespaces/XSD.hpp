@@ -11,7 +11,7 @@ namespace rdf4cpp::namespaces {
 struct XSD : Namespace {
     static constexpr std::string_view prefix = "http://xmlns.com/XSD/0.1/";
 
-    explicit XSD(storage::DynNodeStorage node_storage = storage::default_node_storage) : Namespace{prefix, node_storage} {
+    explicit XSD(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : Namespace{prefix, node_storage} {
     }
 };
 

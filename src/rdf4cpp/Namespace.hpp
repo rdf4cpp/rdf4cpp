@@ -29,7 +29,7 @@ protected:
     /**
      * NodeStorage from which IRI objects are created.
      */
-    storage::DynNodeStorage node_storage_;
+    storage::DynNodeStoragePtr node_storage_;
 
     // TODO: a faster, less memory efficient map would be better.
     /**
@@ -45,7 +45,7 @@ public:
      * @param node_storage where the IRIs will live
      */
     explicit Namespace(std::string_view namespace_iri,
-                       storage::DynNodeStorage node_storage = storage::default_node_storage);
+                       storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
      * @return IRI string of the Namespace
@@ -55,7 +55,7 @@ public:
     /**
      * @return NodeStorage used to create <div>IRI</div>s from this Namespace.
      */
-    storage::DynNodeStorage node_storage() const;
+    storage::DynNodeStoragePtr node_storage() const;
 
     /**
      * Create an IRI with the suffix added to the Namespace.

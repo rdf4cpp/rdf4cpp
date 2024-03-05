@@ -36,7 +36,7 @@ concept NodeStorage = requires (NS ns_mut,
      * @param datatype datatype of specialized storage to check for
      * @return whether this implementation has specialized storage for the given datatype
      */
-    { NS::has_specialized_storage_for(lit_type) } -> std::convertible_to<bool>;
+    { ns.has_specialized_storage_for(lit_type) } -> std::convertible_to<bool>;
 
     /**
       * Backend for NodeStorage::find_or_make_id(view::BNodeBackendView const &)
@@ -99,28 +99,28 @@ concept NodeStorage = requires (NS ns_mut,
      * @param id identifier of the requested Node
      * @return view::IRIBackendView describing the requested Node
      */
-    { ns.find_iri_backend_view(node_id) } -> std::convertible_to<view::IRIBackendView>;
+    { ns.find_iri_backend(node_id) } -> std::convertible_to<view::IRIBackendView>;
 
     /**
      * Backend for NodeStorage::find_literal_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::LiteralBackendView describing the requested Node
      */
-    { ns.find_literal_backend_view(node_id) } -> std::convertible_to<view::LiteralBackendView>;
+    { ns.find_literal_backend(node_id) } -> std::convertible_to<view::LiteralBackendView>;
 
     /**
      * Backend for NodeStorage::find_bnode_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::BNodeBackendView describing the requested Node
      */
-    { ns.find_bnode_backend_view(node_id) } -> std::convertible_to<view::BNodeBackendView>;
+    { ns.find_bnode_backend(node_id) } -> std::convertible_to<view::BNodeBackendView>;
 
     /**
      * Backend for NodeStorage::find_variable_backend_view(identifier::NodeID id) const. Throws if no Node for the given identifier::NodeID exists.
      * @param id identifier of the requested Node
      * @return view::VariableBackendView describing the requested Node
      */
-    { ns.find_variable_backend_view(node_id) } -> std::convertible_to<view::VariableBackendView>;
+    { ns.find_variable_backend(node_id) } -> std::convertible_to<view::VariableBackendView>;
 
     /**
      * Backend for NodeStorage::erase_iri(identifier::NodeID id) const. Must throw if not implemented.
@@ -151,10 +151,13 @@ concept NodeStorage = requires (NS ns_mut,
     { ns_mut.erase_variable(node_id) } -> std::convertible_to<bool>;
 };
 
+/**
+ * A VTable for a NodeStorage
+ */
 struct NodeStorageVTable {
     size_t (*size)(void const *self) noexcept;
     void (*shrink_to_fit)(void *self);
-    bool (*has_specialized_storage_for)(identifier::LiteralType literal_type) noexcept;
+    bool (*has_specialized_storage_for)(void const *self, identifier::LiteralType literal_type) noexcept;
 
     identifier::NodeID (*find_or_make_iri_id)(void *self, view::IRIBackendView const &view);
     identifier::NodeID (*find_or_make_bnode_id)(void *self, view::BNodeBackendView const &view);
@@ -185,8 +188,8 @@ struct NodeStorageVTable {
             .shrink_to_fit = [](void *self) -> void {
                 static_cast<NS *>(self)->shrink_to_fit();
             },
-            .has_specialized_storage_for = [](identifier::LiteralType const lit_type) noexcept -> bool {
-                return NS::has_specialized_storage_for(lit_type);
+            .has_specialized_storage_for = [](void const *self, identifier::LiteralType const lit_type) noexcept -> bool {
+                return static_cast<NS const *>(self)->has_specialized_storage_for(lit_type);
             },
             .find_or_make_iri_id = [](void *self, view::IRIBackendView const &view) -> identifier::NodeID {
                 return static_cast<NS *>(self)->find_or_make_id(view);
@@ -213,16 +216,16 @@ struct NodeStorageVTable {
                 return static_cast<NS const *>(self)->find_id(view);
             },
             .find_iri_backend = [](void const *self, identifier::NodeID id) noexcept -> view::IRIBackendView {
-                return static_cast<NS const *>(self)->find_iri_backend_view(id);
+                return static_cast<NS const *>(self)->find_iri_backend(id);
             },
             .find_bnode_backend = [](void const *self, identifier::NodeID id) noexcept -> view::BNodeBackendView {
-                return static_cast<NS const *>(self)->find_bnode_backend_view(id);
+                return static_cast<NS const *>(self)->find_bnode_backend(id);
             },
             .find_literal_backend = [](void const *self, identifier::NodeID id) noexcept -> view::LiteralBackendView {
-                return static_cast<NS const *>(self)->find_literal_backend_view(id);
+                return static_cast<NS const *>(self)->find_literal_backend(id);
             },
             .find_variable_backend = [](void const *self, identifier::NodeID id) noexcept -> view::VariableBackendView {
-                return static_cast<NS const *>(self)->find_variable_backend_view(id);
+                return static_cast<NS const *>(self)->find_variable_backend(id);
             },
             .erase_iri = [](void *self, identifier::NodeID id) -> bool {
                 return static_cast<NS *>(self)->erase_iri(id);
@@ -242,30 +245,38 @@ struct NodeStorageVTable {
     }
 };
 
-struct DynNodeStorage {
+/**
+ * Essentially a fat-pointer to any NodeStorage.
+ * Consists of an instance-pointer and a vtable-pointer.
+ *
+ * This class fulfills the role of a NodeStorage interface (/ pure-virtual base class).
+ *
+ * Function documentation can be found on the NodeStorage concept.
+ */
+struct DynNodeStoragePtr {
 private:
     void *backend_;
     NodeStorageVTable const *vtable_;
 
 public:
-    constexpr DynNodeStorage() noexcept: DynNodeStorage{nullptr} {
+    constexpr DynNodeStoragePtr() noexcept: DynNodeStoragePtr{nullptr} {
     }
 
-    constexpr DynNodeStorage(std::nullptr_t) noexcept : backend_{nullptr},
-                                                        vtable_{nullptr} {
+    constexpr DynNodeStoragePtr(std::nullptr_t) noexcept : backend_{nullptr},
+                                                           vtable_{nullptr} {
     }
 
-    template<NodeStorage NS>
-    DynNodeStorage(NS &ns) noexcept : backend_{&ns},
-                                      vtable_{NodeStorageVTable::get<NS>()} {
+    template<NodeStorage NS> requires (!std::is_same_v<NS, DynNodeStoragePtr>)
+    DynNodeStoragePtr(NS &ns) noexcept : backend_{&ns},
+                                         vtable_{NodeStorageVTable::get<NS>()} {
     }
 
-    constexpr DynNodeStorage(void *backend, NodeStorageVTable const *vtable) noexcept : backend_{backend},
-                                                                                        vtable_{vtable} {
+    constexpr DynNodeStoragePtr(void *backend, NodeStorageVTable const *vtable) noexcept : backend_{backend},
+                                                                                           vtable_{vtable} {
     }
 
-    template<NodeStorage NS>
-    DynNodeStorage(std::unique_ptr<NS> const &ptr) noexcept : DynNodeStorage{*ptr} {
+    template<NodeStorage NS> requires (!std::is_same_v<NS, DynNodeStoragePtr>)
+    DynNodeStoragePtr(std::unique_ptr<NS> const &ptr) noexcept : DynNodeStoragePtr{*ptr} {
     }
 
     [[nodiscard]] constexpr void *backend() const noexcept {
@@ -284,8 +295,8 @@ public:
         vtable_->shrink_to_fit(backend_);
     }
 
-    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType literal_type) noexcept {
-        return vtable_->has_specialized_storage_for(literal_type);
+    [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType literal_type) const noexcept {
+        return vtable_->has_specialized_storage_for(backend_, literal_type);
     }
 
     [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) {
@@ -352,16 +363,18 @@ public:
         return vtable_->erase_variable(backend_, id);
     }
 
-    std::strong_ordering operator<=>(DynNodeStorage const &other) const noexcept {
+    std::strong_ordering operator<=>(DynNodeStoragePtr const &other) const noexcept {
         return backend_ <=> other.backend_;
     }
 
-    bool operator==(DynNodeStorage const &other) const noexcept {
+    bool operator==(DynNodeStoragePtr const &other) const noexcept {
         return backend_ == other.backend_;
     }
 };
 
-extern DynNodeStorage default_node_storage;
+static_assert(NodeStorage<DynNodeStoragePtr>);
+
+extern DynNodeStoragePtr default_node_storage;
 
 /**
  * Points the default_node_storage back to its original instance
@@ -371,15 +384,15 @@ void reset_default_node_storage() noexcept;
 } // namespace rdf4cpp::storage
 
 template<typename Policy>
-struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::DynNodeStorage> {
-    static inline size_t dice_hash(rdf4cpp::storage::DynNodeStorage const &x) noexcept {
+struct dice::hash::dice_hash_overload<Policy, rdf4cpp::storage::DynNodeStoragePtr> {
+    static inline size_t dice_hash(rdf4cpp::storage::DynNodeStoragePtr const &x) noexcept {
         return dice::hash::dice_hash_templates<Policy>::dice_hash(x.backend());
     }
 };
 
 template<>
-struct std::hash<rdf4cpp::storage::DynNodeStorage> {
-    inline size_t operator()(rdf4cpp::storage::DynNodeStorage const &v) const noexcept {
+struct std::hash<rdf4cpp::storage::DynNodeStoragePtr> {
+    inline size_t operator()(rdf4cpp::storage::DynNodeStoragePtr const &v) const noexcept {
         return ::dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(v);
     }
 };

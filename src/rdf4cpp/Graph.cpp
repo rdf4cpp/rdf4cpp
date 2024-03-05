@@ -15,7 +15,7 @@ Node Graph::to_node(storage::identifier::NodeBackendID id) const noexcept {
     return Node{storage::identifier::NodeBackendHandle{id, node_storage_}};
 }
 
-Graph::Graph(storage::DynNodeStorage node_storage) noexcept : node_storage_{node_storage} {
+Graph::Graph(storage::DynNodeStoragePtr node_storage) noexcept : node_storage_{node_storage} {
 }
 
 void Graph::add(Statement const &stmt_) {

@@ -44,7 +44,7 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit->has_value());
 
             for (auto const term : **qit) {
-                CHECK_EQ(term.backend_handle().storage(), storage::DynNodeStorage{ns});
+                CHECK_EQ(term.backend_handle().storage(), storage::DynNodeStoragePtr{ns});
             }
 
             n += 1;

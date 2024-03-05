@@ -7,7 +7,7 @@ SkolemIRIFactory::SkolemIRIFactory(std::string iri_prefix) noexcept : iri_prefix
 
 storage::identifier::NodeBackendHandle SkolemIRIFactory::make_node(IIdGenerator &generator,
                                                                    [[maybe_unused]] NodeScope const *scope,
-                                                                   storage::DynNodeStorage node_storage) noexcept {
+                                                                   storage::DynNodeStoragePtr node_storage) noexcept {
 
     size_t const buf_sz = generator.max_generated_id_size() + this->iri_prefix.size();
     auto buf = std::make_unique<char[]>(buf_sz);

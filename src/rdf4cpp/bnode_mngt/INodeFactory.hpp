@@ -19,7 +19,7 @@ struct INodeFactory {
 
     [[nodiscard]] virtual storage::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
                                                                                  NodeScope const *scope,
-                                                                                 storage::DynNodeStorage node_storage) noexcept = 0;
+                                                                                 storage::DynNodeStoragePtr node_storage) noexcept = 0;
 };
 
 }  //namespace rdf4cpp::bnode_mngt

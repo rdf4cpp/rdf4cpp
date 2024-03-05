@@ -12,16 +12,16 @@ struct Variable : Node {
     explicit Variable(storage::identifier::NodeBackendHandle handle) noexcept;
 
     explicit Variable(std::string_view name, bool anonymous = false,
-                      storage::DynNodeStorage node_storage = storage::default_node_storage);
+                      storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
-    [[nodiscard]] static Variable make_named(std::string_view name, storage::DynNodeStorage node_storage = storage::default_node_storage);
-    [[nodiscard]] static Variable make_anonymous(std::string_view name, storage::DynNodeStorage node_storage = storage::default_node_storage);
+    [[nodiscard]] static Variable make_named(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+    [[nodiscard]] static Variable make_anonymous(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
-    Variable to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
-    [[nodiscard]] Variable try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    Variable to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    [[nodiscard]] Variable try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
 private:
-    [[nodiscard]] static Variable find(std::string_view name, bool anonymous, storage::DynNodeStorage node_storage) noexcept;
+    [[nodiscard]] static Variable find(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) noexcept;
 
 public:
     /**
@@ -31,7 +31,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static Variable find_named(std::string_view name, storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static Variable find_named(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
     /**
      * searches for an anonymous Variable in the specified node storage and returns it.
      * returns a null Variable, if not found.
@@ -39,7 +39,7 @@ public:
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static Variable find_anonymous(std::string_view name, storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static Variable find_anonymous(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 
     [[nodiscard]] bool is_anonymous() const;
 

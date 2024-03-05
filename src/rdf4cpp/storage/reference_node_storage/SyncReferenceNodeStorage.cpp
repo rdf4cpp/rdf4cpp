@@ -161,11 +161,11 @@ static typename Storage::backend_view_type find_backend_view(Storage &storage, i
     }
 }
 
-view::IRIBackendView SyncReferenceNodeStorage::find_iri_backend_view(identifier::NodeID const id) const {
+view::IRIBackendView SyncReferenceNodeStorage::find_iri_backend(identifier::NodeID const id) const {
     return find_backend_view(iri_storage_, id);
 }
 
-view::LiteralBackendView SyncReferenceNodeStorage::find_literal_backend_view(identifier::NodeID const id) const {
+view::LiteralBackendView SyncReferenceNodeStorage::find_literal_backend(identifier::NodeID const id) const {
     if (id.literal_type().is_fixed() && has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) {
             return find_backend_view(storage, id);
@@ -175,11 +175,11 @@ view::LiteralBackendView SyncReferenceNodeStorage::find_literal_backend_view(ide
     return find_backend_view(fallback_literal_storage_, id);
 }
 
-view::BNodeBackendView SyncReferenceNodeStorage::find_bnode_backend_view(identifier::NodeID const id) const {
+view::BNodeBackendView SyncReferenceNodeStorage::find_bnode_backend(identifier::NodeID const id) const {
     return find_backend_view(bnode_storage_, id);
 }
 
-view::VariableBackendView SyncReferenceNodeStorage::find_variable_backend_view(identifier::NodeID const id) const {
+view::VariableBackendView SyncReferenceNodeStorage::find_variable_backend(identifier::NodeID const id) const {
     return find_backend_view(variable_storage_, id);
 }
 

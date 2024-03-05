@@ -14,7 +14,7 @@ struct BNodeFactory final : INodeFactory {
 
     [[nodiscard]] storage::identifier::NodeBackendHandle make_node(IIdGenerator &generator,
                                                                    NodeScope const *scope,
-                                                                   storage::DynNodeStorage node_storage) noexcept override;
+                                                                   storage::DynNodeStoragePtr node_storage) noexcept override;
 };
 
 }  //namespace rdf4cpp::bnode_mngt

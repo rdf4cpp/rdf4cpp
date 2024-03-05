@@ -27,7 +27,7 @@ std::ostream &operator<<(std::ostream &os, TriplePattern const &pattern) {
     return os;
 }
 
-TriplePattern TriplePattern::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+TriplePattern TriplePattern::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     TriplePattern tp;
     auto it = tp.begin();
     for (const auto &item : *this) {
@@ -36,7 +36,7 @@ TriplePattern TriplePattern::to_node_storage(storage::DynNodeStorage node_storag
     return tp;
 }
 
-TriplePattern TriplePattern::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+TriplePattern TriplePattern::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     TriplePattern tp;
     auto it = tp.begin();
     for (const auto &item : *this) {

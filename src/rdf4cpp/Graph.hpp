@@ -123,14 +123,14 @@ public:
     };
 
 private:
-    storage::DynNodeStorage node_storage_;
+    storage::DynNodeStoragePtr node_storage_;
     triple_storage_type triples_;
 
     static storage::identifier::NodeBackendID to_node_id(Node node) noexcept;
     Node to_node(storage::identifier::NodeBackendID id) const noexcept;
 
 public:
-    explicit Graph(storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
+    explicit Graph(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 
     void add(Statement const &statement);
 

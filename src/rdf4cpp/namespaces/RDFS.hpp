@@ -16,7 +16,7 @@ public:
                                                                   "comment", "Container", "ContainerMembershipProperty",
                                                                   "member", "seeAlso", "isDefinedBy"};
 
-    explicit RDFS(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit RDFS(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

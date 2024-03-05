@@ -39,7 +39,7 @@ namespace rdf4cpp::parser {
 struct ParsingState {
     using blank_node_generator_type = bnode_mngt::NodeGenerator;
     using blank_node_scope_type = bnode_mngt::NodeScope;
-    using node_storage_type = storage::DynNodeStorage;
+    using node_storage_type = storage::DynNodeStoragePtr;
     using blank_node_scope_manager_type = bnode_mngt::INodeScopeManager;
 
     /**

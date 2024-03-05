@@ -19,15 +19,15 @@ namespace rdf4cpp::storage::identifier {
 struct NodeBackendHandle {
 private:
     NodeBackendID id_;
-    DynNodeStorage storage_;
+    DynNodeStoragePtr storage_;
 
 
 public:
     NodeBackendHandle() noexcept = default;
 
     NodeBackendHandle(NodeBackendID id,
-                      DynNodeStorage storage) noexcept : id_{id},
-                                                         storage_{storage} {
+                      DynNodeStoragePtr storage) noexcept : id_{id},
+                                                            storage_{storage} {
     }
 
     /**
@@ -39,7 +39,7 @@ public:
      */
     NodeBackendHandle(NodeID const node_id,
                       RDFNodeType const node_type,
-                      DynNodeStorage storage,
+                      DynNodeStoragePtr storage,
                       bool const inlined = false,
                       uint16_t const tagging_bits = 0) noexcept : id_{node_id, node_type, inlined, tagging_bits},
                                                                   storage_{storage} {
@@ -129,7 +129,7 @@ public:
         return id_;
     }
 
-    [[nodiscard]] DynNodeStorage storage() const noexcept {
+    [[nodiscard]] DynNodeStoragePtr storage() const noexcept {
         return storage_;
     }
 

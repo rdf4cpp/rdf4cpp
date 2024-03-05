@@ -53,7 +53,7 @@ struct MADSRDF : ClosedNamespace {
                                                                    "organization", "phone", "postcode", "scopeNote",
                                                                    "state", "streetAddress", "useFor", "useInstead", "variantLabel"};
 
-    explicit MADSRDF(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit MADSRDF(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

@@ -28,7 +28,7 @@ std::ostream &operator<<(std::ostream &os, const QuadPattern &pattern) {
     return os;
 }
 
-QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+QuadPattern QuadPattern::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     QuadPattern qp;
     auto it = qp.begin();
     for (const auto &item : *this) {
@@ -37,7 +37,7 @@ QuadPattern QuadPattern::to_node_storage(storage::DynNodeStorage node_storage) c
     return qp;
 }
 
-QuadPattern QuadPattern::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+QuadPattern QuadPattern::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     QuadPattern qp;
     auto it = qp.begin();
     for (const auto &item : *this) {

@@ -2,7 +2,7 @@
 
 namespace rdf4cpp {
 
-Namespace::Namespace(std::string_view namespace_iri, storage::DynNodeStorage node_storage)
+Namespace::Namespace(std::string_view namespace_iri, storage::DynNodeStoragePtr node_storage)
     : namespace_iri_{namespace_iri}, node_storage_{node_storage} {
 }
 
@@ -10,7 +10,7 @@ std::string_view Namespace::name_space() const noexcept {
     return namespace_iri_;
 }
 
-storage::DynNodeStorage Namespace::node_storage() const {
+storage::DynNodeStoragePtr Namespace::node_storage() const {
     return node_storage_;
 }
 

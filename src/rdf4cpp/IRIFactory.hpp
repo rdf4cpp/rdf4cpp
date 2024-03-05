@@ -46,7 +46,7 @@ public:
      * @param storage
      * @return
      */
-    [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_relative(std::string_view rel, storage::DynNodeStorage node_storage = storage::default_node_storage) const noexcept;
+    [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_relative(std::string_view rel, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) const noexcept;
     /**
      * Creates a IRI by looking up a prefix in the prefix map and possibly resolving a relative IRI.
      * @param prefix
@@ -54,7 +54,7 @@ public:
      * @param storage
      * @return
      */
-    [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_prefix(std::string_view prefix, std::string_view local, storage::DynNodeStorage node_storage = storage::default_node_storage) const;
+    [[nodiscard]] nonstd::expected<IRI, IRIFactoryError> from_prefix(std::string_view prefix, std::string_view local, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) const;
 
     /**
      * Creates or changes a prefix.
@@ -86,7 +86,7 @@ public:
      * @param storage
      * @return
      */
-    [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::DynNodeStorage node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static nonstd::expected<IRI, IRIFactoryError> create_and_validate(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 };
 
 }  // namespace rdf4cpp

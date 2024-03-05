@@ -11,7 +11,7 @@ BNodeFactory &BNodeFactory::default_instance() noexcept {
 
 storage::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &generator,
                                                                NodeScope const *scope,
-                                                               storage::DynNodeStorage node_storage) noexcept {
+                                                               storage::DynNodeStoragePtr node_storage) noexcept {
     size_t const buf_sz = generator.max_generated_id_size();
     auto buf = std::make_unique<char[]>(buf_sz);
     auto *end = generator.generate_to_buf(buf.get());

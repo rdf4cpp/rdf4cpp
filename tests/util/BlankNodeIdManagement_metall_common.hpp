@@ -70,16 +70,16 @@ private:
                        std::equal_to<>,
                        allocator_type<std::pair<storage::identifier::NodeBackendID const, typename allocator_type<char>::const_pointer>>> storage_to_label;
 
-    storage::DynNodeStorage node_storage_;
+    storage::DynNodeStoragePtr node_storage_;
 
 public:
-    explicit PersistableScope(allocator_type<std::byte> alloc, storage::DynNodeStorage node_storage = storage::default_node_storage) : alloc{alloc},
-                                                                                                                                       label_to_storage{alloc},
-                                                                                                                                       storage_to_label{alloc},
-                                                                                                                                       node_storage_{node_storage} {
+    explicit PersistableScope(allocator_type<std::byte> alloc, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : alloc{alloc},
+                                                                                                                                          label_to_storage{alloc},
+                                                                                                                                          storage_to_label{alloc},
+                                                                                                                                          node_storage_{node_storage} {
     }
 
-    void set_node_storage(storage::DynNodeStorage node_storage) {
+    void set_node_storage(storage::DynNodeStoragePtr node_storage) {
         node_storage_ = node_storage;
     }
 

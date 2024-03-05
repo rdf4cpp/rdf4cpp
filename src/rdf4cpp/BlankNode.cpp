@@ -7,7 +7,7 @@ namespace rdf4cpp {
 BlankNode::BlankNode() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::identifier::RDFNodeType::BNode, {}}} {
 }
 
-BlankNode::BlankNode(std::string_view identifier, storage::DynNodeStorage node_storage)
+BlankNode::BlankNode(std::string_view identifier, storage::DynNodeStoragePtr node_storage)
     : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
                                                   storage::identifier::RDFNodeType::BNode,
                                                   node_storage}} {
@@ -20,11 +20,11 @@ BlankNode BlankNode::make_null() noexcept {
     return BlankNode{};
 }
 
-BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStorage node_storage) {
+BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStoragePtr node_storage) {
     return BlankNode{identifier, node_storage};
 }
 
-BlankNode BlankNode::to_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     if (handle_.storage() == node_storage) {
         return *this;
     }
@@ -33,7 +33,7 @@ BlankNode BlankNode::to_node_storage(storage::DynNodeStorage node_storage) const
     return BlankNode{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
 }
 
-BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept {
+BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
     if (handle_.storage() == node_storage) {
         return *this;
     }
@@ -46,7 +46,7 @@ BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStorage node_storag
     return BlankNode{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
 }
 
-BlankNode BlankNode::find(std::string_view identifier, storage::DynNodeStorage node_storage) noexcept {
+BlankNode BlankNode::find(std::string_view identifier, storage::DynNodeStoragePtr node_storage) noexcept {
     auto nid = node_storage.find_id(storage::view::BNodeBackendView{identifier, std::nullopt});
     if (nid.null())
         return BlankNode{};

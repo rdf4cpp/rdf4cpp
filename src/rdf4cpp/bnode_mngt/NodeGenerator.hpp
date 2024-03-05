@@ -33,7 +33,7 @@ private:
 
     explicit NodeGenerator(std::unique_ptr<IIdGenerator> &&generator, std::unique_ptr<INodeFactory> &&factory) noexcept;
 
-    [[nodiscard]] Node generate_node_impl(NodeScope const *scope, storage::DynNodeStorage node_storage);
+    [[nodiscard]] Node generate_node_impl(NodeScope const *scope, storage::DynNodeStoragePtr node_storage);
 public:
     NodeGenerator(NodeGenerator &&other) noexcept = default;
 
@@ -131,7 +131,7 @@ public:
      * @param node_storage the node storage in which the new node is placed
      * @return the generated node
      */
-    [[nodiscard]] Node generate_node(storage::DynNodeStorage node_storage = storage::default_node_storage);
+    [[nodiscard]] Node generate_node(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 };
 
 }  //namespace rdf4cpp::bnode_mngt

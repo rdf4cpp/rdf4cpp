@@ -137,12 +137,12 @@ static typename NodeTypeStorage::backend_view_type find_backend_view(NodeTypeSto
     }
 }
 
-view::IRIBackendView UnsyncReferenceNodeStorage::find_iri_backend_view(identifier::NodeID const id) const {
+view::IRIBackendView UnsyncReferenceNodeStorage::find_iri_backend(identifier::NodeID const id) const {
     return find_backend_view(iri_storage_, id);
 }
 
-view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend_view(identifier::NodeID const id) const {
-    if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
+view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend(identifier::NodeID const id) const {
+    if (id.literal_type().is_fixed() && has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) {
             return find_backend_view(storage, id);
         });
@@ -151,11 +151,11 @@ view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend_view(i
     return find_backend_view(fallback_literal_storage_, id);
 }
 
-view::BNodeBackendView UnsyncReferenceNodeStorage::find_bnode_backend_view(identifier::NodeID const id) const {
+view::BNodeBackendView UnsyncReferenceNodeStorage::find_bnode_backend(identifier::NodeID const id) const {
     return find_backend_view(bnode_storage_, id);
 }
 
-view::VariableBackendView UnsyncReferenceNodeStorage::find_variable_backend_view(identifier::NodeID const id) const {
+view::VariableBackendView UnsyncReferenceNodeStorage::find_variable_backend(identifier::NodeID const id) const {
     return find_backend_view(variable_storage_, id);
 }
 
@@ -175,7 +175,7 @@ bool UnsyncReferenceNodeStorage::erase_iri(identifier::NodeID const id) noexcept
 }
 
 bool UnsyncReferenceNodeStorage::erase_literal(identifier::NodeID const id) noexcept {
-    if (id.literal_type().is_fixed() && this->has_specialized_storage_for(id.literal_type())) {
+    if (id.literal_type().is_fixed() && has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto &storage) noexcept {
             return erase_impl(storage, id);
         });

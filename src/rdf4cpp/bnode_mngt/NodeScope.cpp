@@ -164,7 +164,7 @@ WeakNodeScope NodeScope::downgrade() const noexcept {
     return WeakNodeScope{this->backend_index_, cur_gen};
 }
 
-Node NodeScope::generate_node(NodeGenerator &generator, storage::DynNodeStorage node_storage) const {
+Node NodeScope::generate_node(NodeGenerator &generator, storage::DynNodeStoragePtr node_storage) const {
     return generator.generate_node_impl(this, node_storage);
 }
 
@@ -172,7 +172,7 @@ Node NodeScope::try_get_node(std::string_view label) const noexcept {
     return Node{this->cached_backend_ptr_->find_node(label)};
 }
 
-Node NodeScope::get_or_generate_node(std::string_view label, NodeGenerator &generator, storage::DynNodeStorage node_storage) {
+Node NodeScope::get_or_generate_node(std::string_view label, NodeGenerator &generator, storage::DynNodeStoragePtr node_storage) {
     if (Node node = this->try_get_node(label); !node.null()) {
         return node;
     }

@@ -19,7 +19,7 @@ struct BFLC : ClosedNamespace {
                                                                   "SeriesProvider", "SeriesSequentialDesignation", "SeriesTracing",
                                                                   "SeriesTreatment", "TransliteratedTitle"};
 
-    explicit BFLC(storage::DynNodeStorage node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
+    explicit BFLC(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) : ClosedNamespace{prefix, suffixes, node_storage} {
     }
 };
 

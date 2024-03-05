@@ -24,7 +24,7 @@ struct NodeGenerator;
 } // namespace bnode_mngt
 
 
-inline constexpr storage::DynNodeStorage keep_node_storage{nullptr};
+inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
 
 /**
  * @brief Models a node in RDF <span>Dataset</span>s, RDF <span>Graphs</span>s or pattern matching tuples like <span>QuadPattern</span>s or <span>TriplePattern</span>s.
@@ -50,14 +50,14 @@ public:
      * @param node_storage node storage to register this node in
      * @return this node but in node storage
      */
-    Node to_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    Node to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     /**
      * Tries to retrieve this nodes equivalent node in the given node storage
      * @param node_storage node storage to try to retrieve the node from
      * @return this node but in node storage, or the null node if it does not exist in node_storage
      */
-    [[nodiscard]] Node try_get_in_node_storage(storage::DynNodeStorage node_storage) const noexcept;
+    [[nodiscard]] Node try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     /**
      * Default construction produces null() const Node. This node models an unset or invalid Node.
@@ -144,7 +144,7 @@ public:
     /**
      * @return the effective boolean value of this as xsd:boolean (or null literal in case of Err)
      */
-    [[nodiscard]] Literal as_ebv(storage::DynNodeStorage node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ebv(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
 
     /**

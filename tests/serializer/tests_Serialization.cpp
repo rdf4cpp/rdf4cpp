@@ -68,7 +68,7 @@ std::string write_basic_data(){
     ser.finalize();
     return buf;
 }
-Graph get_graph(storage::DynNodeStorage node_storage) {
+Graph get_graph(storage::DynNodeStoragePtr node_storage) {
     Graph gd{node_storage};
     Statement q{IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     gd.add(q);
@@ -76,7 +76,7 @@ Graph get_graph(storage::DynNodeStorage node_storage) {
     gd.add(q);
     return gd;
 }
-Dataset get_dataset(storage::DynNodeStorage node_storage) {
+Dataset get_dataset(storage::DynNodeStoragePtr node_storage) {
     Dataset gd{node_storage};
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     gd.add(q);
