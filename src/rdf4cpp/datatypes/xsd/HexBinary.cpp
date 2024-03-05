@@ -66,14 +66,14 @@ HexBinaryRepr HexBinaryRepr::from_encoded(std::string_view const hex_encoded) {
     auto const rest = static_cast<ssize_t>((hex_encoded.size() - start) % 2);
 
     if (rest > 0) {
-        // handle last byte that was not represented by two digits (if there is one)
+        // handle first byte that was not represented by two digits (if there is one)
         // example: in 00A98B1 this decodes A
         auto const missing = encode_decode_detail::hex_decode(hex_encoded[start]);
         buf.push_back(static_cast<std::byte>(missing));
     }
 
     for (size_t ix = start + rest; ix < hex_encoded.size(); ix += 2) {
-        // loop (backwards) over all full bytes, i.e. bytes that are represented by two hex digits
+        // loop  over all full bytes, i.e. bytes that are represented by two hex digits
         // also, ignore leading zero digits
         // example: in 00A98B1 this loops over 98, B1
 
