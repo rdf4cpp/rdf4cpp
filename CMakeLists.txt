@@ -57,7 +57,7 @@ if (NOT uni-algo_FOUND)
             fetchuni-algo
             GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
             GIT_SHALLOW ON
-            GIT_TAG 4d1078984e0e929dad0f33b1acaa433b74e48e04 # v0.7.1
+            GIT_TAG 00cfcbfcbe9720760f8156ee086fc8f45ae59ae4 # v1.2.0
     )
     FetchContent_MakeAvailable(fetchuni-algo)
 endif ()
