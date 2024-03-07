@@ -33,7 +33,7 @@ class Recipe(ConanFile):
         self.requires("expected-lite/0.6.3", transitive_headers=True)
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
-        self.requires("uni-algo/0.7.1")
+        self.requires("uni-algo/1.2.0")
         self.requires("dice-hash/0.4.4", transitive_headers=True)
         self.requires("dice-sparse-map/0.2.5", transitive_headers=True)
         self.requires("dice-template-library/1.4.0", transitive_headers=True)
