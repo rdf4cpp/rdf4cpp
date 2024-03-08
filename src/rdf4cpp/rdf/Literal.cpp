@@ -1936,7 +1936,7 @@ util::TriBool Literal::contains(std::string_view const needle) const noexcept {
     }
 
     auto const s = this->lexical_form();
-    auto const r = una::casesens::search_utf8(s, needle);
+    auto const r = una::casesens::find_utf8(s, needle);
     return static_cast<bool>(r);
 }
 
@@ -1976,13 +1976,13 @@ Literal Literal::substr_before(std::string_view const needle, Node::NodeStorage 
     }
 
     auto const s = this->lexical_form();
-    auto const r = una::casesens::search_utf8(s, needle);
+    auto const r = una::casesens::find_utf8(s, needle);
 
     if (!r) {
         return Literal::make_simple_unchecked("", false, node_storage);
     }
 
-    auto substr = s.view().substr(0, r.pos());  // search_utf8 returns byte position, not unicode character position
+    auto substr = s.view().substr(0, r.pos());  // find_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
@@ -2009,13 +2009,13 @@ Literal Literal::substr_after(std::string_view const needle, Node::NodeStorage &
     }
 
     auto const s = this->lexical_form();
-    auto const r = una::casesens::search_utf8(s, needle);
+    auto const r = una::casesens::find_utf8(s, needle);
 
     if (!r) {
         return Literal::make_simple_unchecked("", false, node_storage);
     }
 
-    auto const substr = s.view().substr(r.pos() + needle.size());  // search_utf8 returns byte position, not unicode character position
+    auto const substr = s.view().substr(r.pos() + needle.size());  // find_utf8 returns byte position, not unicode character position
     return Literal::make_string_like_copy_lang_tag(substr, *this, node_storage);
 }
 
