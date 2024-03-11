@@ -107,6 +107,9 @@ private:
     }
 
 public:
+    constexpr BigDecimal() noexcept : BigDecimal{0, 0} {
+    }
+
     /**
      * creates a BigDecimal from its components.
      * it has the value of unscaled_value * pow(10, -exponent).

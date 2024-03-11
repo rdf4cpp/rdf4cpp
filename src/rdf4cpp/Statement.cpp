@@ -13,7 +13,7 @@ bool Statement::valid() const noexcept {
             && (object().is_iri() || object().is_literal() || object().is_blank_node()));
 }
 
-[[nodiscard]] Statement Statement::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+[[nodiscard]] Statement Statement::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     Statement st;
     auto it = st.begin();
     for (auto const &item : *this) {

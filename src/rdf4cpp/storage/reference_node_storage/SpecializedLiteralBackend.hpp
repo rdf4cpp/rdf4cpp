@@ -63,6 +63,10 @@ struct SpecializedLiteralBackend {
             return x.hash<literal_type>();
         }
     };
+
+    [[nodiscard]] static view_type get_default_view() noexcept {
+        return view_type{.datatype = T::fixed_id, .value = typename T::cpp_type{}};
+    }
 };
 
 }  // namespace rdf4cpp::storage::reference_node_storage

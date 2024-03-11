@@ -54,25 +54,25 @@ public:
 
     [[nodiscard]] static bool has_specialized_storage_for(identifier::LiteralType datatype) noexcept;
 
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view) noexcept;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view) noexcept;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view) noexcept;
-    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &view) noexcept;
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::BNodeBackendView const &view);
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::IRIBackendView const &view);
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::LiteralBackendView const &view);
+    [[nodiscard]] identifier::NodeID find_or_make_id(view::VariableBackendView const &view);
 
     [[nodiscard]] identifier::NodeID find_id(view::BNodeBackendView const &view) const noexcept;
     [[nodiscard]] identifier::NodeID find_id(view::IRIBackendView const &view) const noexcept;
     [[nodiscard]] identifier::NodeID find_id(view::LiteralBackendView const &view) const noexcept;
     [[nodiscard]] identifier::NodeID find_id(view::VariableBackendView const &view) const noexcept;
 
-    [[nodiscard]] view::IRIBackendView find_iri_backend(identifier::NodeID id) const;
-    [[nodiscard]] view::LiteralBackendView find_literal_backend(identifier::NodeID id) const;
-    [[nodiscard]] view::BNodeBackendView find_bnode_backend(identifier::NodeID id) const;
-    [[nodiscard]] view::VariableBackendView find_variable_backend(identifier::NodeID id) const;
+    [[nodiscard]] view::IRIBackendView find_iri_backend(identifier::NodeID id) const noexcept;
+    [[nodiscard]] view::LiteralBackendView find_literal_backend(identifier::NodeID id) const noexcept;
+    [[nodiscard]] view::BNodeBackendView find_bnode_backend(identifier::NodeID id) const noexcept;
+    [[nodiscard]] view::VariableBackendView find_variable_backend(identifier::NodeID id) const noexcept;
 
-    bool erase_iri(identifier::NodeID id) noexcept;
-    bool erase_literal(identifier::NodeID id) noexcept;
-    bool erase_bnode(identifier::NodeID id) noexcept;
-    bool erase_variable(identifier::NodeID id) noexcept;
+    bool erase_iri(identifier::NodeID id);
+    bool erase_literal(identifier::NodeID id);
+    bool erase_bnode(identifier::NodeID id);
+    bool erase_variable(identifier::NodeID id);
 };
 
 static_assert(NodeStorage<SyncReferenceNodeStorage>);

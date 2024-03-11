@@ -15,7 +15,7 @@ Node Node::make_null() noexcept {
     return Node{};
 }
 
-Node Node::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+Node Node::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     switch (handle_.type()) {
         case storage::identifier::RDFNodeType::Variable: {
             return query::Variable{handle_}.to_node_storage(node_storage);

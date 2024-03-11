@@ -34,7 +34,7 @@ struct BlankNode : Node {
      */
     [[nodiscard]] static BlankNode make(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
-    BlankNode to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    BlankNode to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] BlankNode try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     /**

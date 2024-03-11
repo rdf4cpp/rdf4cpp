@@ -74,7 +74,7 @@ public:
     [[nodiscard]] explicit operator std::string() const;
     friend std::ostream &operator<<(std::ostream &os, TriplePattern const &pattern);
 
-    [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    [[nodiscard]] TriplePattern to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] TriplePattern try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 };
 }  // namespace rdf4cpp::query

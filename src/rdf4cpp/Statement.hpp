@@ -13,7 +13,7 @@ struct Statement : query::TriplePattern {
 
     [[nodiscard]] bool valid() const noexcept;
 
-    [[nodiscard]] Statement to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    [[nodiscard]] Statement to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] Statement try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;

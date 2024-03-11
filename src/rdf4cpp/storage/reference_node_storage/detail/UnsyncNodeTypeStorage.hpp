@@ -88,6 +88,17 @@ public:
         }
     }
 
+    /**
+     * Gets the default value for the view type of this backend
+     */
+    static backend_view_type get_default_view() noexcept {
+        if constexpr (requires { backend_type::get_default_view(); }) {
+            return backend_type::get_default_view();
+        } else {
+            return backend_view_type{};
+        }
+    }
+
     detail::BiDirFlatMap<backend_id_type, backend_type, backend_view_type, backend_hasher, backend_equal> mapping;
 };
 

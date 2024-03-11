@@ -24,7 +24,7 @@ BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStoragePt
     return BlankNode{identifier, node_storage};
 }
 
-BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     if (handle_.storage() == node_storage) {
         return *this;
     }

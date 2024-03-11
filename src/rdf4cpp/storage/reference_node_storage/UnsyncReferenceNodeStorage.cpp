@@ -57,7 +57,7 @@ bool UnsyncReferenceNodeStorage::has_specialized_storage_for(identifier::Literal
  */
 template<bool create_if_not_present, typename Storage>
 static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_type const &view,
-                                                Storage &storage) noexcept {
+                                                Storage &storage) noexcept(!create_if_not_present) {
 
     if (auto const id = storage.mapping.lookup_id(view); id != typename Storage::backend_id_type{}) {
         return Storage::to_node_id(id, view);
@@ -71,32 +71,29 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_t
     }
 }
 
-identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::LiteralBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::LiteralBackendView const &view) {
     return view.visit(
-            [this](view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                auto const datatype = identifier::iri_node_id_to_literal_type(lexical.datatype_id);
-                assert(!this->has_specialized_storage_for(datatype));
-
-                return lookup_or_insert_impl<true>(lexical, fallback_literal_storage_);
+            [this](view::LexicalFormLiteralBackendView const &lexical) {
+                assert(!has_specialized_storage_for(identifier::iri_node_id_to_literal_type(lexical.datatype_id)));
+                return lookup_or_insert_impl<true>(lexical, this->fallback_literal_storage_);
             },
-            [this](view::ValueLiteralBackendView const &any) noexcept {
-                assert(this->has_specialized_storage_for(any.datatype));
-
-                return specialization_detail::visit_specialized(specialized_literal_storage_, any.datatype, [&](auto &storage) noexcept {
+            [this](view::ValueLiteralBackendView const &any) {
+                assert(has_specialized_storage_for(any.datatype));
+                return specialization_detail::visit_specialized(this->specialized_literal_storage_, any.datatype, [&any](auto &storage) {
                     return lookup_or_insert_impl<true>(any, storage);
                 });
             });
 }
 
-identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::IRIBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::IRIBackendView const &view) {
     return lookup_or_insert_impl<true>(view, iri_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::BNodeBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::BNodeBackendView const &view) {
     return lookup_or_insert_impl<true>(view, bnode_storage_);
 }
 
-identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::VariableBackendView const &view) noexcept {
+identifier::NodeID UnsyncReferenceNodeStorage::find_or_make_id(view::VariableBackendView const &view) {
     return lookup_or_insert_impl<true>(view, variable_storage_);
 }
 
@@ -110,15 +107,13 @@ identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::IRIBackendView cons
 
 identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::LiteralBackendView const &view) const noexcept {
     return view.visit(
-            [this](view::LexicalFormLiteralBackendView const &lexical) {
-                assert(!this->has_specialized_storage_for(identifier::iri_node_id_to_literal_type(lexical.datatype_id)));
-                return lookup_or_insert_impl<false>(lexical, fallback_literal_storage_);
+            [this](view::LexicalFormLiteralBackendView const &lexical) noexcept {
+                assert(!has_specialized_storage_for(identifier::iri_node_id_to_literal_type(lexical.datatype_id)));
+                return lookup_or_insert_impl<false>(lexical, this->fallback_literal_storage_);
             },
-            [this](view::ValueLiteralBackendView const &any) {
-                return specialization_detail::visit_specialized(specialized_literal_storage_, any.datatype, [this, &any](auto const &storage) {
-                    assert(this->has_specialized_storage_for(any.datatype));
-                    (void) this;
-
+            [this](view::ValueLiteralBackendView const &any) noexcept {
+                return specialization_detail::visit_specialized(this->specialized_literal_storage_, any.datatype, [&any](auto const &storage) noexcept {
+                    assert(has_specialized_storage_for(any.datatype));
                     return lookup_or_insert_impl<false>(any, storage);
                 });
             });
@@ -128,22 +123,23 @@ identifier::NodeID UnsyncReferenceNodeStorage::find_id(view::VariableBackendView
     return lookup_or_insert_impl<false>(view, variable_storage_);
 }
 
-template<typename NodeTypeStorage>
-static typename NodeTypeStorage::backend_view_type find_backend_view(NodeTypeStorage &storage, identifier::NodeID const id) {
-    if (auto view = storage.mapping.lookup_value(NodeTypeStorage::to_backend_id(id)); view.has_value()) {
+template<typename Storage>
+static typename Storage::backend_view_type find_backend_view(Storage &storage, identifier::NodeID const id) noexcept {
+    if (auto view = storage.mapping.lookup_value(Storage::to_backend_id(id)); view.has_value()) {
         return *view;
     } else {
-        throw std::out_of_range{"Did not find node for given id"};
+        assert(false); // assert in debug build; not critical error but should not happen
+        return Storage::get_default_view();
     }
 }
 
-view::IRIBackendView UnsyncReferenceNodeStorage::find_iri_backend(identifier::NodeID const id) const {
+view::IRIBackendView UnsyncReferenceNodeStorage::find_iri_backend(identifier::NodeID const id) const noexcept {
     return find_backend_view(iri_storage_, id);
 }
 
-view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend(identifier::NodeID const id) const {
+view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend(identifier::NodeID const id) const noexcept {
     if (id.literal_type().is_fixed() && has_specialized_storage_for(id.literal_type())) {
-        return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) {
+        return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto const &storage) noexcept {
             return find_backend_view(storage, id);
         });
     }
@@ -151,16 +147,16 @@ view::LiteralBackendView UnsyncReferenceNodeStorage::find_literal_backend(identi
     return find_backend_view(fallback_literal_storage_, id);
 }
 
-view::BNodeBackendView UnsyncReferenceNodeStorage::find_bnode_backend(identifier::NodeID const id) const {
+view::BNodeBackendView UnsyncReferenceNodeStorage::find_bnode_backend(identifier::NodeID const id) const noexcept {
     return find_backend_view(bnode_storage_, id);
 }
 
-view::VariableBackendView UnsyncReferenceNodeStorage::find_variable_backend(identifier::NodeID const id) const {
+view::VariableBackendView UnsyncReferenceNodeStorage::find_variable_backend(identifier::NodeID const id) const noexcept {
     return find_backend_view(variable_storage_, id);
 }
 
 template<typename Storage>
-static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
+static bool erase_impl(Storage &storage, identifier::NodeID const id) {
     auto const backend_id = Storage::to_backend_id(id);
     if (!storage.mapping.lookup_value(backend_id).has_value()) {
         return false;
@@ -170,11 +166,11 @@ static bool erase_impl(Storage &storage, identifier::NodeID const id) noexcept {
     return true;
 }
 
-bool UnsyncReferenceNodeStorage::erase_iri(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_iri(identifier::NodeID const id) {
     return erase_impl(iri_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorage::erase_literal(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_literal(identifier::NodeID const id) {
     if (id.literal_type().is_fixed() && has_specialized_storage_for(id.literal_type())) {
         return specialization_detail::visit_specialized(specialized_literal_storage_, id.literal_type(), [id](auto &storage) noexcept {
             return erase_impl(storage, id);
@@ -184,11 +180,11 @@ bool UnsyncReferenceNodeStorage::erase_literal(identifier::NodeID const id) noex
     return erase_impl(fallback_literal_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorage::erase_bnode(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_bnode(identifier::NodeID const id) {
     return erase_impl(bnode_storage_, id);
 }
 
-bool UnsyncReferenceNodeStorage::erase_variable(identifier::NodeID const id) noexcept {
+bool UnsyncReferenceNodeStorage::erase_variable(identifier::NodeID const id) {
     return erase_impl(variable_storage_, id);
 }
 

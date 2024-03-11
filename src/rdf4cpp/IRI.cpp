@@ -50,7 +50,7 @@ IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
     return IRI{stream.view(), node_storage};
 }
 
-IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     if (handle_.storage() == node_storage) {
         return *this;
     }

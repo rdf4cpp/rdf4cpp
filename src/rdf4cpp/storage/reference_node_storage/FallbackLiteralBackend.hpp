@@ -38,6 +38,13 @@ struct FallbackLiteralBackend {
     static id_type to_backend_id(identifier::NodeID const id) noexcept {
         return id.literal_id();
     }
+
+    static view_type get_default_view() noexcept {
+        auto const default_iri_fixed_id = datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri];
+        auto const default_iri_node_id = identifier::literal_type_to_iri_node_id(default_iri_fixed_id);
+
+        return view_type{.datatype_id = default_iri_node_id, .lexical_form = "", .language_tag = "", .needs_escape = false};
+    }
 };
 
 }  // namespace rdf4cpp::storage::view

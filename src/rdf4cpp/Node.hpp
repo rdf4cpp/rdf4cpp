@@ -50,7 +50,7 @@ public:
      * @param node_storage node storage to register this node in
      * @return this node but in node storage
      */
-    Node to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    Node to_node_storage(storage::DynNodeStoragePtr node_storage) const;
 
     /**
      * Tries to retrieve this nodes equivalent node in the given node storage

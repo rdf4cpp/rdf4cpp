@@ -57,7 +57,7 @@ public:
      */
     [[nodiscard]] static IRI make_uuid(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
-    IRI to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    IRI to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] IRI try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     /**

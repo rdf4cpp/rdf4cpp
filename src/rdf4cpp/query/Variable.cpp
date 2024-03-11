@@ -20,7 +20,7 @@ Variable Variable::make_anonymous(std::string_view name, storage::DynNodeStorage
     return Variable{name, true, node_storage};
 }
 
-Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     if (handle_.storage() == node_storage) {
         return *this;
     }

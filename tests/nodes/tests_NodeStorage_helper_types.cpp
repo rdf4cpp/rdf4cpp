@@ -82,13 +82,6 @@ TEST_SUITE("NodeStorage helper types") {
 
         CHECK(ns.erase_literal(l1.backend_handle().node_id()));
 
-        try {
-            auto dummy = ns.find_literal_backend(l1.backend_handle().node_id());
-            FAIL("Did not throw exception");
-        } catch (...) {
-            // expecting exception
-        }
-
         auto l4 = Literal::make_simple("Hello World", ns);
         CHECK_EQ(l3, l4);
         CHECK_EQ(l3.backend_handle(), l4.backend_handle());

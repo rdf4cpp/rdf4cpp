@@ -6,6 +6,8 @@
 #include <string_view>
 
 #include <dice/hash.hpp>
+
+#include "datatypes/rdf.hpp"
 #include "rdf4cpp/datatypes/registry/util/CharConvExt.hpp"
 
 namespace rdf4cpp {
@@ -131,6 +133,15 @@ constexpr TimePoint construct_timepoint(std::chrono::year_month_day date, std::c
 } // namespace util
 
 }  // namespace rdf4cpp
+
+namespace std::chrono {
+    template<>
+    struct zoned_traits<::rdf4cpp::Timezone> {
+        static ::rdf4cpp::Timezone default_zone() noexcept {
+            return ::rdf4cpp::Timezone{};
+        }
+    };
+} // namespace std::chrono
 
 #ifndef DOXYGEN_PARSER
 template<typename Policy>

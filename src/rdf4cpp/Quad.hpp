@@ -59,7 +59,7 @@ struct Quad : query::QuadPattern {
 
     [[nodiscard]] Statement const &without_graph() const noexcept;
 
-    [[nodiscard]] Quad to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    [[nodiscard]] Quad to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] Quad try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
     bool serialize_ntriples(writer::BufWriterParts writer) const noexcept;

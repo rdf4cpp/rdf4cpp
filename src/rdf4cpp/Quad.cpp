@@ -39,7 +39,7 @@ Statement const &Quad::without_graph() const noexcept {
     return *reinterpret_cast<Statement const *>(entries_.data() + 1);
 }
 
-Quad Quad::to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+Quad Quad::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     Quad qu;
     auto it = qu.begin();
     for (auto const item : *this) {

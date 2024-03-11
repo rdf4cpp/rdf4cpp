@@ -19,9 +19,9 @@
 namespace rdf4cpp {
 
 enum struct FetchOrSerializeResult {
-    Fetched,
-    Serialized,
-    SerializationFailed,
+    Fetched, //< result was already materialized and was fetched
+    Serialized, //< result was successfully serialized
+    SerializationFailed, //< result had to be serialized, but serialization failed
 };
 
 /**
@@ -49,7 +49,7 @@ private:
      */
     template<typename OpSelect>
         requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
-    [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal numeric_binop_impl(OpSelect op_select, Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * the implementation for all numeric, unary operations
@@ -61,7 +61,7 @@ private:
      */
     template<typename OpSelect>
         requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::unop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
-    [[nodiscard]] Literal numeric_unop_impl(OpSelect op_select, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal numeric_unop_impl(OpSelect op_select, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @brief the implementation of the value comparison function
@@ -105,14 +105,14 @@ private:
     /**
      * Creates a simple Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_simple_unchecked(std::string_view lexical_form, bool needs_escape, storage::DynNodeStoragePtr node_storage);
 
     /**
      * Creates a non-inlined typed Literal without doing any safety checks or canonicalization.
      */
-    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, storage::DynNodeStoragePtr node_storage);
 
-    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::identifier::LiteralType fixed_id, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_noninlined_special_unchecked(std::any &&value, storage::identifier::LiteralType fixed_id, storage::DynNodeStoragePtr node_storage);
 
     /**
      * Creates an inlined Literal without any safety checks
@@ -125,12 +125,12 @@ private:
     /**
      * Creates an inlined or non-inlined typed Literal without any safety checks
      */
-    [[nodiscard]] static Literal make_typed_unchecked(std::any &&value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_typed_unchecked(std::any &&value, datatypes::registry::DatatypeIDView datatype, datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry, storage::DynNodeStoragePtr node_storage);
 
     /**
      * Creates a language-tagged Literal directly without any safety checks
      */
-    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, storage::DynNodeStoragePtr node_storage);
 
     [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, storage::DynNodeStoragePtr node_storage, storage::identifier::NodeID node_id) noexcept;
 
@@ -145,7 +145,7 @@ private:
      * @return a string like type with str as lexical form and the language tag (if any) of lang_tag_src
      */
      // TODO needs escape flag
-    [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static Literal make_string_like_copy_lang_tag(std::string_view str, Literal const &lang_tag_src, storage::DynNodeStoragePtr node_storage);
 
     /**
      * Creates a normal accessible Literal from a lang tagged string.
@@ -311,12 +311,11 @@ public:
      * @tparam T the datatype
      * @param compatible_value instance for which the literal is created
      * @param node_storage NodeStorage used
-     * @throws std::runtime_error if lexical_form contains invalid unicode (only xsd::string)
      * @return literal instance representing compatible_value
      */
     template<datatypes::LiteralDatatype T>
     [[nodiscard]] static Literal make_typed_from_value(typename T::cpp_type const &compatible_value,
-                                                       storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept {
+                                                       storage::DynNodeStoragePtr node_storage = storage::default_node_storage) {
 
         if constexpr (std::is_same_v<T, datatypes::rdf::LangString>) {
             return Literal::make_lang_tagged(compatible_value.lexical_form,
@@ -364,7 +363,7 @@ public:
      *
      * @return the literal form of the given boolean
      */
-    static Literal make_boolean(TriBool b, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+    static Literal make_boolean(TriBool b, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 
     /**
      * creates a new string Literal containing a random UUID (Universally Unique IDentifier)
@@ -398,7 +397,7 @@ public:
         return Literal::make_typed_from_value<datatypes::xsd::Double>(dist(rng), node_storage);
     }
 
-    Literal to_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    Literal to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] Literal try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
 private:
@@ -495,7 +494,7 @@ public:
     template<datatypes::LiteralDatatype T>
         requires(!std::same_as<T, datatypes::rdf::LangString>)
     [[nodiscard]] static Literal find_typed(std::string_view lexical_form,
-                                            storage::DynNodeStoragePtr node_storage = storage::default_node_storage) {
+                                            storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept {
         if constexpr (std::is_same_v<T, datatypes::xsd::String>) {
             return find_simple(lexical_form, node_storage);
         }
@@ -615,13 +614,13 @@ public:
      * @param node_storage where to store the literal resulting from the cast
      * @return the literal with the same value as a different type if the cast was successful or the null literal
      */
-    [[nodiscard]] Literal cast(IRI const &target, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal cast(IRI const &target, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * Identical to Literal::cast except with compile time specified target type.
      */
     template<datatypes::LiteralDatatype T>
-    [[nodiscard]] Literal cast(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept {
+    [[nodiscard]] Literal cast(storage::DynNodeStoragePtr node_storage = keep_node_storage) const {
         return this->cast(IRI{T::datatype_id, node_storage}, node_storage);
     }
 
@@ -799,7 +798,7 @@ public:
      * @param node_storage where to put the resulting literal
      * @return lexical form of this as xsd:string if this is not the null literal, otherwise returns the null literal
      */
-    [[nodiscard]] Literal as_lexical_form(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_lexical_form(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * Returns the simplified/more user friendly string version of this. This is for example used when casting numerics to string.
@@ -824,7 +823,7 @@ public:
      * Converts this into it's simplified/more user friendly string representation as xsd:string. See Literal::to_simplified_string for more details.
      * @return user friendly string representation of this as xsd:string if this is not the null literal, otherwise returns the null literal
      */
-    [[nodiscard]] Literal as_simplified_lexical_form(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_simplified_lexical_form(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * Returns the datatype IRI of this.
@@ -841,7 +840,7 @@ public:
     /**
      * @return the language tag of this Literal as xsd:string. If the string is empty this has no language tag.
      */
-    [[nodiscard]] Literal as_language_tag(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_language_tag(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @param lang_tag language tag to compare against
@@ -1019,55 +1018,55 @@ public:
     [[nodiscard]] bool ge_with_extensions(Literal const &other) const noexcept;
     [[nodiscard]] Literal as_ge_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
-    [[nodiscard]] Literal add(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator+(Literal const &other) const noexcept;
-    Literal &add_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) noexcept;
-    Literal &operator+=(Literal const &other) noexcept;
+    [[nodiscard]] Literal add(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator+(Literal const &other) const;
+    Literal &add_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage);
+    Literal &operator+=(Literal const &other);
 
-    [[nodiscard]] Literal sub(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator-(Literal const &other) const noexcept;
-    Literal &sub_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) noexcept;
-    Literal &operator-=(Literal const &other) noexcept;
+    [[nodiscard]] Literal sub(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator-(Literal const &other) const;
+    Literal &sub_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage);
+    Literal &operator-=(Literal const &other);
 
-    [[nodiscard]] Literal mul(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator*(Literal const &other) const noexcept;
-    Literal &mul_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) noexcept;
-    Literal &operator*=(Literal const &other) noexcept;
+    [[nodiscard]] Literal mul(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator*(Literal const &other) const;
+    Literal &mul_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage);
+    Literal &operator*=(Literal const &other);
 
-    [[nodiscard]] Literal div(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator/(Literal const &other) const noexcept;
-    Literal &div_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) noexcept;
-    Literal &operator/=(Literal const &other) noexcept;
+    [[nodiscard]] Literal div(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator/(Literal const &other) const;
+    Literal &div_assign(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage);
+    Literal &operator/=(Literal const &other);
 
-    [[nodiscard]] Literal pos(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator+() const noexcept;
+    [[nodiscard]] Literal pos(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator+() const;
 
-    [[nodiscard]] Literal neg(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    Literal operator-() const noexcept;
+    [[nodiscard]] Literal neg(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
+    Literal operator-() const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-abs
      * @return absolute value of this or the null literal if this is not numeric
      */
-    [[nodiscard]] Literal abs(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal abs(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-round
      * @return the rounded value of this or the null literal if this is not numeric
      */
-    [[nodiscard]] Literal round(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal round(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-floor
      * @return the floored value of this or the null literal if this is not numeric
      */
-    [[nodiscard]] Literal floor(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal floor(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-ceiling
      * @return the ceiled value of this or the null literal if this is not numeric
      */
-    [[nodiscard]] Literal ceil(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal ceil(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
@@ -1079,7 +1078,7 @@ public:
      * @see https://www.w3.org/TR/xpath-functions/#func-string-length
      * @return the length this' lexical form (as xsd:integer) if it is string-like otherwise the null literal
      */
-    [[nodiscard]] Literal as_strlen(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_strlen(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/sparql11-query/#func-langMatches
@@ -1146,7 +1145,7 @@ public:
      * @param replacer replacement regex
      * @return the new string with the matches substring replaced by replacement
      */
-    [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal regex_replace(regex::RegexReplacer const &replacer, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-replace
@@ -1161,7 +1160,7 @@ public:
      */
     [[nodiscard]] Literal regex_replace(Literal const &pattern, Literal const &replacement,
                                         Literal const &flags = Literal::make_simple(""),
-                                        storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+                                        storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-contains
@@ -1201,7 +1200,7 @@ public:
      *          - needle is the empty string
      *          - needle could not be found in this
      */
-    [[nodiscard]] Literal substr_before(std::string_view needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal substr_before(std::string_view needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-before
@@ -1215,7 +1214,7 @@ public:
      *          - needle is the empty string
      *          - needle could not be found in this
      */
-    [[nodiscard]] Literal substr_before(Literal const &needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal substr_before(Literal const &needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
@@ -1228,7 +1227,7 @@ public:
      *          - needle is the empty string
      *          - needle could not be found in this
      */
-    [[nodiscard]] Literal substr_after(std::string_view needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal substr_after(std::string_view needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring-after
@@ -1242,7 +1241,7 @@ public:
      *          - needle is the empty string
      *          - needle could not be found in this
      */
-    [[nodiscard]] Literal substr_after(Literal const &needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal substr_after(Literal const &needle, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-starts-with
@@ -1308,7 +1307,7 @@ public:
      * @return the upper case version if this' if this is string-like or the null literal if
      *      - this is not string-like
      */
-    [[nodiscard]] Literal uppercase(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal uppercase(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-lower-case
@@ -1316,7 +1315,7 @@ public:
      * @return the lower case version if this' if this is string-like or the null literal if
      *      - this is not string-like
      */
-    [[nodiscard]] Literal lowercase(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal lowercase(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-concat
@@ -1324,7 +1323,7 @@ public:
      * @param other other literal to append to this
      * @return a string-like type that is the concatenation of the lexical forms of this and other
      */
-    [[nodiscard]] Literal concat(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal concat(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-encode-for-uri
@@ -1351,7 +1350,7 @@ public:
      */
     [[nodiscard]] Literal substr(size_t start,
                                  size_t len = std::string_view::npos,
-                                 storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+                                 storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @see https://www.w3.org/TR/xpath-functions/#func-substring
@@ -1366,7 +1365,7 @@ public:
      */
     [[nodiscard]] Literal substr(Literal const &start,
                                  Literal const &len = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<datatypes::xsd::Double::cpp_type>::infinity()),
-                                 storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+                                 storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
 private:
     /**
@@ -1409,95 +1408,103 @@ public:
      * Note: will need to be buffered for each query, because each query has only one now.
      * @return std::chrono::system_clock::now() as xsd:dateTime
      */
-    [[nodiscard]] static Literal now(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static Literal now(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
      * returns the year part of this.
      * @return year or nullopt
      */
     [[nodiscard]] std::optional<std::chrono::year> year() const noexcept;
+
     /**
      * returns the year part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_year(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_year(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the month part of this.
      * @return month or nullopt
      */
     [[nodiscard]] std::optional<std::chrono::month> month() const noexcept;
+
     /**
      * returns the month part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_month(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_month(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the day part of this.
      * @return day or nullopt
      */
     [[nodiscard]] std::optional<std::chrono::day> day() const noexcept;
+
     /**
      * returns the day part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_day(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_day(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the hours part of this.
      * @return hours ot nullopt
      */
     [[nodiscard]] std::optional<std::chrono::hours> hours() const noexcept;
+
     /**
      * returns the hours part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_hours(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_hours(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the minutes part of this.
      * @return minutes ot nullopt
      */
     [[nodiscard]] std::optional<std::chrono::minutes> minutes() const noexcept;
+
     /**
      * returns the minutes part of this.
      * @return xsd::Integer or null literal
      */
-    [[nodiscard]] Literal as_minutes(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_minutes(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the seconds (including fractional) part of this.
      * @return seconds or nullopt
      */
     [[nodiscard]] std::optional<std::chrono::milliseconds> seconds() const noexcept;
+
     /**
      * returns the seconds (including fractional) part of this.
      * @return xsd::Decimal or null literal
      */
-    [[nodiscard]] Literal as_seconds(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_seconds(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the timezone offset part of this.
      * @return timezone or nullopt
      */
     [[nodiscard]] std::optional<Timezone> timezone() const noexcept;
+
     /**
      * returns the timezone offset part of this.
      * @return offset as xsd::DayTimeDuration or null literal
      */
-    [[nodiscard]] Literal as_timezone(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_timezone(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * returns the timezone offset part of this.
      * @return timezone as string or nullopt
      */
     [[nodiscard]] std::optional<std::string> tz() const noexcept;
+
     /**
      * returns the timezone offset part of this.
      * @return timezone as simple literal or null literal
      */
-    [[nodiscard]] Literal as_tz(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_tz(storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
 
     /**
      * @return the effective boolean value of this
@@ -1547,20 +1554,20 @@ inline namespace shorthands {
 Literal operator""_xsd_string(char const *str, size_t len);
 
 Literal operator""_xsd_double(long double d);
-Literal operator""_xsd_float(long double d);
+Literal operator""_xsd_float(long double d) noexcept;
 
 Literal operator""_xsd_decimal(char const *str, size_t len);
 
 Literal operator""_xsd_integer(unsigned long long int i);
 
-Literal operator""_xsd_byte(unsigned long long int i);
-Literal operator""_xsd_ubyte(unsigned long long int i);
+Literal operator""_xsd_byte(unsigned long long int i) noexcept;
+Literal operator""_xsd_ubyte(unsigned long long int i) noexcept;
 
-Literal operator""_xsd_short(unsigned long long int i);
-Literal operator""_xsd_ushort(unsigned long long int i);
+Literal operator""_xsd_short(unsigned long long int i) noexcept;
+Literal operator""_xsd_ushort(unsigned long long int i) noexcept;
 
-Literal operator""_xsd_int(unsigned long long int i);
-Literal operator""_xsd_uint(unsigned long long int i);
+Literal operator""_xsd_int(unsigned long long int i) noexcept;
+Literal operator""_xsd_uint(unsigned long long int i) noexcept;
 
 Literal operator""_xsd_long(unsigned long long int i);
 Literal operator""_xsd_ulong(unsigned long long int i);
