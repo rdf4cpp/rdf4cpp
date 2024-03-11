@@ -1,45 +1,60 @@
-BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: false
+AlignConsecutiveAssignments: None
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: None
 AlignOperands: Align
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
-AllowShortBlocksOnASingleLine: Always
+AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Always
 AllowShortLambdasOnASingleLine: All
-AllowShortLoopsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
-BreakBeforeBraces: Custom
+AttributeMacros:
+  - __capability
+BasedOnStyle: LLVM
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
-  AfterControlStatement: Never
+  AfterControlStatement: MultiLine
   AfterEnum: false
   AfterFunction: false
   AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
   AfterUnion: false
+  AfterExternBlock: false
   BeforeCatch: false
   BeforeElse: false
   IndentBraces: false
   SplitEmptyFunction: false
   SplitEmptyRecord: true
+  SplitEmptyNamespace: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
 BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
 ColumnLimit: 0
 CompactNamespaces: true
 ContinuationIndentWidth: 8
+FixNamespaceComments: true
 IndentCaseLabels: true
 IndentPPDirectives: None
+IndentRequires: false
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: true
+Language: Cpp
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: None
 ObjCSpaceAfterProperty: false
@@ -58,9 +73,13 @@ SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 2
 SpacesInAngles: false
-SpacesInCStyleCastParentheses: false
 SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
+Standard: c++20
 TabWidth: 4
+UseCRLF: false
 UseTab: Never
+QualifierAlignment: Custom
+QualifierOrder: ['inline', 'static', 'constexpr', 'type', 'const', 'volatile']
