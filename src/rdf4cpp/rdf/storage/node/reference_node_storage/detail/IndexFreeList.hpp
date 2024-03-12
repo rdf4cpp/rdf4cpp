@@ -62,9 +62,8 @@ private:
      * @param offset bit offset into slot
      * @return index of the next free bit
      */
-    [[nodiscard]] size_type search_next_free(size_type slot_ix, size_type const offset) const noexcept {
+    [[nodiscard]] size_type search_next_free(size_type slot_ix) const noexcept {
         size_type new_offset = std::countr_one(occupied_bitmap_[slot_ix]);
-        assert(new_offset >= offset);
 
         if (new_offset < bitmap_bits) {
             return compose(slot_ix, new_offset);
@@ -116,7 +115,7 @@ public:
             occupied_bitmap_[slot_ix] |= (1ul << offset) - 1;
         }
 
-        next_free_ix_ = search_next_free(slot_ix, offset);
+        next_free_ix_ = search_next_free(slot_ix);
     }
 
     /**
@@ -129,7 +128,7 @@ public:
         }
 
         set_bit(slot_ix, offset);
-        return std::exchange(next_free_ix_, search_next_free(slot_ix, offset));
+        return std::exchange(next_free_ix_, search_next_free(slot_ix));
     }
 
     /**

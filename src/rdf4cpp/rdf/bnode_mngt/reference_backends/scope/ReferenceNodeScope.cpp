@@ -36,7 +36,8 @@ void ReferenceNodeScope::label_node(std::string_view label, storage::node::ident
         throw std::invalid_argument{"Node already labeled"};
     }
 
-    auto const [_, inserted2] = this->handle_to_label_.emplace(handle, it->first);
+    auto const [_it, inserted2] = this->handle_to_label_.emplace(handle, it->first);
+    (void) _it;
     assert(inserted2);
 }
 

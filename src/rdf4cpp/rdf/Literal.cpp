@@ -548,7 +548,18 @@ auto Literal::serialize_lexical_form_impl(C &&consume) const noexcept {
     }
 
     return handle_.literal_backend().visit(
-            [&consume](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+            [this, &consume](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                if constexpr (simplified) {
+                    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+
+                    if (entry != nullptr) {
+                        auto const value = entry->factory_fptr(lexical_backend.lexical_form);
+                        return std::invoke(std::forward<C>(consume), value, entry->serialize_simplified_string_fptr);
+                    }
+                } else {
+                    (void) this;
+                }
+
                 return std::invoke(std::forward<C>(consume), lexical_backend.lexical_form);
             },
             [&consume](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
