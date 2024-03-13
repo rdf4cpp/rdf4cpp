@@ -9,7 +9,7 @@ namespace encode_decode_detail {
 static constexpr std::array<char, 16> uppercase_encode_lut{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                                                            'A', 'B', 'C', 'D', 'E', 'F'};
 
-// integer value -> hexadecimal ascii representation (e.g 0 => '0', 10 => 'A')
+// integer value -> hexadecimal ascii representation (e.g 0 => '0', 10 => 'a')
 static constexpr std::array<char, 16> lowercase_encode_lut{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                                                            'a', 'b', 'c', 'd', 'e', 'f'};
 
