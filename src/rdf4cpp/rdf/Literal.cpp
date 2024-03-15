@@ -557,7 +557,7 @@ auto Literal::serialize_lexical_form_impl(C &&consume) const noexcept {
                         return std::invoke(std::forward<C>(consume), value, entry->serialize_simplified_string_fptr);
                     }
                 } else {
-                    (void) this;
+                    (void) this; // silence unused capture warning
                 }
 
                 return std::invoke(std::forward<C>(consume), lexical_backend.lexical_form);
