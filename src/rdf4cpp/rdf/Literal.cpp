@@ -2277,7 +2277,7 @@ Literal Literal::hash_with(char const *alg, NodeStorage &node_storage) const {
     std::span<std::byte const> const bytes{reinterpret_cast<std::byte const *>(hash_buffer), len};
 
     auto const lex = writer::StringWriter::oneshot([bytes](auto &w) {
-        return datatypes::xsd::HexBinary::cpp_type::serialize_lowercase(bytes, w);
+        return datatypes::xsd::HexBinary::cpp_type::serialize_hash(bytes, w);
     });
 
     return Literal::make_simple(lex, node_storage);

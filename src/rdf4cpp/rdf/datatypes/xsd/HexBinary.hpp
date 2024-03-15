@@ -16,7 +16,7 @@ namespace rdf4cpp::rdf::datatypes::registry {
  * Represents a decoded xsd:hexBinary value as a byte sequence
  * where each byte stores 2 half-octets.
  *
- * The bytes are stored in order most significant to least significant (i.e. index 0 is most significant).
+ * The bytes are stored in order least significant to most significant (i.e. index 0 is least significant).
  */
 struct HexBinaryRepr {
     std::vector<std::byte> bytes;
@@ -35,15 +35,15 @@ struct HexBinaryRepr {
     [[nodiscard]] std::string to_encoded() const noexcept;
 
     static bool serialize(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
-    static bool serialize_lowercase(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
+    static bool serialize_hash(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
 
     bool serialize(writer::BufWriterParts writer) const noexcept;
-    bool serialize_lowercase(writer::BufWriterParts writer) const noexcept;
+    bool serialize_hash(writer::BufWriterParts writer) const noexcept;
 
     /**
      * @param n index of half-octet / hex digit to extract
      * @return the n-th half-octet of this byte sequence
-     * @note the most significant half-octet has index 0
+     * @note the least significant half-octet has index 0
      * @warning the provided index n must be less than n_half_octets() otherwise the behaviour is undefined
      */
     [[nodiscard]] std::byte half_octet(size_t n) const noexcept;
@@ -56,7 +56,7 @@ struct HexBinaryRepr {
     /**
      * @param n index of the byte to extract
      * @return the n-th byte of this sequence
-     * @note the bytes are stored in order most significant to least significant (i.e. index 0 is most significant).
+     * @note the bytes are stored in order least significant to most significant (i.e. index 0 is least significant).
      * @warning the provided index n must be less than n_bytes() otherwise the behaviour is undefined
      */
     [[nodiscard]] std::byte byte(size_t n) const noexcept;

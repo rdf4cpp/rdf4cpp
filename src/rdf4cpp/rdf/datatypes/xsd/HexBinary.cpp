@@ -1,16 +1,24 @@
 #include "HexBinary.hpp"
 
+#include <ranges>
+
 namespace rdf4cpp::rdf::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
 namespace encode_decode_detail {
 
+enum struct Mode : bool {
+    Hash,
+    Number,
+};
+
+
 // integer value -> hexadecimal ascii representation (e.g 0 => '0', 10 => 'A')
-static constexpr std::array<char, 16> uppercase_encode_lut{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                                                           'A', 'B', 'C', 'D', 'E', 'F'};
+static constexpr std::array<char, 16> encode_lut{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                                                 'A', 'B', 'C', 'D', 'E', 'F'};
 
 // integer value -> hexadecimal ascii representation (e.g 0 => '0', 10 => 'a')
-static constexpr std::array<char, 16> lowercase_encode_lut{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+static constexpr std::array<char, 16> encode_lut_lowercase{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                                                            'a', 'b', 'c', 'd', 'e', 'f'};
 
 // ascii hexadecimal representation -> integer value (e.g. 'F' => 15, 'a' => 10, 'A' => 10)
@@ -34,14 +42,14 @@ static uint8_t hex_decode(char const ch) {
     return decoded;
 }
 
-template<bool lowercase>
+template<Mode mode>
 static char hex_encode(uint8_t const half_octet) noexcept {
     assert(half_octet <= 15);
 
-    if constexpr (lowercase) {
-        return lowercase_encode_lut[half_octet];
+    if constexpr (mode == Mode::Number) {
+        return encode_lut[half_octet];
     } else {
-        return uppercase_encode_lut[half_octet];
+        return encode_lut_lowercase[half_octet];
     }
 }
 
@@ -65,22 +73,22 @@ HexBinaryRepr HexBinaryRepr::from_encoded(std::string_view const hex_encoded) {
     // needs separate handling if there is
     auto const rest = static_cast<ssize_t>((hex_encoded.size() - start) % 2);
 
+    for (ssize_t ix = static_cast<ssize_t>(hex_encoded.size()) - 1; ix >= static_cast<ssize_t>(start + rest); ix -= 2) {
+        // loop (backwards) over all full bytes, i.e. bytes that are represented by two hex digits
+        // also, ignore leading zero digits
+        // example: in 00A98B1 this loops over B1, 98
+
+        auto const higher = encode_decode_detail::hex_decode(hex_encoded[ix - 1]);
+        auto const lower = encode_decode_detail::hex_decode(hex_encoded[ix]);
+
+        buf.push_back(static_cast<std::byte>((higher << 4) | lower));
+    }
+
     if (rest > 0) {
-        // handle first byte that was not represented by two digits (if there is one)
+        // handle last byte that was not represented by two digits (if there is one)
         // example: in 00A98B1 this decodes A
         auto const missing = encode_decode_detail::hex_decode(hex_encoded[start]);
         buf.push_back(static_cast<std::byte>(missing));
-    }
-
-    for (size_t ix = start + rest; ix < hex_encoded.size(); ix += 2) {
-        // loop  over all full bytes, i.e. bytes that are represented by two hex digits
-        // also, ignore leading zero digits
-        // example: in 00A98B1 this loops over 98, B1
-
-        auto const higher = encode_decode_detail::hex_decode(hex_encoded[ix]);
-        auto const lower = encode_decode_detail::hex_decode(hex_encoded[ix + 1]);
-
-        buf.push_back(static_cast<std::byte>((higher << 4) | lower));
     }
 
     return HexBinaryRepr{buf};
@@ -92,18 +100,27 @@ std::string HexBinaryRepr::to_encoded() const noexcept {
     });
 }
 
-template<bool lowercase>
+template<encode_decode_detail::Mode mode>
 bool serialize_impl(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
     if (bytes.empty()) {
         return writer::write_str("0", writer);
     }
 
-    for (size_t ix = 0; ix < bytes.size(); ++ix) {
+    auto const ixs = [&bytes]() {
+        auto base_ixs = std::ranges::views::iota(0ul, bytes.size());
+        if constexpr (mode == encode_decode_detail::Mode::Hash) {
+            return base_ixs;
+        } else {
+            return std::ranges::views::reverse(base_ixs);
+        }
+    }();
+
+    for (auto ix : ixs) {
         auto const byte = bytes[ix];
         auto const lower = static_cast<uint8_t>(byte) & 0b1111;
         auto const higher = (static_cast<uint8_t>(byte) >> 4) & 0b1111;
 
-        std::array<char, 2> const chars{encode_decode_detail::hex_encode<lowercase>(higher), encode_decode_detail::hex_encode<lowercase>(lower)};
+        std::array<char, 2> const chars{encode_decode_detail::hex_encode<mode>(higher), encode_decode_detail::hex_encode<mode>(lower)};
 
         if (!writer::write_str(std::string_view{chars.data(), chars.size()}, writer)) {
             return false;
@@ -114,24 +131,25 @@ bool serialize_impl(std::span<std::byte const> bytes, writer::BufWriterParts wri
 }
 
 bool HexBinaryRepr::serialize(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
-    return serialize_impl<false>(bytes, writer);
+    return serialize_impl<encode_decode_detail::Mode::Number>(bytes, writer);
 }
 
-bool HexBinaryRepr::serialize_lowercase(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
-    return serialize_impl<true>(bytes, writer);
+bool HexBinaryRepr::serialize_hash(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept {
+    return serialize_impl<encode_decode_detail::Mode::Hash>(bytes, writer);
 }
 
 bool HexBinaryRepr::serialize(writer::BufWriterParts writer) const noexcept {
     return serialize(this->bytes, writer);
 }
 
-bool HexBinaryRepr::serialize_lowercase(writer::BufWriterParts writer) const noexcept {
-    return serialize_lowercase(this->bytes, writer);
+bool HexBinaryRepr::serialize_hash(writer::BufWriterParts writer) const noexcept {
+    return serialize(this->bytes, writer);
 }
+
 
 std::byte HexBinaryRepr::half_octet(size_t const n) const noexcept {
     auto const ix = n / 2;
-    auto const off = 1 - (n % 2);
+    auto const off = n % 2;
     return (this->byte(ix) >> (4 * off)) & std::byte{0b1111};
 }
 
