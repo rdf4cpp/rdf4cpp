@@ -121,6 +121,10 @@ set(serd_source_files
         src/uri_utils.h
         src/writer.c
 )
+set(style_files
+    .clang-format
+    .clang-tidy
+)
 
 foreach(serd_source_file ${serd_source_files})
     file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/4352d002c55322fbc1a8baca6b0af6afa0142f5b/${serd_source_file}"
@@ -130,6 +134,11 @@ endforeach()
 file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/4352d002c55322fbc1a8baca6b0af6afa0142f5b/COPYING"
         "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
         TLS_VERIFY ON)
+foreach(style_file ${style_files})
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/tentris-cpp-coding-guidelines/main/${style_file}"
+            "${CMAKE_SOURCE_DIR}/${style_file}"
+            TLS_VERIFY ON)
+endforeach()
 
 list(FILTER serd_source_files INCLUDE REGEX "^.+\\.c$")
 list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
