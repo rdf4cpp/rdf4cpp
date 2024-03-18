@@ -34,11 +34,33 @@ struct HexBinaryRepr {
      */
     [[nodiscard]] std::string to_encoded() const noexcept;
 
+    /**
+     * Serializes what to_encoded (with a HexBinaryRepr of the same bytes) would output to the given writer.
+     *
+     * @param bytes bytes to serialize
+     * @param writer writer
+     * @return if serilization succeeded
+     */
     static bool serialize(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
-    static bool serialize_lowercase(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
 
+    /**
+     * Serializes what to_encoded (with a HexBinaryRepr of the same bytes) would output to the given writer
+     * except that the order of bytes will be reversed and the output will be lowercase (like is requried for hashes)
+     *
+     * @param bytes bytes to serialize
+     * @param writer writer
+     * @return if serilization succeeded
+     */
+    static bool serialize_hash(std::span<std::byte const> bytes, writer::BufWriterParts writer) noexcept;
+
+    /**
+     * Same as other overload HexBinaryRepr::serialize, except uses bytes of *this
+     */
     bool serialize(writer::BufWriterParts writer) const noexcept;
-    bool serialize_lowercase(writer::BufWriterParts writer) const noexcept;
+    /**
+     * Same as other overload HexBinaryRepr::serialize_hash, except uses bytes of *this
+     */
+    bool serialize_hash(writer::BufWriterParts writer) const noexcept;
 
     /**
      * @param n index of half-octet / hex digit to extract

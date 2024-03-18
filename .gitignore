@@ -1,4 +1,4 @@
-src/rdf4cpp/rdf/version.hpp
+src/rdf4cpp/version.hpp
 
 docs/doxygen_output/*
 docs/build/*

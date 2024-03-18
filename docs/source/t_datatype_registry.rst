@@ -349,7 +349,7 @@ Conversion Table Implementation
 This section briefly describes where the code that calculates conversion tables can be found.
 
 First, during compiletime, all conversion tables and all conversions they contain are fully calculated. This is
-done in :file:`src/rdf4cpp/rdf/datatypes/registry/DatatypeConversion.hpp` by traversing all outgoing edges for
+done in :file:`src/rdf4cpp/datatypes/registry/DatatypeConversion.hpp` by traversing all outgoing edges for
 each type. The table is calculated in chunks of 1d slices of the table and then stitched together.
 :func:`rdf4cpp::datatypes::registry::conversion_detail::make_conversion_layer_impl` calculates one 1d slice out of the 2d conversion table.
 This slice can consist of either only promotions or only supertype conversions.
