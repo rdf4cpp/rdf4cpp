@@ -75,8 +75,7 @@ static identifier::NodeID lookup_or_insert_impl(typename Storage::backend_view_t
 identifier::NodeID UnsyncReferenceNodeStorageBackend::find_or_make_id(view::LiteralBackendView const &view) noexcept {
     return view.visit(
             [this](view::LexicalFormLiteralBackendView const &lexical) noexcept {
-                auto const datatype = identifier::iri_node_id_to_literal_type(lexical.datatype_id);
-                assert(!this->has_specialized_storage_for(datatype));
+                assert(!this->has_specialized_storage_for(identifier::iri_node_id_to_literal_type(lexical.datatype_id)));
 
                 return lookup_or_insert_impl<true>(lexical, fallback_literal_storage_);
             },

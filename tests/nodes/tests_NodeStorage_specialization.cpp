@@ -14,10 +14,13 @@ using namespace datatypes;
 
 int main(int argc, char **argv) {
     NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    doctest::Context{argc, argv}.run();
+    auto const ret = doctest::Context{argc, argv}.run();
+    if (ret != 0) {
+        return ret;
+    }
 
     NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
-    doctest::Context{argc, argv}.run();
+    return doctest::Context{argc, argv}.run();
 }
 
 template<typename It>

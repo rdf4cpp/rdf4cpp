@@ -548,7 +548,18 @@ auto Literal::serialize_lexical_form_impl(C &&consume) const noexcept {
     }
 
     return handle_.literal_backend().visit(
-            [&consume](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+            [this, &consume](storage::node::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
+                if constexpr (simplified) {
+                    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(this->datatype_id());
+
+                    if (entry != nullptr) {
+                        auto const value = entry->factory_fptr(lexical_backend.lexical_form);
+                        return std::invoke(std::forward<C>(consume), value, entry->serialize_simplified_string_fptr);
+                    }
+                } else {
+                    (void) this; // silence unused capture warning
+                }
+
                 return std::invoke(std::forward<C>(consume), lexical_backend.lexical_form);
             },
             [&consume](storage::node::view::ValueLiteralBackendView const &value_backend) noexcept {
@@ -2266,7 +2277,7 @@ Literal Literal::hash_with(char const *alg, NodeStorage &node_storage) const {
     std::span<std::byte const> const bytes{reinterpret_cast<std::byte const *>(hash_buffer), len};
 
     auto const lex = writer::StringWriter::oneshot([bytes](auto &w) {
-        return datatypes::xsd::HexBinary::cpp_type::serialize(bytes, w);
+        return datatypes::xsd::HexBinary::cpp_type::serialize_hash(bytes, w);
     });
 
     return Literal::make_simple(lex, node_storage);
