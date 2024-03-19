@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-#include "serd/serd.h"
+#include <serd/serd.h>
 
 #include <rdf4cpp/Quad.hpp>
 #include <rdf4cpp/parser/IStreamQuadIterator.hpp>

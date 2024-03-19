@@ -33,9 +33,9 @@ as well as conversions between Literal Datatypes.
 
 You can find all supported Datatypes here:
 
- * :ref:`namespace_rdf4cpp__rdf__datatypes__xsd`: XSD datatypes.
- * :ref:`namespace_rdf4cpp__rdf__datatypes__rdf`: RDF datatypes (LangString).
- * :ref:`namespace_rdf4cpp__rdf__datatypes__owl`: OWL datatypes.
+ * :ref:`namespace_rdf4cpp__datatypes__xsd`: XSD datatypes.
+ * :ref:`namespace_rdf4cpp__datatypes__rdf`: RDF datatypes (LangString).
+ * :ref:`namespace_rdf4cpp__datatypes__owl`: OWL datatypes.
 
 Parsing Files
 -------------

@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
-#include "rdf4cpp/BigDecimal.hpp"
+#include <rdf4cpp/BigDecimal.hpp>
 
 using Dec = rdf4cpp::BigDecimal<>;
 using DecI = rdf4cpp::BigDecimal<int32_t, uint32_t>;

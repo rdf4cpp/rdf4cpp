@@ -1,8 +1,8 @@
 #ifndef RDF4CPP_NODEBACKENDID_HPP
 #define RDF4CPP_NODEBACKENDID_HPP
 
-#include "NodeID.hpp"
-#include "RDFNodeType.hpp"
+#include <rdf4cpp/storage/identifier/NodeID.hpp>
+#include <rdf4cpp/storage/identifier/RDFNodeType.hpp>
 
 namespace rdf4cpp::storage::identifier {
 

@@ -2,7 +2,7 @@
 #define RDF4CPP_RDF_REFERENCENODESTORAGE_BIDIRFLATMAP_HPP
 
 #include <dice/sparse-map/sparse_set.hpp>
-#include "IndexFreeList.hpp"
+#include <rdf4cpp/storage/reference_node_storage/detail/IndexFreeList.hpp>
 
 namespace rdf4cpp::storage::reference_node_storage::detail {
 

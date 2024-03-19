@@ -5,7 +5,7 @@
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/Float.hpp>
-#include "rdf4cpp/BigDecimal.hpp"
+#include <rdf4cpp/BigDecimal.hpp>
 
 #include <dice/hash.hpp>
 

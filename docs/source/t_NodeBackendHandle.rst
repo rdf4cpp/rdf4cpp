@@ -4,7 +4,7 @@ Identifiers Used to Store Nodes
 `NodeBackendHandle` (192 bit)
 _____________________________
 
-rdf4cpp uses `NodeBackendHandle` – a 192 bit wide type – to uniquely identify all `Node`s.
+rdf4cpp uses `NodeBackendHandle` – a 192 bit wide type – to uniquely identify all `Node`\s.
 It consists of a `NodeBackendID` (64 bit), an instance-pointer to a node storage (64 bit),
 and a vtable-pointer for a node storage (64 bit).
 To retrieve a node backend, the full backend handle is required.
@@ -46,7 +46,7 @@ The *inlinining tagging bit* indicates whether the value of the node is stored d
 instead of the node storage.
 
 `RDFNodeType` (2 bit)
-------------------
+---------------------
 
 The `RDFNodeType` specifies if the `Node` is a `BlankNode`, `IRI`, `Literal` or `Variable`.
 
@@ -78,7 +78,7 @@ For `rdf:langString` only the language tag can be inlined into the `LiteralID`.
 This uses the uppermost bits of the `LiteralID`. The amount of bits used depends on the configuration (default 2).
 Inlining uses only as many bits as it needs, the remaining bits of the `LiteralID` is used for storing the
 truncated `LiteralID`
-If you are operating on `LiteralID`s directly, you need to check if they are inlined and possibly un-inline them before
+If you are operating on `LiteralID`\s directly, you need to check if they are inlined and possibly un-inline them before
 using (the inlining tagging-bit of the `NodeBackendID` will be set to indicate that the language tag is inlined).
 
 Important Notes

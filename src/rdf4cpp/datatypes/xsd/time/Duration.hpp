@@ -6,7 +6,7 @@
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
-#include "rdf4cpp/Timezone.hpp"
+#include <rdf4cpp/Timezone.hpp>
 #include <dice/hash.hpp>
 
 namespace rdf4cpp::datatypes::registry {

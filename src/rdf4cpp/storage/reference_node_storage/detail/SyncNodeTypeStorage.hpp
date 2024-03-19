@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_SYNCNODETYPESTORAGE_HPP
 #define RDF4CPP_SYNCNODETYPESTORAGE_HPP
 
-#include "UnsyncNodeTypeStorage.hpp"
+#include <rdf4cpp/storage/reference_node_storage/detail/UnsyncNodeTypeStorage.hpp>
 #include <shared_mutex>
 
 namespace rdf4cpp::storage::reference_node_storage {

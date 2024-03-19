@@ -8,7 +8,7 @@
 #include <dice/hash.hpp>
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 #include <rdf4cpp/util/CheckedInt.hpp>
-#include "rdf4cpp/Timezone.hpp"
+#include <rdf4cpp/Timezone.hpp>
 
 /**
  * @file
