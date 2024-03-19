@@ -22,7 +22,6 @@ The main types of rdf4cpp:
  * :class:`rdf4cpp::query::Variable`: A Variable used in Queries.
  * :class:`rdf4cpp::query::TriplePattern`: A Query patterns of Subject, Predicate and Object.
  * :class:`rdf4cpp::query::QuadPattern`: A Query of Graph, Subject, Predicate and Object.
- * :class:`rdf4cpp::query::SolutionSequence`: A Collection of Solutions as returned by match.
  * :class:`rdf4cpp::query::Solution`: A single matched Solution, with all Variables bound.
 
 Datatypes
@@ -41,7 +40,7 @@ Parsing Files
 -------------
 
 The class :class:`rdf4cpp::parser::RDFFileParser` allows reading files containing rdf Statements and iterate over them.
-Supported Formats: Turtle, TriG, NTriple and NQuad.
+Supported Formats: Turtle, TriG, N-Triples and N-Quads.
 :class:`rdf4cpp::parser::IStreamQuadIterator` allows doing the same over arbitrary data streams.
 
 Relaxed Parsing Mode
