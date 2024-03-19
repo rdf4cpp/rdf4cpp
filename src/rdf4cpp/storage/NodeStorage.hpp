@@ -374,6 +374,14 @@ public:
 
 static_assert(NodeStorage<DynNodeStoragePtr>);
 
+/**
+ * Pointer to the default node-storage instance
+ * This instance is used by default if you do not specify one when creating or modifying nodes.
+ *
+ * This pointer can be reassigned to point to any instance of your choosing, but be
+ * aware that this pointer does not manage ownership, or keep the instance alive.
+ * You need to do that yourself.
+ */
 extern DynNodeStoragePtr default_node_storage;
 
 /**

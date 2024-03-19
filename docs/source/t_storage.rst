@@ -16,7 +16,7 @@ For both storage parts, reference implementations are provided and used as a sen
 NodeStorage
 ___________
 
-`NodeStorage`s store information about RDF `Node`s. By default, there is only one default NodeStorage which is automatically used
+`NodeStorage`\s store information about RDF `Node`\s. By default, there is only one default NodeStorage which is automatically used
 (it lives at `rdf4cpp::storage::default_node_storage`).
 The constructors of `BlankNode`, `IRI`, `Literal` and `Variable` optionally allow to use another `NodeStorage`.
 The `SyncReferenceNodeStorage` implementation of the `NodeStorage` concept, which is used by default, is thread-safe.

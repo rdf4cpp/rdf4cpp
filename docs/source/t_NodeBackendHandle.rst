@@ -56,7 +56,7 @@ The `RDFNodeType` specifies if the `Node` is a `BlankNode`, `IRI`, `Literal` or 
 The `NodeID` identifies a `Node` given `NodeType` inside a node storage.
 A `NodeID` of 0 is considered a null `NodeID` which must not identify any resource.
 
-For `Literal`s the `NodeID` splits up further into `LiteralType` and `LiteralID`.
+For `Literal`\s the `NodeID` splits up further into `LiteralType` and `LiteralID`.
 
 `LiteralType` (6 bit)
 +++++++++++++++++++++
