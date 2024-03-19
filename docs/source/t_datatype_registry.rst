@@ -13,7 +13,7 @@ __________
 
 Every datatype has a base set of functions. These functions are defined by the concept :concept:`rdf4cpp::datatypes::LiteralDatatype`.
 This concept provides the most basic set of functions that are required to interact with a value of a particular datatype.
-The requirements are enumerated in the following concept declaration, which can also be found in :file:`src/rdf4cpp/rdf/datatypes/LiteralDatatype.hpp`.
+The requirements are enumerated in the following concept declaration, which can also be found in :file:`src/rdf4cpp/datatypes/LiteralDatatype.hpp`.
 Note that some entries are intentionally omitted for simplicity. ::
 
     template<typename LiteralDatatypeImpl>
@@ -57,7 +57,7 @@ The following example defines a simplified version of `xsd:int` using only the d
         }
     }
 
-    namespace rdf4cp::rdf::datatypes::basic {
+    namespace rdf4cp::datatypes::basic {
         // note: using an extern template for registry::LiteralDatatypeImpl<registry::basic_int>
         // is advisable to reduce compile times
         struct Int : registry::LiteralDatatypeImpl<registry::basic_int> {};
@@ -103,7 +103,7 @@ Logical capability example
         }
     }
 
-    namespace rdf4cp::rdf::datatypes::basic {
+    namespace rdf4cp::datatypes::basic {
         // Note: again using an extern template for registry::LiteralDatatypeImpl<registry::basic_int>
         // is advisable to reduce compile times
         // Note: must explicitly specify capability in definition

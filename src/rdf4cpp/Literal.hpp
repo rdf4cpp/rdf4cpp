@@ -12,8 +12,8 @@
 #include <rdf4cpp/datatypes/rdf.hpp>
 #include <rdf4cpp/datatypes/xsd.hpp>
 #include <rdf4cpp/regex/Regex.hpp>
-#include "CowString.hpp"
-#include "TriBool.hpp"
+#include <rdf4cpp/CowString.hpp>
+#include <rdf4cpp/TriBool.hpp>
 #include <type_traits>
 
 namespace rdf4cpp {

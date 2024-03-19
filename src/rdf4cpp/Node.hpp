@@ -1,9 +1,9 @@
 #ifndef RDF4CPP_NODE_HPP
 #define RDF4CPP_NODE_HPP
 
+#include <rdf4cpp/TriBool.hpp>
 #include <rdf4cpp/storage/NodeStorage.hpp>
 #include <rdf4cpp/storage/identifier/NodeBackendHandle.hpp>
-#include "TriBool.hpp"
 #include <rdf4cpp/writer/BufWriter.hpp>
 
 #include <memory>

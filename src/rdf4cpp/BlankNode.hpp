@@ -3,7 +3,7 @@
 
 #include <ostream>
 #include <rdf4cpp/Node.hpp>
-#include "TriBool.hpp"
+#include <rdf4cpp/TriBool.hpp>
 
 namespace rdf4cpp::util  {
 struct NodeGenerator;

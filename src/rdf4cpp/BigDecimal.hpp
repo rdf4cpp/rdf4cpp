@@ -9,7 +9,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <dice/hash.hpp>
 
-#include "Expected.hpp"
+#include <rdf4cpp/Expected.hpp>
 
 namespace rdf4cpp {
 enum struct RoundingMode {

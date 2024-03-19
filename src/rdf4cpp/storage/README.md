@@ -20,7 +20,7 @@ Whereas the `UnsyncReferenceNodeStorage` implementation is not.
 
 ## Requirements for `NodeStorage` implementations
 - Implementations must **not** assume that all nodes are stored in the node storage,
-  in fact small `Literals` that can fit in 42 bits (e.g. values of `xsd:int`) are usually _not_ stored there
+  in fact small `Literals` that can fit in 42 bits (e.g. values of `xsd:int`) are usually **not** stored there
 - `IRIs`, `BlankNodes` and `Variables` should usually be stored
   as their string representations
 - `Literals` can be stored either as their canonical lexical form or as values
@@ -33,7 +33,7 @@ Whereas the `UnsyncReferenceNodeStorage` implementation is not.
     without escaping it.
   - see [reference_node_storage](reference_node_storage) for details
 - Some `IRIs` are reserved by default (see [reserved_datatype_ids](../datatypes/registry/FixedIdMappings.hpp))
-  these `IRIs` _must always_ be present in the `NodeStorage` 
+  these `IRIs` **must always** be present in the `NodeStorage` 
   and assigned the given `NodeID`. **Not upholding this invariant results in undefined behaviour.
   See [SyncReferenceNodeStorage::SyncReferenceNodeStorage()](reference_node_storage/SyncReferenceNodeStorage.cpp)
   for the expected usage.**

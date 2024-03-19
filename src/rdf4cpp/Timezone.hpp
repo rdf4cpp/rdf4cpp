@@ -7,8 +7,8 @@
 
 #include <dice/hash.hpp>
 
-#include "datatypes/rdf.hpp"
-#include "rdf4cpp/datatypes/registry/util/CharConvExt.hpp"
+#include <rdf4cpp/datatypes/rdf.hpp>
+#include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp {
 struct Timezone {
