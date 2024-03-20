@@ -11,7 +11,6 @@ namespace rdf4cpp {
  * Quads are typically used to identify a statement in a named Graph of a RDF Dataset. The Graph name can also be the default Graph.
  */
 struct Quad : query::QuadPattern {
-    // TODO: more type-specific functions for graph, subject, predicate, object
 
     /**
      * Initializes the Quad entries with null <div>Node</div>s
