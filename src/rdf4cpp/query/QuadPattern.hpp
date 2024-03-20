@@ -17,8 +17,6 @@ namespace rdf4cpp::query {
  * @see <https://www.w3.org/TR/sparql11-query/#defn_TriplePattern>
  */
 struct QuadPattern {
-    // TODO: adjust API to Quad
-
     using value_type = Node;
     using reference = value_type &;
     using const_reference = value_type const &;

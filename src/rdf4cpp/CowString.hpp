@@ -148,46 +148,16 @@ public:
         return this->view() <=> other.view();
     }
 
-    friend constexpr bool operator==(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() == rhs;
-    }
-    friend constexpr bool operator==(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs == rhs.view();
+    constexpr bool operator==(CowString const &other) const noexcept {
+        return this->view() == other.view();
     }
 
-    friend constexpr bool operator!=(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() != rhs;
-    }
-    friend constexpr bool operator!=(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs != rhs.view();
+    constexpr std::strong_ordering operator<=>(std::string_view const rhs) const noexcept {
+        return this->view() <=> rhs;
     }
 
-    friend constexpr bool operator<(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() < rhs;
-    }
-    friend constexpr bool operator<(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs < rhs.view();
-    }
-
-    friend constexpr bool operator>(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() > rhs;
-    }
-    friend constexpr bool operator>(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs > rhs.view();
-    }
-
-    friend constexpr bool operator<=(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() <= rhs;
-    }
-    friend constexpr bool operator<=(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs <= rhs.view();
-    }
-
-    friend constexpr bool operator>=(CowString const &lhs, std::string_view const rhs) noexcept {
-        return lhs.view() >= rhs;
-    }
-    friend constexpr bool operator>=(std::string_view const lhs, CowString const &rhs) noexcept {
-        return lhs >= rhs.view();
+    constexpr bool operator==(std::string_view const rhs) const noexcept {
+        return this->view() == rhs;
     }
 
     friend std::ostream &operator<<(std::ostream &os, CowString const &cow) {

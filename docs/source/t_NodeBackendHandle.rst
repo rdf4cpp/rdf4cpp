@@ -35,7 +35,7 @@ In the following, the parts of `NodeBackendHandle` will be explained starting fr
 parts in the less significant depend on the parts in the more significant bits.
 
 Free Tagging Bits (13 bit)
--------------------------
+--------------------------
 
 The *free tagging bits* can be used by the internal storage to store 13 bit of information.
 
