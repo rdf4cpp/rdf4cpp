@@ -258,3 +258,12 @@ TEST_CASE("node equality shortcut") {
     CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) == Literal::make_typed_from_value<datatypes::xsd::UnsignedInt>(5, s));
     CHECK(Literal::make_typed_from_value<datatypes::xsd::Int>(5) != Literal::make_typed_from_value<datatypes::xsd::Int>(6, s));
 }
+
+TEST_CASE("node format") {
+    auto iri = IRI::make("https://ex.com");
+    CHECK(std::format("abc{}def", static_cast<const Node&>(iri)) == "abc<https://ex.com>def");
+    CHECK(std::format("abc{}def", iri) == "abc<https://ex.com>def");
+    CHECK(std::format("abc{}def", Literal::make_typed_from_value<rdf4cpp::datatypes::xsd::Int>(42)) == "abc\"42\"^^<http://www.w3.org/2001/XMLSchema#int>def");
+    CHECK(std::format("abc{}def", BlankNode::make("blank")) == "abc_:blankdef");
+    CHECK(std::format("abc{}def", query::Variable::make_named("x")) == "abc?xdef");
+}

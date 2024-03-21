@@ -2544,3 +2544,10 @@ Literal operator""_xsd_ulong(unsigned long long int i) {
 
 }  // namespace shorthands
 }  // namespace rdf4cpp
+
+auto std::formatter<rdf4cpp::Literal>::format(rdf4cpp::Literal n, format_context &ctx) const -> decltype(std::formatter<std::string_view>::format(std::string_view{}, ctx)) {
+    auto s = rdf4cpp::writer::StringWriter::oneshot([n](rdf4cpp::writer::StringWriter &w) {
+        return n.serialize(w);
+    });
+    return std::formatter<std::string_view>::format(s, ctx);
+}
