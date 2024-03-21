@@ -4,6 +4,9 @@ docs/doxygen_output/*
 docs/build/*
 docs/source/api/*
 
+.clang-format
+.clang-tidy
+
 # Based on https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
 
 ### C++ ###
