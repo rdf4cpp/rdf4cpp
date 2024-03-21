@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 
-using namespace rdf4cpp::rdf::regex;
+using namespace rdf4cpp::regex;
 
 TEST_SUITE("regex") {
     TEST_CASE("replacement translation") {

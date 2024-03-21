@@ -1,32 +1,38 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 #include <array>
 #include <iostream>
 
-using namespace rdf4cpp::rdf;
-using namespace storage::node;
+using namespace rdf4cpp;
+using namespace storage;
 using namespace datatypes;
 
 int main(int argc, char **argv) {
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    auto const ret = doctest::Context{argc, argv}.run();
-    if (ret != 0) {
-        return ret;
+    {
+        reference_node_storage::SyncReferenceNodeStorage syncns{};
+        default_node_storage = syncns;
+        auto ret = doctest::Context{argc, argv}.run();
+        if (ret != 0) {
+            return ret;
+        }
     }
 
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
-    return doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
+        default_node_storage = unsyncns;
+        return doctest::Context{argc, argv}.run();
+    }
 }
 
 template<typename It>
 void print_handles(It begin, It const end) {
     for (; begin != end; ++begin) {
-        std::cout << begin->raw() << " ";
+        std::cout << begin->id().to_underlying() << " ";
     }
     std::cout << '\n';
 }
@@ -36,7 +42,7 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
     std::string const case_name{T::identifier};
 
     SUBCASE(case_name.c_str()) {
-        CHECK(NodeStorage::default_instance().has_specialized_storage_for(T::fixed_id));
+        CHECK(storage::default_node_storage.has_specialized_storage_for(T::fixed_id));
 
         std::array<identifier::NodeBackendHandle, N> assigned_ids;
 
@@ -50,13 +56,13 @@ void check_specialized_storage_usage(std::array<typename T::cpp_type, N> const &
             std::cout << "Testing with: " << lex << " as " << std::string_view{T::identifier} << '\n';
 
             view::ValueLiteralBackendView view{.datatype = T::fixed_id, .value = value};
-            auto const id = NodeStorage::default_instance().find_or_make_id(view);
-            auto const id2 = NodeStorage::default_instance().find_or_make_id(view);
+            auto const id = default_node_storage.find_or_make_id(view);
+            auto const id2 = default_node_storage.find_or_make_id(view);
             CHECK(id == id2);
 
-            auto const erased_1 = NodeStorage::default_instance().erase_literal(id);
+            auto const erased_1 = default_node_storage.erase_literal(id);
             CHECK(erased_1);
-            auto const erased_2 = NodeStorage::default_instance().erase_literal(id2);
+            auto const erased_2 = default_node_storage.erase_literal(id2);
             CHECK(!erased_2);
 
             auto lit1 = Literal::make_typed_from_value<T>(value);
@@ -154,7 +160,7 @@ TEST_CASE("NodeStorage specialization xsd:base64Binary") {
 }
 
 TEST_CASE("NodeStorage non-specialization xsd:String") {
-    CHECK(!NodeStorage::default_instance().has_specialized_storage_for(xsd::String::fixed_id));
+    CHECK(!default_node_storage.has_specialized_storage_for(xsd::String::fixed_id));
 
     std::array<xsd::String::cpp_type, 2> const test_values{
             "Hello World",
@@ -168,13 +174,13 @@ TEST_CASE("NodeStorage non-specialization xsd:String") {
         std::cout << "Testing with: " << std::quoted(value) << " as " << std::string_view{xsd::String::identifier} << '\n';
 
         view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first, .lexical_form = value, .language_tag = "", .needs_escape = false};
-        auto const id = NodeStorage::default_instance().find_or_make_id(view);
-        auto const id2 = NodeStorage::default_instance().find_or_make_id(view);
+        auto const id = default_node_storage.find_or_make_id(view);
+        auto const id2 = default_node_storage.find_or_make_id(view);
         CHECK(id == id2);
 
-        auto const erased_1 = NodeStorage::default_instance().erase_literal(id);
+        auto const erased_1 = default_node_storage.erase_literal(id);
         CHECK(erased_1);
-        auto const erased_2 = NodeStorage::default_instance().erase_literal(id2);
+        auto const erased_2 = default_node_storage.erase_literal(id2);
         CHECK(!erased_2);
 
         auto lit1 = Literal::make_typed_from_value<xsd::String>(value);
@@ -246,14 +252,14 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         auto h = l.backend_handle();
         if (!h.is_inlined())
             return h;
-        auto [_, id] = rdf4cpp::rdf::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
-        auto node_id = storage::node::identifier::NodeID{id, h.node_id().literal_type()};
-        return rdf4cpp::rdf::storage::node::identifier::NodeBackendHandle{node_id,
-                                                                          storage::node::identifier::RDFNodeType::Literal,
-                                                                          h.node_storage_id()};
+        auto [_, id] = rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
+        auto node_id = storage::identifier::NodeID{id, h.node_id().literal_type()};
+        return rdf4cpp::storage::identifier::NodeBackendHandle{node_id,
+                                                                          storage::identifier::RDFNodeType::Literal,
+                                                                          h.storage()};
     };
 
-    CHECK(!NodeStorage::default_instance().has_specialized_storage_for(rdf::LangString::fixed_id));
+    CHECK(!default_node_storage.has_specialized_storage_for(rdf::LangString::fixed_id));
 
     std::array<rdf::LangString::cpp_type, 3> const test_values{
             rdf::LangString::cpp_type{.lexical_form = "Hello World", .language_tag = "en"},
@@ -271,13 +277,13 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
                                                  .lexical_form = value.lexical_form,
                                                  .language_tag = value.language_tag,
                                                  .needs_escape = false};
-        auto const id = NodeStorage::default_instance().find_or_make_id(view);
-        auto const id2 = NodeStorage::default_instance().find_or_make_id(view);
+        auto const id = default_node_storage.find_or_make_id(view);
+        auto const id2 = default_node_storage.find_or_make_id(view);
         CHECK(id == id2);
 
-        auto const erased_1 = NodeStorage::default_instance().erase_literal(id);
+        auto const erased_1 = default_node_storage.erase_literal(id);
         CHECK(erased_1);
-        auto const erased_2 = NodeStorage::default_instance().erase_literal(id2);
+        auto const erased_2 = default_node_storage.erase_literal(id2);
         CHECK(!erased_2);
 
         auto lit1 = Literal::make_typed_from_value<rdf::LangString>(value);

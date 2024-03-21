@@ -2,21 +2,22 @@
 #include <iostream>
 #include <sstream>
 
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 
 int main(int argc, char *argv[]) {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
     using namespace parser;
     if (argc != 2) {
         std::cerr << "usage: pass file to be checked as only parameter, found errors are written to stdout";
         return 1;
     }
 
-    rdf4cpp::rdf::datatypes::registry::relaxed_parsing_mode = true;
+    rdf4cpp::datatypes::registry::relaxed_parsing_mode = true;
 
     std::ifstream in{argv[1]};
-    auto nst = storage::node::NodeStorage::new_instance();
+    storage::reference_node_storage::UnsyncReferenceNodeStorage nst;
     int c = 0;
 
     IStreamQuadIterator::state_type state{.node_storage = nst};
@@ -28,7 +29,7 @@ int main(int argc, char *argv[]) {
         ++i;
         ++c;
         if (c >= 1000) {
-            nst = storage::node::NodeStorage::new_instance();
+            nst.clear();
             state.node_storage = nst;
             c = 0;
         }

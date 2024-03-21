@@ -1,7 +1,7 @@
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 #include <cassert>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 void value_construction() {
     // runtime construction

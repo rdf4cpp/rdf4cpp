@@ -1,11 +1,11 @@
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 
 #include <cassert>
 #include <iostream>
 
 #define print(x) { std::cout << #x << " = " << std::string{x} << '\n'; }
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 void blank_nodes() {
     auto &generator = bnode_mngt::NodeGenerator::default_instance();

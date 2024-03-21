@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp/query/TriplePattern.hpp>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 /**
  * This function validates the triple pattern

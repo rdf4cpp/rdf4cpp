@@ -1,12 +1,13 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 #include <iostream>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::parser;
+using namespace rdf4cpp;
+using namespace rdf4cpp::parser;
 
 TEST_SUITE("IStreamQuadIterator") {
 
@@ -37,13 +38,13 @@ TEST_SUITE("IStreamQuadIterator") {
 
         size_t n = 0;
 
-        storage::node::NodeStorage ns = storage::node::NodeStorage::new_instance();
+        storage::NodeStorage auto ns = storage::reference_node_storage::SyncReferenceNodeStorage{};
         IStreamQuadIterator::state_type state{.node_storage = ns};
         for (auto qit = IStreamQuadIterator{iss, ParsingFlags::none(), &state}; qit != std::default_sentinel; ++qit) {
             CHECK(qit->has_value());
 
             for (auto const term : **qit) {
-                CHECK_EQ(term.backend_handle().node_storage_id(), ns.id());
+                CHECK_EQ(term.backend_handle().storage(), storage::DynNodeStoragePtr{ns});
             }
 
             n += 1;

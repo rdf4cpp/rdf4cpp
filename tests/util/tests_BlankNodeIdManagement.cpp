@@ -1,12 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 
 #include <tuple>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::bnode_mngt;
+using namespace rdf4cpp;
+using namespace rdf4cpp::bnode_mngt;
 
 TEST_SUITE("blank node id management") {
     TEST_CASE("blank node id generation") {
@@ -98,10 +98,10 @@ TEST_SUITE("blank node id management") {
             b1_2 = scope_2.get_or_generate_node("b1", generator).as_blank_node();
 
             CHECK(!b1_1.merge_eq(b1_2));
-            CHECK(b1_1.union_eq(b1_2) == util::TriBool::True);
+            CHECK(b1_1.union_eq(b1_2) == TriBool::True);
         }
 
         CHECK(!b1_1.merge_eq(b1_2));
-        CHECK(b1_1.union_eq(b1_2) == util::TriBool::Err);
+        CHECK(b1_1.union_eq(b1_2) == TriBool::Err);
     }
 }

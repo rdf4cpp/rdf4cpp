@@ -1,24 +1,30 @@
 #define DOCTEST_CONFIG_IMPLEMENT
 #include <doctest/doctest.h>
 
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 #include <thread>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage::node;
+using namespace rdf4cpp;
+using namespace rdf4cpp::storage;
 
 int main(int argc, char **argv) {
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    auto const ret = doctest::Context{argc, argv}.run();
-    if (ret != 0) {
-        return ret;
+    {
+        reference_node_storage::SyncReferenceNodeStorage syncns{};
+        default_node_storage = syncns;
+        auto ret = doctest::Context{argc, argv}.run();
+        if (ret != 0) {
+            return ret;
+        }
     }
 
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
-    return doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
+        default_node_storage = unsyncns;
+        return doctest::Context{argc, argv}.run();
+    }
 }
 
 TEST_CASE("Literal - Check for only lexical form") {
@@ -54,7 +60,7 @@ TEST_CASE("Literal - Check for lexical form with IRI") {
         [[maybe_unused]] Literal no_discard_dummy;
         CHECK_THROWS_AS(no_discard_dummy = Literal::make_simple("\xc3\x28"), std::runtime_error);
         CHECK_THROWS_AS(no_discard_dummy = Literal::make_lang_tagged("\xc3\x28", "de"), std::runtime_error);
-        CHECK_EQ(Literal::make_simple_normalize("\u0174", storage::node::NodeStorage::default_instance()), Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance()));  // 2 different ways of writing Ŵ
+        CHECK_EQ(Literal::make_simple_normalize("\u0174", storage::default_node_storage), Literal::make_simple_normalize("W\u0302", storage::default_node_storage));  // 2 different ways of writing Ŵ
     }
     SUBCASE("int datatype") {
         auto iri = IRI{"http://www.w3.org/2001/XMLSchema#int"};
@@ -178,8 +184,8 @@ TEST_CASE("Literal - check fixed id") {
     auto const lit = Literal::make_typed("hello", iri);
 
     CHECK(lit.backend_handle().node_id().literal_type().is_fixed());
-    CHECK_LT(lit.datatype().backend_handle().node_id().value(), datatypes::registry::min_dynamic_datatype_id);
-    CHECK_LT(iri.backend_handle().node_id().value(), datatypes::registry::min_dynamic_datatype_id);
+    CHECK_LT(lit.datatype().backend_handle().node_id().to_underlying(), datatypes::registry::min_dynamic_datatype_id);
+    CHECK_LT(iri.backend_handle().node_id().to_underlying(), datatypes::registry::min_dynamic_datatype_id);
 }
 
 TEST_CASE("Literal - casting") {
@@ -231,7 +237,7 @@ TEST_CASE("Literal - casting") {
             }
 
             SUBCASE("non-integral") {
-                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.5));
+                auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.5));
                 auto const lit2 = lit1.template cast<String>();
 
                 CHECK_EQ(lit2.template value<String>(), "1.5");
@@ -344,7 +350,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> flt") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Float>();
 
         CHECK_EQ(lit2.datatype(), IRI{Float::identifier});
@@ -352,7 +358,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> dbl") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0));
         auto const lit2 = lit1.template cast<Double>();
 
         CHECK_EQ(lit2.datatype(), IRI{Double::identifier});
@@ -360,7 +366,7 @@ TEST_CASE("Literal - casting") {
     }
 
     SUBCASE("dec -> int") {
-        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.2));
+        auto const lit1 = Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.2));
         auto const lit2 = lit1.template cast<Int>();
 
         CHECK_EQ(lit2.datatype(), IRI{Int::identifier});
@@ -487,7 +493,7 @@ TEST_CASE("Literal - casting") {
 }
 
 TEST_CASE("Literal - misc functions") {
-    using namespace rdf4cpp::rdf;
+    using namespace rdf4cpp;
 
     SUBCASE("rand") {
         SUBCASE("same thread") {
@@ -601,7 +607,7 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("Hello", "en-US").as_language_tag_matches_range("en-US"_xsd_string).ebv());
         CHECK((5_xsd_int).as_language_tag_matches_range("*"_xsd_string).null());
         CHECK(("Hello"_xsd_string).as_language_tag_matches_range(""_xsd_string).ebv());
-        CHECK_EQ(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("Hello"_xsd_string).as_language_tag_matches_range("*"_xsd_string).ebv(), TriBool::False);
     }
 
     static constexpr const char *case_number1 = "4.2";
@@ -639,9 +645,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("123"_xsd_string).as_contains(Literal::make_lang_tagged("1", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("fo\u0174obar", "en", storage::node::NodeStorage::default_instance())
+        CHECK(Literal::make_lang_tagged_normalize("fo\u0174obar", "en", storage::default_node_storage)
                       .as_contains(
-                              Literal::make_lang_tagged_normalize("foW\u0302o", "en", storage::node::NodeStorage::default_instance()))
+                              Literal::make_lang_tagged_normalize("foW\u0302o", "en", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -659,8 +665,8 @@ TEST_CASE("Literal - misc functions") {
 
         // unicode
         CHECK(Literal::make_simple_normalize("abc\U0001f34c\u0174",
-                                             storage::node::NodeStorage::default_instance())
-                      .substr_before(Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance())) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+                                             storage::default_node_storage)
+                      .substr_before(Literal::make_simple_normalize("W\u0302", storage::default_node_storage)) == "abc\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("substr_after") {
@@ -677,8 +683,8 @@ TEST_CASE("Literal - misc functions") {
 
         // unicode
         CHECK(Literal::make_simple_normalize("a\U0001f34cb\u0174c\U0001f34c",
-                                             storage::node::NodeStorage::default_instance())
-                      .substr_after(Literal::make_simple_normalize("W\u0302", storage::node::NodeStorage::default_instance())) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
+                                             storage::default_node_storage)
+                      .substr_after(Literal::make_simple_normalize("W\u0302", storage::default_node_storage)) == "c\U0001f34c"_xsd_string);  // 2 different ways of writing Ŵ and a 🍌
     }
 
     SUBCASE("str_start_with") {
@@ -691,8 +697,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_starts_with(Literal::make_lang_tagged("foo", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("\u0174foobar", "en", storage::node::NodeStorage::default_instance())
-                      .as_str_starts_with(Literal::make_simple_normalize("W\u0302foo", storage::node::NodeStorage::default_instance()))
+        CHECK(Literal::make_lang_tagged_normalize("\u0174foobar", "en", storage::default_node_storage)
+                      .as_str_starts_with(Literal::make_simple_normalize("W\u0302foo", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -706,8 +712,8 @@ TEST_CASE("Literal - misc functions") {
         CHECK(("foobar"_xsd_string).as_str_ends_with(Literal::make_lang_tagged("bar", "en")).null());
 
         // unicode
-        CHECK(Literal::make_lang_tagged_normalize("fooba\u0174r", "en", storage::node::NodeStorage::default_instance())
-                      .as_str_ends_with(Literal::make_simple_normalize("baW\u0302r", storage::node::NodeStorage::default_instance()))
+        CHECK(Literal::make_lang_tagged_normalize("fooba\u0174r", "en", storage::default_node_storage)
+                      .as_str_ends_with(Literal::make_simple_normalize("baW\u0302r", storage::default_node_storage))
                       .ebv());  // 2 different ways of writing Ŵ
     }
 
@@ -725,7 +731,7 @@ TEST_CASE("Literal - misc functions") {
         // from https://www.w3.org/TR/xpath-functions/#func-matches
         CHECK(("abracadabra"_xsd_string).as_regex_matches("bra"_xsd_string).ebv());
         CHECK(("abracadabra"_xsd_string).as_regex_matches("^a.*a$"_xsd_string).ebv());
-        CHECK_EQ(("abracadabra"_xsd_string).as_regex_matches("^bra"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("abracadabra"_xsd_string).as_regex_matches("^bra"_xsd_string).ebv(), TriBool::False);
 
         std::string_view const poem = "<poem author=\"Wilhelm Busch\">\n"
                                       "Kaum hat dies der Hahn gesehen,\n"
@@ -735,9 +741,9 @@ TEST_CASE("Literal - misc functions") {
                                       "</poem>";
         auto const poem_lit = Literal::make_simple(poem);
 
-        CHECK_EQ(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv(), TriBool::False);
         //CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv()); TODO: support multiline flag
-        CHECK_EQ(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv(), TriBool::False);
         CHECK(poem_lit.as_regex_matches("kiki"_xsd_string, "i"_xsd_string).ebv());
 
         // check lang tag behaviour
@@ -766,7 +772,7 @@ TEST_CASE("Literal - misc functions") {
         // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
         //CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
 
-        CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), util::TriBool::False);
+        CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), TriBool::False);
         CHECK(("Mr. B. Obama"_xsd_string).as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
 
         // check lang tag behaviour
@@ -826,11 +832,11 @@ TEST_CASE("UUID") {
 
     CHECK_EQ(uuid.datatype(), IRI{"http://www.w3.org/2001/XMLSchema#string"});
     CHECK_NE(uuid, uuid2);  // note: non-deterministic but should basically never fail
-    CHECK_EQ(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}), util::TriBool::True);
+    CHECK_EQ(uuid.regex_matches(regex::Regex{"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}), TriBool::True);
 }
 
 TEST_CASE("to_node_storage") {
-    auto ns2 = storage::node::NodeStorage::new_instance();
+    storage::reference_node_storage::SyncReferenceNodeStorage ns2{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -841,7 +847,7 @@ TEST_CASE("to_node_storage") {
         CHECK_EQ(lit.value<datatypes::xsd::Int>(), lit2.value<datatypes::xsd::Int>());
         CHECK_EQ(lit.backend_handle().node_id().literal_id(), lit2.backend_handle().node_id().literal_id());
         CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-        CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+        CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
     }
 
     SUBCASE("specialized storage") {
@@ -854,7 +860,7 @@ TEST_CASE("to_node_storage") {
             CHECK_EQ(lit.value<datatypes::xsd::Long>(), lit2.value<datatypes::xsd::Long>());
             CHECK_EQ(lit.backend_handle().node_id().literal_id(), lit2.backend_handle().node_id().literal_id());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
 
         SUBCASE("not inlined") {
@@ -865,7 +871,7 @@ TEST_CASE("to_node_storage") {
             CHECK(!lit2.is_inlined());
             CHECK_EQ(lit.value<datatypes::xsd::Long>(), lit2.value<datatypes::xsd::Long>());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
     }
 
@@ -879,7 +885,7 @@ TEST_CASE("to_node_storage") {
                 CHECK(lit2.is_inlined());
                 CHECK_EQ(lit.value<datatypes::rdf::LangString>(), lit2.value<datatypes::rdf::LangString>());
                 CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-                CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+                CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
             }
 
             SUBCASE("tag not inlined") {
@@ -890,7 +896,7 @@ TEST_CASE("to_node_storage") {
                 CHECK(!lit2.is_inlined());
                 CHECK_EQ(lit.value<datatypes::rdf::LangString>(), lit2.value<datatypes::rdf::LangString>());
                 CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-                CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+                CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
             }
         }
 
@@ -902,13 +908,13 @@ TEST_CASE("to_node_storage") {
             CHECK(!lit2.is_inlined());
             CHECK_EQ(lit.value<datatypes::xsd::String>(), lit2.value<datatypes::xsd::String>());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
     }
 }
 
 TEST_CASE("try_get_in_node_storage") {
-    auto ns2 = storage::node::NodeStorage::new_instance();
+    auto ns2 = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
     SUBCASE("no non-inline storage available") {
         auto lit = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
@@ -920,7 +926,7 @@ TEST_CASE("try_get_in_node_storage") {
         CHECK_EQ(lit.value<datatypes::xsd::Int>(), lit2.value<datatypes::xsd::Int>());
         CHECK_EQ(lit.backend_handle().node_id().literal_id(), lit2.backend_handle().node_id().literal_id());
         CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-        CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+        CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
     }
 
     SUBCASE("specialized storage") {
@@ -934,7 +940,7 @@ TEST_CASE("try_get_in_node_storage") {
             CHECK_EQ(lit.value<datatypes::xsd::Long>(), lit2.value<datatypes::xsd::Long>());
             CHECK_EQ(lit.backend_handle().node_id().literal_id(), lit2.backend_handle().node_id().literal_id());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
 
         SUBCASE("not inlined") {
@@ -950,7 +956,7 @@ TEST_CASE("try_get_in_node_storage") {
             CHECK(!lit2.is_inlined());
             CHECK_EQ(lit.value<datatypes::xsd::Long>(), lit2.value<datatypes::xsd::Long>());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
     }
 
@@ -969,7 +975,7 @@ TEST_CASE("try_get_in_node_storage") {
                 CHECK(lit2.is_inlined());
                 CHECK_EQ(lit.value<datatypes::rdf::LangString>(), lit2.value<datatypes::rdf::LangString>());
                 CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-                CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+                CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
             }
 
             SUBCASE("tag not inlined") {
@@ -985,7 +991,7 @@ TEST_CASE("try_get_in_node_storage") {
                 CHECK(!lit2.is_inlined());
                 CHECK_EQ(lit.value<datatypes::rdf::LangString>(), lit2.value<datatypes::rdf::LangString>());
                 CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-                CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+                CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
             }
         }
 
@@ -1002,12 +1008,12 @@ TEST_CASE("try_get_in_node_storage") {
             CHECK(!lit2.is_inlined());
             CHECK_EQ(lit.value<datatypes::xsd::String>(), lit2.value<datatypes::xsd::String>());
             CHECK_EQ(lit.backend_handle().node_id().literal_type(), lit2.backend_handle().node_id().literal_type());
-            CHECK_NE(lit.backend_handle().node_storage_id(), lit2.backend_handle().node_storage_id());
+            CHECK_NE(lit.backend_handle().storage(), lit2.backend_handle().storage());
         }
     }
 }
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 inline constexpr util::ConstexprString fake_datatype = "http://foo/bar";
 template<>
 struct DatatypeMapping<fake_datatype> {
@@ -1023,9 +1029,9 @@ bool capabilities::Default<fake_datatype>::serialize_canonical_string(cpp_type c
     return writer::write_str(s, writer);
 }
 }
-struct FakeDatatype : rdf4cpp::rdf::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::rdf::datatypes::registry::fake_datatype> {};
+struct FakeDatatype : rdf4cpp::datatypes::registry::LiteralDatatypeImpl<rdf4cpp::datatypes::registry::fake_datatype> {};
 
-template<class T>
+template<typename T>
 struct get_find_values {};
 
 template<>
@@ -1044,9 +1050,9 @@ struct get_find_values<datatypes::xsd::Int> {  // always inlined
 };
 template<>
 struct get_find_values<datatypes::xsd::Date> {  // inlined == has timezone
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::rdf::util::Timezone{std::chrono::hours{1}}};
-    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::rdf::util::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> av{std::chrono::year{1342} / 5 / 4, rdf4cpp::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> bv{std::chrono::year{1342} / 5 / 5, rdf4cpp::Timezone{std::chrono::hours{1}}};
+    static constexpr std::pair<std::chrono::year_month_day, rdf4cpp::OptionalTimezone> inl{std::chrono::year{1342} / 5 / 6, std::nullopt};
     static constexpr std::string_view as = "1342-5-4+1:0";
     static constexpr std::string_view bs = "1342-5-5+1:0";
     static constexpr std::string_view inls = "1342-5-6";
@@ -1062,7 +1068,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
     if constexpr (requires { get_find_values<T>::av; }) {
         static constexpr auto av = get_find_values<T>::av;
         static constexpr auto bv = get_find_values<T>::bv;
-        auto nst = storage::node::NodeStorage::new_instance();
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
         CHECK(Literal::find_typed_from_value<T>(av, nst) == Literal{});
         Literal l = Literal::make_typed_from_value<T>(av, nst);
@@ -1071,14 +1077,14 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed_from_value<T>(bv, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inl; }) {
-        auto nst = storage::node::NodeStorage::new_instance();
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
         auto l = Literal::find_typed_from_value<T>(get_find_values<T>::inl, nst);
         CHECK(l == Literal::make_typed_from_value<T>(get_find_values<T>::inl));
     }
     if constexpr (requires { get_find_values<T>::as; }) {
         static constexpr auto as = get_find_values<T>::as;
         static constexpr auto bs = get_find_values<T>::bs;
-        auto nst = storage::node::NodeStorage::new_instance();
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
         CHECK(Literal::find_typed<T>(as, nst) == Literal{});
         Literal l = Literal::make_typed<T>(as, nst);
@@ -1087,7 +1093,7 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         CHECK(Literal::find_typed<T>(bs, nst) == Literal{});
     }
     if constexpr (requires { get_find_values<T>::inls; }) {
-        auto nst = storage::node::NodeStorage::new_instance();
+        auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
         auto l = Literal::find_typed<T>(get_find_values<T>::inls, nst);
         CHECK(l == Literal::make_typed<T>(get_find_values<T>::inls));
     }

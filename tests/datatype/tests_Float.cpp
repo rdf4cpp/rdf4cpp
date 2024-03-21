@@ -1,10 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 #include <cmath>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("float capabilities") {
     static_assert(datatypes::LiteralDatatype<datatypes::xsd::Float>);

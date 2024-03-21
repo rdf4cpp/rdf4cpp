@@ -1,6 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
 
 enum struct OutputFormat {
     NTriples,
@@ -15,7 +16,7 @@ concept format_has_graph = (F == OutputFormat::NQuads || F == OutputFormat::TriG
 template<OutputFormat F>
 concept format_has_prefix = (F == OutputFormat::Turtle || F == OutputFormat::TriG);
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("Literal short type") {
     std::string buf;
@@ -67,16 +68,16 @@ std::string write_basic_data(){
     ser.finalize();
     return buf;
 }
-Graph get_graph() {
-    Graph gd{};
+Graph get_graph(storage::DynNodeStoragePtr node_storage) {
+    Graph gd{node_storage};
     Statement q{IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     gd.add(q);
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
     gd.add(q);
     return gd;
 }
-Dataset get_dataset() {
-    Dataset gd{};
+Dataset get_dataset(storage::DynNodeStoragePtr node_storage) {
+    Dataset gd{node_storage};
     Quad q{IRI::make("http://ex/graph"), IRI::make("http://ex/sub"), IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), IRI::make("http://ex/obj")};
     gd.add(q);
     q.graph() = IRI::make("http://ex/graph2");
@@ -112,11 +113,12 @@ void check_basic_data(const std::string &i) {
 }
 
 TEST_CASE("basic ntriple") {
-    const std::string  d = write_basic_data<OutputFormat::NTriples>();
+    const std::string d = write_basic_data<OutputFormat::NTriples>();
     CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        return get_graph().serialize(w);
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
+        return get_graph(ns).serialize(w);
     });
 
     CHECK_EQ(res, d);
@@ -128,7 +130,8 @@ TEST_CASE("basic nquad") {
     CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> <http://ex/graph2> .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        return get_dataset().serialize(w);
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
+        return get_dataset(ns).serialize(w);
     });
 
     CHECK_EQ(res, d);
@@ -140,7 +143,8 @@ TEST_CASE("basic turtle") {
     CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        return get_graph().serialize_turtle(w);
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
+        return get_graph(ns).serialize_turtle(w);
     });
 
     CHECK_EQ(res, d);
@@ -152,7 +156,8 @@ TEST_CASE("basic trig") {
     CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/graph2> {\n<http://ex/sub> a \"5\"^^xsd:int .\n}\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
-        return get_dataset().serialize_trig(w);
+        storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
+        return get_dataset(ns).serialize_trig(w);
     });
 
     CHECK_EQ(res, d);

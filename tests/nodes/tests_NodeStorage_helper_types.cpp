@@ -1,11 +1,11 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 TEST_SUITE("NodeStorage helper types") {
-    using namespace rdf4cpp::rdf::storage::node::reference_node_storage::detail;
+    using namespace rdf4cpp::storage::reference_node_storage::detail;
 
     TEST_CASE("IndexFreeList") {
         IndexFreeList<> freelist;
@@ -59,10 +59,10 @@ TEST_SUITE("NodeStorage helper types") {
     }
 
     TEST_CASE("integration test") {
-        using namespace rdf4cpp::rdf;
-        using namespace rdf4cpp::rdf::storage::node;
+        using namespace rdf4cpp;
+        using namespace rdf4cpp::storage;
 
-        NodeStorage ns = NodeStorage::new_instance();
+        NodeStorage auto ns = reference_node_storage::SyncReferenceNodeStorage{};
 
         auto l1 = Literal::make_simple("Spherical Cow", ns);
         auto l2 = Literal::make_simple("Spherical Cow", ns);
@@ -81,13 +81,6 @@ TEST_SUITE("NodeStorage helper types") {
 
 
         CHECK(ns.erase_literal(l1.backend_handle().node_id()));
-
-        try {
-            auto dummy = ns.find_literal_backend_view(l1.backend_handle().node_id());
-            FAIL("Did not throw exception");
-        } catch (...) {
-            // expecting exception
-        }
 
         auto l4 = Literal::make_simple("Hello World", ns);
         CHECK_EQ(l3, l4);

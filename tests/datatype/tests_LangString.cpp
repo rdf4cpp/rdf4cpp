@@ -1,9 +1,9 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 
-using namespace rdf4cpp::rdf;
+using namespace rdf4cpp;
 
 TEST_CASE("rdf:langString") {
     Literal dummy;
@@ -44,7 +44,7 @@ TEST_CASE("rdf:langString") {
 }
 
 TEST_CASE("rdf::langString inlining") {
-    using namespace rdf4cpp::rdf::datatypes::registry;
+    using namespace rdf4cpp::datatypes::registry;
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(1) == 1);
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(2) == 2);
     CHECK(DatatypeRegistry::LangTagInlines::bits_needed_for(3) == 2);
@@ -59,5 +59,5 @@ TEST_CASE("rdf::langString inlining") {
     CHECK(Literal::make_lang_tagged("hello world", "de").is_inlined());
     CHECK(!Literal::make_lang_tagged("hello world", "en-us").is_inlined());
 
-    CHECK(!DatatypeRegistry::LangTagInlines::try_into_inlined(storage::node::identifier::LiteralID{1l << 41}, 0).has_value());
+    CHECK(!DatatypeRegistry::LangTagInlines::try_into_inlined(storage::identifier::LiteralID{1l << 41}, 0).has_value());
 }

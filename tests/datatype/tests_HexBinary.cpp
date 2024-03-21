@@ -1,10 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
+#include <rdf4cpp.hpp>
 
-using namespace rdf4cpp::rdf::datatypes::xsd;
-using rdf4cpp::rdf::datatypes::registry::HexBinaryRepr;
+using namespace rdf4cpp::datatypes::xsd;
+using rdf4cpp::datatypes::registry::HexBinaryRepr;
 
 TEST_SUITE("xsd:hexBinary") {
     TEST_CASE("canonicalization") {

@@ -49,13 +49,6 @@ target_link_libraries(tests_Node
         )
 add_test(NAME tests_Node COMMAND tests_Node)
 
-add_executable(tests_NodeStorage_lifetime nodes/tests_NodeStorage_lifetime.cpp)
-target_link_libraries(tests_NodeStorage_lifetime
-        doctest::doctest
-        rdf4cpp
-        )
-add_test(NAME tests_NodeStorage_lifetime COMMAND tests_NodeStorage_lifetime)
-
 add_executable(tests_NodeStorage_helper_types nodes/tests_NodeStorage_helper_types.cpp)
 target_link_libraries(tests_NodeStorage_helper_types
         doctest::doctest
@@ -314,12 +307,12 @@ target_link_libraries(tests_Serialize
 )
 add_test(NAME tests_Serialize COMMAND tests_Serialize)
 
-add_executable(tests_Namespace_life_cycle namespaces/tests_Namespace_life_cycle.cpp)
-target_link_libraries(tests_Namespace_life_cycle
+add_executable(tests_Namespace namespaces/tests_Namespace.cpp)
+target_link_libraries(tests_Namespace
         doctest::doctest
         rdf4cpp
         )
-add_test(NAME tests_Namespace_life_cycle COMMAND tests_Namespace_life_cycle)
+add_test(NAME tests_Namespace COMMAND tests_Namespace)
 
 add_executable(tests_NodeStorage_specialization nodes/tests_NodeStorage_specialization.cpp)
 target_link_libraries(tests_NodeStorage_specialization
@@ -342,12 +335,12 @@ target_link_libraries(tests_BigDecimal
         )
 add_test(NAME tests_BigDecimal COMMAND tests_BigDecimal)
 
-add_executable(tests_dataset_backend graph/tests_dataset_backend.cpp)
-target_link_libraries(tests_dataset_backend
+add_executable(tests_dataset graph/tests_dataset.cpp)
+target_link_libraries(tests_dataset
         doctest::doctest
         rdf4cpp
 )
-add_test(NAME tests_dataset_backend COMMAND tests_dataset_backend)
+add_test(NAME tests_dataset COMMAND tests_dataset)
 
 add_executable(tests_IRIFactory nodes/tests_IRIFactory.cpp)
 target_link_libraries(tests_IRIFactory

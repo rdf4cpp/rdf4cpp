@@ -5,26 +5,32 @@
 #include <unordered_set>
 
 #include <doctest/doctest.h>
-#include <rdf4cpp/rdf.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/UnsyncReferenceNodeStorageBackend.hpp>
-#include <rdf4cpp/rdf/storage/node/reference_node_storage/SyncReferenceNodeStorageBackend.hpp>
+#include <rdf4cpp.hpp>
+#include <rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
-using namespace rdf4cpp::rdf;
-using namespace rdf4cpp::rdf::storage::node;
+using namespace rdf4cpp;
+using namespace rdf4cpp::storage;
 
 int main(int argc, char **argv) {
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::SyncReferenceNodeStorageBackend>());
-    auto const ret = doctest::Context{argc, argv}.run();
-    if (ret != 0) {
-        return ret;
+    {
+        reference_node_storage::SyncReferenceNodeStorage syncns{};
+        default_node_storage = syncns;
+        auto ret = doctest::Context{argc, argv}.run();
+        if (ret != 0) {
+            return ret;
+        }
     }
 
-    NodeStorage::set_default_instance(NodeStorage::new_instance<reference_node_storage::UnsyncReferenceNodeStorageBackend>());
-    return doctest::Context{argc, argv}.run();
+    {
+        reference_node_storage::UnsyncReferenceNodeStorage unsyncns{};
+        default_node_storage = unsyncns;
+        return doctest::Context{argc, argv}.run();
+    }
 }
 
 
-namespace rdf4cpp::rdf::datatypes::registry {
+namespace rdf4cpp::datatypes::registry {
 
 constexpr static util::ConstexprString Incomparable{"Incomparable"};
 
@@ -46,13 +52,13 @@ inline capabilities::Default<Incomparable>::cpp_type capabilities::Default<Incom
     }
 }
 
-} // rdf4cpp::rdf::datatypes::registry
+} // rdf4cpp::datatypes::registry
 
-namespace rdf4cpp::rdf::datatypes::xsd {
+namespace rdf4cpp::datatypes::xsd {
 
 using Incomparable = registry::LiteralDatatypeImpl<registry::Incomparable>;
 
-} // rdf4cpp::rdf::datatypes::xsd
+} // rdf4cpp::datatypes::xsd
 
 
 
@@ -76,7 +82,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("nulls") {
             CHECK(Literal{} <=> Literal{} == std::partial_ordering::equivalent);
             CHECK(Literal{} <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
         }
 
         SUBCASE("inconvertibility") {
@@ -94,7 +100,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("conversion") {
             CHECK(Literal::make_typed_from_value<Int>(1) <=> Literal::make_typed_from_value<Integer>(10) == std::partial_ordering::less);
             CHECK(Literal::make_typed_from_value<Integer>(0) <=> Literal::make_typed_from_value<Float>(1.2f) == std::partial_ordering::less);
-            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)) == std::partial_ordering::equivalent);
+            CHECK(Literal::make_typed_from_value<Float>(1.f) <=> Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)) == std::partial_ordering::equivalent);
         }
     }
 
@@ -107,7 +113,7 @@ TEST_SUITE("comparisions") {
             CHECK(Literal::make_typed_from_value<Float>(10.f).compare_with_extensions(Literal::make_typed_from_value<Incomparable>(1)) == std::weak_ordering::less);
 
             // reason: decimal has fixed id and any fixed id type is always less than a dynamic one
-            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(10.0))) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Incomparable>(1).compare_with_extensions(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(10.0))) == std::weak_ordering::greater);
         }
 
         SUBCASE("nulls") {
@@ -121,10 +127,10 @@ TEST_SUITE("comparisions") {
         SUBCASE("test type ordering extensions") {
             // expected: string < float < decimal < integer < int
 
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
-            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::rdf::util::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Float>(1)) == std::weak_ordering::greater);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
+            CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)).compare_with_extensions(Literal::make_typed_from_value<String>("hello")) == std::weak_ordering::greater);
 
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make_typed_from_value<Float>(1.f).compare_with_extensions(Literal::make_typed_from_value<Integer>(1)) == std::weak_ordering::less);
@@ -199,13 +205,13 @@ TEST_CASE("effective boolean value") {
     Node const null_lit = Literal{};
     Node const null_bnode = BlankNode{};
 
-    CHECK(iri.ebv() == util::TriBool::Err);
-    CHECK(bnode.ebv() == util::TriBool::Err);
-    CHECK(var.ebv() == util::TriBool::Err);
-    CHECK(falsy_lit.ebv() == util::TriBool::False);
-    CHECK(truthy_lit.ebv() == util::TriBool::True);
-    CHECK(null_lit.ebv() == util::TriBool::Err);
-    CHECK(null_bnode.ebv() == util::TriBool::Err);
+    CHECK(iri.ebv() == TriBool::Err);
+    CHECK(bnode.ebv() == TriBool::Err);
+    CHECK(var.ebv() == TriBool::Err);
+    CHECK(falsy_lit.ebv() == TriBool::False);
+    CHECK(truthy_lit.ebv() == TriBool::True);
+    CHECK(null_lit.ebv() == TriBool::Err);
+    CHECK(null_bnode.ebv() == TriBool::Err);
 }
 
 TEST_CASE("IRI UUID") {
@@ -216,7 +222,7 @@ TEST_CASE("IRI UUID") {
     CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
 }
 
-template<class T>
+template<typename T>
 struct get_find_values {};
 
 template<>
@@ -241,7 +247,7 @@ TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
 }
 
 TEST_CASE("node equality shortcut") {
-    auto s = storage::node::NodeStorage::new_instance();
+    auto s = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
     CHECK(IRI::make("https://ex") == IRI::make("https://ex"));
     CHECK(IRI::make("https://ex") != IRI::make("https://ex2"));
