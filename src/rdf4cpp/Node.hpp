@@ -211,8 +211,17 @@ struct dice::hash::dice_hash_overload<Policy, rdf4cpp::Node> {
 };
 
 template<>
-struct std::formatter<rdf4cpp::Node> : std::formatter<string_view> {
-    auto format(rdf4cpp::Node n, format_context &ctx) const -> decltype(std::formatter<std::string_view>::format(std::string_view{}, ctx));
+struct std::formatter<rdf4cpp::Node> {
+    constexpr auto parse(format_parse_context &ctx) {
+        auto b = ctx.begin();
+        if (b != ctx.end() && *b == '}') {
+            return b;
+        }
+        if (b != ctx.end())
+            throw std::format_error("parameters");
+        return ctx.end();
+    }
+    auto format(rdf4cpp::Node n, format_context &ctx) const -> decltype(ctx.out());
 };
 
 #include <ostream>

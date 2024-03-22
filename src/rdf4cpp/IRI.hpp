@@ -124,8 +124,8 @@ struct std::hash<rdf4cpp::IRI> {
 };
 
 template<>
-struct std::formatter<rdf4cpp::IRI> : std::formatter<string_view> {
-    auto format(rdf4cpp::IRI n, format_context &ctx) const -> decltype(std::formatter<std::string_view>::format(std::string_view{}, ctx));
+struct std::formatter<rdf4cpp::IRI> : std::formatter<rdf4cpp::Node> {
+    auto format(rdf4cpp::IRI n, format_context &ctx) const -> decltype(ctx.out());
 };
 
 #endif  //RDF4CPP_IRI_HPP

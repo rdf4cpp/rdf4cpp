@@ -1583,8 +1583,8 @@ struct std::hash<rdf4cpp::Literal> {
 };
 
 template<>
-struct std::formatter<rdf4cpp::Literal> : std::formatter<string_view> {
-    auto format(rdf4cpp::Literal n, format_context &ctx) const -> decltype(std::formatter<std::string_view>::format(std::string_view{}, ctx));
+struct std::formatter<rdf4cpp::Literal> : std::formatter<rdf4cpp::Node> {
+    auto format(rdf4cpp::Literal n, format_context &ctx) const -> decltype(ctx.out());
 };
 
 #endif  //RDF4CPP_LITERAL_HPP
