@@ -315,12 +315,12 @@ struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     }
 };
 
-template<typename OutIter>
+template<std::output_iterator<char> OutIter>
 struct OutputIteratorBuffer {
     OutIter iter;
     std::array<char, BUFSIZ> buffer_{};
 
-    explicit constexpr OutputIteratorBuffer(OutIter i)
+    explicit constexpr OutputIteratorBuffer(OutIter i) noexcept
         : iter(i) {
     }
 
@@ -339,15 +339,15 @@ struct OutputIteratorBuffer {
  *
  * Implements `BufWriter`
  */
-template<typename OutIter>
-struct OutputIteratorBuffWriter : BufWriterBase<OutputIteratorBuffWriter<OutIter>, OutputIteratorBuffer<OutIter>> {
+template<std::output_iterator<char> OutIter>
+struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>> {
     using Buffer = OutputIteratorBuffer<OutIter>;
 
-    using BufWriterBase<OutputIteratorBuffWriter<OutIter>, OutputIteratorBuffer<OutIter>>::cursor;
-    using BufWriterBase<OutputIteratorBuffWriter<OutIter>, OutputIteratorBuffer<OutIter>>::buffer;
+    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::cursor;
+    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::buffer;
 
-    explicit constexpr OutputIteratorBuffWriter(OutIter i) noexcept
-        : BufWriterBase<OutputIteratorBuffWriter<OutIter>, OutputIteratorBuffer<OutIter>>{i} {
+    explicit constexpr BufOutputIteratorWriter(OutIter i) noexcept
+        : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>{i} {
         cursor().repoint(buffer().buffer_.data(),
                          buffer().buffer_.size());
     }

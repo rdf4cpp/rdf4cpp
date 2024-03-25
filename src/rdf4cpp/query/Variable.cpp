@@ -100,7 +100,7 @@ std::ostream &operator<<(std::ostream &os, Variable const &variable) {
 }  // namespace rdf4cpp::query
 
 auto std::formatter<rdf4cpp::query::Variable>::format(rdf4cpp::query::Variable n, format_context &ctx) const -> decltype(ctx.out()) {
-    rdf4cpp::writer::OutputIteratorBuffWriter w{ctx.out()};
+    rdf4cpp::writer::BufOutputIteratorWriter w{ctx.out()};
     n.serialize(w);
     w.finalize();
     return w.buffer().iter;

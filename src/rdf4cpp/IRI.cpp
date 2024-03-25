@@ -151,7 +151,7 @@ IRI operator""_iri(char const *str, size_t const len) {
 }  // namespace rdf4cpp
 
 auto std::formatter<rdf4cpp::IRI>::format(rdf4cpp::IRI n, format_context &ctx) const -> decltype(ctx.out()) {
-    rdf4cpp::writer::OutputIteratorBuffWriter w{ctx.out()};
+    rdf4cpp::writer::BufOutputIteratorWriter w{ctx.out()};
     n.serialize(w);
     w.finalize();
     return w.buffer().iter;

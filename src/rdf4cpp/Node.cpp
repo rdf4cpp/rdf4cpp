@@ -245,7 +245,7 @@ Literal Node::as_ebv(storage::DynNodeStoragePtr node_storage) const noexcept {
 }  // namespace rdf4cpp
 
 auto std::formatter<rdf4cpp::Node>::format(rdf4cpp::Node n, format_context &ctx) const -> decltype(ctx.out()) {
-    rdf4cpp::writer::OutputIteratorBuffWriter w{ctx.out()};
+    rdf4cpp::writer::BufOutputIteratorWriter w{ctx.out()};
     n.serialize(w);
     w.finalize();
     return w.buffer().iter;

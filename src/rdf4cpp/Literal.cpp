@@ -2546,7 +2546,7 @@ Literal operator""_xsd_ulong(unsigned long long int i) {
 }  // namespace rdf4cpp
 
 auto std::formatter<rdf4cpp::Literal>::format(rdf4cpp::Literal n, format_context &ctx) const -> decltype(ctx.out()) {
-    rdf4cpp::writer::OutputIteratorBuffWriter w{ctx.out()};
+    rdf4cpp::writer::BufOutputIteratorWriter w{ctx.out()};
     n.serialize(w);
     w.finalize();
     return w.buffer().iter;
