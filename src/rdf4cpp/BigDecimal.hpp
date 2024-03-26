@@ -272,6 +272,10 @@ public:
         return exponent;
     }
 
+    [[nodiscard]] constexpr UnscaledValue_t get_unscaled_value() const noexcept {
+        return unscaled_value;
+    }
+
     [[nodiscard]] constexpr bool positive() const noexcept {
         return unscaled_value >= 0;
     }
