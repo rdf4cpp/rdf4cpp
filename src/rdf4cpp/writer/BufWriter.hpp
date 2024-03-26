@@ -326,7 +326,8 @@ struct OutputIteratorBuffer {
 
     void write_out(char const *end) {
         char const *b = buffer_.data();
-        while (b != end && b != buffer_.end()) {
+        assert(b <= end && end <= buffer_.end());
+        while (b != end) {
             *iter = *b;
             ++iter;
             ++b;
