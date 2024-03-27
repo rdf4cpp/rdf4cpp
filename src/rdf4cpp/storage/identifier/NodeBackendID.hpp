@@ -6,7 +6,7 @@
 
 namespace rdf4cpp::storage::identifier {
 
-struct NodeBackendID {
+struct alignas(void *) NodeBackendID {
     using underlying_type = uint64_t;
     static constexpr size_t width = 64;
 
@@ -143,6 +143,7 @@ public:
 };
 
 static_assert(sizeof(NodeBackendID) == sizeof(void *));
+static_assert(alignof(NodeBackendID) == alignof(void *));
 
 } // namespace rdf4cpp::storage::identifier
 

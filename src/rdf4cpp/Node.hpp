@@ -195,6 +195,10 @@ public:
      */
     [[nodiscard]] storage::identifier::NodeBackendHandle &backend_handle() noexcept;
 };
+
+static_assert(sizeof(Node) == sizeof(void *) * 3);
+static_assert(alignof(Node) == alignof(void *));
+
 }  // namespace rdf4cpp
 
 template<>
