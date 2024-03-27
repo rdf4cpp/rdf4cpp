@@ -136,6 +136,37 @@ template<>
 std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept {
     return lhs <=> rhs;
 }
+
+struct __attribute__((__packed__)) InlinedDecimal {
+    static constexpr size_t EXPONENT_SIZE = 10;
+    static constexpr size_t UNSCALED_SIZE = storage::identifier::LiteralID::width - 10;
+    uint32_t exponent : EXPONENT_SIZE;
+    uint64_t unscaled_value : UNSCALED_SIZE;
+    uint64_t buffer : 64 - EXPONENT_SIZE - UNSCALED_SIZE = 0;
+};
+template<>
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_decimal>::try_into_inlined(cpp_type const &value) noexcept {
+    auto unscaled_value = value.get_unscaled_value();
+    if (auto const boundary = 1L << (storage::identifier::LiteralID::width - InlinedDecimal::UNSCALED_SIZE - 1); unscaled_value >= boundary || unscaled_value < -boundary) [[unlikely]] {
+        return std::nullopt;
+    }
+
+    auto uv = util::try_pack_integral<uint64_t, InlinedDecimal::UNSCALED_SIZE>(static_cast<int64_t>(unscaled_value));
+    if (!uv.has_value()) {
+        return std::nullopt;
+    }
+    auto ex = util::try_pack_integral<uint32_t, InlinedDecimal::EXPONENT_SIZE>(value.get_exponent());
+    if (!ex.has_value()) {
+        return std::nullopt;
+    }
+    return util::pack<storage::identifier::LiteralID>(InlinedDecimal{*ex, *uv});
+}
+
+template<>
+capabilities::Inlineable<xsd_decimal>::cpp_type capabilities::Inlineable<xsd_decimal>::from_inlined(storage::identifier::LiteralID inlined) noexcept {
+    auto data = util::unpack<InlinedDecimal>(inlined);
+    return cpp_type{data.unscaled_value, data.exponent};
+}
 #endif
 
 template struct LiteralDatatypeImpl<xsd_decimal,
@@ -143,6 +174,7 @@ template struct LiteralDatatypeImpl<xsd_decimal,
                                     capabilities::Numeric,
                                     capabilities::Comparable,
                                     capabilities::Promotable,
-                                    capabilities::FixedId>;
+                                    capabilities::FixedId,
+                                    capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::datatypes::registry

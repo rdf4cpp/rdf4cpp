@@ -14,6 +14,7 @@ TEST_CASE("decimal capabilities") {
     static_assert(!datatypes::SubtypedLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::ComparableLiteralDatatype<datatypes::xsd::Decimal>);
     static_assert(datatypes::FixedIdLiteralDatatype<datatypes::xsd::Decimal>);
+    static_assert(datatypes::InlineableLiteralDatatype<datatypes::xsd::Decimal>);
 }
 
 TEST_CASE("Datatype Decimal") {
@@ -148,4 +149,13 @@ TEST_CASE("Datatype Decimal buffer overread UB") {
 
     auto const lit = Literal::make_typed(sv, IRI{datatypes::xsd::Decimal::identifier});
     CHECK(lit.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type{"123.4"});
+}
+
+TEST_CASE("decimal inlining") {
+    auto l = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
+    CHECK(l.is_inlined());
+    CHECK(static_cast<double>(l.value<datatypes::xsd::Decimal>()) == 4.2);
+    l = Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type(2L << 32, 0));
+    CHECK(!l.is_inlined());
+    CHECK(l.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type(2L << 32, 0));
 }

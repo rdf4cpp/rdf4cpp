@@ -72,6 +72,12 @@ bool capabilities::Logical<xsd_decimal>::effective_boolean_value(cpp_type const 
 
 template<>
 std::partial_ordering capabilities::Comparable<xsd_decimal>::compare(cpp_type const &lhs, cpp_type const &rhs) noexcept;
+
+template<>
+std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_decimal>::try_into_inlined(cpp_type const &value) noexcept;
+
+template<>
+capabilities::Inlineable<xsd_decimal>::cpp_type capabilities::Inlineable<xsd_decimal>::from_inlined(storage::identifier::LiteralID inlined) noexcept;
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_decimal,
@@ -79,7 +85,8 @@ extern template struct LiteralDatatypeImpl<xsd_decimal,
                                            capabilities::Numeric,
                                            capabilities::Comparable,
                                            capabilities::Promotable,
-                                           capabilities::FixedId>;
+                                           capabilities::FixedId,
+                                           capabilities::Inlineable>;
 
 }  // namespace rdf4cpp::datatypes::registry
 
@@ -91,7 +98,8 @@ struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                                registry::capabilities::Numeric,
                                                registry::capabilities::Comparable,
                                                registry::capabilities::Promotable,
-                                               registry::capabilities::FixedId> {};
+                                               registry::capabilities::FixedId,
+                                               registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::datatypes::xsd
 
