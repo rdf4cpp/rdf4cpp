@@ -315,6 +315,57 @@ struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     }
 };
 
+template<std::output_iterator<char> OutIter>
+struct OutputIteratorBuffer {
+    OutIter iter;
+    std::array<char, BUFSIZ> buffer_{};
+
+    explicit constexpr OutputIteratorBuffer(OutIter i) noexcept
+        : iter(i) {
+    }
+
+    void write_out(char const *end) {
+        char const *b = buffer_.data();
+        assert(b <= end && end <= buffer_.end());
+        while (b != end) {
+            *iter = *b;
+            ++iter;
+            ++b;
+        }
+    }
+};
+
+/**
+ * A serializer that serializes to an output iterator.
+ *
+ * Implements `BufWriter`
+ */
+template<std::output_iterator<char> OutIter>
+struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>> {
+    using Buffer = OutputIteratorBuffer<OutIter>;
+
+    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::cursor;
+    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::buffer;
+
+    explicit constexpr BufOutputIteratorWriter(OutIter i) noexcept
+        : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>{i} {
+        cursor().repoint(buffer().buffer_.data(),
+                         buffer().buffer_.size());
+    }
+
+    bool finalize() {
+        buffer().write_out(cursor().data());
+        return true;
+    }
+
+    static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
+        buffer.write_out(cursor.data());
+
+        cursor.repoint(buffer.buffer_.data(),
+                       buffer.buffer_.size());
+    }
+};
+
 } // namespace rdf4cpp::writer
 
 #endif  // RDF4CPP_BUFWRITER_HPP

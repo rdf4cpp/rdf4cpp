@@ -131,3 +131,10 @@ BlankNode operator""_bnode(char const *str, size_t len) {
 
 }  // namespace literals
 }  // namespace rdf4cpp
+
+auto std::formatter<rdf4cpp::BlankNode>::format(rdf4cpp::BlankNode n, format_context &ctx) const -> decltype(ctx.out()) {
+    rdf4cpp::writer::BufOutputIteratorWriter w{ctx.out()};
+    n.serialize(w);
+    w.finalize();
+    return w.buffer().iter;
+}

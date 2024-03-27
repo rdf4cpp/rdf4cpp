@@ -86,4 +86,9 @@ struct std::hash<rdf4cpp::BlankNode> {
     }
 };
 
+template<>
+struct std::formatter<rdf4cpp::BlankNode> : std::formatter<rdf4cpp::Node> {
+    auto format(rdf4cpp::BlankNode n, format_context &ctx) const -> decltype(ctx.out());
+};
+
 #endif  //RDF4CPP_BLANKNODE_HPP

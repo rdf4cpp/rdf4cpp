@@ -72,4 +72,9 @@ struct std::hash<rdf4cpp::query::Variable> {
     }
 };
 
+template<>
+struct std::formatter<rdf4cpp::query::Variable> : std::formatter<rdf4cpp::Node> {
+    auto format(rdf4cpp::query::Variable n, format_context &ctx) const -> decltype(ctx.out());
+};
+
 #endif  //RDF4CPP_VARIABLE_HPP
