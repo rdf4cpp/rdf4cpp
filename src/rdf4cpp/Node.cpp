@@ -242,4 +242,8 @@ Literal Node::as_ebv(storage::DynNodeStoragePtr node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 
+Node::operator bool() const noexcept {
+    return ebv();
+}
+
 }  // namespace rdf4cpp
