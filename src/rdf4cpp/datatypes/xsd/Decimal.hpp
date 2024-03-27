@@ -98,8 +98,8 @@ struct Decimal : registry::LiteralDatatypeImpl<registry::xsd_decimal,
                                                registry::capabilities::Numeric,
                                                registry::capabilities::Comparable,
                                                registry::capabilities::Promotable,
-                                                   registry::capabilities::FixedId,
-                                                   registry::capabilities::Inlineable> {};
+                                               registry::capabilities::FixedId,
+                                               registry::capabilities::Inlineable> {};
 
 }  // namespace rdf4cpp::datatypes::xsd
 
