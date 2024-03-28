@@ -146,6 +146,7 @@ public:
      */
     [[nodiscard]] Literal as_ebv(storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
+    explicit operator bool() const noexcept;
 
     /**
      * Casts this Node into a BlankNode if it is one, otherwise returns the null BlankNode.
@@ -194,6 +195,10 @@ public:
      */
     [[nodiscard]] storage::identifier::NodeBackendHandle &backend_handle() noexcept;
 };
+
+static_assert(sizeof(Node) == sizeof(void *) * 3);
+static_assert(alignof(Node) == alignof(void *));
+
 }  // namespace rdf4cpp
 
 template<>
