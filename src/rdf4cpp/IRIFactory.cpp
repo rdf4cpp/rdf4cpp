@@ -223,7 +223,7 @@ nonstd::expected<IRI, IRIFactoryError> IRIFactory::create_and_validate(std::stri
             return nonstd::make_unexpected(e);
         }
     }
-    return IRI{iri, node_storage};
+    return IRI::make_unchecked(iri, node_storage);
 }
 
 void IRIFactory::assign_prefix(std::string_view prefix, std::string_view expanded) {

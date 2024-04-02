@@ -150,7 +150,7 @@ TEST_SUITE("comparisions") {
         Literal const lit2 = Literal::make_typed_from_value<Int>(5); // duplicate to check if it's filtered out
         Literal const lit3 = Literal::make_typed_from_value<Integer>(10);
         Literal const lit4 = Literal::make_typed_from_value<String>("hello world");
-        IRI const iri{"some random iri"};
+        IRI const iri{"https://random.com/some/iri"};
         IRI const null_iri{};
         Node const node{};
         BlankNode const blank_node{"some_random_id"};
@@ -174,7 +174,7 @@ TEST_SUITE("comparisions") {
         Literal const lit2 = Literal::make_typed_from_value<Int>(5); // duplicate to check if it's filtered out
         Literal const lit3 = Literal::make_typed_from_value<Integer>(10);
         Literal const lit4 = Literal::make_typed_from_value<String>("hello world");
-        IRI const iri{"some random iri"};
+        IRI const iri{"https://random.com/some/iri"};
         IRI const null_iri{};
         Node const node{};
         BlankNode const blank_node{"some_random_id"};
@@ -266,4 +266,13 @@ TEST_CASE("node format") {
     CHECK(std::format("abc{}def", Literal::make_typed_from_value<rdf4cpp::datatypes::xsd::Int>(42)) == "abc\"42\"^^<http://www.w3.org/2001/XMLSchema#int>def");
     CHECK(std::format("abc{}def", BlankNode::make("blank")) == "abc_:blankdef");
     CHECK(std::format("abc{}def", query::Variable::make_named("x")) == "abc?xdef");
+}
+
+TEST_CASE("IRI validity") {
+    IRI i{};
+    CHECK_THROWS_AS(i = IRI::make("something not iri"), std::invalid_argument);
+    CHECK_THROWS_AS(i = IRI("something not iri"), std::invalid_argument);
+    CHECK(IRI::make_unchecked("something not iri").identifier() == "something not iri");
+    CHECK(IRI::make("https://this.is/a/valid/iri").identifier() == "https://this.is/a/valid/iri");
+    CHECK(i == IRI());
 }
