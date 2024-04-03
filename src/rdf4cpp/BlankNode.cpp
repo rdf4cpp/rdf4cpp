@@ -144,8 +144,9 @@ std::string_view BlankNode::validate_bnode_name(std::string_view v) {
     }
     auto lastchar = *it;
     ++it;
+    static constexpr auto pn_matcher = PNCharsMatcher | ASCIIPatternMatcher(".-");
     while (it != r.end()) {
-        if (!PNCharsMatcher.match(*it))
+        if (!pn_matcher.match(*it))
         {
             throw std::invalid_argument(std::format("invalid blank node label {}", v));
         }

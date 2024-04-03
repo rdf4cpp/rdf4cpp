@@ -156,16 +156,19 @@ struct PNCharsBase_UniMatcher {
 constexpr auto PNCharsBaseMatcher = ASCIIAlphaMatcher{} | PNCharsBase_UniMatcher{};
 
 /**
- * matches PN_CHARS|. of the Turtle/SPARQL specification, without ASCII alpha (or with ASCIIAlphaMatcher).
+ * matches PN_CHARS of the Turtle/SPARQL specification, without ASCII num and PN_CHARS_BASE.
  */
 struct PNChars_UniMatcher {
     [[nodiscard]] static constexpr bool match(int c) noexcept {
-        return c == 0xB7 || c == '-' || c == '.' ||
+        return c == 0xB7 ||
                (c >= 0x0300 && c <= 0x036F) ||
                (c >= 0x203F && c <= 0x2040);
     }
 };
 
+/**
+ * matches PN_CHARS of the Turtle/SPARQL specification.
+ */
 constexpr auto PNCharsMatcher = ASCIINumMatcher{} | PNCharsBaseMatcher | PNChars_UniMatcher{};
 
 /**
