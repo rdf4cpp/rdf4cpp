@@ -40,7 +40,7 @@ TEST_SUITE("Serialize") {
     }
 
     TEST_CASE("Serialize BNode") {
-        auto bnode = BlankNode::make("_:123abc");
+        auto bnode = BlankNode::make("123abc");
         run_ser_test(bnode);
     }
 

@@ -1,14 +1,16 @@
 #include "BlankNode.hpp"
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
+#include <rdf4cpp/util/CharMatcher.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
+#include <uni_algo/all.h>
 
 namespace rdf4cpp {
 BlankNode::BlankNode() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::identifier::RDFNodeType::BNode, {}}} {
 }
 
 BlankNode::BlankNode(std::string_view identifier, storage::DynNodeStoragePtr node_storage)
-    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
+    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = validate_bnode_name(identifier), .scope = std::nullopt}),
                                                   storage::identifier::RDFNodeType::BNode,
                                                   node_storage}} {
 }
@@ -22,6 +24,12 @@ BlankNode BlankNode::make_null() noexcept {
 
 BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStoragePtr node_storage) {
     return BlankNode{identifier, node_storage};
+}
+
+BlankNode BlankNode::make_unchecked(std::string_view identifier, storage::DynNodeStoragePtr node_storage) {
+    return BlankNode{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
+                                                            storage::identifier::RDFNodeType::BNode,
+                                                            node_storage}};
 }
 
 BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
@@ -121,6 +129,33 @@ TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
     assert(other_label.has_value());
 
     return *this_label == *other_label;
+}
+
+std::string_view BlankNode::validate_bnode_name(std::string_view v) {
+    using namespace util::char_matcher_detail;
+    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
+    auto r = v | una::views::utf8;
+    auto it = r.begin();
+    if (it == r.end()) {
+        throw std::invalid_argument("invalid blank node label (empty string)");
+    }
+    if (!first_matcher.match(*it)) {
+        throw std::invalid_argument(std::format("invalid blank node label {}", v));
+    }
+    auto lastchar = *it;
+    ++it;
+    while (it != r.end()) {
+        if (!PNCharsMatcher.match(*it))
+        {
+            throw std::invalid_argument(std::format("invalid blank node label {}", v));
+        }
+        lastchar = *it;
+        ++it;
+    }
+    if (lastchar == '.') {
+        throw std::invalid_argument(std::format("invalid blank node label {}", v));
+    }
+    return v;
 }
 
 inline namespace shorthands {

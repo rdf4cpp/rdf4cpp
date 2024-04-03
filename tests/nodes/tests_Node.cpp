@@ -276,3 +276,14 @@ TEST_CASE("IRI validity") {
     CHECK(IRI::make("https://this.is/a/valid/iri").identifier() == "https://this.is/a/valid/iri");
     CHECK(i == IRI());
 }
+
+TEST_CASE("BlankNode validity") {
+    BlankNode n{};
+    CHECK_THROWS_AS(n = BlankNode::make("-may_not_be_first"), std::invalid_argument);
+    CHECK_THROWS_AS(n = BlankNode("may_not_be_last."), std::invalid_argument);
+    CHECK(BlankNode::make_unchecked("may_not_be_last.").identifier() == "may_not_be_last.");
+    CHECK(BlankNode::make("a_middle.is_allowed").identifier() == "a_middle.is_allowed");
+    CHECK(BlankNode::make("012_numbers_too567").identifier() == "012_numbers_too567");
+    CHECK(BlankNode::make("\U0001f34cthrow_some_unicode_at_it\U0001f34c").identifier() == "\U0001f34cthrow_some_unicode_at_it\U0001f34c");
+    CHECK(n == BlankNode{});
+}
