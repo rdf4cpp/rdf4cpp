@@ -32,20 +32,30 @@ TEST_SUITE("Serialize") {
             auto var = query::Variable::make_anonymous("y");
             run_ser_test(var);
         }
+
+        SUBCASE("null") {
+            run_ser_test(query::Variable());
+        }
     }
 
     TEST_CASE("Serialize IRI") {
         auto iri = IRI::make("http://url.com#some-iri");
         run_ser_test(iri);
+        run_ser_test(IRI());
     }
 
     TEST_CASE("Serialize BNode") {
         auto bnode = BlankNode::make("_:123abc");
         run_ser_test(bnode);
+        run_ser_test(BlankNode());
     }
 
     TEST_CASE("Serialize Literal") {
         using namespace rdf4cpp::datatypes;
+
+        SUBCASE("null") {
+            run_ser_test(Literal());
+        }
 
         SUBCASE("xsd:string") {
             auto lit = Literal::make_simple("simple");

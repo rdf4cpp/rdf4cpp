@@ -56,6 +56,11 @@ BlankNode BlankNode::find(std::string_view identifier, storage::DynNodeStoragePt
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }
 
 bool BlankNode::serialize(writer::BufWriterParts const writer) const noexcept {
+    if (null()) {
+        RDF4CPP_DETAIL_TRY_WRITE_STR("null");
+        return true;
+    }
+
     auto const backend = handle_.bnode_backend();
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("_:");
