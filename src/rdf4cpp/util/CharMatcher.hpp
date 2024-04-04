@@ -1,6 +1,8 @@
 #ifndef RDF4CPP_CHARMATCHER_HPP
 #define RDF4CPP_CHARMATCHER_HPP
 
+#include <array>
+#include <optional>
 #include <string_view>
 
 /**
@@ -189,6 +191,12 @@ bool match(const M &m, S s) noexcept {
     }
     return true;
 }
+
+struct CharRange {
+    char first;
+    char last;
+};
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
 
 } // namespace rdf4cpp::util::char_matcher_detail
 

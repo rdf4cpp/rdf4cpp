@@ -299,3 +299,11 @@ TEST_CASE("char matcher") {
     CHECK(!match(alnum, unic));
     CHECK(match(alnum | ucs, unic));
 }
+
+TEST_CASE("SIMD char matcher") {
+    using namespace util::char_matcher_detail;
+    std::array<CharRange, 3> r {CharRange{'a', 'z'}, CharRange{'A', 'Z'}, CharRange{'a', 'a'}};
+    CHECK(try_match_simd("abcdefZxyAZz", r, "") == true);
+    CHECK(try_match_simd("abcdefx5yz", r, "") == false);
+    CHECK(!try_match_simd("abcdefx\U000000FF5yz", r, "").has_value());
+}

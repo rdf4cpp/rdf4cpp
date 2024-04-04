@@ -22,6 +22,7 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
+find_package(highway QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
 find_package(dice-template-library QUIET)
@@ -209,6 +210,7 @@ add_library(rdf4cpp
         src/rdf4cpp/query/Variable.cpp
         src/rdf4cpp/regex/Regex.cpp
         src/rdf4cpp/regex/RegexReplacer.cpp
+        src/rdf4cpp/util/CharMatcher.cpp
         src/rdf4cpp/storage/NodeStorage.cpp
         src/rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.cpp
         src/rdf4cpp/storage/reference_node_storage/UnsyncReferenceNodeStorage.cpp
@@ -248,6 +250,7 @@ target_link_libraries(rdf4cpp
         re2::re2
         OpenSSL::Crypto
         uni-algo::uni-algo
+        highway::highway
         )
 
 set_target_properties(rdf4cpp PROPERTIES
