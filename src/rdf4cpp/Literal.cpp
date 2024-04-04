@@ -414,7 +414,8 @@ Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage
 
                 // Default case.
                 // This node storage doesn't have specialized storage for the value and the new one also doesn't
-                auto const dtype_iri_view = handle_.storage().find_iri_backend(lexical_backend.datatype_id);
+                auto src_node_storage = handle_.storage();
+                auto const dtype_iri_view = src_node_storage.find_iri_backend(lexical_backend.datatype_id);
 
                 lexical_backend.datatype_id = node_storage.find_id(dtype_iri_view);
                 if (lexical_backend.datatype_id == storage::identifier::NodeID{}) {
