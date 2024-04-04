@@ -58,6 +58,10 @@ Node Node::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) cons
 }
 
 bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
+    if (null()) {
+        return rdf4cpp::writer::write_str("null", writer);
+    }
+
     switch (handle_.type()) {
         [[likely]] case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.serialize(writer);

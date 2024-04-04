@@ -106,6 +106,10 @@ IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
 }
 
 bool IRI::serialize(writer::BufWriterParts const writer) const noexcept {
+    if (null()) {
+        return rdf4cpp::writer::write_str("null", writer);
+    }
+
     auto const backend = handle_.iri_backend();
 
     RDF4CPP_DETAIL_TRY_WRITE_STR("<");
