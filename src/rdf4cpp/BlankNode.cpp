@@ -57,8 +57,7 @@ std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_b
 
 bool BlankNode::serialize(writer::BufWriterParts const writer) const noexcept {
     if (null()) {
-        RDF4CPP_DETAIL_TRY_WRITE_STR("null");
-        return true;
+        return rdf4cpp::writer::write_str("null", writer);
     }
 
     auto const backend = handle_.bnode_backend();
