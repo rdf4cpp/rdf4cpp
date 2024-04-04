@@ -246,6 +246,10 @@ Literal Node::as_ebv(storage::DynNodeStoragePtr node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
 }
 
+Node::operator bool() const noexcept {
+    return ebv();
+}
+
 }  // namespace rdf4cpp
 
 auto std::formatter<rdf4cpp::Node>::format(rdf4cpp::Node n, format_context &ctx) const -> decltype(ctx.out()) {
