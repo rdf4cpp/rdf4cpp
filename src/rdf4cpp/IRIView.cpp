@@ -171,25 +171,26 @@ IRIFactoryError IRIView::quick_validate() const noexcept {
     if (!scheme.has_value())
         return IRIFactoryError::Relative;
     static constexpr auto scheme_pattern = ascii_alphanum_matcher | ASCIIPatternMatcher{"+-."};
-    if (!match(scheme_pattern, *scheme)) // scheme is ascii only, no need to utf8-decode
+    if (!match<scheme_pattern, una::views::utf8>(*scheme))
         return IRIFactoryError::InvalidScheme;
     auto [userinfo, host, port] = all_authority_parts();
     static constexpr auto userinfo_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:"};
-    if (userinfo.has_value() && !match(userinfo_pattern, *userinfo | una::views::utf8))
+    if (userinfo.has_value() && !match<userinfo_pattern, una::views::utf8>(*userinfo))
         return IRIFactoryError::InvalidUserinfo;
     static constexpr auto host_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%[]:"};
-    if (host.has_value() && !match(host_pattern, *host | una::views::utf8))
+    if (host.has_value() && !match<host_pattern, una::views::utf8>(*host))
         return IRIFactoryError::InvalidHost;
-    if (port.has_value() && !match(ASCIINumMatcher{}, *port)) // scheme is ascii numbers only, no need to utf8-decode
+    static constexpr ASCIINumMatcher port_pattern{};
+    if (port.has_value() && !match<port_pattern, una::views::utf8>(*port))
         return IRIFactoryError::InvalidPort;
     static constexpr auto path_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:@/"};
-    if (!match(path_pattern, path | una::views::utf8))
+    if (!match<path_pattern, una::views::utf8>(path))
         return IRIFactoryError::InvalidPath;
     static constexpr auto query_pattern = i_unreserved_matcher | sub_delims_matcher | IPrivateMatcher{} | ASCIIPatternMatcher{"%:@/?"};
-    if (query.has_value() && !match(query_pattern, *query | una::views::utf8))
+    if (query.has_value() && !match<query_pattern, una::views::utf8>(*query))
         return IRIFactoryError::InvalidQuery;
     static constexpr auto frag_pattern = i_unreserved_matcher | sub_delims_matcher | ASCIIPatternMatcher{"%:@/?"};
-    if (frag.has_value() && !match(frag_pattern, *frag | una::views::utf8))
+    if (frag.has_value() && !match<frag_pattern, una::views::utf8>(*frag))
         return IRIFactoryError::InvalidFragment;
     return IRIFactoryError::Ok;
 }

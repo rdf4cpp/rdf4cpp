@@ -4,6 +4,7 @@
 #include <rdf4cpp.hpp>
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <array>
+#include <uni_algo/all.h>
 
 using namespace rdf4cpp;
 
@@ -289,15 +290,9 @@ TEST_CASE("char matcher") {
     CHECK(priv.match(0x10FFFD));
     CHECK(!priv.match(0xFFFF));
 
-    CHECK(match(alnum, std::string_view{"abcAbZz093"}));
-    CHECK(!match(alnum, std::string_view{"abcAb#Zz093"}));
-    std::array<int,3> unic{
-            'a', 'b', 'c'
-    };
-    CHECK(match(alnum, unic));
-    unic[1] = 0x30000;
-    CHECK(!match(alnum, unic));
-    CHECK(match(alnum | ucs, unic));
+    CHECK(match<alnum, una::views::utf8>(std::string_view{"abcAbZz093"}));
+    CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#Zz093"}));
+    CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#\U000000FFZz093"}));
 }
 
 TEST_CASE("SIMD char matcher") {

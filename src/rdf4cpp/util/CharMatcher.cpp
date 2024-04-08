@@ -4,6 +4,7 @@
 #define HWY_TARGET_INCLUDE "rdf4cpp/util/CharMatcher.cpp"
 #include <hwy/foreach_target.h>
 
+#include <cassert>
 #include <hwy/highway.h>
 #include <stdexcept>
 
@@ -41,6 +42,12 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     }
 
     std::optional<bool> try_match_simd_impl(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single) {
+        // register usage:
+        // 1 - data
+        // 6 - ranges
+        // 5 - logic
+        // ? - singles
+        // 16 overall
         bool found_unicode = false;
         bool r = true;
         using D = hwy::HWY_NAMESPACE::ScalableTag<uint8_t>;  //NOLINT
@@ -57,10 +64,13 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         V unicode_bit = hwy::HWY_NAMESPACE::Set(d, 7);
 
         // if this gets ported to variable size vectors, this needs to be changed (like above)
-        std::array<V, 8> si{};
+        // this array prevents keeping in registers, but there are not enough registers anyway
+        std::array<V, simd_max_single_chars> si{};
         size_t si_num = single.size();
-        if (si_num > si.size())
-            throw std::invalid_argument("too many single matches");
+        if (si_num > si.size()) {
+            assert(false);
+            return std::nullopt;
+        }
         for (size_t i = 0; i < si_num; ++i) {
             si[i] = hwy::HWY_NAMESPACE::Set(d, static_cast<uint8_t>(single[i]));
         }
