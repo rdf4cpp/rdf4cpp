@@ -93,6 +93,16 @@ if (NOT dice-template-library_FOUND)
     FetchContent_MakeAvailable(fetchdice-template-library)
 endif ()
 
+if (NOT highway_FOUND)
+    FetchContent_Declare(
+            fetchhighway
+            GIT_REPOSITORY https://github.com/google/highway.git
+            GIT_TAG 1.1.0
+            GIT_SHALLOW TRUE)
+
+    FetchContent_MakeAvailable(fetchhighway)
+endif ()
+
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
