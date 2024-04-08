@@ -13,6 +13,12 @@ namespace rdf4cpp::util::char_matcher_detail {
 template<typename T>
 concept CharMatcher = requires(const T a, int c) {{a.match(c)} -> std::same_as<bool>; };
 
+struct CharRange {
+    char first;
+    char last;
+};
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
+
 /**
  * matches, if any char in pattern matches. does compare char by char, so no utf8.
  */
@@ -191,13 +197,6 @@ bool match(const M &m, S s) noexcept {
     }
     return true;
 }
-
-struct CharRange {
-    char first;
-    char last;
-};
-std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
-
 } // namespace rdf4cpp::util::char_matcher_detail
 
 #endif  //RDF4CPP_CHARMATCHER_HPP
