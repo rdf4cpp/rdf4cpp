@@ -36,6 +36,14 @@ concept CharMatcher = requires(T const a, int c) {
 };
 
 static constexpr size_t simd_max_single_chars = 32;
+/**
+ * tries to match each char of data to be in one of the 3 ranges or contained in single.
+ * fails (and returns std::nullopt) if non ascii is found, or single is longer than 32 chars.
+ * @param data
+ * @param ranges a range with first >= last will get ignored, first may not be 0, if range should not be empty, requires at least ranges[0] to be valid
+ * @param single single.size() <= 32
+ * @return
+ */
 std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
 
 /**
@@ -292,6 +300,7 @@ constexpr auto PNCharsMatcher = ASCIINumMatcher{} | PNCharsBaseMatcher | PNChars
 
 /**
   * iterates over s and tries to match all in m.
+  * attempts to do an ASCII SIMD match first, if that does not decide the matching, decodes the utf-8 and matches char by char.
   * @tparam m a CharMatcher
   * @tparam utf8_range_decoder needs to be una::views::utf8 (if i include it here, una technically becomes part of our public API)
   * @param s
