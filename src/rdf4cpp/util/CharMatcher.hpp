@@ -40,11 +40,26 @@ static constexpr size_t simd_max_single_chars = 32;
  * tries to match each char of data to be in one of the 3 ranges or contained in single.
  * fails (and returns std::nullopt) if non ascii is found, or single is longer than 32 chars.
  * @param data
- * @param ranges a range with first >= last will get ignored, first may not be 0, if range should not be empty, requires at least ranges[0] to be valid
+ * @param ranges a range with first >= last will get ignored, first may not be 0, if range should not be empty
  * @param single single.size() <= 32
  * @return
  */
 std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
+
+/**
+ * tries to check if data contains any of match.
+ * @param data
+ * @param match
+ * @return
+ */
+bool contains_any(std::string_view data, std::array<char, 4> match);
+
+/**
+ * for test cases only!
+ * iterates over each available highway target and calls func specifically with only that target selected.
+ * @param func
+ */
+void test_simd_foreach_supported(void(*func)(std::string_view target_name));
 
 /**
  * matches, if any char in pattern matches. does compare char by char, so no utf8.
@@ -315,13 +330,16 @@ bool match(std::string_view s) noexcept {
     }
     static constexpr auto singles = m.simd_singles();
     auto simd_r = try_match_simd(s, ranges, singles);
-    if (simd_r.has_value())
+    if (simd_r.has_value()) {
         return *simd_r;
-    if (m.FAIL_IF_UNICODE)
+    }
+    if constexpr (m.FAIL_IF_UNICODE) {
         return false;
+    }
     for (int c : s | utf8_range_decoder) {
-        if (!m.match(c))
+        if (!m.match(c)) {
             return false;
+        }
     }
     return true;
 }

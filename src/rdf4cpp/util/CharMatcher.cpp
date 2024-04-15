@@ -53,7 +53,8 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         using D = hwy::HWY_NAMESPACE::ScalableTag<int8_t>;  //NOLINT
         using V = hwy::HWY_NAMESPACE::VFromD<D>;             //NOLINT
         D d;
-        V zero = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].first));
+        bool r0a = ranges[0].first < ranges[0].last;
+        V zero = r0a ? hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].first)) : hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(single.at(0)));
         V r0b = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].first - 1));
         V r0e = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].last + 1));
         bool r1a = ranges[1].first < ranges[1].last;
@@ -84,7 +85,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
 
             // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
             // and <= and >= are 2 instructions regardless of signed/unsigned
-            auto m = hwy::HWY_NAMESPACE::And(in_vec > r0b, in_vec < r0e);
+            auto m = r0a ? hwy::HWY_NAMESPACE::And(in_vec > r0b, in_vec < r0e) : hwy::HWY_NAMESPACE::FirstN(d, 0);
             if (r1a) {
                 m = hwy::HWY_NAMESPACE::Or(m, hwy::HWY_NAMESPACE::And(in_vec > r1b, in_vec < r1e));
             }
@@ -103,6 +104,28 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         return r;
     }
 
+    bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
+        bool r = true;
+        using D = hwy::HWY_NAMESPACE::ScalableTag<int8_t>;  //NOLINT
+        using V = hwy::HWY_NAMESPACE::VFromD<D>;             //NOLINT
+        D d;
+        V zero = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(0));
+        V m0 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[0]));
+        V m1 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[1]));
+        V m2 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[2]));
+        V m3 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[3]));
+
+        Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
+            auto m = in_vec == m0;
+            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m1);
+            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m2);
+            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m3);
+            r = r && !hwy::HWY_NAMESPACE::AllFalse(d, m);
+            return r;
+        });
+
+        return r;
+    }
     // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE
 HWY_AFTER_NAMESPACE();
@@ -110,9 +133,23 @@ HWY_AFTER_NAMESPACE();
 #if HWY_ONCE
 namespace rdf4cpp::util::char_matcher_detail {
     HWY_EXPORT(try_match_simd_impl);
+    HWY_EXPORT(contains_any_impl);
 
     std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single) {
         return HWY_DYNAMIC_DISPATCH(try_match_simd_impl)(data, ranges, single);
+    }
+
+    bool contains_any(std::string_view data, std::array<char, 4> match) {
+        return HWY_DYNAMIC_DISPATCH(contains_any_impl)(data, match);
+    }
+
+    void test_simd_foreach_supported(void(*func)(std::string_view target_name)) {
+        auto targets = hwy::SupportedAndGeneratedTargets();
+        for (const auto t : targets) {
+            hwy::SetSupportedTargetsForTest(t);
+            func(hwy::TargetName(t));
+        }
+        hwy::SetSupportedTargetsForTest(0);
     }
 }  // namespace rdf4cpp::util::char_matcher_detail
 #endif

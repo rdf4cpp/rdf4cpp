@@ -295,12 +295,29 @@ TEST_CASE("char matcher") {
     CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#\U000000FFZz093"}));
 }
 
-TEST_CASE("SIMD char matcher") {
+void test_simd_matcher_worker(std::string_view target_name) {
     using namespace util::char_matcher_detail;
+    INFO(target_name); // add to every failing test case in scope
     std::array<CharRange, 3> r {CharRange{'a', 'z'}, CharRange{'A', 'Z'}, CharRange{'a', 'a'}};
+    std::array<CharRange, 3> empty {CharRange{'a', 'a'}, CharRange{'a', 'a'}, CharRange{'a', 'a'}};
     CHECK(try_match_simd("abcdefZxyAZz", r, "") == true);
     CHECK(try_match_simd("abcdefZxy%&AZz", r, "") == false);
     CHECK(try_match_simd("abcdefZxy%&AZz", r, "%&") == true);
+    CHECK(try_match_simd("f", r, "") == true);
     CHECK(try_match_simd("abcdefx5yz", r, "") == false);
     CHECK(!try_match_simd("abcdefx\U000000FF5yz", r, "").has_value());
+    CHECK(try_match_simd("abcdefZxy%&AZz", empty, "%&") == false);
+    CHECK(try_match_simd("%", empty, "%&") == true);
+
+    std::array chars{'a', 'b', 'A', 'B'};
+    CHECK(contains_any("57816a58919", chars) == true);
+    CHECK(contains_any("57816A58919", chars) == true);
+    CHECK(contains_any("5781658919B", chars) == true);
+    CHECK(contains_any("b5781658919", chars) == true);
+    CHECK(contains_any("5781658919", chars) == false);
+    CHECK(contains_any("57\U000000FF816a58919", chars) == true);
+    CHECK(contains_any("57\U000000FF81658919", chars) == false);
+}
+TEST_CASE("SIMD char matcher") {
+    util::char_matcher_detail::test_simd_foreach_supported(&test_simd_matcher_worker);
 }
