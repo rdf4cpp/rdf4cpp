@@ -105,7 +105,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     }
 
     bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
-        bool r = true;
+        bool r = false;
         using D = hwy::HWY_NAMESPACE::ScalableTag<int8_t>;  //NOLINT
         using V = hwy::HWY_NAMESPACE::VFromD<D>;             //NOLINT
         D d;
@@ -120,8 +120,8 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
             m = hwy::HWY_NAMESPACE::Or(m, in_vec == m1);
             m = hwy::HWY_NAMESPACE::Or(m, in_vec == m2);
             m = hwy::HWY_NAMESPACE::Or(m, in_vec == m3);
-            r = r && !hwy::HWY_NAMESPACE::AllFalse(d, m);
-            return r;
+            r = r || !hwy::HWY_NAMESPACE::AllFalse(d, m);
+            return !r;
         });
 
         return r;
