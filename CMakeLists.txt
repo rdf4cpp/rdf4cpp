@@ -22,7 +22,7 @@ find_package(Boost REQUIRED)
 find_package(re2 QUIET)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo QUIET)
-find_package(highway QUIET)
+#find_package(highway QUIET)
 find_package(dice-hash QUIET)
 find_package(dice-sparse-map QUIET)
 find_package(dice-template-library QUIET)
@@ -93,15 +93,14 @@ if (NOT dice-template-library_FOUND)
     FetchContent_MakeAvailable(fetchdice-template-library)
 endif ()
 
-if (NOT highway_FOUND)
-    FetchContent_Declare(
-            fetchhighway
-            GIT_REPOSITORY https://github.com/google/highway.git
-            GIT_TAG 1.1.0
-            GIT_SHALLOW TRUE)
+FetchContent_Declare(
+        highway
+        GIT_REPOSITORY https://github.com/google/highway.git
+        GIT_TAG 1.1.0
+        GIT_SHALLOW TRUE
+        FIND_PACKAGE_ARGS)
 
-    FetchContent_MakeAvailable(fetchhighway)
-endif ()
+FetchContent_MakeAvailable(highway)
 
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
