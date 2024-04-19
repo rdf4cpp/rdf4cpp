@@ -63,40 +63,77 @@ bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type co
     if (value.first.count() == 0 && value.second.count() == 0) {
         return writer::write_str("PT0.000S", writer);
     }
-    std::stringstream str{};
     std::chrono::months m_rem = value.first;
     std::chrono::milliseconds ms_rem = value.second;
     if (m_rem.count() < 0) {
-        str << '-';
+        if (!writer::write_str("-", writer)) {
+            return false;
+        }
         m_rem = -m_rem;
         ms_rem = -ms_rem;
     }
-    str << 'P';
+    if (!writer::write_str("P", writer)) {
+        return false;
+    }
     auto years = std::chrono::floor<std::chrono::years>(m_rem);
-    if (years.count() != 0)
-        str << years.count() << 'Y';
+    if (years.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", years.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("Y", writer)) {
+            return false;
+        }
+    }
     m_rem -= years;
-    if (m_rem.count() != 0)
-        str << m_rem.count() << 'M';
+    if (m_rem.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", m_rem.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("M", writer)) {
+            return false;
+        }
+    }
     auto days = std::chrono::floor<std::chrono::days>(ms_rem);
-    if (days.count() != 0)
-        str << days.count() << 'D';
+    if (days.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", days.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("D", writer)) {
+            return false;
+        }
+    }
     ms_rem -= days;
     if (ms_rem.count() != 0) {
-        str << 'T';
+        if (!writer::write_str("T", writer)) {
+            return false;
+        }
         auto hours = std::chrono::floor<std::chrono::hours>(ms_rem);
-        if (hours.count() != 0)
-            str << hours.count() << 'H';
+        if (hours.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", hours.count()).write_ok) {
+                return false;
+            }
+            if (!writer::write_str("H", writer)) {
+                return false;
+            }
+        }
         ms_rem -= hours;
         auto minutes = std::chrono::floor<std::chrono::minutes>(ms_rem);
-        if (minutes.count() != 0)
-            str << minutes.count() << 'M';
+        if (minutes.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", minutes.count()).write_ok) {
+                return false;
+            }
+            if (!writer::write_str("M", writer)) {
+                return false;
+            }
+        }
         ms_rem -= minutes;
-        if (ms_rem.count() != 0)
-            str << std::format("{:%S}S", ms_rem);
+        if (ms_rem.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{:%S}S", ms_rem).write_ok) {
+                return false;
+            }
+        }
     }
-
-    return writer::write_str(str.view(), writer);
+    return true;
 }
 
 struct __attribute__((__packed__)) InlinedDurationHelper {

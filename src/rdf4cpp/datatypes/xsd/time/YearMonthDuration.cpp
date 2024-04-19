@@ -40,21 +40,35 @@ bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cp
     if (value.count() == 0) {
         return writer::write_str("P0M", writer);
     }
-    std::stringstream str{};
     std::chrono::months m_rem = value;
     if (m_rem.count() < 0) {
-        str << '-';
+        if (!writer::write_str("-", writer)) {
+            return false;
+        }
         m_rem = -m_rem;
     }
-    str << 'P';
+    if (!writer::write_str("P", writer)) {
+        return false;
+    }
     auto years = std::chrono::floor<std::chrono::years>(m_rem);
-    if (years.count() != 0)
-        str << years.count() << 'Y';
+    if (years.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", years.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("Y", writer)) {
+            return false;
+        }
+    }
     m_rem -= years;
-    if (m_rem.count() != 0)
-        str << m_rem.count() << 'M';
-
-    return writer::write_str(str.view(), writer);
+    if (m_rem.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", m_rem.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("M", writer)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 template<>

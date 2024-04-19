@@ -366,6 +366,37 @@ struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>,
     }
 };
 
+struct BufWriterOutputIterator {
+    BufWriterParts writer;
+    char buff = '\0';
+    bool write_ok = true;
+
+    using difference_type = ptrdiff_t;
+
+    char& operator*() noexcept {
+        return buff;
+    }
+
+    BufWriterOutputIterator& operator++() {
+        if (writer.cursor->size() == 0) [[unlikely]] {
+            writer.flush(writer.buffer, writer.cursor, 1);
+            if (writer.cursor->size() == 0) [[unlikely]] {
+                write_ok = false;
+                return *this;
+            }
+        }
+        *writer.cursor->data() = buff;
+        writer.cursor->advance(1);
+        return *this;
+    }
+    BufWriterOutputIterator operator++(int) {
+        assert(false);
+        auto r = *this;
+        ++(*this);
+        return r;
+    }
+};
+
 } // namespace rdf4cpp::writer
 
 #endif  // RDF4CPP_BUFWRITER_HPP

@@ -55,32 +55,57 @@ bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_
     if (value.count() == 0) {
         return writer::write_str("PT0.000S", writer);
     }
-    std::stringstream str{};
     std::chrono::milliseconds ms_rem = value;
     if (ms_rem.count() < 0) {
-        str << '-';
+        if (!writer::write_str("-", writer)) {
+            return false;
+        }
         ms_rem = -ms_rem;
     }
-    str << 'P';
+    if (!writer::write_str("P", writer)) {
+        return false;
+    }
     auto days = std::chrono::floor<std::chrono::days>(ms_rem);
-    if (days.count() != 0)
-        str << days.count() << 'D';
+    if (days.count() != 0) {
+        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", days.count()).write_ok) {
+            return false;
+        }
+        if (!writer::write_str("D", writer)) {
+            return false;
+        }
+    }
     ms_rem -= days;
     if (ms_rem.count() != 0) {
-        str << 'T';
+        if (!writer::write_str("T", writer)) {
+            return false;
+        }
         auto hours = std::chrono::floor<std::chrono::hours>(ms_rem);
-        if (hours.count() != 0)
-            str << hours.count() << 'H';
+        if (hours.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", hours.count()).write_ok) {
+                return false;
+            }
+            if (!writer::write_str("H", writer)) {
+                return false;
+            }
+        }
         ms_rem -= hours;
         auto minutes = std::chrono::floor<std::chrono::minutes>(ms_rem);
-        if (minutes.count() != 0)
-            str << minutes.count() << 'M';
+        if (minutes.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", minutes.count()).write_ok) {
+                return false;
+            }
+            if (!writer::write_str("M", writer)) {
+                return false;
+            }
+        }
         ms_rem -= minutes;
-        if (ms_rem.count() != 0)
-            str << std::format("{:%S}S", ms_rem);
+        if (ms_rem.count() != 0) {
+            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{:%S}S", ms_rem).write_ok) {
+                return false;
+            }
+        }
     }
-
-    return writer::write_str(str.view(), writer);
+    return true;
 }
 
 template<>

@@ -64,10 +64,22 @@ struct Timezone {
     }
 
     [[nodiscard]] std::string to_canonical_string() const noexcept {
-        if (offset.count() == 0)
-            return "Z";
-        auto c = offset.count();
-        return std::format("{:+03}:{:02}", c / 60, std::abs(c) % 60);
+        std::string buf;
+        writer::StringWriter ser{buf};
+        if (!to_canonical_string(ser)) {
+            return "writer error";
+        }
+        ser.finalize();
+        return buf;
+    }
+
+    [[nodiscard]] bool to_canonical_string(writer::BufWriterParts writer) const noexcept {
+        if (offset == std::chrono::minutes{0}) {
+            return writer::write_str("Z", writer);
+        }
+        auto h = std::chrono::floor<std::chrono::hours>(std::chrono::abs(offset));
+        auto m = std::chrono::abs(offset) - h;
+        return std::format_to(writer::BufWriterOutputIterator{writer}, "{}{:02}:{:02}", offset >= std::chrono::minutes{0} ? '+' : '-', h.count(), m.count()).write_ok;
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {

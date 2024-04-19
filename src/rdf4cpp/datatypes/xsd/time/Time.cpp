@@ -30,11 +30,13 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
 
 template<>
 bool capabilities::Default<xsd_time>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    auto str = std::format("{:%H:%M:%S}", std::chrono::hh_mm_ss(value.first));
-    if (value.second.has_value())
-        str += value.second->to_canonical_string();
-
-    return writer::write_str(str, writer);
+    if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{:%H:%M:%S}", std::chrono::hh_mm_ss(value.first)).write_ok) {
+        return false;
+    }
+    if (value.second.has_value()) {
+        return value.second->to_canonical_string(writer);
+    }
+    return true;
 }
 
 using IHelp = registry::util::InliningHelperPacked;
