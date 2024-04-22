@@ -74,6 +74,10 @@ std::string_view Variable::name() const {
 }
 
 bool Variable::serialize(writer::BufWriterParts const writer) const noexcept {
+    if (null()) {
+        return rdf4cpp::writer::write_str("null", writer);
+    }
+
     auto const backend = handle_.variable_backend();
 
     if (backend.is_anonymous) {

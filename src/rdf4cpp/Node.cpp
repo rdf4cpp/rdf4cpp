@@ -58,6 +58,10 @@ Node Node::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) cons
 }
 
 bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
+    if (null()) {
+        return rdf4cpp::writer::write_str("null", writer);
+    }
+
     switch (handle_.type()) {
         [[likely]] case storage::identifier::RDFNodeType::IRI: {
             return IRI{handle_}.serialize(writer);
@@ -240,6 +244,10 @@ TriBool Node::ebv() const noexcept {
 
 Literal Node::as_ebv(storage::DynNodeStoragePtr node_storage) const noexcept {
     return this->as_literal().as_ebv(node_storage);
+}
+
+Node::operator bool() const noexcept {
+    return ebv();
 }
 
 }  // namespace rdf4cpp
