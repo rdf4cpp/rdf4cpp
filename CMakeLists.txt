@@ -17,91 +17,15 @@ if (PROJECT_IS_TOP_LEVEL AND USE_CONAN)
 endif ()
 
 # find packages
-find_package(expected-lite QUIET)
+find_package(expected-lite REQUIRED)
 find_package(Boost REQUIRED)
-find_package(re2 QUIET)
+find_package(re2 REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(uni-algo QUIET)
-#find_package(highway QUIET)
-find_package(dice-hash QUIET)
-find_package(dice-sparse-map QUIET)
-find_package(dice-template-library QUIET)
-
-include(FetchContent)
-
-if (NOT expected-lite_FOUND)
-    FetchContent_Declare(
-            fetchexpected-lite
-            GIT_REPOSITORY https://github.com/martinmoene/expected-lite
-            GIT_TAG 95b9cb015fa17baa749c2b396b335906e1596a9e # v0.6.2
-    )
-
-    FetchContent_MakeAvailable(fetchexpected-lite)
-    message(DEBUG "No CMake package for expected-lite found. expected-lite was retrieved via FetchContent.")
-endif ()
-
-if (NOT re2_FOUND)
-    FetchContent_Declare(
-            fetchre2
-            GIT_REPOSITORY https://github.com/google/re2
-            GIT_TAG 4be240789d5b322df9f02b7e19c8651f3ccbf205 # 2022-12-01
-    )
-
-    set(RE2_BUILD_TESTING OFF CACHE INTERNAL "")
-    FetchContent_MakeAvailable(fetchre2)
-    message(DEBUG "No CMake package for re2 found. re2 was retrieved via FetchContent.")
-endif ()
-
-if (NOT uni-algo_FOUND)
-    set(UNI_ALGO_INSTALL On)
-    FetchContent_Declare(
-            fetchuni-algo
-            GIT_REPOSITORY https://github.com/uni-algo/uni-algo.git
-            GIT_SHALLOW ON
-            GIT_TAG 00cfcbfcbe9720760f8156ee086fc8f45ae59ae4 # v1.2.0
-    )
-    FetchContent_MakeAvailable(fetchuni-algo)
-endif ()
-
-if (NOT dice-hash_FOUND)
-    FetchContent_Declare(
-            fetchdice-hash
-            GIT_REPOSITORY https://github.com/dice-group/dice-hash.git
-            GIT_TAG v0.4.3
-            GIT_SHALLOW TRUE)
-
-    FetchContent_MakeAvailable(fetchdice-hash)
-endif ()
-
-if (NOT dice-sparse-map_FOUND)
-    FetchContent_Declare(
-            fetchdice-sparse-map
-            GIT_REPOSITORY https://github.com/dice-group/dice-sparse-map.git
-            GIT_TAG v0.2.4
-            GIT_SHALLOW TRUE)
-
-    FetchContent_MakeAvailable(fetchdice-sparse-map)
-endif ()
-
-if (NOT dice-template-library_FOUND)
-    FetchContent_Declare(
-            fetchdice-template-library
-            GIT_REPOSITORY https://github.com/dice-group/dice-template-library.git
-            GIT_TAG v1.4.0
-            GIT_SHALLOW TRUE)
-
-    FetchContent_MakeAvailable(fetchdice-template-library)
-endif ()
-
-FetchContent_Declare(
-        highway
-        GIT_REPOSITORY https://github.com/google/highway.git
-        GIT_TAG 1.1.0
-        GIT_SHALLOW TRUE
-        FIND_PACKAGE_ARGS)
-
-FetchContent_MakeAvailable(highway)
-
+find_package(uni-algo REQUIRED)
+find_package(highway REQUIRED)
+find_package(dice-hash REQUIRED)
+find_package(dice-sparse-map REQUIRED)
+find_package(dice-template-library REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
