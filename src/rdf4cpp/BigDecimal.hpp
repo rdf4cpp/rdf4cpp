@@ -262,6 +262,13 @@ public:
      * converts this BigDecimal to its smallest internal representation.
      */
     constexpr void normalize() noexcept {
+        normalize(unscaled_value, exponent);
+    }
+
+    /**
+     * converts this BigDecimal to its smallest internal representation.
+     */
+    static constexpr void normalize(UnscaledValue_t &unscaled_value, Exponent_t &exponent) noexcept {
         while (exponent > 0 && unscaled_value % base == 0) {
             unscaled_value /= base;
             --exponent;
