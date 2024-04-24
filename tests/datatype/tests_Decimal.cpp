@@ -158,6 +158,9 @@ TEST_CASE("decimal inlining sanity check") {
         auto const l = Literal::make_typed<Decimal>("4.2");
         CHECK(l.is_inlined());
         CHECK(static_cast<double>(l.value<Decimal>()) == 4.2);
+
+        auto const l2 = Literal::make_typed<Decimal>("-1.0");
+        CHECK_EQ(l2.value<Decimal>(), -1);
     }
 
     SUBCASE("normalization") {
