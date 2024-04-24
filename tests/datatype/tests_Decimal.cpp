@@ -151,11 +151,53 @@ TEST_CASE("Datatype Decimal buffer overread UB") {
     CHECK(lit.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type{"123.4"});
 }
 
-TEST_CASE("decimal inlining") {
-    auto l = Literal::make_typed<datatypes::xsd::Decimal>("4.2");
-    CHECK(l.is_inlined());
-    CHECK(static_cast<double>(l.value<datatypes::xsd::Decimal>()) == 4.2);
-    l = Literal::make_typed_from_value<datatypes::xsd::Decimal>(datatypes::xsd::Decimal::cpp_type(2L << 32, 0));
-    CHECK(!l.is_inlined());
-    CHECK(l.value<datatypes::xsd::Decimal>() == datatypes::xsd::Decimal::cpp_type(2L << 32, 0));
+TEST_CASE("decimal inlining sanity check") {
+    using namespace datatypes::xsd;
+
+    SUBCASE("sanity check") {
+        auto const l = Literal::make_typed<Decimal>("4.2");
+        CHECK(l.is_inlined());
+        CHECK(static_cast<double>(l.value<Decimal>()) == 4.2);
+    }
+
+    SUBCASE("normalization") {
+        auto l = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{40, 1});
+        auto l2 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{4, 0});
+
+        CHECK(l.is_inlined());
+        CHECK(l2.is_inlined());
+        CHECK_EQ(l, l2);
+        CHECK_EQ(l.backend_handle(), l2.backend_handle());
+    }
+
+    SUBCASE("limits") {
+        SUBCASE("unscaled value") {
+            boost::multiprecision::cpp_int const very_big_value{"99999999999999999999999999999999999999999999999"};
+            CHECK_GT(very_big_value, std::numeric_limits<int64_t>::max());
+
+            // way over the limit
+            auto const l = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{very_big_value, 1U});
+            CHECK(!l.is_inlined());
+            CHECK(l.value<Decimal>() == Decimal::cpp_type{very_big_value, 1U});
+
+            auto const l2 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{-very_big_value, 1U});
+            CHECK(!l2.is_inlined());
+            CHECK(l2.value<Decimal>() == Decimal::cpp_type{-very_big_value, 1U});
+
+            // right at the inlining limit
+            auto const l3 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(1L << 32, 0));
+            CHECK(!l3.is_inlined());
+            CHECK(l3.value<Decimal>() == Decimal::cpp_type(1L << 32, 0));
+
+            auto const l4 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(-1L << 32, 0));
+            CHECK(!l4.is_inlined());
+            CHECK(l4.value<Decimal>() == Decimal::cpp_type(-1L << 32, 0));
+        }
+
+        SUBCASE("exponent") {
+            auto const l = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type{boost::multiprecision::cpp_int{5}, 1U << 10});
+            CHECK(!l.is_inlined());
+            CHECK(l.value<Decimal>() == Decimal::cpp_type(5, 1U << 10));
+        }
+    }
 }
