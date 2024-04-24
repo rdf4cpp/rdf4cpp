@@ -17,7 +17,6 @@ IRI::IRI() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::i
 
 IRI::IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage)
     : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = iri}),
-                                                  storage::identifier::RDFNodeType::IRI,
                                                   node_storage}} {
 }
 
@@ -25,7 +24,6 @@ IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node
     : IRI{visit(datatypes::registry::DatatypeIDVisitor{
                         [&](storage::identifier::LiteralType const fixed) -> IRI {
                             return IRI{storage::identifier::NodeBackendHandle{storage::identifier::literal_type_to_iri_node_id(fixed),
-                                                                              storage::identifier::RDFNodeType::IRI,
                                                                               node_storage}};
                         },
                         [&](std::string_view const dynamic) -> IRI {
@@ -56,7 +54,7 @@ IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
     }
 
     auto const node_id = node_storage.find_or_make_id(handle_.iri_backend());
-    return IRI{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage}};
+    return IRI{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 IRI IRI::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
@@ -65,24 +63,23 @@ IRI IRI::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const 
     }
 
     auto const node_id = node_storage.find_id(handle_.iri_backend());
-    if (node_id == storage::identifier::NodeID{}) {
+    if (node_id.null()) {
         return IRI{};
     }
 
-    return IRI{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage}};
+    return IRI{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 IRI IRI::find(std::string_view iri, storage::DynNodeStoragePtr node_storage) noexcept {
     auto nid = node_storage.find_id(storage::view::IRIBackendView{iri});
     if (nid.null())
         return IRI{};
-    return IRI{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::IRI, node_storage}};
+    return IRI{storage::identifier::NodeBackendHandle{nid, node_storage}};
 }
 IRI IRI::find(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept {
     return visit(datatypes::registry::DatatypeIDVisitor{
                              [&](storage::identifier::LiteralType const fixed) -> IRI {
                                  return IRI{storage::identifier::NodeBackendHandle{storage::identifier::literal_type_to_iri_node_id(fixed),
-                                                                                   storage::identifier::RDFNodeType::IRI,
                                                                                    node_storage}};
                              },
                              [&](std::string_view const dynamic) -> IRI {
@@ -95,7 +92,7 @@ IRI IRI::find(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr
 IRI::operator datatypes::registry::DatatypeIDView() const noexcept {
     using namespace storage::identifier;
 
-    auto const id = this->handle_.node_id();
+    auto const id = this->handle_.id();
     LiteralType const type = iri_node_id_to_literal_type(id);
 
     if (type.is_fixed()) {

@@ -29,7 +29,7 @@ storage::identifier::NodeBackendHandle BNodeFactory::make_node(IIdGenerator &gen
         }
     }();
 
-    return storage::identifier::NodeBackendHandle{id, storage::identifier::RDFNodeType::BNode, node_storage};
+    return storage::identifier::NodeBackendHandle{id, node_storage};
 }
 
 }  //namespace rdf4cpp::bnode_mngt

@@ -173,7 +173,7 @@ TEST_CASE("NodeStorage non-specialization xsd:String") {
 
         std::cout << "Testing with: " << std::quoted(value) << " as " << std::string_view{xsd::String::identifier} << '\n';
 
-        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first, .lexical_form = value, .language_tag = "", .needs_escape = false};
+        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeBackendID::xsd_string_iri.first, .lexical_form = value, .language_tag = "", .needs_escape = false};
         auto const id = default_node_storage.find_or_make_id(view);
         auto const id2 = default_node_storage.find_or_make_id(view);
         CHECK(id == id2);
@@ -200,11 +200,11 @@ TEST_CASE("NodeStorage non-specialization xsd:String") {
         auto const backend3 = lit3.backend_handle().literal_backend().get_lexical();
         auto const backend4 = lit3.backend_handle().literal_backend().get_lexical();
 
-        CHECK(identifier::NodeID::xsd_string_iri.first == backend1.datatype_id);
+        CHECK(identifier::NodeBackendID::xsd_string_iri.first == backend1.datatype_id);
         CHECK(backend1.datatype_id == backend2.datatype_id);
         CHECK(backend2.datatype_id == backend3.datatype_id);
         CHECK(backend3.datatype_id == backend4.datatype_id);
-        CHECK(backend4.datatype_id == identifier::NodeID::xsd_string_iri.first);
+        CHECK(backend4.datatype_id == identifier::NodeBackendID::xsd_string_iri.first);
 
         CHECK(backend1.language_tag == "");
         CHECK(backend2.language_tag == "");
@@ -273,7 +273,7 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
 
         std::cout << "Testing with: " << std::quoted(value.lexical_form) << "@" << value.language_tag << " as " << std::string_view{rdf::LangString::identifier} << '\n';
 
-        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeID::xsd_string_iri.first,
+        view::LexicalFormLiteralBackendView view{.datatype_id = identifier::NodeBackendID::xsd_string_iri.first,
                                                  .lexical_form = value.lexical_form,
                                                  .language_tag = value.language_tag,
                                                  .needs_escape = false};
@@ -297,9 +297,9 @@ TEST_CASE("NodeStorage non-specialization rdf:langString") {
         auto const backend1 = extract_backend_handle(lit1).literal_backend().get_lexical();
         auto const backend2 = extract_backend_handle(lit2).literal_backend().get_lexical();
 
-        CHECK(identifier::NodeID::rdf_langstring_iri.first == backend1.datatype_id);
+        CHECK(identifier::NodeBackendID::rdf_langstring_iri.first == backend1.datatype_id);
         CHECK(backend1.datatype_id == backend2.datatype_id);
-        CHECK(backend2.datatype_id == identifier::NodeID::rdf_langstring_iri.first);
+        CHECK(backend2.datatype_id == identifier::NodeBackendID::rdf_langstring_iri.first);
 
         CHECK(value.language_tag == backend1.language_tag);
         CHECK(backend1.language_tag == backend2.language_tag);

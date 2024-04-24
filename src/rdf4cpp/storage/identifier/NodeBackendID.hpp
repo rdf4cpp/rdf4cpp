@@ -10,6 +10,10 @@ struct alignas(uint64_t) NodeBackendID {
     using underlying_type = uint64_t;
     static constexpr size_t width = 64;
 
+    static std::pair<NodeBackendID, std::string_view> const default_graph_iri;
+    static std::pair<NodeBackendID, std::string_view> const xsd_string_iri;
+    static std::pair<NodeBackendID, std::string_view> const rdf_langstring_iri;
+
 private:
     struct __attribute__((__packed__)) id_parts {
         NodeID node_id_;
@@ -28,7 +32,7 @@ private:
 public:
     NodeBackendID() noexcept = default;
 
-    explicit NodeBackendID(underlying_type const underlying_id) noexcept : underlying_{underlying_id} {
+    explicit constexpr NodeBackendID(underlying_type const underlying_id) noexcept : underlying_{underlying_id} {
     }
 
     /**
@@ -38,7 +42,7 @@ public:
      * @param inlined inlined bit
      * @param tagging_bits tagging bits (must be all zero for usage with the backend)
      */
-    NodeBackendID(NodeID const node_id,
+    constexpr NodeBackendID(NodeID const node_id,
                   RDFNodeType const node_type,
                   bool const inlined = false,
                   uint16_t const tagging_bits = 0) noexcept : parts_{node_id, node_type, inlined, tagging_bits} {
@@ -144,6 +148,44 @@ public:
 
 static_assert(sizeof(NodeBackendID) == sizeof(uint64_t));
 static_assert(alignof(NodeBackendID) == alignof(uint64_t));
+
+/**
+ * Convert a NodeId for an IRI
+ * to a LiteralType.
+ *
+ * SAFETY: caller must ensure the node id actually refers to an IRI
+ *
+ * @param id IRI NodeId
+ * @return the LiteralType associated with that IRI
+ */
+constexpr LiteralType iri_node_id_to_literal_type(NodeBackendID const id) noexcept {
+    assert(id.is_iri());
+    auto const value = id.node_id().to_underlying();
+
+    return value < datatypes::registry::min_dynamic_datatype_id && value != 0
+                   ? static_cast<LiteralType>(value)
+                   : LiteralType::other();
+}
+
+/**
+ * Convert a LiteralType to the corresponding IRI NodeID.
+ *
+ * @param datatype fixed dataype
+ * @return NodeID of the IRI associated with the given datatype
+ */
+constexpr NodeBackendID literal_type_to_iri_node_id(LiteralType const datatype) {
+    assert(datatype.is_fixed());
+    return NodeBackendID{NodeID{datatype.to_underlying()}, RDFNodeType::IRI};
+}
+
+inline constexpr std::pair<NodeBackendID, std::string_view> NodeBackendID::default_graph_iri{literal_type_to_iri_node_id(datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri]),
+                                                                                             datatypes::registry::default_graph_iri};
+
+inline constexpr std::pair<NodeBackendID, std::string_view> NodeBackendID::xsd_string_iri{literal_type_to_iri_node_id(datatypes::xsd::String::fixed_id),
+                                                                                          datatypes::xsd::String::identifier};
+
+inline constexpr std::pair<NodeBackendID, std::string_view> NodeBackendID::rdf_langstring_iri{literal_type_to_iri_node_id(datatypes::rdf::LangString::fixed_id),
+                                                                                              datatypes::rdf::LangString::identifier};
 
 } // namespace rdf4cpp::storage::identifier
 

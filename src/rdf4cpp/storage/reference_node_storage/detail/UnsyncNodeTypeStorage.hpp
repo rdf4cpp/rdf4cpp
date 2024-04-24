@@ -69,23 +69,15 @@ public:
     /**
      * Translates the given backend_id_type into a NodeID
      */
-    static identifier::NodeID to_node_id(backend_id_type const id, [[maybe_unused]] backend_view_type const &view) noexcept {
-        if constexpr (requires { backend_type::to_node_id(id, view); }) {
-            return backend_type::to_node_id(id, view);
-        } else {
-            return id;
-        }
+    static identifier::NodeBackendID from_storage_id(backend_id_type const id, backend_view_type const &view) noexcept {
+        return backend_type::from_storage_id(id, view);
     }
 
     /**
      * Translates the given NodeID into a backend_id_type
      */
-    static backend_id_type to_backend_id(identifier::NodeID const id) noexcept {
-        if constexpr (requires { backend_type::to_backend_id(id); }) {
-            return backend_type::to_backend_id(id);
-        } else {
-            return id;
-        }
+    static backend_id_type to_storage_id(identifier::NodeBackendID const id) noexcept {
+        return backend_type::to_storage_id(id);
     }
 
     /**

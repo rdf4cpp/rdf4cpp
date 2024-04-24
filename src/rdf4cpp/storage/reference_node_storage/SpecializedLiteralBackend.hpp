@@ -30,15 +30,15 @@ struct SpecializedLiteralBackend {
      * Translates the given id_type (= LiteralID) into a NodeID by attaching the
      * LiteralType from the given view to it.
      */
-    static identifier::NodeID to_node_id(id_type const id, view_type const &view) noexcept {
-        return identifier::NodeID{id, view.datatype};
+    static identifier::NodeBackendID from_storage_id(id_type const id, view_type const &view) noexcept {
+        return identifier::NodeBackendID{identifier::NodeID{id, view.datatype}, identifier::RDFNodeType::Literal};
     }
 
     /**
      * Translates the given NodeID into an id_type (= LiteralID) by extracting the LiteralID
      */
-    static id_type to_backend_id(identifier::NodeID const id) noexcept {
-        return id.literal_id();
+    static id_type to_storage_id(identifier::NodeBackendID const id) noexcept {
+        return id.node_id().literal_id();
     }
 
     struct equal {

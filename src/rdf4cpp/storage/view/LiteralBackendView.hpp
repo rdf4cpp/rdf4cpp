@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_LITERALBACKENDHANDLE_HPP
 #define RDF4CPP_LITERALBACKENDHANDLE_HPP
 
-#include <rdf4cpp/storage/identifier/NodeID.hpp>
+#include <rdf4cpp/storage/identifier/NodeBackendID.hpp>
 
 #include <dice/hash.hpp>
 #include <dice/template-library/overloaded.hpp>
@@ -12,7 +12,7 @@
 namespace rdf4cpp::storage::view {
 
 struct LexicalFormLiteralBackendView {
-    identifier::NodeID datatype_id;
+    identifier::NodeBackendID datatype_id;
     std::string_view lexical_form;
     std::string_view language_tag;
     bool needs_escape;

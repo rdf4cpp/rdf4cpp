@@ -132,7 +132,7 @@ private:
      */
     [[nodiscard]] static Literal make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, storage::DynNodeStoragePtr node_storage);
 
-    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, storage::DynNodeStoragePtr node_storage, storage::identifier::NodeID node_id) noexcept;
+    [[nodiscard]] static Literal make_lang_tagged_unchecked_from_node_id(std::string_view lang, storage::DynNodeStoragePtr node_storage, storage::identifier::NodeBackendID node_id) noexcept;
 
     /**
      * Creates a string like type with contents of str.
@@ -338,7 +338,6 @@ public:
                 return Literal{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::ValueLiteralBackendView{
                                                                                                         .datatype = T::fixed_id,
                                                                                                         .value = std::any{compatible_value}}),
-                                                                      storage::identifier::RDFNodeType::Literal,
                                                                       node_storage}};
             }
         }
@@ -401,7 +400,7 @@ public:
     [[nodiscard]] Literal try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
 private:
-    [[nodiscard]] static storage::identifier::NodeID find_datatype_iri(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept;
+    [[nodiscard]] static storage::identifier::NodeBackendID find_datatype_iri(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept;
 
 public:
     /**
@@ -457,7 +456,7 @@ public:
                         .value = std::any{compatible_value}});
                 if (nid.null())
                     return Literal{};
-                return Literal{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
+                return Literal{storage::identifier::NodeBackendHandle{nid, node_storage}};
             }
         }
 
@@ -479,7 +478,7 @@ public:
 
         if (nid.null())
             return Literal{};
-        return Literal{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
+        return Literal{storage::identifier::NodeBackendHandle{nid, node_storage}};
     }
 
     /**
@@ -514,7 +513,7 @@ public:
                         .value = std::any{value}});
                 if (nid.null())
                     return Literal{};
-                return Literal{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
+                return Literal{storage::identifier::NodeBackendHandle{nid, node_storage}};
             }
         }
 
@@ -532,7 +531,7 @@ public:
 
         if (nid.null())
             return Literal{};
-        return Literal{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
+        return Literal{storage::identifier::NodeBackendHandle{nid, node_storage}};
     }
 
     /**
