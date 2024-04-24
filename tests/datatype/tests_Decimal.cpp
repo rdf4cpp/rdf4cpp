@@ -161,6 +161,22 @@ TEST_CASE("decimal inlining sanity check") {
 
         auto const l2 = Literal::make_typed<Decimal>("-1.0");
         CHECK_EQ(l2.value<Decimal>(), -1);
+
+        auto const l3 = Literal::make_typed<Decimal>("1.984612364642233");
+        CHECK(!l3.is_inlined());
+        CHECK_EQ(l3.value<Decimal>(), Decimal::cpp_type{"1.984612364642233"});
+
+        auto const l4 = Literal::make_typed<Decimal>("-1.984612364642233");
+        CHECK(!l4.is_inlined());
+        CHECK_EQ(l4.value<Decimal>(), Decimal::cpp_type{"-1.984612364642233"});
+
+        auto const l5 = Literal::make_typed<Decimal>("1.8743");
+        CHECK(l5.is_inlined());
+        CHECK_EQ(l5.value<Decimal>(), Decimal::cpp_type{"1.8743"});
+
+        auto const l6 = Literal::make_typed<Decimal>("-1.9846");
+        CHECK(l6.is_inlined());
+        CHECK_EQ(l6.value<Decimal>(), Decimal::cpp_type{"-1.9846"});
     }
 
     SUBCASE("normalization") {
@@ -187,14 +203,23 @@ TEST_CASE("decimal inlining sanity check") {
             CHECK(!l2.is_inlined());
             CHECK(l2.value<Decimal>() == Decimal::cpp_type{-very_big_value, 1U});
 
-            // right at the inlining limit
-            auto const l3 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(1L << 32, 0));
+            // right above the inlining limit
+            auto const l3 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(1L << 31, 0));
             CHECK(!l3.is_inlined());
-            CHECK(l3.value<Decimal>() == Decimal::cpp_type(1L << 32, 0));
+            CHECK(l3.value<Decimal>() == Decimal::cpp_type(1L << 31, 0));
 
-            auto const l4 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(-1L << 32, 0));
+            auto const l4 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(-(1L << 31) - 1, 0));
             CHECK(!l4.is_inlined());
-            CHECK(l4.value<Decimal>() == Decimal::cpp_type(-1L << 32, 0));
+            CHECK(l4.value<Decimal>() == Decimal::cpp_type(-(1L << 31) - 1, 0));
+
+            // right below the inlining limit
+            auto const l5 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type((1L << 31) - 1, 0));
+            CHECK(l5.is_inlined());
+            CHECK(l5.value<Decimal>() == Decimal::cpp_type((1L << 31) - 1, 0));
+
+            auto const l6 = Literal::make_typed_from_value<Decimal>(Decimal::cpp_type(-(1L << 31), 0));
+            CHECK(l6.is_inlined());
+            CHECK(l6.value<Decimal>() == Decimal::cpp_type(-(1L << 31), 0));
         }
 
         SUBCASE("exponent") {
