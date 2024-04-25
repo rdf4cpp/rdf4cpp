@@ -137,6 +137,10 @@ public:
         return underlying_;
     }
 
+    explicit constexpr operator underlying_type() const noexcept {
+        return underlying_;
+    }
+
     constexpr std::strong_ordering operator<=>(NodeBackendID const &other) const noexcept {
         return underlying_ <=> other.underlying_;
     }
