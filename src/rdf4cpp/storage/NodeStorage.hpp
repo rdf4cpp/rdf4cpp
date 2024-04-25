@@ -271,6 +271,11 @@ public:
                                          vtable_{NodeStorageVTable::get<NS>()} {
     }
 
+    template<NodeStorage NS> requires (!std::is_same_v<NS, DynNodeStoragePtr>)
+    DynNodeStoragePtr(NS *ns) noexcept : backend_{ns},
+                                         vtable_{NodeStorageVTable::get<NS>()} {
+    }
+
     constexpr DynNodeStoragePtr(void *backend, NodeStorageVTable const *vtable) noexcept : backend_{backend},
                                                                                            vtable_{vtable} {
     }
