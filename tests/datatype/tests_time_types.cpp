@@ -5,6 +5,10 @@
 #include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
+#define ANKERL_NANOBENCH_IMPLEMENT
+#include <nanobench.h>
+#include <random>
+
 template<typename Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
     using namespace rdf4cpp;
@@ -610,4 +614,84 @@ TEST_CASE("arithmetic") {
     CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y") / Literal::make_typed_from_value<datatypes::xsd::Double>(0.0)) == Literal{});
     CHECK((Literal::make_typed<datatypes::xsd::DayTimeDuration>("P4D") / Literal::make_typed<datatypes::xsd::DayTimeDuration>("P2D")) == Literal::make_typed<datatypes::xsd::Decimal>("2"));
     CHECK((Literal::make_typed<datatypes::xsd::YearMonthDuration>("P4Y") / Literal::make_typed<datatypes::xsd::YearMonthDuration>("P2Y")) == Literal::make_typed<datatypes::xsd::Decimal>("2"));
+}
+
+bool baseline(rdf4cpp::datatypes::xsd::Date::cpp_type const &value, rdf4cpp::writer::BufWriterParts writer) noexcept {
+    auto str = std::format("{:%Y-%m-%d}", value.first);
+    if (value.second.has_value())
+        str += value.second->to_canonical_string();
+
+    return rdf4cpp::writer::write_str(str, writer);
+}
+
+bool buffered(rdf4cpp::datatypes::xsd::Date::cpp_type const &value, rdf4cpp::writer::BufWriterParts writer) noexcept {
+    std::array<char, 1024> buff;
+    auto str = std::format_to(&buff[0], "{:%Y-%m-%d}", value.first);
+    if (value.second.has_value())
+        str = value.second->to_canonical_string(str);
+
+    return rdf4cpp::writer::write_str(std::string_view(&buff[0], str-&buff[0]), writer);
+}
+
+bool current(rdf4cpp::datatypes::xsd::Date::cpp_type const &value, rdf4cpp::writer::BufWriterParts writer) noexcept {
+    if (!std::format_to(rdf4cpp::writer::BufWriterOutputIterator{writer}, "{:%Y-%m-%d}", value.first).write_ok) {
+        return false;
+    }
+    if (value.second.has_value()) {
+        return value.second->to_canonical_string(writer);
+    }
+    return true;
+}
+
+TEST_CASE("serialization perf") {
+    static constexpr size_t s = 1024;
+    std::array<rdf4cpp::datatypes::xsd::Date::cpp_type, s> data{};
+    std::mt19937_64 rng{};
+    std::uniform_int_distribution<int> year(-5000, 5000);
+    std::uniform_int_distribution<unsigned int> month(1, 12);
+    std::uniform_int_distribution<unsigned int> day(1, 28);
+    std::uniform_int_distribution<int> tz(-13, 13);
+    std::uniform_int_distribution<int> has_tz(0, 100);
+    for (auto& d : data) {
+        d.first = std::chrono::year{year(rng)} / std::chrono::month{month(rng)} / day(rng);
+        if (has_tz(rng) < 50)
+            d.second = rdf4cpp::Timezone(std::chrono::hours(tz(rng)));
+        else
+            d.second = std::nullopt;
+        CHECK(rdf4cpp::writer::StringWriter::oneshot([&](auto w) {
+            return baseline(d, w);
+        }) == rdf4cpp::writer::StringWriter::oneshot([&](auto w) {
+                  return buffered(d, w);
+              }));
+    }
+
+    size_t base_i = 0;
+    size_t buff_i = 0;
+    size_t direct_i = 0;
+
+    ankerl::nanobench::Bench().performanceCounters(true).relative(true).run("baseline", [&]() {
+        std::string r{};
+        r.reserve(1024);
+        rdf4cpp::writer::StringWriter wr(r);
+        baseline(data[base_i % s], wr);
+        ++base_i;
+        wr.finalize();
+        ankerl::nanobench::doNotOptimizeAway(r);
+    }).run("buffered", [&]() {
+        std::string r{};
+        r.reserve(1024);
+        rdf4cpp::writer::StringWriter wr(r);
+        buffered(data[buff_i % s], wr);
+        ++buff_i;
+        wr.finalize();
+        ankerl::nanobench::doNotOptimizeAway(r);
+    }).run("direct write", [&]() {
+        std::string r{};
+        r.reserve(1024);
+        rdf4cpp::writer::StringWriter wr(r);
+        current(data[direct_i % s], wr);
+        ++direct_i;
+        wr.finalize();
+        ankerl::nanobench::doNotOptimizeAway(r);
+    });
 }
