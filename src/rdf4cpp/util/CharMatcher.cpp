@@ -51,8 +51,8 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         using namespace hwy::HWY_NAMESPACE;
         bool found_unicode = false;
         bool r = true;
-        using D = ScalableTag<int8_t>;  //NOLINT
-        using V = VFromD<D>;             //NOLINT
+        using D = ScalableTag<int8_t>;  //NOLINT tag type, selects the used vector type
+        using V = Vec<D>;             //NOLINT vector type
         D d;
         bool r0a = ranges[0].first < ranges[0].last;
         V zero = r0a ? Set(d, static_cast<int8_t>(ranges[0].first)) : Set(d, static_cast<int8_t>(single.at(0)));
@@ -108,8 +108,8 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
         using namespace hwy::HWY_NAMESPACE;
         bool r = false;
-        using D = ScalableTag<int8_t>;  //NOLINT
-        using V = VFromD<D>;             //NOLINT
+        using D = ScalableTag<int8_t>;  //NOLINT  tag type, selects the used vector type
+        using V = Vec<D>;             //NOLINT vector type
         D d;
         V zero = Set(d, static_cast<int8_t>(0));
         V m0 = Set(d, static_cast<int8_t>(match[0]));
