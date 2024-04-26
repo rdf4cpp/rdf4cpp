@@ -48,22 +48,23 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         // 5 - logic
         // ? - singles
         // 16 overall
+        using namespace hwy::HWY_NAMESPACE;
         bool found_unicode = false;
         bool r = true;
-        using D = hwy::HWY_NAMESPACE::ScalableTag<int8_t>;  //NOLINT
-        using V = hwy::HWY_NAMESPACE::VFromD<D>;             //NOLINT
+        using D = ScalableTag<int8_t>;  //NOLINT
+        using V = VFromD<D>;             //NOLINT
         D d;
         bool r0a = ranges[0].first < ranges[0].last;
-        V zero = r0a ? hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].first)) : hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(single.at(0)));
-        V r0b = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].first - 1));
-        V r0e = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[0].last + 1));
+        V zero = r0a ? Set(d, static_cast<int8_t>(ranges[0].first)) : Set(d, static_cast<int8_t>(single.at(0)));
+        V r0b = Set(d, static_cast<int8_t>(ranges[0].first - 1));
+        V r0e = Set(d, static_cast<int8_t>(ranges[0].last + 1));
         bool r1a = ranges[1].first < ranges[1].last;
-        V r1b = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[1].first - 1));
-        V r1e = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[1].last + 1));
+        V r1b = Set(d, static_cast<int8_t>(ranges[1].first - 1));
+        V r1e = Set(d, static_cast<int8_t>(ranges[1].last + 1));
         bool r2a = ranges[2].first < ranges[2].last;
-        V r2b = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[2].first - 1));
-        V r2e = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(ranges[2].last + 1));
-        V unicode_bit = hwy::HWY_NAMESPACE::Set(d, 7);
+        V r2b = Set(d, static_cast<int8_t>(ranges[2].first - 1));
+        V r2e = Set(d, static_cast<int8_t>(ranges[2].last + 1));
+        V unicode_bit = Set(d, 7);
 
         // if this gets ported to variable size vectors, this needs to be changed (like above)
         // this array prevents keeping in registers, but there are not enough registers anyway
@@ -74,28 +75,28 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
             return std::nullopt;
         }
         for (size_t i = 0; i < si_num; ++i) {
-            si[i] = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(single[i]));
+            si[i] = Set(d, static_cast<int8_t>(single[i]));
         }
 
         Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
-            if (!hwy::HWY_NAMESPACE::AllTrue(d, hwy::HWY_NAMESPACE::HighestSetBitIndex(in_vec) < unicode_bit)) {
+            if (!AllTrue(d, HighestSetBitIndex(in_vec) < unicode_bit)) {
                 found_unicode = true;
                 return false;
             }
 
             // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
             // and <= and >= are 2 instructions regardless of signed/unsigned
-            auto m = r0a ? hwy::HWY_NAMESPACE::And(in_vec > r0b, in_vec < r0e) : hwy::HWY_NAMESPACE::FirstN(d, 0);
+            auto m = r0a ? And(in_vec > r0b, in_vec < r0e) : FirstN(d, 0);
             if (r1a) {
-                m = hwy::HWY_NAMESPACE::Or(m, hwy::HWY_NAMESPACE::And(in_vec > r1b, in_vec < r1e));
+                m = Or(m, And(in_vec > r1b, in_vec < r1e));
             }
             if (r2a) {
-                m = hwy::HWY_NAMESPACE::Or(m, hwy::HWY_NAMESPACE::And(in_vec > r2b, in_vec < r2e));
+                m = Or(m, And(in_vec > r2b, in_vec < r2e));
             }
             for (size_t i = 0; i < si_num; ++i) {
-                m = hwy::HWY_NAMESPACE::Or(m, in_vec == si[i]);
+                m = Or(m, in_vec == si[i]);
             }
-            r = r && hwy::HWY_NAMESPACE::AllTrue(d, m);
+            r = r && AllTrue(d, m);
             return r;
         });
 
@@ -105,22 +106,23 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     }
 
     bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
+        using namespace hwy::HWY_NAMESPACE;
         bool r = false;
-        using D = hwy::HWY_NAMESPACE::ScalableTag<int8_t>;  //NOLINT
-        using V = hwy::HWY_NAMESPACE::VFromD<D>;             //NOLINT
+        using D = ScalableTag<int8_t>;  //NOLINT
+        using V = VFromD<D>;             //NOLINT
         D d;
-        V zero = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(0));
-        V m0 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[0]));
-        V m1 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[1]));
-        V m2 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[2]));
-        V m3 = hwy::HWY_NAMESPACE::Set(d, static_cast<int8_t>(match[3]));
+        V zero = Set(d, static_cast<int8_t>(0));
+        V m0 = Set(d, static_cast<int8_t>(match[0]));
+        V m1 = Set(d, static_cast<int8_t>(match[1]));
+        V m2 = Set(d, static_cast<int8_t>(match[2]));
+        V m3 = Set(d, static_cast<int8_t>(match[3]));
 
         Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
             auto m = in_vec == m0;
-            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m1);
-            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m2);
-            m = hwy::HWY_NAMESPACE::Or(m, in_vec == m3);
-            r = r || !hwy::HWY_NAMESPACE::AllFalse(d, m);
+            m = Or(m, in_vec == m1);
+            m = Or(m, in_vec == m2);
+            m = Or(m, in_vec == m3);
+            r = r || !AllFalse(d, m);
             return !r;
         });
 

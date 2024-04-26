@@ -22,14 +22,14 @@ concept CharMatcher = requires(T const a, int c) {
         a.match(c)
     } -> std::same_as<bool>;
     {
-        T::SIMD_RANGE_NUM
+        T::simd_range_num
     } -> std::same_as<const size_t &>;
     {
-        T::FAIL_IF_UNICODE
+        T::fail_if_unicode
     } -> std::same_as<const bool &>;
     {
         a.simd_ranges()
-    } -> std::same_as<std::array<CharRange, T::SIMD_RANGE_NUM>>;
+    } -> std::same_as<std::array<CharRange, T::simd_range_num>>;
     {
         a.simd_singles()
     };  // -> std::same_as<std::string_view>;
@@ -79,9 +79,9 @@ struct ASCIIPatternMatcher {
     return static_cast<std::string_view>(pattern).find(ch) != std::string_view::npos;
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 0;
-    static constexpr bool FAIL_IF_UNICODE = true;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
+    static constexpr size_t simd_range_num = 0;
+    static constexpr bool fail_if_unicode = true;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
         return {};
     }
     [[nodiscard]] consteval auto simd_singles() const noexcept {
@@ -100,10 +100,10 @@ struct ASCIINumMatcher {
         return c >= '0' && c <= '9';
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 1;
-    static constexpr bool FAIL_IF_UNICODE = true;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
-        return std::array<CharRange, SIMD_RANGE_NUM>{CharRange{'0', '9'}};
+    static constexpr size_t simd_range_num = 1;
+    static constexpr bool fail_if_unicode = true;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
+        return std::array<CharRange, simd_range_num>{CharRange{'0', '9'}};
     }
     [[nodiscard]] static consteval auto simd_singles() noexcept {
         return datatypes::registry::util::ConstexprString("");
@@ -120,10 +120,10 @@ struct ASCIIAlphaMatcher {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 2;
-    static constexpr bool FAIL_IF_UNICODE = true;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
-        return std::array<CharRange, SIMD_RANGE_NUM>{
+    static constexpr size_t simd_range_num = 2;
+    static constexpr bool fail_if_unicode = true;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
+        return std::array<CharRange, simd_range_num>{
                 CharRange{'a', 'z'},
                 CharRange{'A', 'Z'}};
     }
@@ -149,20 +149,20 @@ struct OrMatcher {
         return a.match(c) || b.match(c);
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = A::SIMD_RANGE_NUM + B::SIMD_RANGE_NUM;
-    static constexpr bool FAIL_IF_UNICODE = A::FAIL_IF_UNICODE && B::FAIL_IF_UNICODE;
-    [[nodiscard]] consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() const noexcept {
-        std::array<CharRange, SIMD_RANGE_NUM> r{};
-        if constexpr (A::SIMD_RANGE_NUM > 0) {
+    static constexpr size_t simd_range_num = A::simd_range_num + B::simd_range_num;
+    static constexpr bool fail_if_unicode = A::fail_if_unicode && B::fail_if_unicode;
+    [[nodiscard]] consteval std::array<CharRange, simd_range_num> simd_ranges() const noexcept {
+        std::array<CharRange, simd_range_num> r{};
+        if constexpr (A::simd_range_num > 0) {
             auto aa = a.simd_ranges();
-            for (size_t s = 0; s < A::SIMD_RANGE_NUM; ++s) {
+            for (size_t s = 0; s < A::simd_range_num; ++s) {
                 r[s] = aa[s];
             }
         }
-        if constexpr (B::SIMD_RANGE_NUM > 0) {
+        if constexpr (B::simd_range_num > 0) {
             auto ba = b.simd_ranges();
-            for (size_t s = 0; s < B::SIMD_RANGE_NUM; ++s) {
-                r[s + A::SIMD_RANGE_NUM] = ba[s];
+            for (size_t s = 0; s < B::simd_range_num; ++s) {
+                r[s + A::simd_range_num] = ba[s];
             }
         }
         return r;
@@ -214,9 +214,9 @@ struct UCSCharMatcher {
                (c >= 0xE0000 && c <= 0xEFFFD);
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 0;
-    static constexpr bool FAIL_IF_UNICODE = false;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
+    static constexpr size_t simd_range_num = 0;
+    static constexpr bool fail_if_unicode = false;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
         return {};
     }
     [[nodiscard]] static consteval auto simd_singles() noexcept {
@@ -243,9 +243,9 @@ struct IPrivateMatcher {
                (c >= 0x100000 && c <= 0x10FFFD);
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 0;
-    static constexpr bool FAIL_IF_UNICODE = false;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
+    static constexpr size_t simd_range_num = 0;
+    static constexpr bool fail_if_unicode = false;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
         return {};
     }
     [[nodiscard]] static consteval auto simd_singles() noexcept {
@@ -273,9 +273,9 @@ struct PNCharsBase_UniMatcher {
                (c >= 0x00010000 && c <= 0x000EFFFF);
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 0;
-    static constexpr bool FAIL_IF_UNICODE = false;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
+    static constexpr size_t simd_range_num = 0;
+    static constexpr bool fail_if_unicode = false;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
         return {};
     }
     [[nodiscard]] static consteval auto simd_singles() noexcept {
@@ -298,9 +298,9 @@ struct PNChars_UniMatcher {
                (c >= 0x203F && c <= 0x2040);
     }
 
-    static constexpr size_t SIMD_RANGE_NUM = 0;
-    static constexpr bool FAIL_IF_UNICODE = false;
-    [[nodiscard]] static consteval std::array<CharRange, SIMD_RANGE_NUM> simd_ranges() noexcept {
+    static constexpr size_t simd_range_num = 0;
+    static constexpr bool fail_if_unicode = false;
+    [[nodiscard]] static consteval std::array<CharRange, simd_range_num> simd_ranges() noexcept {
         return {};
     }
     [[nodiscard]] static consteval auto simd_singles() noexcept {
@@ -333,7 +333,7 @@ bool match(std::string_view s) noexcept {
     if (simd_r.has_value()) {
         return *simd_r;
     }
-    if constexpr (m.FAIL_IF_UNICODE) {
+    if constexpr (m.fail_if_unicode) {
         return false;
     }
     for (int c : s | utf8_range_decoder) {
