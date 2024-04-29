@@ -298,18 +298,15 @@ TEST_CASE("char matcher") {
 void test_simd_matcher_worker(std::string_view target_name) {
     using namespace util::char_matcher_detail;
     INFO(target_name); // add to every failing test case in scope
-    std::array<CharRange, 3> r {CharRange{'a', 'z'}, CharRange{'A', 'Z'}, CharRange{'a', 'a'}};
-    std::array<CharRange, 3> empty {CharRange{'a', 'a'}, CharRange{'a', 'a'}, CharRange{'a', 'a'}};
+    std::array<CharRange, 3> r {CharRange{'a', 'z'}, CharRange{'A', 'Z'}, CharRange{'a', 'b'}};
     static constexpr datatypes::registry::util::ConstexprString single_empty{""};
-static constexpr datatypes::registry::util::ConstexprString single_2{"%&$"};
+    static constexpr datatypes::registry::util::ConstexprString single_2{"%&$"};
     CHECK(try_match_simd("abcdefZxyAZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == true);
     CHECK(try_match_simd("abcdefZxy%&AZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == false);
     CHECK(try_match_simd("abcdefZxy%&AZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_2) == true);
     CHECK(try_match_simd("f", r, single_empty) == true);
     CHECK(try_match_simd("abcdefx5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == false);
     CHECK(!try_match_simd("abcdefx\U000000FF5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty).has_value());
-    CHECK(try_match_simd("abcdefZxy%&AZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", empty, single_2) == false);
-    CHECK(try_match_simd("%", empty, single_2) == true);
 
     std::array chars{'a', 'b', 'A', 'B'};
     CHECK(contains_any("57816a58919", chars) == true);

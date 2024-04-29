@@ -41,28 +41,34 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     }
 
     template<size_t rn, size_t sn>
+    requires (rn > 0)
     HWY_INLINE std::optional<bool> try_match_simd_impl(std::string_view data, std::array<CharRange, rn> const &ranges, datatypes::registry::util::ConstexprString<sn> const &single) {
-        // register usage (3 ranges):
-        // 1 - data
-        // 6 - ranges
-        // 5 - logic
-        // ? - singles
-        // 16 overall
         using namespace hwy::HWY_NAMESPACE;
+
         bool found_unicode = false;
         bool r = true;
+
         using D = ScalableTag<int8_t>;  //NOLINT tag type, selects the used vector type
         using V = Vec<D>;             //NOLINT vector type
-        D d;
-        bool has_range_0 = rn > 0;
-        V const zero = has_range_0 ? Set(d, static_cast<int8_t>(ranges[0].first)) : Set(d, static_cast<int8_t>(single.value.at(0)));
+        D const d;
+
+        // elements from this vector are used, if data is not a multiple of Lanes(d)
+        // should not influence final result
+        // => comparisons need to evaluate as true for the logic to work
+        V const zero = Set(d, static_cast<int8_t>(ranges[0].first));
+
+        // set up ranges
         std::array<std::pair<V, V>, rn> range_vectors;
         for (size_t i = 0; i < rn; ++i) {
+            assert(ranges[i].first != '\0');
+            assert(ranges[i].first < ranges[i].last);
             range_vectors[i].first = Set(d, static_cast<int8_t>(ranges[i].first - 1));
             range_vectors[i].second = Set(d, static_cast<int8_t>(ranges[i].last + 1));
         }
-        V unicode_bit = Set(d, 7);
 
+        V const unicode_bit_index = Set(d, 7);
+
+        // set up single compares
         std::array<V, sn-1> single_vectors{};
         auto view = static_cast<std::string_view>(single);
         for (size_t i = 0; i < view.size(); ++i) {
@@ -70,22 +76,29 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         }
 
         Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
-            if (!AllTrue(d, HighestSetBitIndex(in_vec) < unicode_bit)) {
+            // if bit 7 is set, the char belongs to a unicode sequence
+            // => std::nullopt
+            if (!AllTrue(d, HighestSetBitIndex(in_vec) < unicode_bit_index)) {
                 found_unicode = true;
                 return false;
             }
 
             // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
             // and <= and >= are 2 instructions regardless of signed/unsigned
-            auto m = has_range_0 ? And(in_vec > range_vectors[0].first, in_vec < range_vectors[0].second) : FirstN(d, 0);
+
+            // check if target is in one of the ranges
+            auto m = And(in_vec > range_vectors[0].first, in_vec < range_vectors[0].second);
             for (size_t i = 1; i < rn; ++i) {
                 m = Or(m, And(in_vec > range_vectors[i].first, in_vec < range_vectors[i].second));
             }
+
+            // check the single compares
             for (size_t i = 0; i < sn-1; ++i) {
                 m = Or(m, in_vec == single_vectors[i]);
             }
+
             r = r && AllTrue(d, m);
-            return r;
+            return r; // possible early return
         });
 
         if (found_unicode)
@@ -114,22 +127,31 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
         using namespace hwy::HWY_NAMESPACE;
         bool r = false;
+
         using D = ScalableTag<int8_t>;  //NOLINT  tag type, selects the used vector type
         using V = Vec<D>;             //NOLINT vector type
-        D d;
-        V zero = Set(d, static_cast<int8_t>(0));
-        V m0 = Set(d, static_cast<int8_t>(match[0]));
-        V m1 = Set(d, static_cast<int8_t>(match[1]));
-        V m2 = Set(d, static_cast<int8_t>(match[2]));
-        V m3 = Set(d, static_cast<int8_t>(match[3]));
+        D const d;
+
+        // elements from this vector are used, if data is not a multiple of Lanes(d)
+        // should not influence final result
+        // => comparisons need to evaluate as false for the logic to work
+        V const zero = Set(d, static_cast<int8_t>(0));
+
+        // load comparison vectors
+        std::array<V, 4> match_vectors;
+        for (size_t i = 0; i < 4; ++i) {
+            match_vectors[i] = Set(d, static_cast<int8_t>(match[i]));
+        }
 
         Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
-            auto m = in_vec == m0;
-            m = Or(m, in_vec == m1);
-            m = Or(m, in_vec == m2);
-            m = Or(m, in_vec == m3);
+            // compare
+            auto m = in_vec == match_vectors[0];
+            for (size_t i = 1; i < 4; ++i) {
+                m = Or(m, in_vec == match_vectors[i]);
+            }
+
             r = r || !AllFalse(d, m);
-            return !r;
+            return !r; // potential early return
         });
 
         return r;

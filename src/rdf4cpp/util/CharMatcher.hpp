@@ -40,7 +40,7 @@ concept CharMatcher = requires(T const a, int c) {
  * fails (and returns std::nullopt) if non ascii is found.
  * each size variant needs to be explicitly specified (because it needs its own highway dispatch table).
  * @param data
- * @param ranges
+ * @param ranges each range [first, last] needs to contain at least one character, first may also not be '\0'
  * @param single
  * @return
  */
@@ -63,7 +63,7 @@ std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 
 /**
  * tries to check if data contains any of match.
  * @param data
- * @param match
+ * @param match may not contain '\0'
  * @return
  */
 bool contains_any(std::string_view data, std::array<char, 4> match);
