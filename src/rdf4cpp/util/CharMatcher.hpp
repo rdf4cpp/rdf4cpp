@@ -35,16 +35,30 @@ concept CharMatcher = requires(T const a, int c) {
     };  // -> std::same_as<std::string_view>;
 };
 
-static constexpr size_t simd_max_single_chars = 32;
 /**
- * tries to match each char of data to be in one of the 3 ranges or contained in single.
- * fails (and returns std::nullopt) if non ascii is found, or single is longer than 32 chars.
+ * tries to match each char of data to be in one of the ranges or contained in single.
+ * fails (and returns std::nullopt) if non ascii is found.
+ * each size variant needs to be explicitly specified (because it needs its own highway dispatch table).
  * @param data
- * @param ranges a range with first >= last will get ignored, first may not be 0, if range should not be empty
- * @param single single.size() <= 32
+ * @param ranges
+ * @param single
  * @return
  */
-std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single);
+template<size_t rn, size_t sn>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, rn> const &ranges, datatypes::registry::util::ConstexprString<sn> const &single) = delete;
+
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<1> const &single);
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<4> const &single);
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<18> const &single);
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<20> const &single);
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<21> const &single);
+template<>
+std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 1> const &ranges, datatypes::registry::util::ConstexprString<1> const &single);
 
 /**
  * tries to check if data contains any of match.
@@ -323,11 +337,7 @@ constexpr auto PNCharsMatcher = ASCIINumMatcher{} | PNCharsBaseMatcher | PNChars
   */
 template<auto const &m, auto utf8_range_decoder>
 bool match(std::string_view s) noexcept {
-    auto ra = m.simd_ranges();
-    std::array<CharRange, 3> ranges{};
-    for (size_t i = 0; i < std::min(ra.size(), ranges.size()); ++i) {
-        ranges[i] = ra[i];
-    }
+    auto ranges = m.simd_ranges();
     static constexpr auto singles = m.simd_singles();
     auto simd_r = try_match_simd(s, ranges, singles);
     if (simd_r.has_value()) {

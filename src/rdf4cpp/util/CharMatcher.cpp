@@ -15,9 +15,8 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     // `count` are instead taken from `no[i % Lanes(d)]`.
     // if func returns false, exits early
     // from hwy/contrib/algo/transform-inl.h
-    // TODO move to some header, probably will get used somewhere else
     template<class D, class Func, typename T = hwy::HWY_NAMESPACE::TFromD<D>>
-    void Foreach(D d, T const *HWY_RESTRICT in, size_t const count, hwy::HWY_NAMESPACE::Vec<D> const no,
+    HWY_INLINE void Foreach(D d, T const *HWY_RESTRICT in, size_t const count, hwy::HWY_NAMESPACE::Vec<D> const no,
                  Func const &func) {
         size_t const N = Lanes(d);
 
@@ -41,8 +40,9 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         func(d, v);
     }
 
-    std::optional<bool> try_match_simd_impl(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single) {
-        // register usage:
+    template<size_t rn, size_t sn>
+    HWY_INLINE std::optional<bool> try_match_simd_impl(std::string_view data, std::array<CharRange, rn> const &ranges, datatypes::registry::util::ConstexprString<sn> const &single) {
+        // register usage (3 ranges):
         // 1 - data
         // 6 - ranges
         // 5 - logic
@@ -54,28 +54,19 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         using D = ScalableTag<int8_t>;  //NOLINT tag type, selects the used vector type
         using V = Vec<D>;             //NOLINT vector type
         D d;
-        bool r0a = ranges[0].first < ranges[0].last;
-        V zero = r0a ? Set(d, static_cast<int8_t>(ranges[0].first)) : Set(d, static_cast<int8_t>(single.at(0)));
-        V r0b = Set(d, static_cast<int8_t>(ranges[0].first - 1));
-        V r0e = Set(d, static_cast<int8_t>(ranges[0].last + 1));
-        bool r1a = ranges[1].first < ranges[1].last;
-        V r1b = Set(d, static_cast<int8_t>(ranges[1].first - 1));
-        V r1e = Set(d, static_cast<int8_t>(ranges[1].last + 1));
-        bool r2a = ranges[2].first < ranges[2].last;
-        V r2b = Set(d, static_cast<int8_t>(ranges[2].first - 1));
-        V r2e = Set(d, static_cast<int8_t>(ranges[2].last + 1));
+        bool has_range_0 = rn > 0;
+        V const zero = has_range_0 ? Set(d, static_cast<int8_t>(ranges[0].first)) : Set(d, static_cast<int8_t>(single.value.at(0)));
+        std::array<std::pair<V, V>, rn> range_vectors;
+        for (size_t i = 0; i < rn; ++i) {
+            range_vectors[i].first = Set(d, static_cast<int8_t>(ranges[i].first - 1));
+            range_vectors[i].second = Set(d, static_cast<int8_t>(ranges[i].last + 1));
+        }
         V unicode_bit = Set(d, 7);
 
-        // if this gets ported to variable size vectors, this needs to be changed (like above)
-        // this array prevents keeping in registers, but there are not enough registers anyway
-        std::array<V, simd_max_single_chars> si{};
-        size_t si_num = single.size();
-        if (si_num > si.size()) {
-            assert(false);
-            return std::nullopt;
-        }
-        for (size_t i = 0; i < si_num; ++i) {
-            si[i] = Set(d, static_cast<int8_t>(single[i]));
+        std::array<V, sn-1> single_vectors{};
+        auto view = static_cast<std::string_view>(single);
+        for (size_t i = 0; i < view.size(); ++i) {
+            single_vectors[i] = Set(d, static_cast<int8_t>(view[i]));
         }
 
         Foreach(d, reinterpret_cast<int8_t const *>(data.data()), data.size(), zero, [&](auto d, auto in_vec) HWY_ATTR {
@@ -86,15 +77,12 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
 
             // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
             // and <= and >= are 2 instructions regardless of signed/unsigned
-            auto m = r0a ? And(in_vec > r0b, in_vec < r0e) : FirstN(d, 0);
-            if (r1a) {
-                m = Or(m, And(in_vec > r1b, in_vec < r1e));
+            auto m = has_range_0 ? And(in_vec > range_vectors[0].first, in_vec < range_vectors[0].second) : FirstN(d, 0);
+            for (size_t i = 1; i < rn; ++i) {
+                m = Or(m, And(in_vec > range_vectors[i].first, in_vec < range_vectors[i].second));
             }
-            if (r2a) {
-                m = Or(m, And(in_vec > r2b, in_vec < r2e));
-            }
-            for (size_t i = 0; i < si_num; ++i) {
-                m = Or(m, in_vec == si[i]);
+            for (size_t i = 0; i < sn-1; ++i) {
+                m = Or(m, in_vec == single_vectors[i]);
             }
             r = r && AllTrue(d, m);
             return r;
@@ -103,6 +91,24 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         if (found_unicode)
             return std::nullopt;
         return r;
+    }
+    std::optional<bool> try_match_simd_impl_3_1(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<1> const &single) {
+        return try_match_simd_impl(data, ranges, single);
+    }
+    std::optional<bool> try_match_simd_impl_3_4(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<4> const &single) {
+        return try_match_simd_impl(data, ranges, single);
+    }
+    std::optional<bool> try_match_simd_impl_3_18(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<18> const &single) {
+        return try_match_simd_impl(data, ranges, single);
+    }
+    std::optional<bool> try_match_simd_impl_3_20(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<20> const &single) {
+        return try_match_simd_impl(data, ranges, single);
+    }
+    std::optional<bool> try_match_simd_impl_3_21(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<21> const &single) {
+        return try_match_simd_impl(data, ranges, single);
+    }
+    std::optional<bool> try_match_simd_impl_1_1(std::string_view data, std::array<CharRange, 1> const &ranges, datatypes::registry::util::ConstexprString<1> const &single) {
+        return try_match_simd_impl(data, ranges, single);
     }
 
     bool contains_any_impl(std::string_view data, std::array<char, 4> match) {
@@ -134,11 +140,37 @@ HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
 namespace rdf4cpp::util::char_matcher_detail {
-    HWY_EXPORT(try_match_simd_impl);
+    HWY_EXPORT(try_match_simd_impl_3_1);
+    HWY_EXPORT(try_match_simd_impl_3_4);
+    HWY_EXPORT(try_match_simd_impl_3_18);
+    HWY_EXPORT(try_match_simd_impl_3_20);
+    HWY_EXPORT(try_match_simd_impl_3_21);
+    HWY_EXPORT(try_match_simd_impl_1_1);
     HWY_EXPORT(contains_any_impl);
 
-    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, std::string_view single) {
-        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl)(data, ranges, single);
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<1> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_3_1)(data, ranges, single);
+    }
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<4> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_3_4)(data, ranges, single);
+    }
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<18> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_3_18)(data, ranges, single);
+    }
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<20> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_3_20)(data, ranges, single);
+    }
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 3> const &ranges, datatypes::registry::util::ConstexprString<21> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_3_21)(data, ranges, single);
+    }
+    template<>
+    std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 1> const &ranges, datatypes::registry::util::ConstexprString<1> const &single) {
+        return HWY_DYNAMIC_DISPATCH(try_match_simd_impl_1_1)(data, ranges, single);
     }
 
     bool contains_any(std::string_view data, std::array<char, 4> match) {
