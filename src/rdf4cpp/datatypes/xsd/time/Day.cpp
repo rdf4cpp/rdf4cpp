@@ -25,13 +25,15 @@ capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_
 
 template<>
 bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    if (!std::format_to(writer::BufWriterOutputIterator{writer}, "---{:%d}", value.first).write_ok) {
-        return false;
-    }
+    //assumes day is in [1,12]
+    std::array<char, 3 + 2 + Timezone::max_canonical_string_chars> buff;
+    char *it = std::format_to(buff.data(), "---{:%d}", value.first);
     if (value.second.has_value()) {
-        return value.second->to_canonical_string(writer);
+        it = value.second->to_canonical_string(it);
     }
-    return true;
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>

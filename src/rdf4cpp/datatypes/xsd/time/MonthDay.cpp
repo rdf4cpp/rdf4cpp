@@ -27,13 +27,15 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
 
 template<>
 bool capabilities::Default<xsd_gMonthDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    if (!std::format_to(writer::BufWriterOutputIterator{writer}, "--{:%m-%d}", value.first).write_ok) {
-        return false;
-    }
+    //--, month, -, day, tz
+    std::array<char, 2+2+1+2 + Timezone::max_canonical_string_chars> buff;
+    char *it = std::format_to(buff.data(), "--{:%m-%d}", value.first);
     if (value.second.has_value()) {
-        return value.second->to_canonical_string(writer);
+        it = value.second->to_canonical_string(it);
     }
-    return true;
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 struct __attribute__((__packed__)) InliningHelperMonthDay {

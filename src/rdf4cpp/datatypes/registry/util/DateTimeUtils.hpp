@@ -142,6 +142,17 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds<datatype>(res_s);
 }
 
+inline char* canonical_seconds_remove_empty_millis(char* it) {
+    for (size_t m = 0; m<3; ++m) {
+        if (it[-1] != '0')
+            return it;
+        --it;
+    }
+    assert(it[-1] == '.');
+    --it;
+    return it;
+}
+
 inline bool in_ymd_bounds(rdf4cpp::TimePoint tp) noexcept {
     static constexpr auto max = rdf4cpp::util::construct_timepoint(std::chrono::year::max() / std::chrono::December / std::chrono::day{31},
                                                                    std::chrono::days{1} - std::chrono::milliseconds{1});

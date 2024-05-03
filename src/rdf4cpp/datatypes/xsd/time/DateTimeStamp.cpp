@@ -51,10 +51,14 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 
 template<>
 bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{:%Y-%m-%dT%H:%M:%S}", value).write_ok) {
-        return false;
-    }
-    return value.get_time_zone().to_canonical_string(writer);
+    //year,-,month,-,day,T,hours,:,min,:,sec,tz
+    std::array<char, 6+1+2+1+2 +1+ 2+1+2+1+6 + Timezone::max_canonical_string_chars> buff;
+    char *it = std::format_to(buff.data(), "{:%Y-%m-%dT%H:%M:%S}", value);
+    it = util::canonical_seconds_remove_empty_millis(it);
+    it = value.get_time_zone().to_canonical_string(it);
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>
