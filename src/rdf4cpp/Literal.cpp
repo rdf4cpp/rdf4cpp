@@ -187,7 +187,9 @@ Literal Literal::lang_tagged_get_de_inlined() const noexcept {
     auto [_, id] = datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
     return Literal{storage::identifier::NodeBackendHandle{storage::identifier::NodeID{id, this->handle_.node_id().literal_type()},
                                                           handle_.type(),
-                                                          handle_.storage()}};
+                                                          handle_.storage(),
+                                                          false,
+                                                          handle_.free_tagging_bits()}};
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
