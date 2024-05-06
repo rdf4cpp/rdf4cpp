@@ -62,10 +62,10 @@ TEST_CASE("Variable::find") {
 
 TEST_CASE("Variable validity") {
     query::Variable n{};
-    CHECK_THROWS_AS(n = query::Variable::make_named("\U00000312_not_first"), std::invalid_argument);
-    CHECK_THROWS_AS(n = query::Variable::make_anonymous("no-"), std::invalid_argument);
-    CHECK_THROWS_AS(n = query::Variable::make_anonymous("-no"), std::invalid_argument);
-    CHECK_THROWS_AS(n = query::Variable("may_not_contain."), std::invalid_argument);
+    CHECK_THROWS_AS(n = query::Variable::make_named("\U00000312_not_first"), ParsingError);
+    CHECK_THROWS_AS(n = query::Variable::make_anonymous("no-"), ParsingError);
+    CHECK_THROWS_AS(n = query::Variable::make_anonymous("-no"), ParsingError);
+    CHECK_THROWS_AS(n = query::Variable("may_not_contain."), ParsingError);
     CHECK(query::Variable::make_unchecked("may_not_contain.").name() == "may_not_contain.");
     CHECK(query::Variable::make_named("012_numbers_too567").name() == "012_numbers_too567");
     CHECK(query::Variable::make_named("\U0001f34cthrow_some_unicode_at_it\U0001f34c").name() == "\U0001f34cthrow_some_unicode_at_it\U0001f34c");

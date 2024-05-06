@@ -89,6 +89,7 @@ add_library(rdf4cpp
         src/rdf4cpp/Node.cpp
         src/rdf4cpp/Quad.cpp
         src/rdf4cpp/Statement.cpp
+        src/rdf4cpp/ParsingError.cpp
         src/rdf4cpp/bnode_mngt/NodeGenerator.cpp
         src/rdf4cpp/bnode_mngt/NodeScope.cpp
         src/rdf4cpp/bnode_mngt/WeakNodeScope.cpp

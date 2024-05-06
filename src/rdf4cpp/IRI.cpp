@@ -1,6 +1,7 @@
 #include "IRI.hpp"
 #include <rdf4cpp/writer/TryWrite.hpp>
 #include <rdf4cpp/IRIView.hpp>
+#include <rdf4cpp/ParsingError.hpp>
 
 #include <sstream>
 
@@ -17,9 +18,7 @@ IRI::IRI() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::i
 }
 
 IRI::IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage)
-    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = check_valid_iri(iri)}),
-                                                  storage::identifier::RDFNodeType::IRI,
-                                                  node_storage}} {
+    : IRI{make_unchecked(check_valid_iri(iri), node_storage)} {
 }
 
 IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept
@@ -60,7 +59,7 @@ IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
 std::string_view IRI::check_valid_iri(std::string_view s) {
     auto v = IRIView(s).quick_validate();
     if (v != IRIFactoryError::Ok)
-        throw std::invalid_argument(std::format("IRI {} is invalid: {}", s, v));
+        throw ParsingError(std::format("IRI {} is invalid: {}", s, v));
     return s;
 }
 
