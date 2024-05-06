@@ -40,35 +40,28 @@ bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cp
     if (value.count() == 0) {
         return writer::write_str("P0M", writer);
     }
+    //-,P,years,months,
+    std::array<char, 1+1+(std::numeric_limits<int64_t>::digits10+2)+3> buff;
+    char* it = buff.data();
     std::chrono::months m_rem = value;
     if (m_rem.count() < 0) {
-        if (!writer::write_str("-", writer)) {
-            return false;
-        }
+        *(it++) = '-';
         m_rem = -m_rem;
     }
-    if (!writer::write_str("P", writer)) {
-        return false;
-    }
+    *(it++) = 'P';
     auto years = std::chrono::floor<std::chrono::years>(m_rem);
     if (years.count() != 0) {
-        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", years.count()).write_ok) {
-            return false;
-        }
-        if (!writer::write_str("Y", writer)) {
-            return false;
-        }
+        it = std::format_to(it, "{}", years.count());
+        *(it++) = 'Y';
     }
     m_rem -= years;
     if (m_rem.count() != 0) {
-        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", m_rem.count()).write_ok) {
-            return false;
-        }
-        if (!writer::write_str("M", writer)) {
-            return false;
-        }
+        it = std::format_to(it, "{}", m_rem.count());
+        *(it++) = 'M';
     }
-    return true;
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>

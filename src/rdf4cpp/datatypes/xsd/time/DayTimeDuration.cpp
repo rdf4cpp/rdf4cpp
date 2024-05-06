@@ -53,59 +53,46 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
 template<>
 bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     if (value.count() == 0) {
-        return writer::write_str("PT0.000S", writer);
+        return writer::write_str("PT0S", writer);
     }
+    //-,P, days,T,hours,minutes,seconds
+    std::array<char, 1+1 + (std::numeric_limits<int64_t>::digits10+2)+1+3+3+7> buff;
+    char* it = buff.data();
     std::chrono::milliseconds ms_rem = value;
     if (ms_rem.count() < 0) {
-        if (!writer::write_str("-", writer)) {
-            return false;
-        }
+        *(it++) = '-';
         ms_rem = -ms_rem;
     }
-    if (!writer::write_str("P", writer)) {
-        return false;
-    }
+    *(it++) = 'P';
     auto days = std::chrono::floor<std::chrono::days>(ms_rem);
     if (days.count() != 0) {
-        if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", days.count()).write_ok) {
-            return false;
-        }
-        if (!writer::write_str("D", writer)) {
-            return false;
-        }
+        it = std::format_to(it, "{}", days.count());
+        *(it++) = 'D';
     }
     ms_rem -= days;
     if (ms_rem.count() != 0) {
-        if (!writer::write_str("T", writer)) {
-            return false;
-        }
+        *(it++) = 'T';
         auto hours = std::chrono::floor<std::chrono::hours>(ms_rem);
         if (hours.count() != 0) {
-            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", hours.count()).write_ok) {
-                return false;
-            }
-            if (!writer::write_str("H", writer)) {
-                return false;
-            }
+            it = std::format_to(it, "{}", hours.count());
+            *(it++) = 'H';
         }
         ms_rem -= hours;
         auto minutes = std::chrono::floor<std::chrono::minutes>(ms_rem);
         if (minutes.count() != 0) {
-            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{}", minutes.count()).write_ok) {
-                return false;
-            }
-            if (!writer::write_str("M", writer)) {
-                return false;
-            }
+            it = std::format_to(it, "{}", minutes.count());
+            *(it++) = 'M';
         }
         ms_rem -= minutes;
         if (ms_rem.count() != 0) {
-            if (!std::format_to(writer::BufWriterOutputIterator{writer}, "{:%S}S", ms_rem).write_ok) {
-                return false;
-            }
+            it = std::format_to(it, "{:%S}", ms_rem);
+            it = util::canonical_seconds_remove_empty_millis(it);
+            *(it++) = 'S';
         }
     }
-    return true;
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>
