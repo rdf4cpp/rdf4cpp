@@ -136,7 +136,8 @@ Literal Literal::make_lang_tagged_unchecked_from_node_id(std::string_view lang, 
 
     return Literal{NodeBackendHandle{NodeBackendID{NodeID{*inlined_id, node_id.node_id().literal_type()},
                                                    RDFNodeType::Literal,
-                                                   true},
+                                                   true,
+                                                   node_id.free_tagging_bits()},
                                      node_storage}};
 }
 
