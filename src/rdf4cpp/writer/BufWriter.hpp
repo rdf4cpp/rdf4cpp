@@ -225,7 +225,7 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {
         auto const bytes_filled = cursor.data() - buffer.buffer_->data();
 
-        buffer.buffer_->resize(std::bit_ceil(std::max(buffer.buffer_->size() + additional_cap, buffer.buffer_->size() * 2)));
+        buffer.buffer_->resize(std::bit_ceil(buffer.buffer_->size() + additional_cap));
         cursor.repoint(buffer.buffer_->data() + bytes_filled,
                        buffer.buffer_->size() - bytes_filled);
     }
@@ -365,39 +365,6 @@ struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>,
                        buffer.buffer_.size());
     }
 };
-
-struct BufWriterOutputIterator {
-    BufWriterParts writer;
-    char buff = '\0';
-    bool write_ok = true;
-
-    using difference_type = ptrdiff_t;
-
-    char& operator*() noexcept {
-        if (writer.cursor->size() == 0) [[unlikely]] {
-            writer.flush(writer.buffer, writer.cursor, 1);
-            if (writer.cursor->size() == 0) [[unlikely]] {
-                write_ok = false;
-                assert(false);
-            }
-        }
-        return *writer.cursor->data();
-    }
-
-    BufWriterOutputIterator& operator++() {
-
-        //*writer.cursor->data() = buff;
-        writer.cursor->advance(1);
-        return *this;
-    }
-    BufWriterOutputIterator operator++(int) {
-        assert(false);
-        auto r = *this;
-        ++(*this);
-        return r;
-    }
-};
-
 } // namespace rdf4cpp::writer
 
 #endif  // RDF4CPP_BUFWRITER_HPP

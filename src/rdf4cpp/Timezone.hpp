@@ -63,30 +63,11 @@ struct Timezone {
         return tz;
     }
 
-    [[nodiscard]] std::string to_canonical_string() const noexcept {
-        std::string buf;
-        writer::StringWriter ser{buf};
-        if (!to_canonical_string(ser)) {
-            return "writer error";
-        }
-        ser.finalize();
-        return buf;
-    }
-
-    [[nodiscard]] bool to_canonical_string(writer::BufWriterParts writer) const noexcept {
-        if (offset == std::chrono::minutes{0}) {
-            return writer::write_str("Z", writer);
-        }
-        auto h = std::chrono::floor<std::chrono::hours>(std::chrono::abs(offset));
-        auto m = std::chrono::abs(offset) - h;
-        return std::format_to(writer::BufWriterOutputIterator{writer}, "{}{:02}:{:02}", offset >= std::chrono::minutes{0} ? '+' : '-', h.count(), m.count()).write_ok;
-    }
-
     // sign, hours, :, minutes
     // assumes offset stays inside spec (+-14 hours)
     static constexpr size_t max_canonical_string_chars = 1+2+1+2;
     template<std::output_iterator<char> T>
-    [[nodiscard]] T to_canonical_string(T o) const noexcept {
+    T to_canonical_string(T o) const noexcept {
         if (offset == std::chrono::minutes{0}) {
             *o = 'Z';
             ++o;
@@ -95,6 +76,12 @@ struct Timezone {
         auto h = std::chrono::floor<std::chrono::hours>(std::chrono::abs(offset));
         auto m = std::chrono::abs(offset) - h;
         return std::format_to(o, "{}{:02}:{:02}", offset >= std::chrono::minutes{0} ? '+' : '-', h.count(), m.count());
+    }
+    [[nodiscard]] std::string to_canonical_string() const noexcept {
+        std::string buf{};
+        buf.reserve(max_canonical_string_chars);
+        to_canonical_string(std::back_inserter(buf));
+        return buf;
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {

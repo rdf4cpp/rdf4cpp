@@ -142,13 +142,13 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds<datatype>(res_s);
 }
 
-inline char* canonical_seconds_remove_empty_millis(char* it) {
+inline char *canonical_seconds_remove_empty_millis(char *it) {
     for (size_t m = 0; m<3; ++m) {
-        if (it[-1] != '0')
+        if (*(it - 1) != '0')
             return it;
         --it;
     }
-    assert(it[-1] == '.');
+    assert(*(it - 1) == '.');
     --it;
     return it;
 }
