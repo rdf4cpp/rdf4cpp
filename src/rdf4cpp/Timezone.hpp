@@ -64,8 +64,7 @@ struct Timezone {
     }
 
     // sign, hours, :, minutes
-    // assumes offset stays inside spec (+-14 hours)
-    static constexpr size_t max_canonical_string_chars = 1+2+1+2;
+    static constexpr size_t max_canonical_string_chars = 1+(std::numeric_limits<int64_t>::digits10+1)+1+2;
     template<std::output_iterator<char> T>
     T to_canonical_string(T o) const noexcept {
         if (offset == std::chrono::minutes{0}) {
