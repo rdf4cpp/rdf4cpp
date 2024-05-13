@@ -5,10 +5,6 @@
 #include <rdf4cpp.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
-#define ANKERL_NANOBENCH_IMPLEMENT
-#include <nanobench.h>
-#include <random>
-
 template<typename Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
     using namespace rdf4cpp;

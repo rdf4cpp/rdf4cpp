@@ -25,7 +25,7 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
 template<>
 bool capabilities::Default<xsd_date>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     //year,-,month,-,day,tz
-    std::array<char, 6+1+2+1+2 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, 6+1+3+1+3 + Timezone::max_canonical_string_chars> buff;
     char *it = std::format_to(buff.data(), "{:%Y-%m-%d}", value.first);
     if (value.second.has_value()) {
         it = value.second->to_canonical_string(it);

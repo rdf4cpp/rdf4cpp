@@ -324,7 +324,6 @@ add_test(NAME tests_NodeStorage_specialization COMMAND tests_NodeStorage_special
 add_executable(tests_time_types datatype/tests_time_types.cpp)
 target_link_libraries(tests_time_types
         doctest::doctest
-        nanobench::nanobench
         rdf4cpp
         )
 add_test(NAME tests_time_types COMMAND tests_time_types)

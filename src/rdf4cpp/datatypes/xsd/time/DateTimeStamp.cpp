@@ -52,7 +52,7 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 template<>
 bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     //year,-,month,-,day, T, hours,:,min,:,sec,.,millisec, tz
-    std::array<char, 6+1+2+1+2 +1+ 2+1+2+1+2+1+3 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, 6+1+3+1+3 +1+ 2+1+2+1+2+1+3 + Timezone::max_canonical_string_chars> buff;
     char *it = std::format_to(buff.data(), "{:%Y-%m-%dT%H:%M:%S}", value);
     it = util::canonical_seconds_remove_empty_millis(it);
     it = value.get_time_zone().to_canonical_string(it);
