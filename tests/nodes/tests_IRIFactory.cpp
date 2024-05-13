@@ -5,6 +5,7 @@
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <array>
 #include <uni_algo/all.h>
+#include <hwy/highway.h>
 
 using namespace rdf4cpp;
 
@@ -295,6 +296,15 @@ TEST_CASE("char matcher") {
     CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#\U000000FFZz093"}));
 }
 
+void test_simd_foreach_supported(void (*func)(std::string_view target_name)) {
+    auto targets = hwy::SupportedAndGeneratedTargets();
+    for (auto const t : targets) {
+        hwy::SetSupportedTargetsForTest(t);
+        func(hwy::TargetName(t));
+    }
+    hwy::SetSupportedTargetsForTest(0);
+}
+
 void test_simd_matcher_worker(std::string_view target_name) {
     using namespace util::char_matcher_detail;
     INFO(target_name); // add to every failing test case in scope
@@ -319,5 +329,5 @@ void test_simd_matcher_worker(std::string_view target_name) {
     CHECK(contains_any("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa", std::array{'"', '\\', '\n', '\r'}) == true);
 }
 TEST_CASE("SIMD char matcher") {
-    util::char_matcher_detail::test_simd_foreach_supported(&test_simd_matcher_worker);
+    test_simd_foreach_supported(&test_simd_matcher_worker);
 }

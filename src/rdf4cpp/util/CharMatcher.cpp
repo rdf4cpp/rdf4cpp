@@ -14,10 +14,10 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     // Calls `func(d, v)` for each input vector; out of bound lanes with index i >=
     // `count` are instead taken from `no[i % Lanes(d)]`.
     // if func returns false, exits early
-    // from hwy/contrib/algo/transform-inl.h
-    template<class D, class Func, typename T = hwy::HWY_NAMESPACE::TFromD<D>>
+    // from hwy/contrib/algo/transform-inl.h, added early return
+    template<typename D, typename Func, typename T = hwy::HWY_NAMESPACE::TFromD<D>>
     HWY_INLINE void Foreach(D d, T const *HWY_RESTRICT in, size_t const count, hwy::HWY_NAMESPACE::Vec<D> const no,
-                 Func const &func) {
+                            Func const &func) {
         size_t const N = Lanes(d);
 
         size_t idx = 0;
@@ -41,7 +41,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
     }
 
     template<size_t rn, size_t sn>
-    requires (rn > 0)
+    requires(rn > 0)
     HWY_INLINE std::optional<bool> try_match_simd_impl(std::string_view data, std::array<CharRange, rn> const &ranges, datatypes::registry::util::ConstexprString<sn> const &single) {
         using namespace hwy::HWY_NAMESPACE;
 
@@ -49,13 +49,16 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         bool r = true;
 
         using D = ScalableTag<int8_t>;  //NOLINT tag type, selects the used vector type
-        using V = Vec<D>;             //NOLINT vector type
+        using V = Vec<D>;               //NOLINT vector type
         D const d;
 
         // elements from this vector are used, if data is not a multiple of Lanes(d)
         // should not influence final result
         // => comparisons need to evaluate as true for the logic to work
         V const zero = Set(d, static_cast<int8_t>(ranges[0].first));
+
+        // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
+        // and <= and >= are 2 instructions regardless of signed/unsigned
 
         // set up ranges
         std::array<std::pair<V, V>, rn> range_vectors;
@@ -69,7 +72,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         V const unicode_bit_index = Set(d, 7);
 
         // set up single compares
-        std::array<V, sn-1> single_vectors{};
+        std::array<V, sn - 1> single_vectors{};
         auto view = static_cast<std::string_view>(single);
         for (size_t i = 0; i < view.size(); ++i) {
             single_vectors[i] = Set(d, static_cast<int8_t>(view[i]));
@@ -83,9 +86,6 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
                 return false;
             }
 
-            // highway doc: on x86 < and > are 1 instruction for signed ints (3 for unsigned)
-            // and <= and >= are 2 instructions regardless of signed/unsigned
-
             // check if target is in one of the ranges
             auto m = And(in_vec > range_vectors[0].first, in_vec < range_vectors[0].second);
             for (size_t i = 1; i < rn; ++i) {
@@ -93,12 +93,12 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
             }
 
             // check the single compares
-            for (size_t i = 0; i < sn-1; ++i) {
+            for (size_t i = 0; i < sn - 1; ++i) {
                 m = Or(m, in_vec == single_vectors[i]);
             }
 
             r = r && AllTrue(d, m);
-            return r; // possible early return
+            return r;  // possible early return
         });
 
         if (found_unicode)
@@ -129,7 +129,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         bool r = false;
 
         using D = ScalableTag<int8_t>;  //NOLINT  tag type, selects the used vector type
-        using V = Vec<D>;             //NOLINT vector type
+        using V = Vec<D>;               //NOLINT vector type
         D const d;
 
         // elements from this vector are used, if data is not a multiple of Lanes(d)
@@ -140,6 +140,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
         // load comparison vectors
         std::array<V, 4> match_vectors;
         for (size_t i = 0; i < 4; ++i) {
+            assert(match[i] != '\0');
             match_vectors[i] = Set(d, static_cast<int8_t>(match[i]));
         }
 
@@ -151,7 +152,7 @@ namespace rdf4cpp::util::char_matcher_detail::HWY_NAMESPACE {
             }
 
             r = r || !AllFalse(d, m);
-            return !r; // potential early return
+            return !r;  // potential early return
         });
 
         return r;
@@ -197,15 +198,6 @@ namespace rdf4cpp::util::char_matcher_detail {
 
     bool contains_any(std::string_view data, std::array<char, 4> match) {
         return HWY_DYNAMIC_DISPATCH(contains_any_impl)(data, match);
-    }
-
-    void test_simd_foreach_supported(void(*func)(std::string_view target_name)) {
-        auto targets = hwy::SupportedAndGeneratedTargets();
-        for (const auto t : targets) {
-            hwy::SetSupportedTargetsForTest(t);
-            func(hwy::TargetName(t));
-        }
-        hwy::SetSupportedTargetsForTest(0);
     }
 }  // namespace rdf4cpp::util::char_matcher_detail
 #endif

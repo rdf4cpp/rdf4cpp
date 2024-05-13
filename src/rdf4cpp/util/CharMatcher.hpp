@@ -20,19 +20,19 @@ template<typename T>
 concept CharMatcher = requires(T const a, int c) {
     {
         a.match(c)
-    } -> std::same_as<bool>;
+    } -> std::convertible_to<bool>;
     {
         T::simd_range_num
-    } -> std::same_as<const size_t &>;
+    } -> std::convertible_to<size_t>;
     {
         T::fail_if_unicode
-    } -> std::same_as<const bool &>;
+    } -> std::convertible_to<bool>;
     {
         a.simd_ranges()
     } -> std::same_as<std::array<CharRange, T::simd_range_num>>;
     {
         a.simd_singles()
-    };  // -> std::same_as<std::string_view>;
+    } -> std::convertible_to<std::string_view>;
 };
 
 /**
@@ -69,13 +69,6 @@ std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 
 bool contains_any(std::string_view data, std::array<char, 4> match);
 
 /**
- * for test cases only!
- * iterates over each available highway target and calls func specifically with only that target selected.
- * @param func
- */
-void test_simd_foreach_supported(void(*func)(std::string_view target_name));
-
-/**
  * matches, if any char in pattern matches. does compare char by char, so no utf8.
  */
 template<size_t n>
@@ -87,10 +80,10 @@ struct ASCIIPatternMatcher {
     }
 
     [[nodiscard]] constexpr bool match(int c) const noexcept {
-    auto ch = static_cast<char>(c);
-    if (c != static_cast<int>(ch))  // not asciii
-        return false;
-    return static_cast<std::string_view>(pattern).find(ch) != std::string_view::npos;
+        auto ch = static_cast<char>(c);
+        if (c != static_cast<int>(ch))  // not asciii
+            return false;
+        return static_cast<std::string_view>(pattern).find(ch) != std::string_view::npos;
     }
 
     static constexpr size_t simd_range_num = 0;
