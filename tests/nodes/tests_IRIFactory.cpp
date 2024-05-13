@@ -318,7 +318,7 @@ void test_simd_matcher_worker(std::string_view target_name) {
     CHECK(try_match_simd("abcdefx5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == false);
     CHECK(!try_match_simd("abcdefx\U000000FF5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty).has_value());
 
-    std::array chars{'a', 'b', 'A', 'B'};
+    static constexpr datatypes::registry::util::ConstexprString chars = "aAbB";
     CHECK(contains_any("57816a58919", chars) == true);
     CHECK(contains_any("57816A58919", chars) == true);
     CHECK(contains_any("5781658919B", chars) == true);
@@ -326,7 +326,8 @@ void test_simd_matcher_worker(std::string_view target_name) {
     CHECK(contains_any("5781658919", chars) == false);
     CHECK(contains_any("57\U000000FF816a58919", chars) == true);
     CHECK(contains_any("57\U000000FF81658919", chars) == false);
-    CHECK(contains_any("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa", std::array{'"', '\\', '\n', '\r'}) == true);
+    static constexpr datatypes::registry::util::ConstexprString pattern = "\"\\\n\r";
+    CHECK(contains_any("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa", pattern) == true);
 }
 TEST_CASE("SIMD char matcher") {
     test_simd_foreach_supported(&test_simd_matcher_worker);

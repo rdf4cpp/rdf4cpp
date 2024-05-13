@@ -66,7 +66,10 @@ std::optional<bool> try_match_simd(std::string_view data, std::array<CharRange, 
  * @param match may not contain '\0'
  * @return
  */
-bool contains_any(std::string_view data, std::array<char, 4> match);
+template<size_t n>
+bool contains_any(std::string_view data, datatypes::registry::util::ConstexprString<n> const &match) = delete;
+template<>
+bool contains_any(std::string_view data, datatypes::registry::util::ConstexprString<5> const &match);
 
 /**
  * matches, if any char in pattern matches. does compare char by char, so no utf8.

@@ -25,7 +25,8 @@
 
 namespace rdf4cpp {
 bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
-    return util::char_matcher_detail::contains_any(lexical_form, std::array{'"', '\\', '\n', '\r'});
+    static constexpr datatypes::registry::util::ConstexprString pattern = "\"\\\n\r";
+    return util::char_matcher_detail::contains_any(lexical_form, pattern);
 }
 
 template<typename T, typename S>
