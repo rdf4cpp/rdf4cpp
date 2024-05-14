@@ -23,6 +23,14 @@ struct BNodeBackend {
     explicit operator view_type() const noexcept {
         return view_type{.identifier = identifier, .scope = scope};
     }
+
+    static identifier::NodeBackendID from_storage_id(id_type const id, [[maybe_unused]] view_type const view) noexcept {
+        return identifier::NodeBackendID{id, identifier::RDFNodeType::BNode};
+    }
+
+    static id_type to_storage_id(identifier::NodeBackendID const id) noexcept {
+        return id.node_id();
+    }
 };
 
 }  // namespace rdf4cpp::storage::reference_node_storage

@@ -27,7 +27,6 @@ BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStoragePt
 
 BlankNode BlankNode::make_unchecked(std::string_view identifier, storage::DynNodeStoragePtr node_storage) {
     return BlankNode{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
-                                                            storage::identifier::RDFNodeType::BNode,
                                                             node_storage}};
 }
 
@@ -37,7 +36,7 @@ BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) co
     }
 
     auto const node_id = node_storage.find_or_make_id(handle_.bnode_backend());
-    return BlankNode{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
@@ -46,18 +45,18 @@ BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStoragePtr node_sto
     }
 
     auto const node_id = node_storage.find_id(handle_.bnode_backend());
-    if (node_id == storage::identifier::NodeID{}) {
+    if (node_id.null()) {
         return BlankNode{};
     }
 
-    return BlankNode{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 BlankNode BlankNode::find(std::string_view identifier, storage::DynNodeStoragePtr node_storage) noexcept {
     auto nid = node_storage.find_id(storage::view::BNodeBackendView{identifier, std::nullopt});
     if (nid.null())
         return BlankNode{};
-    return BlankNode{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::BNode, node_storage}};
+    return BlankNode{storage::identifier::NodeBackendHandle{nid, node_storage}};
 }
 
 std::string_view BlankNode::identifier() const noexcept { return handle_.bnode_backend().identifier; }

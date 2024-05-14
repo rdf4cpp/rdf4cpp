@@ -19,10 +19,6 @@ struct __attribute__((__packed__)) NodeID {
     using underlying_type = uint64_t;
     static constexpr size_t width = 48;
 
-    static std::pair<NodeID, std::string_view> const default_graph_iri;
-    static std::pair<NodeID, std::string_view> const xsd_string_iri;
-    static std::pair<NodeID, std::string_view> const rdf_langstring_iri;
-
     static NodeID const min_bnode_id;
     static NodeID const min_iri_id;
     static NodeID const min_variable_id;
@@ -94,43 +90,6 @@ public:
 };
 
 static_assert(sizeof(NodeID) == 6);
-
-/**
- * Convert a NodeId for an IRI
- * to a LiteralType.
- *
- * SAFETY: caller must ensure the node id actually refers to an IRI
- *
- * @param id IRI NodeId
- * @return the LiteralType associated with that IRI
- */
-constexpr LiteralType iri_node_id_to_literal_type(NodeID const id) noexcept {
-    auto const value = id.to_underlying();
-
-    return value < datatypes::registry::min_dynamic_datatype_id && value != 0
-                   ? static_cast<LiteralType>(value)
-                   : LiteralType::other();
-}
-
-/**
- * Convert a LiteralType to the corresponding IRI NodeID.
- *
- * @param datatype fixed dataype
- * @return NodeID of the IRI associated with the given datatype
- */
-constexpr NodeID literal_type_to_iri_node_id(LiteralType const datatype) {
-    assert(datatype.is_fixed());
-    return NodeID{datatype.to_underlying()};
-}
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::default_graph_iri{literal_type_to_iri_node_id(datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri]),
-                                                                               datatypes::registry::default_graph_iri};
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::xsd_string_iri{literal_type_to_iri_node_id(datatypes::xsd::String::fixed_id),
-                                                                            datatypes::xsd::String::identifier};
-
-inline constexpr std::pair<NodeID, std::string_view> NodeID::rdf_langstring_iri{literal_type_to_iri_node_id(datatypes::rdf::LangString::fixed_id),
-                                                                                datatypes::rdf::LangString::identifier};
 
 inline constexpr NodeID NodeID::min_bnode_id{1};
 inline constexpr NodeID NodeID::min_iri_id{datatypes::registry::min_dynamic_datatype_id};

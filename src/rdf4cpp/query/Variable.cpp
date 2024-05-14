@@ -24,8 +24,7 @@ Variable Variable::make_anonymous(std::string_view name, storage::DynNodeStorage
 
 Variable Variable::make_unchecked(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) {
     return Variable{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
-                    storage::identifier::RDFNodeType::Variable,
-                    node_storage}};
+                                                           node_storage}};
 }
 
 Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
@@ -34,7 +33,7 @@ Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) cons
     }
 
     auto const node_id = node_storage.find_or_make_id(handle_.variable_backend());
-    return Variable{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 Variable Variable::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
@@ -43,11 +42,11 @@ Variable Variable::try_get_in_node_storage(storage::DynNodeStoragePtr node_stora
     }
 
     auto const node_id = node_storage.find_id(handle_.variable_backend());
-    if (node_id == storage::identifier::NodeID{}) {
+    if (node_id.null()) {
         return Variable{};
     }
 
-    return Variable{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 Variable Variable::find(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) noexcept {
@@ -56,7 +55,7 @@ Variable Variable::find(std::string_view name, bool anonymous, storage::DynNodeS
     if (nid.null())
         return Variable{};
 
-    return Variable{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Variable, node_storage}};
+    return Variable{storage::identifier::NodeBackendHandle{nid, node_storage}};
 }
 Variable Variable::find_named(std::string_view name, storage::DynNodeStoragePtr node_storage) noexcept {
     return find(name, false, node_storage);
