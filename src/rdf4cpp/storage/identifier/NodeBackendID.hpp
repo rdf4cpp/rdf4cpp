@@ -166,6 +166,7 @@ constexpr LiteralType iri_node_id_to_literal_type(NodeBackendID const id) noexce
     assert(id.is_iri());
     auto const value = id.node_id().to_underlying();
 
+    // all ids values below min_dynamic_datatype_id (except for the null id) are reserved for fixed datatype IRIs
     return value < datatypes::registry::min_dynamic_datatype_id && value != 0
                    ? static_cast<LiteralType>(value)
                    : LiteralType::other();
