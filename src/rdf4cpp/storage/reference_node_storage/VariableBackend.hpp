@@ -23,6 +23,14 @@ struct VariableBackend {
         return view_type{.name = name,
                          .is_anonymous = is_anonymous};
     }
+
+    static identifier::NodeBackendID from_storage_id(id_type const id, [[maybe_unused]] view_type const view) noexcept {
+        return identifier::NodeBackendID{id, identifier::RDFNodeType::Variable};
+    }
+
+    static id_type to_storage_id(identifier::NodeBackendID const id) noexcept {
+        return id.node_id();
+    }
 };
 
 }  // namespace rdf4cpp::storage::reference_node_storage

@@ -16,7 +16,7 @@ storage::identifier::NodeBackendHandle SkolemIRIFactory::make_node(IIdGenerator 
     end = generator.generate_to_buf(end);
 
     auto const node_id = node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = std::string_view{buf.get(), static_cast<size_t>(end - buf.get())}});
-    return storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::IRI, node_storage};
+    return storage::identifier::NodeBackendHandle{node_id, node_storage};
 }
 
 }  //namespace rdf4cpp::bnode_mngt

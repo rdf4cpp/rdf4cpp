@@ -80,7 +80,7 @@ TEST_SUITE("NodeStorage helper types") {
         CHECK_EQ(l3.lexical_form(), "Hello World");
 
 
-        CHECK(ns.erase_literal(l1.backend_handle().node_id()));
+        CHECK(ns.erase_literal(l1.backend_handle().id()));
 
         auto l4 = Literal::make_simple("Hello World", ns);
         CHECK_EQ(l3, l4);

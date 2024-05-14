@@ -12,7 +12,7 @@ struct FallbackLiteralBackend {
     using id_type = identifier::LiteralID;
 
     size_t hash;
-    identifier::NodeID datatype_id;
+    identifier::NodeBackendID datatype_id;
     detail::ConstString lexical_form;
     detail::ConstString language_tag;
     bool needs_escape;
@@ -31,12 +31,12 @@ struct FallbackLiteralBackend {
                          .needs_escape = needs_escape};
     }
 
-    static identifier::NodeID to_node_id(id_type const id, view_type const view) noexcept {
-        return identifier::NodeID{id, iri_node_id_to_literal_type(view.datatype_id)};
+    static identifier::NodeBackendID from_storage_id(id_type const id, view_type const view) noexcept {
+        return identifier::NodeBackendID{identifier::NodeID{id, iri_node_id_to_literal_type(view.datatype_id)}, identifier::RDFNodeType::Literal};
     }
 
-    static id_type to_backend_id(identifier::NodeID const id) noexcept {
-        return id.literal_id();
+    static id_type to_storage_id(identifier::NodeBackendID const id) noexcept {
+        return id.node_id().literal_id();
     }
 
     static view_type get_default_view() noexcept {

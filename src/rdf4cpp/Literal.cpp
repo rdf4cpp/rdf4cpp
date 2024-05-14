@@ -89,21 +89,19 @@ Literal Literal::make_null() noexcept {
 
 Literal Literal::make_simple_unchecked(std::string_view lexical_form, bool needs_escape, storage::DynNodeStoragePtr node_storage) {
     return Literal{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::LexicalFormLiteralBackendView{
-                                                                .datatype_id = storage::identifier::NodeID::xsd_string_iri.first,
+                                                                .datatype_id = storage::identifier::NodeBackendID::xsd_string_iri.first,
                                                                 .lexical_form = lexical_form,
                                                                 .language_tag = "",
                                                                 .needs_escape = needs_escape}),
-                                                          storage::identifier::RDFNodeType::Literal,
                                                           node_storage}};
 }
 
 Literal Literal::make_noninlined_typed_unchecked(std::string_view lexical_form, bool needs_escape, IRI const &datatype, storage::DynNodeStoragePtr node_storage) {
     return Literal{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::LexicalFormLiteralBackendView{
-                                                                .datatype_id = datatype.to_node_storage(node_storage).backend_handle().node_id(),
+                                                                .datatype_id = datatype.to_node_storage(node_storage).backend_handle().id(),
                                                                 .lexical_form = lexical_form,
                                                                 .language_tag = "",
                                                                 .needs_escape = needs_escape}),
-                                                          storage::identifier::RDFNodeType::Literal,
                                                           node_storage}};
 }
 
@@ -111,34 +109,36 @@ Literal Literal::make_noninlined_special_unchecked(std::any &&value, storage::id
     return Literal{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::ValueLiteralBackendView{
                                                                 .datatype = fixed_id,
                                                                 .value = std::move(value)}),
-                                                          storage::identifier::RDFNodeType::Literal,
                                                           node_storage}};
 }
 
 Literal Literal::make_lang_tagged_unchecked(std::string_view lexical_form, bool needs_escape, std::string_view lang, storage::DynNodeStoragePtr node_storage) {
     auto node_id = node_storage.find_or_make_id(storage::view::LexicalFormLiteralBackendView{
-            .datatype_id = storage::identifier::NodeID::rdf_langstring_iri.first,
+            .datatype_id = storage::identifier::NodeBackendID::rdf_langstring_iri.first,
             .lexical_form = lexical_form,
             .language_tag = lang,
             .needs_escape = needs_escape});
 
     return make_lang_tagged_unchecked_from_node_id(lang, node_storage, node_id);
 }
-Literal Literal::make_lang_tagged_unchecked_from_node_id(std::string_view lang, storage::DynNodeStoragePtr node_storage, storage::identifier::NodeID node_id) noexcept {
-    bool inlined = false;
-    auto lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
-    if (lang_tag_i.has_value()) {
-        auto inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.literal_id(), lang_tag_i.value());  // check if we have enough space
-        if (inlined_id.has_value()) {
-            node_id = storage::identifier::NodeID{inlined_id.value(), node_id.literal_type()};
-            inlined = true;
-        }
+Literal Literal::make_lang_tagged_unchecked_from_node_id(std::string_view lang, storage::DynNodeStoragePtr node_storage, storage::identifier::NodeBackendID node_id) noexcept {
+    using namespace storage::identifier;
+
+    auto const lang_tag_i = datatypes::registry::DatatypeRegistry::LangTagInlines::try_tag_to_inlined(lang);  // check if the lang_tag can be inlined
+    if (!lang_tag_i.has_value()) {
+        return Literal{NodeBackendHandle{node_id, node_storage}};
     }
 
-    return Literal{storage::identifier::NodeBackendHandle{node_id,
-                                                          storage::identifier::RDFNodeType::Literal,
-                                                          node_storage,
-                                                          inlined}};
+    auto const inlined_id = datatypes::registry::DatatypeRegistry::LangTagInlines::try_into_inlined(node_id.node_id().literal_id(), *lang_tag_i);  // check if we have enough space#
+    if (!inlined_id.has_value()) {
+        return Literal{NodeBackendHandle{node_id, node_storage}};
+    }
+
+    return Literal{NodeBackendHandle{NodeBackendID{NodeID{*inlined_id, node_id.node_id().literal_type()},
+                                                   RDFNodeType::Literal,
+                                                   true,
+                                                   node_id.free_tagging_bits()},
+                                     node_storage}};
 }
 
 Literal Literal::make_inlined_typed_unchecked(storage::identifier::LiteralID inlined_value, storage::identifier::LiteralType fixed_id, storage::DynNodeStoragePtr node_storage) noexcept {
@@ -188,7 +188,9 @@ Literal Literal::lang_tagged_get_de_inlined() const noexcept {
     auto [_, id] = datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(handle_.node_id().literal_id());
     return Literal{storage::identifier::NodeBackendHandle{storage::identifier::NodeID{id, this->handle_.node_id().literal_type()},
                                                           handle_.type(),
-                                                          handle_.storage()}};
+                                                          handle_.storage(),
+                                                          false,
+                                                          handle_.free_tagging_bits()}};
 }
 
 bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept {
@@ -347,7 +349,7 @@ Literal Literal::to_node_storage(storage::DynNodeStoragePtr node_storage) const 
                 return node_storage.find_or_make_id(literal_view);
             });
 
-    return Literal{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Literal, node_storage}};
+    return Literal{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
 Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
@@ -364,28 +366,25 @@ Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage
             auto const literal_view = this->lang_tagged_get_de_inlined().handle_.literal_backend();
 
             auto const tmp_id = node_storage.find_id(literal_view);
-            if (tmp_id == storage::identifier::NodeID{}) {
+            if (tmp_id.null()) {
                 return Literal{};
             }
 
-            auto const [node_id, inlined] = [tmp_id, &literal_view]() noexcept {
-                if (auto const lang_tag_i = DatatypeRegistry::LangTagInlines::try_tag_to_inlined(literal_view.get_lexical().language_tag);
-                    lang_tag_i.has_value()) {
+            auto const lang_tag_i = DatatypeRegistry::LangTagInlines::try_tag_to_inlined(literal_view.get_lexical().language_tag);
+            if (!lang_tag_i.has_value()) {
+                return Literal{storage::identifier::NodeBackendHandle{tmp_id, node_storage}};
+            }
 
-                    if (auto const inlined_id = DatatypeRegistry::LangTagInlines::try_into_inlined(tmp_id.literal_id(), *lang_tag_i);
-                        inlined_id.has_value()) {
+            auto const inlined_id = DatatypeRegistry::LangTagInlines::try_into_inlined(tmp_id.node_id().literal_id(), *lang_tag_i);
+            if (!inlined_id.has_value()) {
+                return Literal{storage::identifier::NodeBackendHandle{tmp_id, node_storage}};
+            }
 
-                        return std::make_pair(storage::identifier::NodeID{*inlined_id, tmp_id.literal_type()}, true);
-                    }
-                }
-
-                return std::make_pair(tmp_id, false);
-            }();
-
-            return Literal{storage::identifier::NodeBackendHandle{node_id,
-                                                                  storage::identifier::RDFNodeType::Literal,
-                                                                  node_storage,
-                                                                  inlined}};
+            return Literal{storage::identifier::NodeBackendHandle{storage::identifier::NodeBackendID{storage::identifier::NodeID{*inlined_id, tmp_id.node_id().literal_type()},
+                                                                                                     storage::identifier::RDFNodeType::Literal,
+                                                                                                     true,
+                                                                                                     tmp_id.free_tagging_bits()},
+                                                                  node_storage}};
         }
 
         auto const node_id = this->handle_.node_id();
@@ -418,9 +417,9 @@ Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage
                 auto const dtype_iri_view = src_node_storage.find_iri_backend(lexical_backend.datatype_id);
 
                 lexical_backend.datatype_id = node_storage.find_id(dtype_iri_view);
-                if (lexical_backend.datatype_id == storage::identifier::NodeID{}) {
+                if (lexical_backend.datatype_id.null()) {
                     // datatype IRI not present, therefore literal cannot be present
-                    return storage::identifier::NodeID{};
+                    return storage::identifier::NodeBackendID{};
                 }
 
                 return node_storage.find_id(literal_view);
@@ -447,31 +446,31 @@ Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage
                 return node_storage.find_id(literal_view);
             });
 
-    if (node_id == storage::identifier::NodeID{}) {
+    if (node_id.null()) {
         return Literal{};
     }
 
-    return Literal{storage::identifier::NodeBackendHandle{node_id, storage::identifier::RDFNodeType::Literal, node_storage}};
+    return Literal{storage::identifier::NodeBackendHandle{node_id, node_storage}};
 }
 
-storage::identifier::NodeID Literal::find_datatype_iri(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept {
+storage::identifier::NodeBackendID Literal::find_datatype_iri(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept {
     auto nid = IRI::find(id, node_storage);
-    return nid.backend_handle().node_id();
+    return nid.backend_handle().id();
 }
 
 Literal Literal::find_simple(std::string_view lexical_form, storage::DynNodeStoragePtr node_storage) noexcept {
     auto esc = lexical_form_needs_escape(lexical_form);
     auto nid = node_storage.find_id(storage::view::LexicalFormLiteralBackendView{
-            storage::identifier::NodeID::xsd_string_iri.first, lexical_form, "", esc});
+            storage::identifier::NodeBackendID::xsd_string_iri.first, lexical_form, "", esc});
     if (nid.null())
         return Literal{};
-    return Literal{storage::identifier::NodeBackendHandle{nid, storage::identifier::RDFNodeType::Literal, node_storage}};
+    return Literal{storage::identifier::NodeBackendHandle{nid, node_storage}};
 }
 
 Literal Literal::find_lang_tagged(std::string_view lexical_form, std::string_view lang_tag, storage::DynNodeStoragePtr node_storage) noexcept {
     auto esc = lexical_form_needs_escape(lexical_form);
     auto nid = node_storage.find_id(storage::view::LexicalFormLiteralBackendView{
-            storage::identifier::NodeID::rdf_langstring_iri.first, lexical_form, lang_tag, esc});
+            storage::identifier::NodeBackendID::rdf_langstring_iri.first, lexical_form, lang_tag, esc});
     if (nid.null())
         return Literal{};
     return make_lang_tagged_unchecked_from_node_id(lang_tag, node_storage, nid);
@@ -516,7 +515,6 @@ IRI Literal::datatype() const noexcept {
 
     auto const lexical = handle_.literal_backend().get_lexical();
     return IRI{storage::identifier::NodeBackendHandle{lexical.datatype_id,
-                                                      storage::identifier::RDFNodeType::IRI,
                                                       handle_.storage()}};
 }
 

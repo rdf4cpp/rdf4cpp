@@ -30,7 +30,9 @@ In the following, the bit-fields of `NodeBackendID` will be explained starting f
 most significant bits because the parts in the less significant depend on the bits in the more significant bits.
 
 ## Free Tagging Bits (13 bit)
-The _free tagging bits_ can be used by the internal storage to store 13 bit of information.
+The _free tagging bits_ can be used by the internal storage to store 13 bit of information in the `NodeBackendID`.
+The IRIs of fixed-id datatypes can not have any tagging bits set, since the `NodeBackendID`s will be determined
+by their `LiteralType`.
 
 ## Inlinining tagging bit (1 bit)
 The _inlinining tagging bit_ indicates whether the value of the node is stored directly (in-place) inside the NodeID

@@ -148,7 +148,7 @@ public:
      */
     [[nodiscard]] view::IRIBackendView iri_backend() const noexcept {
         assert(id_.is_iri());
-        return storage_.find_iri_backend(id_.node_id());
+        return storage_.find_iri_backend(id_);
     }
 
     /**
@@ -158,7 +158,7 @@ public:
      */
     [[nodiscard]] view::LiteralBackendView literal_backend() const noexcept {
         assert(id_.is_literal());
-        return storage_.find_literal_backend(id_.node_id());
+        return storage_.find_literal_backend(id_);
     }
 
     /**
@@ -168,7 +168,7 @@ public:
      */
     [[nodiscard]] view::BNodeBackendView bnode_backend() const noexcept {
         assert(id_.is_blank_node());
-        return storage_.find_bnode_backend(id_.node_id());
+        return storage_.find_bnode_backend(id_);
     }
 
     /**
@@ -178,7 +178,7 @@ public:
      */
     [[nodiscard]] view::VariableBackendView variable_backend() const noexcept {
         assert(id_.is_variable());
-        return storage_.find_variable_backend(id_.node_id());
+        return storage_.find_variable_backend(id_);
     }
 };
 
@@ -193,7 +193,6 @@ static_assert(sizeof(NodeBackendHandle) == 3 * sizeof(void *));
     assert(lit_handle.is_literal());
     assert(lit_handle.node_id().literal_type().is_fixed());
     return NodeBackendHandle{literal_type_to_iri_node_id(lit_handle.node_id().literal_type()),
-                             storage::identifier::RDFNodeType::IRI,
                              lit_handle.storage()};
 }
 
