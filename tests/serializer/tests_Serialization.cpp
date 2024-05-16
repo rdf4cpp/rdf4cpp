@@ -98,7 +98,7 @@ void check_basic_data(const std::string &i) {
     if constexpr (HasGraph)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
     ++qit;
     CHECK(qit != std::default_sentinel);
     CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
@@ -107,7 +107,7 @@ void check_basic_data(const std::string &i) {
     if constexpr (HasGraph)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph2"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
     ++qit;
     CHECK(qit == std::default_sentinel);
 }
@@ -223,7 +223,7 @@ void check_ext_data(const std::string &i) {
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
 
     ++qit;
     CHECK(qit != std::default_sentinel);
@@ -233,7 +233,7 @@ void check_ext_data(const std::string &i) {
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
 
     ++qit;
     CHECK(qit != std::default_sentinel);
@@ -243,7 +243,7 @@ void check_ext_data(const std::string &i) {
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
 
     ++qit;
     CHECK(qit != std::default_sentinel);
@@ -253,7 +253,7 @@ void check_ext_data(const std::string &i) {
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
 
     ++qit;
     CHECK(qit != std::default_sentinel);
@@ -263,7 +263,7 @@ void check_ext_data(const std::string &i) {
     if constexpr (F == parser::ParsingFlag::TriG)
         CHECK(qit->value().graph() == IRI::make("http://ex/graph"));
     else
-        CHECK(qit->value().graph() == IRI::make(""));
+        CHECK(qit->value().graph() == IRI::default_graph());
 
     ++qit;
     CHECK(qit == std::default_sentinel);

@@ -4,6 +4,8 @@
 #include <rdf4cpp.hpp>
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <array>
+#include <uni_algo/all.h>
+#include <hwy/highway.h>
 
 using namespace rdf4cpp;
 
@@ -289,13 +291,44 @@ TEST_CASE("char matcher") {
     CHECK(priv.match(0x10FFFD));
     CHECK(!priv.match(0xFFFF));
 
-    CHECK(match(alnum, std::string_view{"abcAbZz093"}));
-    CHECK(!match(alnum, std::string_view{"abcAb#Zz093"}));
-    std::array<int,3> unic{
-            'a', 'b', 'c'
-    };
-    CHECK(match(alnum, unic));
-    unic[1] = 0x30000;
-    CHECK(!match(alnum, unic));
-    CHECK(match(alnum | ucs, unic));
+    CHECK(match<alnum, una::views::utf8>(std::string_view{"abcAbZz093"}));
+    CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#Zz093"}));
+    CHECK(!match<alnum, una::views::utf8>(std::string_view{"abcAb#\U000000FFZz093"}));
+}
+
+void test_simd_foreach_supported(void (*func)(std::string_view target_name)) {
+    auto targets = hwy::SupportedAndGeneratedTargets();
+    for (auto const t : targets) {
+        hwy::SetSupportedTargetsForTest(t);
+        func(hwy::TargetName(t));
+    }
+    hwy::SetSupportedTargetsForTest(0);
+}
+
+void test_simd_matcher_worker(std::string_view target_name) {
+    using namespace util::char_matcher_detail;
+    INFO(target_name); // add to every failing test case in scope
+    std::array<CharRange, 3> r {CharRange{'a', 'z'}, CharRange{'A', 'Z'}, CharRange{'a', 'b'}};
+    static constexpr datatypes::registry::util::ConstexprString single_empty{""};
+    static constexpr datatypes::registry::util::ConstexprString single_2{"%&$"};
+    CHECK(try_match_simd("abcdefZxyAZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == true);
+    CHECK(try_match_simd("abcdefZxy%&AZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == false);
+    CHECK(try_match_simd("abcdefZxy%&AZzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_2) == true);
+    CHECK(try_match_simd("f", r, single_empty) == true);
+    CHECK(try_match_simd("abcdefx5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty) == false);
+    CHECK(!try_match_simd("abcdefx\U000000FF5yzaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", r, single_empty).has_value());
+
+    static constexpr datatypes::registry::util::ConstexprString chars = "aAbB";
+    CHECK(contains_any("57816a58919", chars) == true);
+    CHECK(contains_any("57816A58919", chars) == true);
+    CHECK(contains_any("5781658919B", chars) == true);
+    CHECK(contains_any("b5781658919", chars) == true);
+    CHECK(contains_any("5781658919", chars) == false);
+    CHECK(contains_any("57\U000000FF816a58919", chars) == true);
+    CHECK(contains_any("57\U000000FF81658919", chars) == false);
+    static constexpr datatypes::registry::util::ConstexprString pattern = "\"\\\n\r";
+    CHECK(contains_any("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"aaaa", pattern) == true);
+}
+TEST_CASE("SIMD char matcher") {
+    test_simd_foreach_supported(&test_simd_matcher_worker);
 }

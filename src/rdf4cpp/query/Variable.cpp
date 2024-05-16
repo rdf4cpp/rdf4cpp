@@ -1,14 +1,17 @@
 #include "Variable.hpp"
 
 #include <rdf4cpp/writer/TryWrite.hpp>
+#include <rdf4cpp/util/CharMatcher.hpp>
+#include <rdf4cpp/ParsingError.hpp>
+#include <uni_algo/all.h>
 
 namespace rdf4cpp::query {
 Variable::Variable() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::identifier::RDFNodeType::Variable, {}}} {
 }
 
 Variable::Variable(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage)
-    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
-                                                  node_storage}} {}
+    : Variable{make_unchecked(check_var_name(name), anonymous, node_storage)} {}
+
 Variable::Variable(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {}
 
 Variable Variable::make_named(std::string_view name, storage::DynNodeStoragePtr node_storage) {
@@ -17,6 +20,11 @@ Variable Variable::make_named(std::string_view name, storage::DynNodeStoragePtr 
 
 Variable Variable::make_anonymous(std::string_view name, storage::DynNodeStoragePtr node_storage) {
     return Variable{name, true, node_storage};
+}
+
+Variable Variable::make_unchecked(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) {
+    return Variable{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::VariableBackendView{.name = name, .is_anonymous = anonymous}),
+                                                           node_storage}};
 }
 
 Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
@@ -98,6 +106,28 @@ std::ostream &operator<<(std::ostream &os, Variable const &variable) {
     w.finalize();
 
     return os;
+}
+
+std::string_view Variable::check_var_name(std::string_view n) {
+    using namespace util::char_matcher_detail;
+    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
+    auto r = n | una::views::utf8;
+    auto it = r.begin();
+    if (it == r.end()) {
+        throw ParsingError("invalid blank node label (empty string)");
+    }
+    if (!first_matcher.match(*it)) {
+        throw ParsingError(std::format("invalid blank node label {}", n));
+    }
+    ++it;
+    while (it != r.end()) {
+        if (!PNCharsMatcher.match(*it))
+        {
+            throw ParsingError(std::format("invalid blank node label {}", n));
+        }
+        ++it;
+    }
+    return n;
 }
 
 }  // namespace rdf4cpp::query

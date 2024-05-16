@@ -1,5 +1,7 @@
 #include "IRI.hpp"
 #include <rdf4cpp/writer/TryWrite.hpp>
+#include <rdf4cpp/IRIView.hpp>
+#include <rdf4cpp/ParsingError.hpp>
 
 #include <sstream>
 
@@ -16,8 +18,7 @@ IRI::IRI() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::i
 }
 
 IRI::IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage)
-    : Node{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = iri}),
-                                                  node_storage}} {
+    : IRI{make_unchecked(check_valid_iri(iri), node_storage)} {
 }
 
 IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept
@@ -27,7 +28,7 @@ IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node
                                                                               node_storage}};
                         },
                         [&](std::string_view const dynamic) -> IRI {
-                            return IRI{dynamic, node_storage};
+                            return IRI::make_unchecked(dynamic, node_storage);
                         }},
                 id)} {
 }
@@ -40,12 +41,24 @@ IRI IRI::make(std::string_view iri, storage::DynNodeStoragePtr node_storage) {
     return IRI{iri, node_storage};
 }
 
+IRI IRI::make_unchecked(std::string_view iri, storage::DynNodeStoragePtr node_storage) {
+    return IRI{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::IRIBackendView{.identifier = iri}),
+                                                      node_storage}};
+}
+
 IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
     boost::uuids::random_generator_mt19937 gen{};
     boost::uuids::uuid u = gen();
     std::stringstream stream{};
     stream << "urn:uuid:" << u;
     return IRI{stream.view(), node_storage};
+}
+
+std::string_view IRI::check_valid_iri(std::string_view s) {
+    auto v = IRIView(s).quick_validate();
+    if (v != IRIFactoryError::Ok)
+        throw ParsingError(std::format("IRI {} is invalid: {}", s, v));
+    return s;
 }
 
 IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
@@ -128,7 +141,7 @@ bool IRI::is_iri() const noexcept { return true; }
 
 
 IRI IRI::default_graph(storage::DynNodeStoragePtr node_storage) {
-    return IRI{"", node_storage};
+    return IRI::make_unchecked("", node_storage);
 }
 std::ostream &operator<<(std::ostream &os, IRI const &iri) {
     writer::BufOStreamWriter w{os};

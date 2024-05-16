@@ -17,6 +17,8 @@ struct Variable : Node {
     [[nodiscard]] static Variable make_named(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
     [[nodiscard]] static Variable make_anonymous(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
+    [[nodiscard]] static Variable make_unchecked(std::string_view name, bool anonymous = false, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+
     Variable to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] Variable try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
@@ -61,6 +63,8 @@ public:
     friend struct Node;
 
     // todo unbound()
+private:
+    static std::string_view check_var_name(std::string_view n);
 };
 
 }  // namespace rdf4cpp::query

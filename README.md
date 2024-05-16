@@ -30,23 +30,6 @@ Note:
 
 If you want to include rdf4cpp without using conan, make sure you also include its dependencies exposed via the rdf4cpp API.
 
-### With FetchContent
-Use
-```
-include(FetchContent)
-FetchContent_Declare(
-        rdf4cpp
-        GIT_REPOSITORY "${CMAKE_CURRENT_SOURCE_DIR}/../"
-        GIT_TAG v0.0.31
-        GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(rdf4cpp)
-```
-
-to make the library target `rdf4cpp::rdf4cpp` available. 
-
-Beware: Conan will not be used for dependency retrieval if you include rdf4cpp via FetchContent. It is your responsibility that all dependencies are available  before. 
-
 ## Build
 
 ### Requirements

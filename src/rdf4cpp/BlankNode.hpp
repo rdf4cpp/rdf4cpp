@@ -34,6 +34,11 @@ struct BlankNode : Node {
      */
     [[nodiscard]] static BlankNode make(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
+    /**
+     * Constructs a bnode from an identifier
+     */
+    [[nodiscard]] static BlankNode make_unchecked(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+
     BlankNode to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] BlankNode try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
@@ -70,6 +75,9 @@ struct BlankNode : Node {
     [[nodiscard]] bool is_iri() const noexcept;
 
     friend struct Node;
+
+private:
+    static std::string_view validate_bnode_name(std::string_view v);
 };
 
 inline namespace shorthands {

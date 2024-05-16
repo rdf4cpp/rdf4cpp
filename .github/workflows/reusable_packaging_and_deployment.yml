@@ -80,21 +80,3 @@ jobs:
           # build and test package
           conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing -o boost:header_only=True
           conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
-
-  test-fetch-content-static:
-    name: Test cmake FetchContent (static lib)
-    uses: ./.github/workflows/reusable_fetch_content.yml
-    with:
-      os: ${{ inputs.os }}
-      compiler: ${{ inputs.compiler }}
-      cmake-version: ${{ inputs.cmake-version }}
-      build-shared-libs: false
-
-  test-fetch-content-shared:
-    name: Test cmake FetchContent (shared lib)
-    uses: ./.github/workflows/reusable_fetch_content.yml
-    with:
-      os: ${{ inputs.os }}
-      compiler: ${{ inputs.compiler }}
-      cmake-version: ${{ inputs.cmake-version }}
-      build-shared-libs: true

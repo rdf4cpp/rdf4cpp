@@ -24,6 +24,8 @@ private:
      */
     explicit operator datatypes::registry::DatatypeIDView() const noexcept;
 
+    static std::string_view check_valid_iri(std::string_view s);
+
 public:
     explicit IRI(storage::identifier::NodeBackendHandle handle) noexcept;
 
@@ -36,6 +38,7 @@ public:
      * Constructs an IRI object from a IRI string
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
+     * @throw rdf4cpp::ParsingError if iri is invalid
      */
     explicit IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
@@ -45,11 +48,19 @@ public:
     [[nodiscard]] static IRI make_null() noexcept;
 
     /**
-     * Constructs an IRI object from a IRI string
+     * Constructs an IRI object from a IRI string.
+     * @param iri IRI string
+     * @param node_storage optional custom node_storage used to store the IRI
+     * @throw rdf4cpp::ParsingError if iri is invalid
+     */
+    [[nodiscard]] static IRI make(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+
+    /**
+     * Constructs an IRI object from a IRI string without checking if the IRI is valid.
      * @param iri IRI string
      * @param node_storage optional custom node_storage used to store the IRI
      */
-    [[nodiscard]] static IRI make(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+    [[nodiscard]] static IRI make_unchecked(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
      * creates a new IRI containing a random UUID (Universally Unique IDentifier)

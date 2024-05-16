@@ -19,56 +19,15 @@
 #include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/util/CaseInsensitiveCharTraits.hpp>
 #include <rdf4cpp/writer/Prefixes.hpp>
+#include <rdf4cpp/util/CharMatcher.hpp>
 
 #include <openssl/evp.h>
 
 namespace rdf4cpp {
-static bool lexical_form_needs_escape_non_simd(std::string_view const lexical_form) noexcept {
-    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-    auto const it = std::find_if(std::execution::unseq, lexical_form.begin(), lexical_form.end(), [](char const ch) noexcept {
-        return ch == '"' || ch == '\\' || ch == '\n' || ch == '\r';
-    });
-
-    return it != lexical_form.end();
-}
-} // namespace rdf4cpp
-
-#ifdef __AVX2__
-#include <immintrin.h>
-
-namespace rdf4cpp {
-bool Literal::lexical_form_needs_escape(std::string_view lexical_form) noexcept {
-    // https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-    __m256i const masks[4]{_mm256_set1_epi8('"'),
-                           _mm256_set1_epi8('\\'),
-                           _mm256_set1_epi8('\n'),
-                           _mm256_set1_epi8('\r')};
-
-    while (lexical_form.size() >= 32) {
-        __m256i const chars = _mm256_loadu_si256(reinterpret_cast<__m256i const *>(lexical_form.data()));
-        for (auto const &mask : masks) {
-            auto const eq = _mm256_cmpeq_epi8(mask, chars);
-
-            if (_mm256_movemask_epi8(eq) != 0) {
-                return true;
-            }
-        }
-
-        lexical_form.remove_prefix(32);
-    }
-
-    return lexical_form_needs_escape_non_simd(lexical_form);
-}
-} // rdf4cpp::rdf
-#else
-namespace rdf4cpp {
 bool Literal::lexical_form_needs_escape(std::string_view const lexical_form) noexcept {
-    return lexical_form_needs_escape_non_simd(lexical_form);
+    static constexpr datatypes::registry::util::ConstexprString pattern = "\"\\\n\r";
+    return util::char_matcher_detail::contains_any(lexical_form, pattern);
 }
-} // namespace rdf4cpp
-#endif
-
-namespace rdf4cpp {
 
 template<typename T, typename S>
 static std::string run_serialize(S serialize, T const &value) {

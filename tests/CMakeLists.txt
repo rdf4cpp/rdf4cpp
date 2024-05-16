@@ -345,6 +345,8 @@ add_test(NAME tests_dataset COMMAND tests_dataset)
 add_executable(tests_IRIFactory nodes/tests_IRIFactory.cpp)
 target_link_libraries(tests_IRIFactory
         doctest::doctest
+        uni-algo::uni-algo
+        highway::highway
         rdf4cpp
 )
 set_property(TARGET tests_IRIFactory PROPERTY CXX_STANDARD 20)
