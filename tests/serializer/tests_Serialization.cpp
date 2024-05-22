@@ -62,6 +62,10 @@ std::string write_basic_data(){
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
     if (!serialize<F>(q, ser, &st))
         FAIL("write failed");
+    q.graph() = IRI::default_graph();
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(7);
+    if (!serialize<F>(q, ser, &st))
+        FAIL("write failed");
     if constexpr (format_has_prefix<F>)
         if (!st.flush(ser))
             FAIL("flush failed");
@@ -74,6 +78,8 @@ Graph get_graph(storage::DynNodeStoragePtr node_storage) {
     gd.add(q);
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
     gd.add(q);
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(7);
+    gd.add(q);
     return gd;
 }
 Dataset get_dataset(storage::DynNodeStoragePtr node_storage) {
@@ -82,6 +88,9 @@ Dataset get_dataset(storage::DynNodeStoragePtr node_storage) {
     gd.add(q);
     q.graph() = IRI::make("http://ex/graph2");
     q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(5);
+    gd.add(q);
+    q.graph() = IRI::default_graph();
+    q.object() = Literal::make_typed_from_value<datatypes::xsd::Int>(7);
     gd.add(q);
     return gd;
 }
@@ -109,25 +118,46 @@ void check_basic_data(const std::string &i) {
     else
         CHECK(qit->value().graph() == IRI::default_graph());
     ++qit;
+    CHECK(qit != std::default_sentinel);
+    CHECK(qit->value().subject() == IRI::make("http://ex/sub"));
+    CHECK(qit->value().predicate() == IRI::make("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+    CHECK(qit->value().object() == Literal::make_typed_from_value<datatypes::xsd::Int>(7));
+    if constexpr (HasGraph)
+        CHECK(qit->value().graph() == IRI::default_graph());
+    else
+        CHECK(qit->value().graph() == IRI::default_graph());
+    ++qit;
     CHECK(qit == std::default_sentinel);
 }
 
 TEST_CASE("basic ntriple") {
     const std::string d = write_basic_data<OutputFormat::NTriples>();
-    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
+    std::string const expected_1 = "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n"
+                             "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n"
+                             "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"7\"^^<http://www.w3.org/2001/XMLSchema#int> .\n";
+    std::string const expected_2 = "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> .\n"
+                             "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"7\"^^<http://www.w3.org/2001/XMLSchema#int> .\n"
+                             "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> .\n";
+    // use the OR clause to deal with different orderings
+    auto const result_1 = d == expected_1 || d == expected_2;
+    CHECK(result_1);
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
         storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_graph(ns).serialize(w);
     });
+    // use the OR clause to deal with different orderings
+    auto const result_2 = res == expected_1 || res == expected_2;
+    CHECK(result_2);
 
-    CHECK_EQ(res, d);
     check_basic_data<false, parser::ParsingFlag::NTriples>(d);
 }
 
 TEST_CASE("basic nquad") {
     const std::string d = write_basic_data<OutputFormat::NQuads>();
-    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> <http://ex/graph2> .\n");
+    CHECK(d == "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://ex/obj> <http://ex/graph> .\n"
+               "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"5\"^^<http://www.w3.org/2001/XMLSchema#int> <http://ex/graph2> .\n"
+               "<http://ex/sub> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"7\"^^<http://www.w3.org/2001/XMLSchema#int> .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
         storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
@@ -140,20 +170,34 @@ TEST_CASE("basic nquad") {
 
 TEST_CASE("basic turtle") {
     const std::string d = write_basic_data<OutputFormat::Turtle>();
-    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int .\n");
+    std::string const expected_1 = "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
+                                   "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+                                   "<http://ex/sub> a <http://ex/obj> ,\n\"5\"^^xsd:int ,\n\"7\"^^xsd:int .\n";
+
+    std::string const expected_2 = "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
+                                   "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+                                   "<http://ex/sub> a <http://ex/obj> ,\n\"7\"^^xsd:int ,\n\"5\"^^xsd:int .\n";
+    // use the OR clause to deal with different orderings
+    auto const result_1 = d == expected_1 || d == expected_2;
+    CHECK(result_1);
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
         storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};
         return get_graph(ns).serialize_turtle(w);
     });
+    // use the OR clause to deal with different orderings
+    auto const result_2 = res == expected_1 || res == expected_2;
+    CHECK(result_2);
 
-    CHECK_EQ(res, d);
     check_basic_data<false, parser::ParsingFlag::Turtle>(d);
 }
 
 TEST_CASE("basic trig") {
     const std::string d = write_basic_data<OutputFormat::TriG>();
-    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/graph2> {\n<http://ex/sub> a \"5\"^^xsd:int .\n}\n");
+    CHECK(d == "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n"
+               "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n"
+               "<http://ex/graph> {\n<http://ex/sub> a <http://ex/obj> .\n}\n<http://ex/graph2> {\n<http://ex/sub> a \"5\"^^xsd:int .\n}\n"
+               "<http://ex/sub> a \"7\"^^xsd:int .\n");
 
     auto const res = writer::StringWriter::oneshot([](auto &w) noexcept {
         storage::reference_node_storage::UnsyncReferenceNodeStorage ns{};

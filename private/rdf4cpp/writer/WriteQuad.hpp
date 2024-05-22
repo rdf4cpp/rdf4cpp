@@ -48,7 +48,7 @@ bool write_quad(Q const &s, writer::BufWriterParts const writer, writer::Seriali
                     return false;
                 }
 
-                if (!s.graph().null()) {
+                if (s.graph() != IRI::default_graph()) {
                     RDF4CPP_DETAIL_TRY_WRITE_NODE(s.graph());
                     RDF4CPP_DETAIL_TRY_WRITE_STR(" {\n");
 
@@ -89,7 +89,7 @@ bool write_quad(Q const &s, writer::BufWriterParts const writer, writer::Seriali
 
     if constexpr (!writer::format_has_prefix<F>) {
         if constexpr (writer::format_has_graph<F>) {
-            if (!s.graph().null()) {
+            if (s.graph() != IRI::default_graph()) {
                 RDF4CPP_DETAIL_TRY_WRITE_STR(" ");
                 RDF4CPP_DETAIL_TRY_WRITE_NODE(s.graph());
             }
