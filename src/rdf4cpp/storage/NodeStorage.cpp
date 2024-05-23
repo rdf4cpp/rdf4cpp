@@ -1,16 +1,14 @@
-#include "NodeStorage.hpp"
-
+#include <rdf4cpp/storage/NodeStorage.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
 
 namespace rdf4cpp::storage {
 
-#ifndef DOXYGEN_PARSER
-reference_node_storage::SyncReferenceNodeStorage default_node_storage_holder_;
-DynNodeStoragePtr default_node_storage{default_node_storage_holder_};
-#endif // DOXYGEN_PARSER
+namespace reference_node_storage {
+SyncReferenceNodeStorage default_instance{};
+} // reference_node_storage
 
-void reset_default_node_storage() noexcept {
-    default_node_storage = default_node_storage_holder_;
-}
+#ifndef DOXYGEN_PARSER
+DynNodeStoragePtr default_node_storage{reference_node_storage::default_instance};
+#endif // DOXYGEN_PARSER
 
 } // namespace rdf4cpp::storage

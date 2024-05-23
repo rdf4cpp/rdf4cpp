@@ -74,8 +74,9 @@ public:
     bool erase_bnode(identifier::NodeBackendID id);
     bool erase_variable(identifier::NodeBackendID id);
 };
-
 static_assert(NodeStorage<SyncReferenceNodeStorage>);
+
+extern SyncReferenceNodeStorage default_instance;
 
 }  // namespace rdf4cpp::storage::reference_node_storage
 #endif  //RDF4CPP_SYNCREFERENCENODESTORAGE_HPP
