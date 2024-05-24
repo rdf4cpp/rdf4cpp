@@ -80,6 +80,9 @@ RegexReplacer::Impl::Impl(Regex::Impl const &regex, std::string_view const rewri
     if (!this->regex->regex.CheckRewriteString(this->rewrite, &err)) {
         throw RegexError(err);
     }
+    if (this->regex->regex_match("")) {
+        throw RegexError("replace matches empty string");
+    }
 }
 
 void RegexReplacer::Impl::regex_replace(std::string &str) const noexcept {

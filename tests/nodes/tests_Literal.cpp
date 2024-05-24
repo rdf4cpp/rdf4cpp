@@ -768,9 +768,7 @@ TEST_CASE("Literal - misc functions") {
         CHECK_EQ(("AAAA"_xsd_string).regex_replace("A+?"_xsd_string, "b"_xsd_string), "bbbb"_xsd_string);
         CHECK_EQ(("darted"_xsd_string).regex_replace("^(.*?)d(.*)$"_xsd_string, "$1c$2"_xsd_string), "carted"_xsd_string);
 
-        // 'The expression fn:replace("abracadabra", ".*?", "$1") raises an error, because the pattern matches the zero-length string'
-        // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
-        //CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
+        CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
 
         CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), TriBool::False);
         CHECK(("Mr. B. Obama"_xsd_string).as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
