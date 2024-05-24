@@ -15,7 +15,7 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
         s = s.substr(1);
     }
     if (s.empty() || s[0] != 'P')
-        throw std::runtime_error{"duration missing P"};
+        throw InvalidNode{"duration missing P"};
     s = s.substr(1);
     auto p = s.find('T');
     auto date = s.substr(0, p);
@@ -23,7 +23,7 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
     auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D', identifier>(date);
     if (!time.empty()) {
         if (time[0] != 'T')
-            throw std::runtime_error{"duration missing T"};
+            throw InvalidNode{"duration missing T"};
         time = time.substr(1);
     }
     auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H', identifier>(time);
@@ -34,9 +34,9 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
     if (days.has_value())
         ms += *days;
     if (!date.empty() || !time.empty())
-        throw std::runtime_error{"expected end of string"};
+        throw InvalidNode{"expected end of string"};
     if (!days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
-        throw std::runtime_error{"duration without any fields"};
+        throw InvalidNode{"duration without any fields"};
     }
     if (hours.has_value())
         ms += *hours;

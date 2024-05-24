@@ -1,7 +1,7 @@
 #include "IRI.hpp"
-#include <rdf4cpp/writer/TryWrite.hpp>
 #include <rdf4cpp/IRIView.hpp>
-#include <rdf4cpp/ParsingError.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
+#include <rdf4cpp/writer/TryWrite.hpp>
 
 #include <sstream>
 
@@ -57,7 +57,7 @@ IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
 std::string_view IRI::check_valid_iri(std::string_view s) {
     auto v = IRIView(s).quick_validate();
     if (v != IRIFactoryError::Ok)
-        throw ParsingError(std::format("IRI {} is invalid: {}", s, v));
+        throw InvalidNode(std::format("IRI {} is invalid: {}", s, v));
     return s;
 }
 

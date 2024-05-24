@@ -239,9 +239,9 @@ TEST_CASE("conversion") {
         CHECK(Dec{"-0005.000"} == Dec{-5000, 3});
         CHECK_EQ(Dec{"-0005.000"}.get_exponent(), 3);
         CHECK(Dec{"0.0"} == Dec{"-0.0"});
-        CHECK_THROWS_AS(Dec{"5.5.5"}, std::invalid_argument);
-        CHECK_THROWS_AS(Dec{"5.5-5"}, std::invalid_argument);
-        CHECK_THROWS_AS(Dec{"5.5+5"}, std::invalid_argument);
+        CHECK_THROWS_AS(Dec{"5.5.5"}, rdf4cpp::InvalidNode);
+        CHECK_THROWS_AS(Dec{"5.5-5"}, rdf4cpp::InvalidNode);
+        CHECK_THROWS_AS(Dec{"5.5+5"}, rdf4cpp::InvalidNode);
         // no e notation allowed by rdf (xml) standard
     }
     SUBCASE("from cpp_int") {

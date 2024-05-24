@@ -1,9 +1,9 @@
 #include "BlankNode.hpp"
 #include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
+#include <rdf4cpp/InvalidNode.hpp>
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
-#include <rdf4cpp/ParsingError.hpp>
 #include <uni_algo/all.h>
 
 namespace rdf4cpp {
@@ -139,10 +139,10 @@ std::string_view BlankNode::validate_bnode_name(std::string_view v) {
     auto r = v | una::views::utf8;
     auto it = r.begin();
     if (it == r.end()) {
-        throw ParsingError("invalid blank node label (empty string)");
+        throw InvalidNode("invalid blank node label (empty string)");
     }
     if (!first_matcher.match(*it)) {
-        throw ParsingError(std::format("invalid blank node label {}", v));
+        throw InvalidNode(std::format("invalid blank node label {}", v));
     }
     auto lastchar = *it;
     ++it;
@@ -150,13 +150,13 @@ std::string_view BlankNode::validate_bnode_name(std::string_view v) {
     while (it != r.end()) {
         if (!pn_matcher.match(*it))
         {
-            throw ParsingError(std::format("invalid blank node label {}", v));
+            throw InvalidNode(std::format("invalid blank node label {}", v));
         }
         lastchar = *it;
         ++it;
     }
     if (lastchar == '.') {
-        throw ParsingError(std::format("invalid blank node label {}", v));
+        throw InvalidNode(std::format("invalid blank node label {}", v));
     }
     return v;
 }

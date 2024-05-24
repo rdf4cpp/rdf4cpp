@@ -1,8 +1,8 @@
 #include "Variable.hpp"
 
-#include <rdf4cpp/writer/TryWrite.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
 #include <rdf4cpp/util/CharMatcher.hpp>
-#include <rdf4cpp/ParsingError.hpp>
+#include <rdf4cpp/writer/TryWrite.hpp>
 #include <uni_algo/all.h>
 
 namespace rdf4cpp::query {
@@ -114,16 +114,16 @@ std::string_view Variable::check_var_name(std::string_view n) {
     auto r = n | una::views::utf8;
     auto it = r.begin();
     if (it == r.end()) {
-        throw ParsingError("invalid blank node label (empty string)");
+        throw InvalidNode("invalid blank node label (empty string)");
     }
     if (!first_matcher.match(*it)) {
-        throw ParsingError(std::format("invalid blank node label {}", n));
+        throw InvalidNode(std::format("invalid blank node label {}", n));
     }
     ++it;
     while (it != r.end()) {
         if (!PNCharsMatcher.match(*it))
         {
-            throw ParsingError(std::format("invalid blank node label {}", n));
+            throw InvalidNode(std::format("invalid blank node label {}", n));
         }
         ++it;
     }

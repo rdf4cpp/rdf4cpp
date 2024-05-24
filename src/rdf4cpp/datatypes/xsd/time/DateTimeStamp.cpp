@@ -15,34 +15,34 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
     auto minutes = parse_date_time_fragment<std::chrono::minutes, unsigned int, ':', identifier>(s);
     auto p = s.find_first_of(rdf4cpp::Timezone::begin_tokens);
     if (p == 0)
-        throw std::runtime_error{"invalid seconds"};
+        throw InvalidNode{"invalid seconds"};
     if (p == std::string::npos)
-        throw std::runtime_error{"missing timezone"};
+        throw InvalidNode{"missing timezone"};
     auto tz = rdf4cpp::Timezone::parse(s.substr(p));
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s.substr(0, p));
     auto date = year / month / day;
     if (registry::relaxed_parsing_mode && !date.ok())
         date = normalize(date);
     if (!date.ok()) {
-        throw std::runtime_error("invalid date");
+        throw InvalidNode("invalid date");
     }
     if (!registry::relaxed_parsing_mode) {
         if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
-            throw std::runtime_error{"minutes out of range"};
+            throw InvalidNode{"minutes out of range"};
         if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
-            throw std::runtime_error{"hours out of range"};
+            throw InvalidNode{"hours out of range"};
         if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
-            throw std::runtime_error{"seconds out of range"};
+            throw InvalidNode{"seconds out of range"};
     }
     auto time = hours + minutes + ms;
     if (!registry::relaxed_parsing_mode) {
         if (time == std::chrono::hours{24}) {
             date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
             if (!date.ok())
-                throw std::runtime_error("invalid date");
+                throw InvalidNode("invalid date");
             time = std::chrono::hours{0};
         } else if (time > std::chrono::hours{24}) {
-            throw std::runtime_error{"invalid time of day"};
+            throw InvalidNode{"invalid time of day"};
         }
     }
 

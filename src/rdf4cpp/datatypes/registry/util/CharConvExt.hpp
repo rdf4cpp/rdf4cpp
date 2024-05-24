@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <format>
 
+#include <rdf4cpp/InvalidNode.hpp>
+
 namespace rdf4cpp::datatypes::registry::util {
 
 /**
@@ -17,7 +19,7 @@ namespace rdf4cpp::datatypes::registry::util {
  * @tparam I the resulting integral type
  * @param s the string to be parsed
  * @return the resulting value
- * @throws std::runtime_error if the string cannot be parsed
+ * @throws ParsingError if the string cannot be parsed
  */
 template<std::integral I, ConstexprString datatype>
 I from_chars(std::string_view s) {
@@ -30,9 +32,9 @@ I from_chars(std::string_view s) {
     auto const res = std::from_chars(s.data(), s.data() + s.size(), value);
 
     if (res.ec != std::errc{}) {
-        throw std::runtime_error{std::format("{} parsing error: {} at {}", datatype, std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
+        throw rdf4cpp::InvalidNode{std::format("{} parsing error: {} at {}", datatype, std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
     } else if (res.ptr != s.data() + s.size()) {
-        throw std::runtime_error{std::format("{} parsing error: unexpected char at {}", datatype, std::string_view(res.ptr, s.data() + s.size()))};
+        throw rdf4cpp::InvalidNode{std::format("{} parsing error: unexpected char at {}", datatype, std::string_view(res.ptr, s.data() + s.size()))};
     } else {
         return value;
     }
@@ -68,7 +70,7 @@ bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noex
  * @tparam F the result floating point type
  * @param s the string to be parsed
  * @return the resulting value
- * @throws std::runtime_error if the string cannot be parsed
+ * @throws ParsingError if the string cannot be parsed
  */
 template<std::floating_point F, ConstexprString datatype>
 F from_chars(std::string_view s) {
@@ -82,7 +84,7 @@ F from_chars(std::string_view s) {
 
     if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
-        throw std::runtime_error{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
+        throw rdf4cpp::InvalidNode{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
     }
 
     return value;

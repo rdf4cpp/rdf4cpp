@@ -9,6 +9,7 @@
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 #include <rdf4cpp/util/CheckedInt.hpp>
 #include <rdf4cpp/Timezone.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
 
 /**
  * @file
@@ -93,7 +94,7 @@ ResultType parse_date_time_fragment(std::string_view &s) {
     if constexpr (Separator != '\0') {
         auto p = s.find(Separator, 1);
         if (p == std::string::npos)
-            throw std::runtime_error(std::format("{} parse error: missing {}", datatype, Separator));
+            throw InvalidNode(std::format("{} parse error: missing {}", datatype, Separator));
         res_s = s.substr(0, p);
         s = s.substr(p + 1);
     }

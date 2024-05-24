@@ -1,4 +1,5 @@
 #include "Rational.hpp"
+#include <rdf4cpp/InvalidNode.hpp>
 
 namespace rdf4cpp::datatypes::registry {
 
@@ -19,18 +20,18 @@ template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s) {
     if (auto pos = s.find_last_of('-'); pos != std::string_view::npos && pos != 0) {
         // owl:rational only allows - at beginning, boost also allows it in the denominator
-        throw std::runtime_error{"owl:rational parsing error: invalid sign position"};
+        throw InvalidNode{"owl:rational parsing error: invalid sign position"};
     }
 
     if (s.find_first_not_of("0123456789/-") != std::string_view::npos) {
         // owl:rational does not allow hex, boost does
-        throw std::runtime_error{"owl:rational parsing error: invalid character in string"};
+        throw InvalidNode{"owl:rational parsing error: invalid character in string"};
     }
 
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"owl:rational parsing error:"} + e.what()};
+        throw InvalidNode{std::string{"owl:rational parsing error:"} + e.what()};
     }
 }
 

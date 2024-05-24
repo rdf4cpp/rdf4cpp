@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <rdf4cpp/InvalidNode.hpp>
+
 namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
@@ -12,11 +14,11 @@ capabilities::Default<xsd_non_positive_integer>::cpp_type capabilities::Default<
     try {
         ret = cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"xsd:nonPositiveInteger parsing error: "} + e.what()};
+        throw InvalidNode{std::string{"xsd:nonPositiveInteger parsing error: "} + e.what()};
     }
 
     if (ret > 0) {
-        throw std::runtime_error{"xsd:nonPositiveInteger parsing error: found non-negative value"};
+        throw InvalidNode{"xsd:nonPositiveInteger parsing error: found non-negative value"};
     }
 
     return ret;
