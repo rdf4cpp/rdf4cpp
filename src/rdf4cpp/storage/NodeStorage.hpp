@@ -21,17 +21,6 @@ concept NodeStorage = requires (NS ns_mut,
                                 view::IRIBackendView const &iri_view,
                                 identifier::NodeBackendID const node_id) {
     /**
-     * @return number of nodes managed by this INodeStorageBackend. Implementations are free
-     *      to always report 0.
-     */
-    { ns.size() } -> std::convertible_to<size_t>;
-
-    /**
-     * Requests the removal of unused capacity.
-     */
-    ns_mut.shrink_to_fit();
-
-    /**
      * Backend for NodeStorage::has_specialized_storage_for(datatype)
      * @param datatype datatype of specialized storage to check for
      * @return whether this implementation has specialized storage for the given datatype
@@ -121,42 +110,12 @@ concept NodeStorage = requires (NS ns_mut,
      * @return view::VariableBackendView describing the requested Node
      */
     { ns.find_variable_backend(node_id) } -> std::convertible_to<view::VariableBackendView>;
-
-    /**
-     * Must throw if not implemented.
-     * @param id identifier::NodeID identifying the resource
-     * @return if backend of resource was erased
-     */
-    { ns_mut.erase_iri(node_id) } -> std::convertible_to<bool>;
-
-    /**
-     * Must throw if not implemented.
-     * @param id identifier::NodeID identifying the resource
-     * @return if backend of resource was erased
-     */
-    { ns_mut.erase_literal(node_id) } -> std::convertible_to<bool>;
-
-    /**
-     * Must throw if not implemented.
-     * @param id identifier::NodeID identifying the resource
-     * @return if backend of resource was erased
-     */
-    { ns_mut.erase_bnode(node_id) } -> std::convertible_to<bool>;
-
-    /**
-     * Must throw if not implemented.
-     * @param id identifier::NodeID identifying the resource
-     * @return if backend of resource was erased
-     */
-    { ns_mut.erase_variable(node_id) } -> std::convertible_to<bool>;
 };
 
 /**
  * A VTable for a NodeStorage
  */
 struct NodeStorageVTable {
-    size_t (*size)(void const *self) noexcept;
-    void (*shrink_to_fit)(void *self);
     bool (*has_specialized_storage_for)(void const *self, identifier::LiteralType literal_type) noexcept;
 
     identifier::NodeBackendID (*find_or_make_iri_id)(void *self, view::IRIBackendView const &view);
@@ -174,20 +133,9 @@ struct NodeStorageVTable {
     view::LiteralBackendView (*find_literal_backend)(void const *self, identifier::NodeBackendID id) noexcept;
     view::VariableBackendView (*find_variable_backend)(void const *self, identifier::NodeBackendID id) noexcept;
 
-    bool (*erase_iri)(void *self, identifier::NodeBackendID id);
-    bool (*erase_bnode)(void *self, identifier::NodeBackendID id);
-    bool (*erase_literal)(void *self, identifier::NodeBackendID id);
-    bool (*erase_variable)(void *self, identifier::NodeBackendID id);
-
     template<NodeStorage NS>
     static NodeStorageVTable const *get() noexcept {
         static constexpr NodeStorageVTable vtable{
-            .size = [](void const *self) noexcept -> size_t {
-                return static_cast<NS const *>(self)->size();
-            },
-            .shrink_to_fit = [](void *self) -> void {
-                static_cast<NS *>(self)->shrink_to_fit();
-            },
             .has_specialized_storage_for = [](void const *self, identifier::LiteralType const lit_type) noexcept -> bool {
                 return static_cast<NS const *>(self)->has_specialized_storage_for(lit_type);
             },
@@ -226,20 +174,7 @@ struct NodeStorageVTable {
             },
             .find_variable_backend = [](void const *self, identifier::NodeBackendID id) noexcept -> view::VariableBackendView {
                 return static_cast<NS const *>(self)->find_variable_backend(id);
-            },
-            .erase_iri = [](void *self, identifier::NodeBackendID id) -> bool {
-                return static_cast<NS *>(self)->erase_iri(id);
-            },
-            .erase_bnode = [](void *self, identifier::NodeBackendID id) -> bool {
-                return static_cast<NS *>(self)->erase_bnode(id);
-            },
-            .erase_literal = [](void *self, identifier::NodeBackendID id) -> bool {
-                return static_cast<NS *>(self)->erase_literal(id);
-            },
-            .erase_variable = [](void *self, identifier::NodeBackendID id) -> bool {
-                return static_cast<NS *>(self)->erase_variable(id);
-            }
-        };
+            }};
 
         return &vtable;
     }
@@ -290,14 +225,6 @@ public:
 
     [[nodiscard]] constexpr NodeStorageVTable const *vtable() const noexcept {
         return vtable_;
-    }
-
-    [[nodiscard]] size_t size() const noexcept {
-        return vtable_->size(backend_);
-    }
-
-    void shrink_to_fit() {
-        vtable_->shrink_to_fit(backend_);
     }
 
     [[nodiscard]] bool has_specialized_storage_for(identifier::LiteralType literal_type) const noexcept {
@@ -352,22 +279,6 @@ public:
         return vtable_->find_variable_backend(backend_, id);
     }
 
-    bool erase_iri(identifier::NodeBackendID id) {
-        return vtable_->erase_iri(backend_, id);
-    }
-
-    bool erase_bnode(identifier::NodeBackendID id) {
-        return vtable_->erase_bnode(backend_, id);
-    }
-
-    bool erase_literal(identifier::NodeBackendID id) {
-        return vtable_->erase_literal(backend_, id);
-    }
-
-    bool erase_variable(identifier::NodeBackendID id) {
-        return vtable_->erase_variable(backend_, id);
-    }
-
     std::strong_ordering operator<=>(DynNodeStoragePtr const &other) const noexcept {
         return backend_ <=> other.backend_;
     }
@@ -380,7 +291,7 @@ public:
 static_assert(NodeStorage<DynNodeStoragePtr>);
 
 /**
- * Pointer to the default node-storage instance
+ * Pointer to the default node-storage instance. By default it points to rdf4cpp::storage::reference_node_storage::default_instance.
  * This instance is used by default if you do not specify one when creating or modifying nodes.
  *
  * This pointer can be reassigned to point to any instance of your choosing, but be
@@ -388,11 +299,6 @@ static_assert(NodeStorage<DynNodeStoragePtr>);
  * You need to do that yourself.
  */
 extern DynNodeStoragePtr default_node_storage;
-
-/**
- * Points the default_node_storage back to its original instance
- */
-void reset_default_node_storage() noexcept;
 
 } // namespace rdf4cpp::storage
 
