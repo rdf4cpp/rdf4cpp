@@ -64,7 +64,12 @@ bool capabilities::Default<xsd_duration>::serialize_canonical_string(cpp_type co
         return writer::write_str("PT0S", writer);
     }
     //-,P,years,months, days,T,hours,minutes,seconds
-    std::array<char, 1+1+(std::numeric_limits<int64_t>::digits10+2)+3 + (std::numeric_limits<int64_t>::digits10+2)+1+3+3+7> buff;
+    std::array<char, 1 + 1 + registry::util::chrono_max_canonical_string_chars::years + 1 + registry::util::chrono_max_canonical_string_chars::months + 1 +
+                             registry::util::chrono_max_canonical_string_chars::days + 1 + 1 +
+                             registry::util::chrono_max_canonical_string_chars::hours + 1 +
+                             registry::util::chrono_max_canonical_string_chars::minutes + 1 +
+                             registry::util::chrono_max_canonical_string_chars::seconds + 1>
+            buff;
     char* it = buff.data();
     std::chrono::months m_rem = value.first;
     std::chrono::milliseconds ms_rem = value.second;

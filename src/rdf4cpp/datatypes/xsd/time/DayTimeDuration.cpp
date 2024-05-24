@@ -56,7 +56,11 @@ bool capabilities::Default<xsd_dayTimeDuration>::serialize_canonical_string(cpp_
         return writer::write_str("PT0S", writer);
     }
     //-,P, days,T,hours,minutes,seconds
-    std::array<char, 1+1 + (std::numeric_limits<int64_t>::digits10+2)+1+3+3+7> buff;
+    std::array<char, 1 + 1 + registry::util::chrono_max_canonical_string_chars::days + 1 + 1 +
+                             registry::util::chrono_max_canonical_string_chars::hours + 1 +
+                             registry::util::chrono_max_canonical_string_chars::minutes + 1 +
+                             registry::util::chrono_max_canonical_string_chars::seconds + 1>
+            buff;
     char* it = buff.data();
     std::chrono::milliseconds ms_rem = value;
     if (ms_rem.count() < 0) {

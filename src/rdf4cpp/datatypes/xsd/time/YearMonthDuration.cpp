@@ -41,7 +41,8 @@ bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cp
         return writer::write_str("P0M", writer);
     }
     //-,P,years,months,
-    std::array<char, 1+1+(std::numeric_limits<int64_t>::digits10+2)+3> buff;
+    std::array<char, 1 + 1 + registry::util::chrono_max_canonical_string_chars::years + 1 + registry::util::chrono_max_canonical_string_chars::months + 1>
+            buff;
     char* it = buff.data();
     std::chrono::months m_rem = value;
     if (m_rem.count() < 0) {

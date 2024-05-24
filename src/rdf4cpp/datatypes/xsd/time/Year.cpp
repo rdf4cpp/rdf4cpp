@@ -14,8 +14,7 @@ capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::fro
 
 template<>
 bool capabilities::Default<xsd_gYear>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    //std::chrono::year is in [-32767, 32767].
-    std::array<char, 6 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, registry::util::chrono_max_canonical_string_chars::year + Timezone::max_canonical_string_chars> buff;
     char *it = std::format_to(buff.data(), "{:%Y}", value.first);
     if (value.second.has_value()) {
         it = value.second->to_canonical_string(it);

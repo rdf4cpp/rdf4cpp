@@ -26,7 +26,7 @@ capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_
 template<>
 bool capabilities::Default<xsd_gDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     //---,day,tz
-    std::array<char, 3 + 3 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, 3 + registry::util::chrono_max_canonical_string_chars::day + Timezone::max_canonical_string_chars> buff;
     char *it = std::format_to(buff.data(), "---{:%d}", value.first);
     if (value.second.has_value()) {
         it = value.second->to_canonical_string(it);

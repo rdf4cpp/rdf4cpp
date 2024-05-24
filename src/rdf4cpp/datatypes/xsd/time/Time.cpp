@@ -31,7 +31,10 @@ capabilities::Default<xsd_time>::cpp_type capabilities::Default<xsd_time>::from_
 template<>
 bool capabilities::Default<xsd_time>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     //hours,:,min,:,sec,tz
-    std::array<char, (std::numeric_limits<int64_t>::digits10+1)+1+2+1+6 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, registry::util::chrono_max_canonical_string_chars::hours_unbound + 1 +
+                             registry::util::chrono_max_canonical_string_chars::minutes + 1 +
+                             registry::util::chrono_max_canonical_string_chars::seconds + Timezone::max_canonical_string_chars>
+            buff;
     char *it = std::format_to(buff.data(), "{:%H:%M:%S}", std::chrono::hh_mm_ss(value.first));
     it = util::canonical_seconds_remove_empty_millis(it);
     if (value.second.has_value()) {

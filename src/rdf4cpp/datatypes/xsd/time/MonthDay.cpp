@@ -28,7 +28,9 @@ capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthD
 template<>
 bool capabilities::Default<xsd_gMonthDay>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
     //--, month, -, day, tz
-    std::array<char, 2+3+1+3 + Timezone::max_canonical_string_chars> buff;
+    std::array<char, 2 + registry::util::chrono_max_canonical_string_chars::month + 1 + registry::util::chrono_max_canonical_string_chars::day +
+                             Timezone::max_canonical_string_chars>
+            buff;
     char *it = std::format_to(buff.data(), "--{:%m-%d}", value.first);
     if (value.second.has_value()) {
         it = value.second->to_canonical_string(it);
