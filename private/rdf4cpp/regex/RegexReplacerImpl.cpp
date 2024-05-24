@@ -76,6 +76,10 @@ RegexReplacer::Impl::Impl(Regex::Impl const &regex, std::string_view const rewri
                                                                                       rewrite{regex.flags.contains(RegexFlag::Literal)
                                                                                                       ? rewrite
                                                                                                       : detail::translate_rewrite(rewrite)} {
+    std::string err{};
+    if (!this->regex->regex.CheckRewriteString(this->rewrite, &err)) {
+        throw RegexError(err);
+    }
 }
 
 void RegexReplacer::Impl::regex_replace(std::string &str) const noexcept {

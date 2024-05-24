@@ -779,6 +779,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK_EQ(Literal::make_lang_tagged("abcd", "en").regex_replace("b"_xsd_string, "Z"_xsd_string), Literal::make_lang_tagged("aZcd", "en"));
         CHECK_EQ(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "en"), "Z"_xsd_string), Literal::make_lang_tagged("aZcd", "en"));
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
+
+        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\\\hgfhf World"_xsd_string) == "Hello Hello \\hgfhf World World"_xsd_string);
+        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\hgfhf World"_xsd_string) == Literal{});
     }
 
     SUBCASE("hashes") {
