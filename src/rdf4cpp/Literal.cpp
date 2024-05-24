@@ -159,7 +159,7 @@ bool Literal::dynamic_datatype_eq_impl(std::string_view datatype) const noexcept
 
 Literal Literal::make_simple(std::string_view lexical_form, storage::DynNodeStoragePtr node_storage) {
     if (!una::is_valid_utf8(lexical_form)) {
-        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+        throw InvalidNode{"Invalid UTF-8 in lexical form of literal"};
     }
 
     auto const needs_escape = lexical_form_needs_escape(lexical_form);
@@ -175,7 +175,7 @@ Literal Literal::make_simple_normalize(std::string_view lexical_form, storage::D
 Literal Literal::make_lang_tagged(std::string_view lexical_form, std::string_view lang_tag,
                                   storage::DynNodeStoragePtr node_storage) {
     if (!una::is_valid_utf8(lexical_form)) [[unlikely]] {
-        throw std::runtime_error{"Invalid UTF-8 in lexical form of literal"};
+        throw InvalidNode{"Invalid UTF-8 in lexical form of literal"};
     }
 
     auto const lowercase_lang_tag = una::cases::to_lowercase_utf8(lang_tag);
