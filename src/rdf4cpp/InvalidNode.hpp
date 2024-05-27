@@ -5,10 +5,10 @@
 
 namespace rdf4cpp {
     struct InvalidNode : std::runtime_error {
-        explicit inline InvalidNode(std::string const &msg)
+        explicit InvalidNode(std::string const &msg)
             : runtime_error(msg) {
         }
-        explicit inline InvalidNode(char const *msg)
+        explicit InvalidNode(char const *msg)
             : runtime_error(msg) {
         }
     };

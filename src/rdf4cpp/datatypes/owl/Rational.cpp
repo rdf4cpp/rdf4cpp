@@ -31,7 +31,7 @@ capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"owl:rational parsing error:"} + e.what()};
+        throw InvalidNode{std::string{"owl:rational parsing error: "} + e.what()};
     }
 }
 

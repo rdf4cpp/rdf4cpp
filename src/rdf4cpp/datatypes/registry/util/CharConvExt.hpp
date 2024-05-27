@@ -19,7 +19,7 @@ namespace rdf4cpp::datatypes::registry::util {
  * @tparam I the resulting integral type
  * @param s the string to be parsed
  * @return the resulting value
- * @throws ParsingError if the string cannot be parsed
+ * @throws rdf4cpp::InvalidNode if the string cannot be parsed
  */
 template<std::integral I, ConstexprString datatype>
 I from_chars(std::string_view s) {
@@ -70,7 +70,7 @@ bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noex
  * @tparam F the result floating point type
  * @param s the string to be parsed
  * @return the resulting value
- * @throws ParsingError if the string cannot be parsed
+ * @throws rdf4cpp::InvalidNode if the string cannot be parsed
  */
 template<std::floating_point F, ConstexprString datatype>
 F from_chars(std::string_view s) {

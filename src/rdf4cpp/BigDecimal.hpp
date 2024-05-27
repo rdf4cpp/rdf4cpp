@@ -124,7 +124,7 @@ public:
      * parses a BigDecimal from a string_view.
      * may include a leading sign and one decimal point ., everything else needs to be numeric.
      * @param value
-     * @throw ParsingError if a invalid char is found, or on exceeding the types numeric limits
+     * @throw rdf4cpp::InvalidNode if a invalid char is found, or on exceeding the types numeric limits
      */
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
         bool begin = true;
