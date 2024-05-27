@@ -303,23 +303,23 @@ static_assert(number_of_digits(9)==1);
 static_assert(number_of_digits(-1)==2);
 static_assert(number_of_digits(10)==2);
 static_assert(number_of_digits(std::numeric_limits<uint64_t>::max())==std::numeric_limits<uint64_t>::digits10+1);
-struct chrono_max_canonical_string_chars {
+namespace chrono_max_canonical_string_chars {
     //std::chrono::year is in [-32767, 32767]
-    static constexpr size_t year = 6;
+    inline constexpr size_t year = std::max(number_of_digits(static_cast<int>(std::chrono::year::min())), number_of_digits(static_cast<int>(std::chrono::year::max())));
     static_assert(std::chrono::year::min() == std::chrono::year(-32767));  //NOLINT
     static_assert(std::chrono::year::max() == std::chrono::year(32767));   //NOLINT
     //std::chrono::day is in [0, 255]
-    static constexpr size_t day = 3;
+    inline constexpr size_t day = number_of_digits(255);
     //std::chrono::month is in [0, 255]
-    static constexpr size_t month = 3;
+    inline constexpr size_t month = number_of_digits(255);
     //[0, 59.999] (includes milliseconds)
-    static constexpr size_t seconds = 2 + 1 + 3;
+    inline constexpr size_t seconds = 2 + 1 + 3;
     //[0,59]
-    static constexpr size_t minutes = 2;
+    inline constexpr size_t minutes = 2;
     //[0,24] (used if more than 24 hours get added to days)
-    static constexpr size_t hours = 2;
+    inline constexpr size_t hours = 2;
     //used if no days are serialized
-    static constexpr size_t hours_unbound = number_of_digits(std::chrono::floor<std::chrono::hours>(std::chrono::milliseconds::max()).count());
+    inline constexpr size_t hours_unbound = number_of_digits(std::chrono::floor<std::chrono::hours>(std::chrono::milliseconds::max()).count());
     static_assert(sizeof(std::chrono::hours::rep) <= sizeof(int64_t));
     static_assert(sizeof(std::chrono::milliseconds ::rep) <= sizeof(int64_t));
     //duration
@@ -327,9 +327,9 @@ struct chrono_max_canonical_string_chars {
     static_assert(sizeof(std::chrono::years::rep) <= sizeof(int64_t));
     static_assert(sizeof(std::chrono::months::rep) <= sizeof(int64_t));
     //duration
-    static constexpr size_t months = 2;
+    inline constexpr size_t months = 2;
     //duration
-    static constexpr size_t days = number_of_digits(std::chrono::floor<std::chrono::days>(std::chrono::milliseconds::max()).count());;
+    inline constexpr size_t days = number_of_digits(std::chrono::floor<std::chrono::days>(std::chrono::milliseconds::max()).count());;
     static_assert(sizeof(std::chrono::days::rep) <= sizeof(int64_t));
 };
 
