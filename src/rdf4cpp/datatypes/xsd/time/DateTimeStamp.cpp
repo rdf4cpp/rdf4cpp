@@ -51,8 +51,20 @@ capabilities::Default<xsd_dateTimeStamp>::cpp_type capabilities::Default<xsd_dat
 
 template<>
 bool capabilities::Default<xsd_dateTimeStamp>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    auto str = std::format("{:%Y-%m-%dT%H:%M:%S%Z}", value);
-    return writer::write_str(str, writer);
+    //year,-,month,-,day, T, hours,:,min,:,sec, tz
+    std::array<char, registry::util::chrono_max_canonical_string_chars::year + 1 +
+                             registry::util::chrono_max_canonical_string_chars::month + 1 +
+                             registry::util::chrono_max_canonical_string_chars::day + 1 +
+                             registry::util::chrono_max_canonical_string_chars::hours + 1 +
+                             registry::util::chrono_max_canonical_string_chars::minutes + 1 +
+                             registry::util::chrono_max_canonical_string_chars::seconds + Timezone::max_canonical_string_chars>
+            buff;
+    char *it = std::format_to(buff.data(), "{:%Y-%m-%dT%H:%M:%S}", value);
+    it = util::canonical_seconds_remove_empty_millis(it);
+    it = value.get_time_zone().to_canonical_string(it);
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>

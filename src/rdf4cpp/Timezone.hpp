@@ -63,11 +63,24 @@ struct Timezone {
         return tz;
     }
 
+    // sign, hours, :, minutes
+    static constexpr size_t max_canonical_string_chars = 1+(std::numeric_limits<int64_t>::digits10+1)+1+2;
+    template<std::output_iterator<char> T>
+    T to_canonical_string(T o) const noexcept {
+        if (offset == std::chrono::minutes{0}) {
+            *o = 'Z';
+            ++o;
+            return o;
+        }
+        auto h = std::chrono::floor<std::chrono::hours>(std::chrono::abs(offset));
+        auto m = std::chrono::abs(offset) - h;
+        return std::format_to(o, "{}{:02}:{:02}", offset >= std::chrono::minutes{0} ? '+' : '-', h.count(), m.count());
+    }
     [[nodiscard]] std::string to_canonical_string() const noexcept {
-        if (offset.count() == 0)
-            return "Z";
-        auto c = offset.count();
-        return std::format("{:+03}:{:02}", c / 60, std::abs(c) % 60);
+        std::string buf{};
+        buf.reserve(max_canonical_string_chars);
+        to_canonical_string(std::back_inserter(buf));
+        return buf;
     }
 
     [[nodiscard]] const std::chrono::time_zone *get_tz(std::chrono::time_point<std::chrono::system_clock> n = std::chrono::system_clock::now()) const {

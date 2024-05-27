@@ -142,6 +142,17 @@ inline std::optional<std::chrono::milliseconds> parse_duration_milliseconds(std:
     return parse_milliseconds<datatype>(res_s);
 }
 
+inline char *canonical_seconds_remove_empty_millis(char *it) {
+    for (size_t m = 0; m<3; ++m) {
+        if (*(it - 1) != '0')
+            return it;
+        --it;
+    }
+    assert(*(it - 1) == '.');
+    --it;
+    return it;
+}
+
 inline bool in_ymd_bounds(rdf4cpp::TimePoint tp) noexcept {
     static constexpr auto max = rdf4cpp::util::construct_timepoint(std::chrono::year::max() / std::chrono::December / std::chrono::day{31},
                                                                    std::chrono::days{1} - std::chrono::milliseconds{1});
@@ -276,6 +287,51 @@ inline std::chrono::year_month_day normalize(std::chrono::year_month_day i) {
     // see https://en.cppreference.com/w/cpp/chrono/year_month_day/operator_days
     return static_cast<std::chrono::year_month_day>(static_cast<std::chrono::sys_days>(i + std::chrono::months{0}));
 }
+
+template<std::integral I, I base = 10>
+consteval I number_of_digits(I num) {
+    if (num < 0) {
+        return 1 + number_of_digits(-num);
+    } else if (num < base) {
+        return 1;
+    } else {
+        return 1 + number_of_digits(num / base);
+    }
+}
+static_assert(number_of_digits(0)==1);
+static_assert(number_of_digits(9)==1);
+static_assert(number_of_digits(-1)==2);
+static_assert(number_of_digits(10)==2);
+static_assert(number_of_digits(std::numeric_limits<uint64_t>::max())==std::numeric_limits<uint64_t>::digits10+1);
+namespace chrono_max_canonical_string_chars {
+    //std::chrono::year is in [-32767, 32767]
+    inline constexpr size_t year = std::max(number_of_digits(static_cast<int>(std::chrono::year::min())), number_of_digits(static_cast<int>(std::chrono::year::max())));
+    static_assert(std::chrono::year::min() == std::chrono::year(-32767));  //NOLINT
+    static_assert(std::chrono::year::max() == std::chrono::year(32767));   //NOLINT
+    //std::chrono::day is in [0, 255]
+    inline constexpr size_t day = number_of_digits(255);
+    //std::chrono::month is in [0, 255]
+    inline constexpr size_t month = number_of_digits(255);
+    //[0, 59.999] (includes milliseconds)
+    inline constexpr size_t seconds = 2 + 1 + 3;
+    //[0,59]
+    inline constexpr size_t minutes = 2;
+    //[0,24] (used if more than 24 hours get added to days)
+    inline constexpr size_t hours = 2;
+    //used if no days are serialized
+    inline constexpr size_t hours_unbound = number_of_digits(std::chrono::floor<std::chrono::hours>(std::chrono::milliseconds::max()).count());
+    static_assert(sizeof(std::chrono::hours::rep) <= sizeof(int64_t));
+    static_assert(sizeof(std::chrono::milliseconds ::rep) <= sizeof(int64_t));
+    //duration
+    static constexpr size_t years = number_of_digits(std::chrono::floor<std::chrono::years>(std::chrono::months::max()).count());
+    static_assert(sizeof(std::chrono::years::rep) <= sizeof(int64_t));
+    static_assert(sizeof(std::chrono::months::rep) <= sizeof(int64_t));
+    //duration
+    inline constexpr size_t months = 2;
+    //duration
+    inline constexpr size_t days = number_of_digits(std::chrono::floor<std::chrono::days>(std::chrono::milliseconds::max()).count());;
+    static_assert(sizeof(std::chrono::days::rep) <= sizeof(int64_t));
+};
 
 }  // namespace rdf4cpp::datatypes::registry::util
 

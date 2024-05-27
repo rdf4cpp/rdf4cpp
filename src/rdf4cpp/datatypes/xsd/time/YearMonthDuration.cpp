@@ -40,21 +40,29 @@ bool capabilities::Default<xsd_yearMonthDuration>::serialize_canonical_string(cp
     if (value.count() == 0) {
         return writer::write_str("P0M", writer);
     }
-    std::stringstream str{};
+    //-,P,years,months,
+    std::array<char, 1 + 1 + registry::util::chrono_max_canonical_string_chars::years + 1 + registry::util::chrono_max_canonical_string_chars::months + 1>
+            buff;
+    char* it = buff.data();
     std::chrono::months m_rem = value;
     if (m_rem.count() < 0) {
-        str << '-';
+        *(it++) = '-';
         m_rem = -m_rem;
     }
-    str << 'P';
+    *(it++) = 'P';
     auto years = std::chrono::floor<std::chrono::years>(m_rem);
-    if (years.count() != 0)
-        str << years.count() << 'Y';
+    if (years.count() != 0) {
+        it = std::format_to(it, "{}", years.count());
+        *(it++) = 'Y';
+    }
     m_rem -= years;
-    if (m_rem.count() != 0)
-        str << m_rem.count() << 'M';
-
-    return writer::write_str(str.view(), writer);
+    if (m_rem.count() != 0) {
+        it = std::format_to(it, "{}", m_rem.count());
+        *(it++) = 'M';
+    }
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>
