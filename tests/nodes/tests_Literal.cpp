@@ -768,9 +768,7 @@ TEST_CASE("Literal - misc functions") {
         CHECK_EQ(("AAAA"_xsd_string).regex_replace("A+?"_xsd_string, "b"_xsd_string), "bbbb"_xsd_string);
         CHECK_EQ(("darted"_xsd_string).regex_replace("^(.*?)d(.*)$"_xsd_string, "$1c$2"_xsd_string), "carted"_xsd_string);
 
-        // 'The expression fn:replace("abracadabra", ".*?", "$1") raises an error, because the pattern matches the zero-length string'
-        // TODO: figure out how implement correct behaviour here (currently returns ""^^xsd:string)
-        //CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
+        CHECK(("abracadabra"_xsd_string).regex_replace(".*?"_xsd_string, "$1"_xsd_string).null());
 
         CHECK_EQ(("abcd"_xsd_string).as_regex_matches(".*"_xsd_string, "q"_xsd_string).ebv(), TriBool::False);
         CHECK(("Mr. B. Obama"_xsd_string).as_regex_matches("B. OBAMA"_xsd_string, "qi"_xsd_string).ebv());
@@ -779,6 +777,9 @@ TEST_CASE("Literal - misc functions") {
         CHECK_EQ(Literal::make_lang_tagged("abcd", "en").regex_replace("b"_xsd_string, "Z"_xsd_string), Literal::make_lang_tagged("aZcd", "en"));
         CHECK_EQ(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "en"), "Z"_xsd_string), Literal::make_lang_tagged("aZcd", "en"));
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
+
+        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\\\hgfhf World"_xsd_string) == "Hello Hello \\hgfhf World World"_xsd_string);
+        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\hgfhf World"_xsd_string) == Literal{});
     }
 
     SUBCASE("hashes") {
