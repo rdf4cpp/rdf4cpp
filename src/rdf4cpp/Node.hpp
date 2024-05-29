@@ -18,11 +18,6 @@ namespace query {
 struct Variable;
 } // namespace rdf4cpp
 
-namespace bnode_mngt {
-struct NodeScope;
-struct NodeGenerator;
-} // namespace bnode_mngt
-
 
 inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
 
@@ -35,10 +30,6 @@ inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
  * @warning This type is a POD.
  */
 struct Node {
-private:
-    friend struct bnode_mngt::NodeScope;
-    friend struct bnode_mngt::NodeGenerator;
-
 protected:
     storage::identifier::NodeBackendHandle handle_;
 

@@ -1,7 +1,6 @@
 #include "BNodeBackendView.hpp"
 
 #include <dice/hash.hpp>
-#include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 
 namespace rdf4cpp::storage::view {
 size_t BNodeBackendView::hash() const noexcept {

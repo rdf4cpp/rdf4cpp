@@ -211,7 +211,7 @@ void Dataset::solution_iterator::fill_solution() noexcept {
 Dataset::solution_iterator::solution_iterator(Dataset const *parent,
                                               query::QuadPattern const &pat,
                                               typename storage_type::const_iterator beg,
-                                              typename storage_type::const_iterator end) noexcept : parent_{parent}, pat_{pat}, giter_{beg}, gend_{end}, cur_{pat} {
+                                              typename storage_type::const_iterator end) noexcept : parent_{parent}, pat_{pat}, giter_{beg}, gend_{end}, iter_{}, cur_{pat} {
     if (giter_ != gend_) {
         auto const &tpat = pat_.without_graph();
 

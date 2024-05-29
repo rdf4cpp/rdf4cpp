@@ -7,7 +7,6 @@
 #include <rdf4cpp/Node.hpp>
 #include <rdf4cpp/namespaces.hpp>
 #include <rdf4cpp/bnode_mngt/NodeGenerator.hpp>
-#include <rdf4cpp/bnode_mngt/NodeScope.hpp>
 #include <rdf4cpp/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/parser/RDFFileParser.hpp>
 #include <rdf4cpp/version.hpp>

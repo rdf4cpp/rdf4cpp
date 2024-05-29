@@ -11,21 +11,21 @@ using namespace rdf4cpp::bnode_mngt;
 TEST_SUITE("blank node id management") {
     TEST_CASE("blank node id generation") {
         SUBCASE("from entropy") {
-            auto gen = NodeGenerator::new_instance();
+            RandomIdGenerator gen;
 
-            auto const id1 = gen.generate_id();
-            auto const id2 = gen.generate_id();
-            auto const id3 = gen.generate_id();
+            auto const id1 = gen.generate();
+            auto const id2 = gen.generate();
+            auto const id3 = gen.generate();
 
             CHECK(id1 != id2);
             CHECK(id2 != id3);
             CHECK(id1 != id3);
 
-            auto gen2 = NodeGenerator::new_instance();
+            RandomIdGenerator gen2;
 
-            auto const id4 = gen2.generate_id();
-            auto const id5 = gen2.generate_id();
-            auto const id6 = gen2.generate_id();
+            auto const id4 = gen2.generate();
+            auto const id5 = gen2.generate();
+            auto const id6 = gen2.generate();
 
             CHECK(id4 != id5);
             CHECK(id5 != id6);
@@ -36,22 +36,19 @@ TEST_SUITE("blank node id management") {
 
         SUBCASE("from seed") {
             auto const seed = 42;
-
-            auto gen = NodeGenerator::new_instance_with_generator<RandomIdGenerator>(seed);
-
-            auto const id1 = gen.generate_id();
-            auto const id2 = gen.generate_id();
-            auto const id3 = gen.generate_id();
+            RandomIdGenerator gen{seed};
+            auto const id1 = gen.generate();
+            auto const id2 = gen.generate();
+            auto const id3 = gen.generate();
 
             CHECK(id1 != id2);
             CHECK(id2 != id3);
             CHECK(id1 != id3);
 
-            auto gen2 = NodeGenerator::new_instance_with_generator<RandomIdGenerator>(seed);
-
-            auto const id4 = gen2.generate_id();
-            auto const id5 = gen2.generate_id();
-            auto const id6 = gen2.generate_id();
+            RandomIdGenerator gen2{seed};
+            auto const id4 = gen2.generate();
+            auto const id5 = gen2.generate();
+            auto const id6 = gen2.generate();
 
             CHECK(id4 != id5);
             CHECK(id5 != id6);
@@ -64,7 +61,7 @@ TEST_SUITE("blank node id management") {
     TEST_CASE("blank node id manager") {
 
         {
-            NodeScope scope = NodeScope::new_instance();
+            ReferenceNodeScope<> scope;
 
             auto b1 = scope.get_or_generate_node("abc");
             auto b2 = scope.get_or_generate_node("bcd");
@@ -80,28 +77,65 @@ TEST_SUITE("blank node id management") {
             CHECK(fresh != b2);
         }
 
-        NodeScope mng2 = NodeScope::new_instance();
+        ReferenceNodeScope<> mng2;
         CHECK(mng2.try_get_node("abc").null());
     }
 
-    TEST_CASE("union and merge semantics") {
-        auto &generator = NodeGenerator::default_instance();
+    TEST_CASE("file parsing") {
+        std::istringstream rdf_file{
+            "<http://website.com#subj> <http://website.com#pred> _:bn_1 <http://website.com#graph1> ."
+            "<http://website.com#subj> <http://website.com#pred> _:bn_1 <http://website.com#graph2> ."};
 
-        BlankNode b1_1;
-        BlankNode b1_2;
+        query::QuadPattern const pat{query::Variable{"g"}, IRI{"http://website.com#subj"}, IRI{"http://website.com#pred"}, query::Variable{"o"}};
 
-        {
-            NodeScope scope_1 = NodeScope::new_instance();
-            NodeScope scope_2 = NodeScope::new_instance();
+        SUBCASE("rdf-merge") {
+            // rdf-merge semantics
+            MergeNodeScopeManager<> mng;
+            parser::ParsingState st{.blank_node_scope_manager = mng};
 
-            b1_1 = scope_1.get_or_generate_node("b1", generator).as_blank_node();
-            b1_2 = scope_2.get_or_generate_node("b1", generator).as_blank_node();
+            Dataset ds;
+            ds.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
 
-            CHECK(!b1_1.merge_eq(b1_2));
-            CHECK(b1_1.union_eq(b1_2) == TriBool::True);
+            std::vector<query::Solution> solutions;
+            for (auto const &sol : ds.match(pat)) {
+                solutions.push_back(sol);
+            }
+
+            auto const g1 = solutions[0][0];
+            auto const g2 = solutions[1][0];
+            auto const bn1 = solutions[0][1];
+            auto const bn2 = solutions[1][1];
+
+            CHECK_NE(g1, g2);
+            CHECK_NE(bn1, bn2);
+
+            CHECK_NE(bn1.as_blank_node().identifier(), "bn_1");
+            CHECK_NE(bn2.as_blank_node().identifier(), "bn_1");
         }
 
-        CHECK(!b1_1.merge_eq(b1_2));
-        CHECK(b1_1.union_eq(b1_2) == TriBool::Err);
+        SUBCASE("rdf-union") {
+            // rdf-merge semantics
+            UnionNodeScopeManager<> mng;
+            parser::ParsingState st{.blank_node_scope_manager = mng};
+
+            Dataset ds;
+            ds.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
+
+            std::vector<query::Solution> solutions;
+            for (auto const &sol : ds.match(pat)) {
+                solutions.push_back(sol);
+            }
+
+            auto const g1 = solutions[0][0];
+            auto const g2 = solutions[1][0];
+            auto const bn1 = solutions[0][1];
+            auto const bn2 = solutions[1][1];
+
+            CHECK_NE(g1, g2);
+            CHECK_EQ(bn1, bn2);
+
+            CHECK_NE(bn1.as_blank_node().identifier(), "bn_1");
+            CHECK_NE(bn2.as_blank_node().identifier(), "bn_1");
+        }
     }
 }

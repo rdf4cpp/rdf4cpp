@@ -36,28 +36,12 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
         return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
     }
 
-    if (this->flags.contains(ParsingFlag::KeepBlankNodeIds)) {
-        try {
-            return BlankNode{node_str, this->state->node_storage};
-        } catch (std::runtime_error const &e) {
-            // TODO: check when actual blank node validation implemented
-            // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
-            this->last_error = ParsingError{.error_type = ParsingError::Type::BadBlankNode,
-                                            .line = serd_reader_get_current_line(this->reader),
-                                            .col = serd_reader_get_current_col(this->reader),
-                                            .message = std::string{e.what()} + ". note: position may not be accurate and instead point to the end of the triple."};
-
-            return nonstd::make_unexpected(SERD_ERR_BAD_SYNTAX);
-        }
-    }
-
     try {
-        assert(this->state->blank_node_generator != nullptr);
-        assert(this->state->blank_node_scope_manager != nullptr);
+        if (this->state->blank_node_scope_manager == nullptr || this->flags.contains(ParsingFlag::KeepBlankNodeIds)) {
+            return BlankNode{node_str, this->state->node_storage};
+        }
 
-        return this->state->blank_node_scope_manager->scope(graph_str).get_or_generate_node(node_str,
-                                                                                            *this->state->blank_node_generator,
-                                                                                            this->state->node_storage);
+        return this->state->blank_node_scope_manager.scope(graph_str).get_or_generate_node(node_str, this->state->node_storage);
     } catch (std::runtime_error const &e) {
         // TODO: check when actual blank node validation implemented
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed

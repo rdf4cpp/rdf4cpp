@@ -3,11 +3,6 @@
 
 #include <ostream>
 #include <rdf4cpp/Node.hpp>
-#include <rdf4cpp/TriBool.hpp>
-
-namespace rdf4cpp::util  {
-struct NodeGenerator;
-}
 
 namespace rdf4cpp {
 
@@ -63,9 +58,6 @@ struct BlankNode : Node {
     bool serialize(writer::BufWriterParts writer) const noexcept;
 
     [[nodiscard]] explicit operator std::string() const noexcept;
-
-    [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
-    [[nodiscard]] TriBool union_eq(BlankNode const &other) const noexcept;
 
     friend std::ostream &operator<<(std::ostream &os, BlankNode const &node);
 

@@ -11,20 +11,21 @@ namespace generator_detail {
 static constexpr size_t max_generated_id_size = std::numeric_limits<size_t>::digits10;
 } //namespace generator_detail
 
-IncreasingIdGenerator::IncreasingIdGenerator(std::string prefix, size_t const initial_value) noexcept : prefix{std::move(prefix)},
-                                                                                                        counter{initial_value} {
+IncreasingIdGenerator::IncreasingIdGenerator(std::string prefix, size_t const initial_value) noexcept : prefix_{std::move(prefix)},
+                                                                                                        counter_{initial_value} {
 }
 
-size_t IncreasingIdGenerator::max_generated_id_size() const noexcept {
-    return generator_detail::max_generated_id_size + this->prefix.size();
-}
+BlankNode IncreasingIdGenerator::generate(storage::DynNodeStoragePtr node_storage) noexcept {
+    static thread_local std::string buf;
 
-char *IncreasingIdGenerator::generate_to_buf(char *buf) {
-    buf = std::copy(this->prefix.begin(), this->prefix.end(), buf);
+    buf.clear();
+    buf.resize(prefix_.size() + generator_detail::max_generated_id_size);
 
-    std::to_chars_result const res = std::to_chars(buf, buf + generator_detail::max_generated_id_size, this->counter.fetch_add(1, std::memory_order_relaxed));
+    auto write_it = std::copy(prefix_.begin(), prefix_.end(), buf.data());
+    std::to_chars_result const res = std::to_chars(write_it, write_it + generator_detail::max_generated_id_size, counter_.fetch_add(1, std::memory_order_relaxed));
     assert(res.ec == std::errc{});
-    return res.ptr;
+
+    return BlankNode::make(std::string_view{buf.data(), static_cast<size_t>(res.ptr - buf.data())}, node_storage);
 }
 
 }  //namespace rdf4cpp::bnode_mngt

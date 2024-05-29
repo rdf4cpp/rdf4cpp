@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_INCREASINGBLANKNODEIDGENERATOR_HPP
 #define RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_INCREASINGBLANKNODEIDGENERATOR_HPP
 
-#include <rdf4cpp/bnode_mngt/IIdGenerator.hpp>
+#include <rdf4cpp/bnode_mngt/NodeGenerator.hpp>
 
 #include <atomic>
 #include <string>
@@ -11,10 +11,10 @@ namespace rdf4cpp::bnode_mngt {
 /**
  * Generates identifiers consisting of a optional prefix and an integer in increasing value.
  */
-struct IncreasingIdGenerator : IIdGenerator {
+struct IncreasingIdGenerator {
 private:
-    std::string prefix;
-    std::atomic<size_t> counter;
+    std::string prefix_;
+    std::atomic<size_t> counter_;
 
 public:
     /**
@@ -25,9 +25,9 @@ public:
      */
     explicit IncreasingIdGenerator(std::string prefix = "", size_t initial_value = 0) noexcept;
 
-    [[nodiscard]] size_t max_generated_id_size() const noexcept override;
-    char *generate_to_buf(char *buf) override;
+    BlankNode generate(storage::DynNodeStoragePtr node_storage) noexcept;
 };
+static_assert(NodeGenerator<IncreasingIdGenerator>);
 
 }  //namespace rdf4cpp::bnode_mngt
 
