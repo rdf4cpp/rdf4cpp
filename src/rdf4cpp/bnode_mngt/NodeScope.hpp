@@ -9,7 +9,7 @@
 namespace rdf4cpp::bnode_mngt {
 
 template<typename S>
-concept NodeScope = requires (S &s, S const &const_s, std::string_view label, storage::DynNodeStoragePtr node_storage) {
+concept NodeScope = requires (S &s, std::string_view label, storage::DynNodeStoragePtr node_storage) {
     /**
      * Retrieve the node for the given label
      * or generate a new one based on the label.

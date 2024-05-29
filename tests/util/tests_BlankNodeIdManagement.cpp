@@ -86,56 +86,46 @@ TEST_SUITE("blank node id management") {
             "<http://website.com#subj> <http://website.com#pred> _:bn_1 <http://website.com#graph1> ."
             "<http://website.com#subj> <http://website.com#pred> _:bn_1 <http://website.com#graph2> ."};
 
-        query::QuadPattern const pat{query::Variable{"g"}, IRI{"http://website.com#subj"}, IRI{"http://website.com#pred"}, query::Variable{"o"}};
+        query::TriplePattern const pat{IRI{"http://website.com#subj"}, IRI{"http://website.com#pred"}, query::Variable{"o"}};
 
         SUBCASE("rdf-merge") {
             // rdf-merge semantics
             MergeNodeScopeManager<> mng;
             parser::ParsingState st{.blank_node_scope_manager = mng};
 
-            Dataset ds;
-            ds.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
+            Graph merge_graph;
+            merge_graph.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
 
             std::vector<query::Solution> solutions;
-            for (auto const &sol : ds.match(pat)) {
+            for (auto const &sol : merge_graph.match(pat)) {
                 solutions.push_back(sol);
             }
 
-            auto const g1 = solutions[0][0];
-            auto const g2 = solutions[1][0];
-            auto const bn1 = solutions[0][1];
-            auto const bn2 = solutions[1][1];
+            CHECK_EQ(solutions.size(), 2);
+            auto const bn1 = solutions[0][0];
+            auto const bn2 = solutions[1][0];
 
-            CHECK_NE(g1, g2);
             CHECK_NE(bn1, bn2);
-
             CHECK_NE(bn1.as_blank_node().identifier(), "bn_1");
             CHECK_NE(bn2.as_blank_node().identifier(), "bn_1");
         }
 
         SUBCASE("rdf-union") {
-            // rdf-merge semantics
+            // rdf-union semantics
             UnionNodeScopeManager<> mng;
             parser::ParsingState st{.blank_node_scope_manager = mng};
 
-            Dataset ds;
-            ds.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
+            Graph union_graph;
+            union_graph.load_rdf_data(rdf_file, parser::ParsingFlag::NQuads, &st);
 
             std::vector<query::Solution> solutions;
-            for (auto const &sol : ds.match(pat)) {
+            for (auto const &sol : union_graph.match(pat)) {
                 solutions.push_back(sol);
             }
 
-            auto const g1 = solutions[0][0];
-            auto const g2 = solutions[1][0];
-            auto const bn1 = solutions[0][1];
-            auto const bn2 = solutions[1][1];
-
-            CHECK_NE(g1, g2);
-            CHECK_EQ(bn1, bn2);
-
+            CHECK_EQ(solutions.size(), 1);
+            auto const bn1 = solutions[0][0];
             CHECK_NE(bn1.as_blank_node().identifier(), "bn_1");
-            CHECK_NE(bn2.as_blank_node().identifier(), "bn_1");
         }
     }
 }

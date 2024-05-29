@@ -146,7 +146,7 @@ public:
     void load_rdf_data(std::istream &rdf_file,
                        parser::ParsingFlags flags = parser::ParsingFlags::none(),
                        parser::ParsingState *state = nullptr,
-                       ErrF &&errf = {}) noexcept requires std::invocable<decltype(errf), parser::ParsingError> {
+                       ErrF &&errf = {}) requires std::invocable<decltype(errf), parser::ParsingError> {
 
         if (state != nullptr && state->node_storage != node_storage_) {
             throw std::invalid_argument{"NodeStorage of the parsing state must be the same as NodeStorage of the Dataset"};
