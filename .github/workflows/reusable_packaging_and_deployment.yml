@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Add Repos for for gcc-13 and clang-16,17
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@feature/conan2_utils
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@main
 
       - name: Ensure stdlib version
         run: |
@@ -43,7 +43,7 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@feature/conan2_utils
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@main
         with:
           conan-version: 2.3.1
 

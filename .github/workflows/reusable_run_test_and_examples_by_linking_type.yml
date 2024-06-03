@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Add Repos for for gcc-13 and clang-17
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@feature/conan2_utils
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@main
 
       - name: Ensure stdlib version
         run: |
@@ -76,7 +76,7 @@ jobs:
           test $AVX_EXISTS -eq $AVX_SHOULD_EXIST
 
       - name: Configure conan
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@feature/conan2_utils
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@main
         with:
           conan-version: 2.3.1
 
@@ -100,7 +100,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Get dependency provider
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/add_conan_provider@feature/conan2_utils
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/add_conan_provider@main
 
       - name: Configure CMake
         env:
