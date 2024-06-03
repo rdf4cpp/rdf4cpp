@@ -122,3 +122,5 @@ environment_run.sh.env
 .ninja_log
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,conan,ninja,cmake,clion+all
+/CMakeUserPresets.json
+/conan_provider.cmake

@@ -4,18 +4,6 @@ project(rdf4cpp VERSION 0.0.32)
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
-OPTION(USE_CONAN "If available, use conan to retrieve dependencies." ON)
-if (PROJECT_IS_TOP_LEVEL AND USE_CONAN)
-    include(cmake/conan_cmake.cmake)
-    if (BUILD_TESTING)
-        set(CONAN_HYPERTRIE_WITH_TEST_DEPS "True")
-    else()
-        set(CONAN_HYPERTRIE_WITH_TEST_DEPS "False")
-    endif()
-    set(CONAN_OPTIONS "with_test_deps=${CONAN_HYPERTRIE_WITH_TEST_DEPS}")
-    install_packages_via_conan("${CMAKE_SOURCE_DIR}/conanfile.py" "${CONAN_OPTIONS};boost/*:header_only=True")
-endif ()
-
 # find packages
 find_package(expected-lite REQUIRED)
 find_package(Boost REQUIRED)
