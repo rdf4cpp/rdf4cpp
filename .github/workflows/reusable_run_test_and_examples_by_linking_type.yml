@@ -91,6 +91,11 @@ jobs:
           path: ~/.conan2/p
           key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2${{ fromJSON('["", "-coverage"]')[inputs.with-coverage] }}${{ fromJSON('["", "-sanitizer"]')[inputs.with-sanitizer] }}${{ fromJSON('["", "-avx"]')[inputs.with-avx] }}
 
+      - name: install gcovr
+        if: inputs.with-coverage
+        run: |
+          pip3 install gcovr
+
       - name: Check out sources
         uses: actions/checkout@v3
 

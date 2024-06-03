@@ -26,7 +26,7 @@ jobs:
 
       - name: Ensure stdlib version
         run: |
-          sudo apt install libstdc++-13-dev -y
+          sudo apt install libstdc++-13-dev jq -y
 
       - name: Get minimum cmake version
         uses: lukka/get-cmake@v3.29.3
@@ -67,5 +67,8 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing -o boost:header_only=True
-          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
+          pkg_name=$(conan inspect --format json . | jq -r '.name')
+          pkg_ver=$(conan inspect --format json . | jq -r '.version')
+          
+          conan create . --name "${pkg_name}" --version "${pkg_ver}" --channel ci/testing -pr:b=default --build missing -o boost:header_only=True
+          conan remove -f {pkg_name}/${pkg_ver}@ci/testing
