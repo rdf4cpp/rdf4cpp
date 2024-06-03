@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache@v4.0.2
         with:
           path: ~/.conan2/p
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan${{ fromJSON('["", "-coverage"]')[inputs.with-coverage] }}${{ fromJSON('["", "-sanitizer"]')[inputs.with-sanitizer] }}${{ fromJSON('["", "-avx"]')[inputs.with-avx] }}
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2${{ fromJSON('["", "-coverage"]')[inputs.with-coverage] }}${{ fromJSON('["", "-sanitizer"]')[inputs.with-sanitizer] }}${{ fromJSON('["", "-avx"]')[inputs.with-avx] }}
 
       - name: Check out sources
         uses: actions/checkout@v3
