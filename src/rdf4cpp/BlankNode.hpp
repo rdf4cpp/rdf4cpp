@@ -47,6 +47,13 @@ struct BlankNode : Node {
     [[nodiscard]] static BlankNode find(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 
     /**
+     * Validates the given blank node identifier
+     * @param identifier identifier to validate
+     * @throws ParsingError if the blank node identifier is not valid
+     */
+    static void validate(std::string_view identifier);
+
+    /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
@@ -67,9 +74,6 @@ struct BlankNode : Node {
     [[nodiscard]] bool is_iri() const noexcept;
 
     friend struct Node;
-
-private:
-    static std::string_view validate_bnode_name(std::string_view v);
 };
 
 inline namespace shorthands {

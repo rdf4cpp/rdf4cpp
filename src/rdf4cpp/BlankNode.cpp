@@ -9,7 +9,7 @@ BlankNode::BlankNode() noexcept : Node{storage::identifier::NodeBackendHandle{{}
 }
 
 BlankNode::BlankNode(std::string_view identifier, storage::DynNodeStoragePtr node_storage)
-    : BlankNode{make_unchecked(validate_bnode_name(identifier), node_storage)} {
+    : BlankNode{make_unchecked((validate(identifier), identifier), node_storage)} {
 }
 
 BlankNode::BlankNode(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {
@@ -89,7 +89,7 @@ std::ostream &operator<<(std::ostream &os, BlankNode const &bnode) {
     return os;
 }
 
-std::string_view BlankNode::validate_bnode_name(std::string_view v) {
+void BlankNode::validate(std::string_view v) {
     using namespace util::char_matcher_detail;
     static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
     auto r = v | una::views::utf8;
@@ -114,7 +114,6 @@ std::string_view BlankNode::validate_bnode_name(std::string_view v) {
     if (lastchar == '.') {
         throw ParsingError(std::format("invalid blank node label {}", v));
     }
-    return v;
 }
 
 inline namespace shorthands {

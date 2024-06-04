@@ -13,6 +13,7 @@ static constexpr size_t max_generated_id_size = std::numeric_limits<size_t>::dig
 
 IncreasingIdGenerator::IncreasingIdGenerator(std::string prefix, size_t const initial_value) noexcept : prefix_{std::move(prefix)},
                                                                                                         counter_{initial_value} {
+    BlankNode::validate(prefix_); // throws if invalid
 }
 
 BlankNode IncreasingIdGenerator::generate(storage::DynNodeStoragePtr node_storage) noexcept {
@@ -25,7 +26,8 @@ BlankNode IncreasingIdGenerator::generate(storage::DynNodeStoragePtr node_storag
     std::to_chars_result const res = std::to_chars(write_it, write_it + generator_detail::max_generated_id_size, counter_.fetch_add(1, std::memory_order_relaxed));
     assert(res.ec == std::errc{});
 
-    return BlankNode::make(std::string_view{buf.data(), static_cast<size_t>(res.ptr - buf.data())}, node_storage);
+    // checked in constructor, can use make_unchecked
+    return BlankNode::make_unchecked(std::string_view{buf.data(), static_cast<size_t>(res.ptr - buf.data())}, node_storage);
 }
 
 }  //namespace rdf4cpp::bnode_mngt

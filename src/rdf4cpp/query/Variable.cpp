@@ -10,7 +10,7 @@ Variable::Variable() noexcept : Node{storage::identifier::NodeBackendHandle{{}, 
 }
 
 Variable::Variable(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage)
-    : Variable{make_unchecked(check_var_name(name), anonymous, node_storage)} {}
+    : Variable{make_unchecked((validate(name), name), anonymous, node_storage)} {}
 
 Variable::Variable(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {}
 
@@ -108,7 +108,7 @@ std::ostream &operator<<(std::ostream &os, Variable const &variable) {
     return os;
 }
 
-std::string_view Variable::check_var_name(std::string_view n) {
+void Variable::validate(std::string_view n) {
     using namespace util::char_matcher_detail;
     static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
     auto r = n | una::views::utf8;
@@ -127,7 +127,6 @@ std::string_view Variable::check_var_name(std::string_view n) {
         }
         ++it;
     }
-    return n;
 }
 
 }  // namespace rdf4cpp::query
