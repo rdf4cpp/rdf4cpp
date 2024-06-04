@@ -30,8 +30,6 @@ namespace rdf4cpp::parser {
  * @endcode
  */
 struct ParsingState {
-    using node_storage_type = storage::DynNodeStoragePtr;
-
     /**
      * The initial prefixes the parser has knowledge of
      * @note default value is an empty map

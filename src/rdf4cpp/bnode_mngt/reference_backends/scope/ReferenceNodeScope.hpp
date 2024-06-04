@@ -40,6 +40,7 @@ public:
     }
 
     [[nodiscard]] Node try_get_node(std::string_view label) const noexcept {
+        std::shared_lock lock{mutex_};
         if (auto it = label_to_handle_.find(label); it != label_to_handle_.end()) {
             return Node{it->second};
         }
