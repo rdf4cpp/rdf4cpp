@@ -2,6 +2,7 @@
 #define RDF4CPP_REFERENCENODESTORAGE_CONSTSTRING_HPP
 
 #include <string>
+#include <utility>
 
 namespace rdf4cpp::storage::reference_node_storage::detail {
 
@@ -97,6 +98,22 @@ namespace rdf4cpp::storage::reference_node_storage::detail {
             std::swap(a.data_, b.data_);
             std::swap(a.size_, b.size_);
             std::swap(a.alloc_, b.alloc_);
+        }
+
+        bool operator==(BasicConstString const &other) const noexcept {
+            return static_cast<std::string_view>(*this) == static_cast<std::string_view>(other);
+        }
+
+        std::strong_ordering operator<=>(BasicConstString const &other) const noexcept {
+            return static_cast<std::string_view>(*this) <=> static_cast<std::string_view>(other);
+        }
+
+        friend bool operator==(BasicConstString const &self, std::string_view const other) noexcept {
+            return static_cast<std::string_view>(self) == other;
+        }
+
+        friend std::strong_ordering operator<=>(BasicConstString const &self, std::string_view const other) noexcept {
+            return static_cast<std::string_view>(self) <=> other;
         }
     };
 

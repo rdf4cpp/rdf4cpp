@@ -34,7 +34,13 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1) {
         Dataset ds2;
-        ds2.load_rdf_data(argv[1]);
+        std::ifstream ifs{argv[1]};
+        if (!ifs.is_open()) {
+            std::cout << "could not open test file." << std::endl;
+            return 1;
+        }
+
+        ds2.load_rdf_data(ifs);
 
         std::cout << "ds2 from " << argv[1] << ":" << std::endl;
         std::cout << ds2 << std::endl;

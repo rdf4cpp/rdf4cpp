@@ -18,7 +18,7 @@ IRI::IRI() noexcept : Node{storage::identifier::NodeBackendHandle{{}, storage::i
 }
 
 IRI::IRI(std::string_view iri, storage::DynNodeStoragePtr node_storage)
-    : IRI{make_unchecked(check_valid_iri(iri), node_storage)} {
+    : IRI{make_unchecked((validate(iri), iri), node_storage)} {
 }
 
 IRI::IRI(datatypes::registry::DatatypeIDView id, storage::DynNodeStoragePtr node_storage) noexcept
@@ -54,11 +54,10 @@ IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
     return IRI{stream.view(), node_storage};
 }
 
-std::string_view IRI::check_valid_iri(std::string_view s) {
+void IRI::validate(std::string_view s) {
     auto v = IRIView(s).quick_validate();
     if (v != IRIFactoryError::Ok)
         throw ParsingError(std::format("IRI {} is invalid: {}", s, v));
-    return s;
 }
 
 IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {

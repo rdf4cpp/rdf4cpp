@@ -569,9 +569,9 @@ TEST_SUITE("IStreamQuadIterator") {
                                         "_:b2 <http://purl.org/dc/elements/1.1/subject> \"Some Subject\" .\n";
 
         SUBCASE("bnodes") {
+            bnode_mngt::MergeNodeScopeManager<> manager;
             IStreamQuadIterator::state_type state{
-                    .blank_node_generator = &bnode_mngt::NodeGenerator::default_instance(),
-                    .blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance()};
+                    .blank_node_scope_manager = &manager};
 
             std::istringstream iss{triples};
             IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
@@ -599,48 +599,6 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK(qit != std::default_sentinel);
             auto b2_1 = qit->value().subject();
             CHECK(b2_1.is_blank_node());
-            CHECK(b2_1 != b1_1);
-            std::cout << b2_1 << std::endl;
-            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-            CHECK(qit->value().object() == Literal::make_simple("Some Subject"));
-
-            ++qit;
-            CHECK(qit == std::default_sentinel);
-        }
-
-        SUBCASE("skolem iris") {
-            auto scope_mng = bnode_mngt::ReferenceNodeScopeManager{};
-            auto generator = bnode_mngt::NodeGenerator::new_instance_with_factory<bnode_mngt::SkolemIRIFactory>("http://skolem-iris.org#");
-
-            IStreamQuadIterator::state_type state{.blank_node_generator = &generator,
-                                                  .blank_node_scope_manager = &scope_mng};
-
-            std::istringstream iss{triples};
-            IStreamQuadIterator qit{iss, ParsingFlags::none(), &state};
-
-            CHECK(qit != std::default_sentinel);
-            CHECK(qit->has_value());
-            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/12"});
-            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-
-            auto b1_1 = qit->value().object();
-            CHECK(b1_1.is_iri());
-            std::cout << qit->value().object() << std::endl;
-
-            ++qit;
-            CHECK(qit != std::default_sentinel);
-            CHECK(qit->value().subject() == IRI{"http://data.semanticweb.org/workshop/admire/2012/paper/13"});
-            CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
-
-            auto b1_2 = qit->value().object();
-            CHECK(b1_1.is_iri());
-            std::cout << qit->value().object() << std::endl;
-            CHECK(b1_1 == b1_2);
-
-            ++qit;
-            CHECK(qit != std::default_sentinel);
-            auto b2_1 = qit->value().subject();
-            CHECK(b2_1.is_iri());
             CHECK(b2_1 != b1_1);
             std::cout << b2_1 << std::endl;
             CHECK(qit->value().predicate() == IRI{"http://purl.org/dc/elements/1.1/subject"});
