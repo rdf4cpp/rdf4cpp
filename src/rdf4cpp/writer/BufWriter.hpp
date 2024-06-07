@@ -365,7 +365,6 @@ struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>,
                        buffer.buffer_.size());
     }
 };
-
 } // namespace rdf4cpp::writer
 
 #endif  // RDF4CPP_BUFWRITER_HPP

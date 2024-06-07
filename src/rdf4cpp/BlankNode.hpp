@@ -3,11 +3,6 @@
 
 #include <ostream>
 #include <rdf4cpp/Node.hpp>
-#include <rdf4cpp/TriBool.hpp>
-
-namespace rdf4cpp::util  {
-struct NodeGenerator;
-}
 
 namespace rdf4cpp {
 
@@ -52,6 +47,13 @@ struct BlankNode : Node {
     [[nodiscard]] static BlankNode find(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 
     /**
+     * Validates the given blank node identifier
+     * @param identifier identifier to validate
+     * @throws ParsingError if the blank node identifier is not valid
+     */
+    static void validate(std::string_view identifier);
+
+    /**
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
@@ -64,9 +66,6 @@ struct BlankNode : Node {
 
     [[nodiscard]] explicit operator std::string() const noexcept;
 
-    [[nodiscard]] bool merge_eq(BlankNode const &other) const noexcept;
-    [[nodiscard]] TriBool union_eq(BlankNode const &other) const noexcept;
-
     friend std::ostream &operator<<(std::ostream &os, BlankNode const &node);
 
     [[nodiscard]] bool is_literal() const noexcept;
@@ -75,9 +74,6 @@ struct BlankNode : Node {
     [[nodiscard]] bool is_iri() const noexcept;
 
     friend struct Node;
-
-private:
-    static std::string_view validate_bnode_name(std::string_view v);
 };
 
 inline namespace shorthands {

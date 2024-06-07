@@ -4,13 +4,10 @@
 #include <string_view>
 #include <optional>
 
-#include <rdf4cpp/bnode_mngt/WeakNodeScope.hpp>
-
 namespace rdf4cpp::storage::view {
 
 struct BNodeBackendView {
     std::string_view identifier;
-    std::optional<rdf4cpp::bnode_mngt::WeakNodeScope> scope;
 
     [[nodiscard]] size_t hash() const noexcept;
     auto operator<=>(BNodeBackendView const &other) const noexcept = default;

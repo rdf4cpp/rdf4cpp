@@ -89,15 +89,8 @@ add_library(rdf4cpp
         src/rdf4cpp/Node.cpp
         src/rdf4cpp/Quad.cpp
         src/rdf4cpp/Statement.cpp
-        src/rdf4cpp/bnode_mngt/NodeGenerator.cpp
-        src/rdf4cpp/bnode_mngt/NodeScope.cpp
-        src/rdf4cpp/bnode_mngt/WeakNodeScope.cpp
-        src/rdf4cpp/bnode_mngt/reference_backends/factory/SkolemIRIFactory.cpp
-        src/rdf4cpp/bnode_mngt/reference_backends/factory/BNodeFactory.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
-        src/rdf4cpp/bnode_mngt/reference_backends/scope/ReferenceNodeScope.cpp
-        src/rdf4cpp/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.cpp
         src/rdf4cpp/datatypes/registry/DatatypeRegistry.cpp
         src/rdf4cpp/datatypes/owl/Rational.cpp
         src/rdf4cpp/datatypes/owl/Real.cpp

@@ -21,11 +21,17 @@ capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearM
 
 template<>
 bool capabilities::Default<xsd_gYearMonth>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    auto str = std::format("{:%Y-%m}", value.first);
-    if (value.second.has_value())
-        str += value.second->to_canonical_string();
-
-    return writer::write_str(str, writer);
+    //year,-,month,tz
+    std::array<char, registry::util::chrono_max_canonical_string_chars::year + 1 +
+                             registry::util::chrono_max_canonical_string_chars::month + Timezone::max_canonical_string_chars>
+            buff;
+    char *it = std::format_to(buff.data(), "{:%Y-%m}", value.first);
+    if (value.second.has_value()) {
+        it = value.second->to_canonical_string(it);
+    }
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 struct __attribute__((__packed__)) InliningHelperYearMonth {

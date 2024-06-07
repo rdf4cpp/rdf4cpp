@@ -24,8 +24,6 @@ private:
      */
     explicit operator datatypes::registry::DatatypeIDView() const noexcept;
 
-    static std::string_view check_valid_iri(std::string_view s);
-
 public:
     explicit IRI(storage::identifier::NodeBackendHandle handle) noexcept;
 
@@ -79,6 +77,14 @@ public:
      * @return
      */
     [[nodiscard]] static IRI find(std::string_view iri, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
+
+    /**
+     * Validates that the given input string is a valid IRI
+     * @param iri iri string to validate
+     * @throws ParsingError if the given IRI is invalid
+     */
+    static void validate(std::string_view iri);
+
 private:
     /**
      * searches for a IRI in the specified node storage and returns it.

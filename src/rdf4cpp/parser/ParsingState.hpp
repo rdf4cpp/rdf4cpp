@@ -1,17 +1,10 @@
 #ifndef RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 #define RDF4CPP_RDF_PARSER_PARSINGSTATE_HPP
 
-#include <rdf4cpp/bnode_mngt/NodeScope.hpp>
-#include <rdf4cpp/bnode_mngt/reference_backends/scope_manager/ReferenceNodeScopeManager.hpp>
-#include <rdf4cpp/bnode_mngt/reference_backends/scope_manager/SingleNodeScopeManager.hpp>
 #include <rdf4cpp/IRIFactory.hpp>
-
-#include <dice/sparse-map/sparse_map.hpp>
-#include <dice/hash.hpp>
-
-#include <string>
-#include <string_view>
-#include <optional>
+#include <rdf4cpp/bnode_mngt/reference_backends/scope_manager/MergeNodeScopeManager.hpp>
+#include <rdf4cpp/bnode_mngt/reference_backends/scope_manager/UnionNodeScopeManager.hpp>
+#include <rdf4cpp/storage/NodeStorage.hpp>
 
 namespace rdf4cpp::parser {
 
@@ -37,11 +30,6 @@ namespace rdf4cpp::parser {
  * @endcode
  */
 struct ParsingState {
-    using blank_node_generator_type = bnode_mngt::NodeGenerator;
-    using blank_node_scope_type = bnode_mngt::NodeScope;
-    using node_storage_type = storage::DynNodeStoragePtr;
-    using blank_node_scope_manager_type = bnode_mngt::INodeScopeManager;
-
     /**
      * The initial prefixes the parser has knowledge of
      * @note default value is an empty map
@@ -51,10 +39,15 @@ struct ParsingState {
     /**
      * The node storage to put the parsed quads into
      */
-    node_storage_type node_storage = storage::default_node_storage;
+    storage::DynNodeStoragePtr node_storage = storage::default_node_storage;
 
-    blank_node_generator_type *blank_node_generator = &bnode_mngt::NodeGenerator::default_instance();
-    blank_node_scope_manager_type *blank_node_scope_manager = &bnode_mngt::ReferenceNodeScopeManager::default_instance();
+    /**
+     * The node scope manager to use while parsing files
+     * the scopes names passed in are the graph identifiers.
+     *
+     * By default no scope is used, this means all blank nodes will keep the labels from the file.
+     */
+    bnode_mngt::DynNodeScopeManagerPtr blank_node_scope_manager = nullptr;
 };
 
 }  //namespace rdf4cpp::parser

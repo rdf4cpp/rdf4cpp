@@ -1,9 +1,10 @@
 #ifndef RDF4CPP_UNSYNCREFERENCENODESTORAGE_HPP
 #define RDF4CPP_UNSYNCREFERENCENODESTORAGE_HPP
 
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 
+#include <rdf4cpp/storage/NodeStorage.hpp>
 #include <rdf4cpp/storage/reference_node_storage/BNodeBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/FallbackLiteralBackend.hpp>
 #include <rdf4cpp/storage/reference_node_storage/IRIBackend.hpp>

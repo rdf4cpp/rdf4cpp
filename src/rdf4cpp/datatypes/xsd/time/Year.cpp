@@ -14,11 +14,14 @@ capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::fro
 
 template<>
 bool capabilities::Default<xsd_gYear>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    auto str = std::format("{:%Y}", value.first);
-    if (value.second.has_value())
-        str += value.second->to_canonical_string();
-
-    return writer::write_str(str, writer);
+    std::array<char, registry::util::chrono_max_canonical_string_chars::year + Timezone::max_canonical_string_chars> buff;
+    char *it = std::format_to(buff.data(), "{:%Y}", value.first);
+    if (value.second.has_value()) {
+        it = value.second->to_canonical_string(it);
+    }
+    size_t const len = it - buff.data();
+    assert(len <= buff.size());
+    return writer::write_str(std::string_view(buff.data(), len), writer);
 }
 
 template<>

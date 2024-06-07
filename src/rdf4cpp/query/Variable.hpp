@@ -7,6 +7,10 @@
 namespace rdf4cpp::query {
 
 struct Variable : Node {
+private:
+    [[nodiscard]] static Variable find(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) noexcept;
+
+public:
     Variable() noexcept;
 
     explicit Variable(storage::identifier::NodeBackendHandle handle) noexcept;
@@ -22,10 +26,6 @@ struct Variable : Node {
     Variable to_node_storage(storage::DynNodeStoragePtr node_storage) const;
     [[nodiscard]] Variable try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
 
-private:
-    [[nodiscard]] static Variable find(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage) noexcept;
-
-public:
     /**
      * searches for a named Variable in the specified node storage and returns it.
      * returns a null Variable, if not found.
@@ -42,6 +42,13 @@ public:
      * @return
      */
     [[nodiscard]] static Variable find_anonymous(std::string_view name, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
+
+    /**
+     * Validates that the given name is a valid Variable name
+     * @param var_name name to check
+     * @throws ParsingError if the variable name is not valid
+     */
+    static void validate(std::string_view var_name);
 
     [[nodiscard]] bool is_anonymous() const;
 
@@ -63,8 +70,6 @@ public:
     friend struct Node;
 
     // todo unbound()
-private:
-    static std::string_view check_var_name(std::string_view n);
 };
 
 }  // namespace rdf4cpp::query
