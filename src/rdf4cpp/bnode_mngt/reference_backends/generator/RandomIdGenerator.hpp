@@ -1,7 +1,7 @@
 #ifndef RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_RANDOMBLANKNODEIDGENERATOR_HPP
 #define RDF4CPP_RDF_UTIL_REFERENCEBACKENDS_RANDOMBLANKNODEIDGENERATOR_HPP
 
-#include <rdf4cpp/bnode_mngt/IIdGenerator.hpp>
+#include <rdf4cpp/bnode_mngt/NodeGenerator.hpp>
 
 #include <random>
 #include <mutex>
@@ -11,11 +11,11 @@ namespace rdf4cpp::bnode_mngt {
 /**
  * Generates 32-char long random ids consisting of [0-9a-z]
  */
-struct RandomIdGenerator : IIdGenerator {
+struct RandomIdGenerator {
 private:
-    std::mutex mutable mutex;
-    std::mt19937_64 rng;
-    std::uniform_int_distribution<size_t> dist;
+    std::mutex mutable mutex_;
+    std::mt19937_64 rng_;
+    std::uniform_int_distribution<size_t> dist_;
 
     char next_char();
 public:
@@ -30,9 +30,9 @@ public:
      */
     explicit RandomIdGenerator(uint64_t seed);
 
-    [[nodiscard]] size_t max_generated_id_size() const noexcept override;
-    char *generate_to_buf(char *buf) override;
+    BlankNode generate(storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
 };
+static_assert(NodeGenerator<RandomIdGenerator>);
 
 }  //namespace rdf4cpp::bnode_mngt
 

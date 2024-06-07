@@ -1,6 +1,4 @@
 #include "BlankNode.hpp"
-#include <rdf4cpp/bnode_mngt/NodeScope.hpp>
-
 #include <rdf4cpp/util/CharMatcher.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
 #include <rdf4cpp/ParsingError.hpp>
@@ -11,7 +9,7 @@ BlankNode::BlankNode() noexcept : Node{storage::identifier::NodeBackendHandle{{}
 }
 
 BlankNode::BlankNode(std::string_view identifier, storage::DynNodeStoragePtr node_storage)
-    : BlankNode{make_unchecked(validate_bnode_name(identifier), node_storage)} {
+    : BlankNode{make_unchecked((validate(identifier), identifier), node_storage)} {
 }
 
 BlankNode::BlankNode(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {
@@ -26,7 +24,7 @@ BlankNode BlankNode::make(std::string_view identifier, storage::DynNodeStoragePt
 }
 
 BlankNode BlankNode::make_unchecked(std::string_view identifier, storage::DynNodeStoragePtr node_storage) {
-    return BlankNode{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier, .scope = std::nullopt}),
+    return BlankNode{storage::identifier::NodeBackendHandle{node_storage.find_or_make_id(storage::view::BNodeBackendView{.identifier = identifier}),
                                                             node_storage}};
 }
 
@@ -53,7 +51,7 @@ BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStoragePtr node_sto
 }
 
 BlankNode BlankNode::find(std::string_view identifier, storage::DynNodeStoragePtr node_storage) noexcept {
-    auto nid = node_storage.find_id(storage::view::BNodeBackendView{identifier, std::nullopt});
+    auto nid = node_storage.find_id(storage::view::BNodeBackendView{.identifier = identifier});
     if (nid.null())
         return BlankNode{};
     return BlankNode{storage::identifier::NodeBackendHandle{nid, node_storage}};
@@ -91,49 +89,7 @@ std::ostream &operator<<(std::ostream &os, BlankNode const &bnode) {
     return os;
 }
 
-bool BlankNode::merge_eq(BlankNode const &other) const noexcept {
-    if (this->handle_ == other.handle_) {
-        return true;
-    }
-
-    auto const this_backend = this->handle_.bnode_backend();
-    auto const other_backend = other.handle_.bnode_backend();
-
-    return this_backend.identifier == other_backend.identifier && this_backend.scope == other_backend.scope;
-}
-
-TriBool BlankNode::union_eq(BlankNode const &other) const noexcept {
-    if (this->handle_ == other.handle_) {
-        return true;
-    }
-
-    auto const this_backend = this->handle_.bnode_backend();
-    auto const other_backend = other.handle_.bnode_backend();
-
-    if (!this_backend.scope.has_value() || !other_backend.scope.has_value()) {
-        return this_backend.scope.has_value() == other_backend.scope.has_value() && this_backend.identifier == other_backend.identifier;
-    }
-
-    auto this_scope = this_backend.scope->try_upgrade();
-    if (!this_scope.has_value()) {
-        return TriBool::Err;
-    }
-
-    auto other_scope = other_backend.scope->try_upgrade();
-    if (!other_scope.has_value()) {
-        return TriBool::Err;
-    }
-
-    auto const this_label = this_scope->try_get_label(*this);
-    assert(this_label.has_value());
-
-    auto const other_label = other_scope->try_get_label(other);
-    assert(other_label.has_value());
-
-    return *this_label == *other_label;
-}
-
-std::string_view BlankNode::validate_bnode_name(std::string_view v) {
+void BlankNode::validate(std::string_view v) {
     using namespace util::char_matcher_detail;
     static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
     auto r = v | una::views::utf8;
@@ -158,7 +114,6 @@ std::string_view BlankNode::validate_bnode_name(std::string_view v) {
     if (lastchar == '.') {
         throw ParsingError(std::format("invalid blank node label {}", v));
     }
-    return v;
 }
 
 inline namespace shorthands {

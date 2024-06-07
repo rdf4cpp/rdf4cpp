@@ -151,14 +151,18 @@ public:
     [[nodiscard]] solution_sequence match(query::QuadPattern const &quad_pattern) const noexcept;
 
     template<typename ErrF = decltype([](parser::ParsingError) noexcept {})>
-    void load_rdf_data(std::string const &file_path,
+    void load_rdf_data(std::istream &rdf_file,
                        parser::ParsingFlags flags = parser::ParsingFlags::none(),
-                       ErrF &&errf = {}) noexcept requires std::invocable<decltype(errf), parser::ParsingError> {
+                       parser::ParsingState *state = nullptr,
+                       ErrF &&errf = {}) requires std::invocable<decltype(errf), parser::ParsingError> {
 
-        parser::ParsingState state{.node_storage = node_storage_};
-        parser::RDFFileParser parser{file_path, flags, &state};
+        if (state != nullptr && state->node_storage != node_storage_) {
+            throw std::invalid_argument{"NodeStorage of the parsing state must be the same as NodeStorage of the Dataset"};
+        }
 
-        for (auto const &quad : parser) {
+        parser::IStreamQuadIterator parser{rdf_file, flags, state};
+        for (; parser != std::default_sentinel; ++parser) {
+            auto const &quad = *parser;
             if (quad.has_value()) {
                 add(*quad);
             } else {

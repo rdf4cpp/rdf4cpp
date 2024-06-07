@@ -19,22 +19,23 @@ static constexpr size_t generated_id_size = 32;
 RandomIdGenerator::RandomIdGenerator() : RandomIdGenerator{std::random_device{}()} {
 }
 
-RandomIdGenerator::RandomIdGenerator(uint64_t const seed) : rng{seed},
-                                                            dist{0, generator_detail::bnode_id_valid_chars.size() - 1} {
+RandomIdGenerator::RandomIdGenerator(uint64_t const seed) : rng_{seed},
+                                                            dist_{0, generator_detail::bnode_id_valid_chars.size() - 1} {
 }
 
-size_t RandomIdGenerator::max_generated_id_size() const noexcept {
-    return generator_detail::generated_id_size;
-}
+BlankNode RandomIdGenerator::generate(storage::DynNodeStoragePtr node_storage) noexcept {
+    std::array<char, generator_detail::generated_id_size> buf;
 
-char *RandomIdGenerator::generate_to_buf(char *const buf) {
-    std::unique_lock lock{this->mutex};
-    return std::generate_n(buf, generator_detail::generated_id_size, [this]() { return this->next_char(); });
+    {
+        std::unique_lock lock{mutex_};
+        std::ranges::generate(buf, [this]() { return this->next_char(); });
+    }
+
+    return BlankNode::make_unchecked(std::string_view{buf.data(), buf.size()}, node_storage);
 }
 
 char RandomIdGenerator::next_char() {
-    return generator_detail::bnode_id_valid_chars[this->dist(this->rng)];
+    return generator_detail::bnode_id_valid_chars[dist_(rng_)];
 }
-
 
 }  //namespace rdf4cpp::bnode_mngt

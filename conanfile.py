@@ -38,7 +38,6 @@ class Recipe(ConanFile):
         self.requires("dice-template-library/1.5.0@dice-group/feature-conan2_new", transitive_headers=True)
 
         self.test_requires("doctest/2.4.11")
-        self.test_requires("metall/0.26")
         self.test_requires("nanobench/4.3.11")
 
     def set_name(self):
