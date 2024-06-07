@@ -1803,6 +1803,10 @@ static regex::Regex::flag_type translate_regex_flags(std::string_view const xpat
                 return facc | regex::RegexFlag::CaseInsensitive;
             case 'q':
                 return facc | regex::RegexFlag::Literal;
+            case 'm':
+                return facc | regex::RegexFlag::Multiline;
+            case 'x':
+                return facc | regex::RegexFlag::RemoveWhitespace;
             default:
                 throw std::runtime_error{std::string{"Encountered unsupported regex flag: "} + c};
         }
