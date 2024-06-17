@@ -35,7 +35,7 @@ class Recipe(ConanFile):
         self.requires("highway/1.1.0")
         self.requires("dice-hash/0.4.5", transitive_headers=True)
         self.requires("dice-sparse-map/0.2.6", transitive_headers=True)
-        self.requires("dice-template-library/1.5.0@dice-group/feature-conan2_new", transitive_headers=True)
+        self.requires("dice-template-library/1.5.1", transitive_headers=True)
 
         self.test_requires("doctest/2.4.11")
         self.test_requires("nanobench/4.3.11")
