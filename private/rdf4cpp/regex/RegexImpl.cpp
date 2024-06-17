@@ -25,6 +25,9 @@ static re2::RE2 build_regex(std::string_view regex, Regex::flag_type flags) {
     if (!flags.contains(RegexFlag::Multiline) && !flags.contains(RegexFlag::RemoveWhitespace)) {
         return {regex, opt};
     }
+    // https://www.w3.org/TR/xpath-functions/#flags
+    // re2 does not support x
+    // and m needs to be passed as re2 flag (Options::set_one_line is ignored, if Options::posix_syntax == false)
     std::string x{};
     x.reserve(regex.size()+4);
     if (flags.contains(RegexFlag::Multiline)) {
@@ -36,18 +39,15 @@ static re2::RE2 build_regex(std::string_view regex, Regex::flag_type flags) {
         for (char const c : regex) {
             if (c == '[' && prev != '\\') {
                 ++classes;
-            }
-            else if (c == ']' && prev != '\\') {
+            } else if (c == ']' && prev != '\\') {
                 --classes;
-            }
-            else if (classes == 0 && (c == '\t' || c == '\r' || c == '\n' || c == ' ')) {
+            } else if (classes == 0 && (c == '\t' || c == '\r' || c == '\n' || c == ' ')) {
                 continue;
             }
             x.append(1, c);
             prev = c;
         }
-    }
-    else {
+    } else {
         x.append(regex);
     }
     return {x, opt};
