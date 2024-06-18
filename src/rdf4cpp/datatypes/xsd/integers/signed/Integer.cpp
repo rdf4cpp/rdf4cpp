@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <rdf4cpp/InvalidNode.hpp>
+
 namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
@@ -14,7 +16,7 @@ capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_integer>:
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw std::runtime_error{std::string{"xsd:integer parsing error: "} + e.what()};
+        throw InvalidNode{std::string{"xsd:integer parsing error: "} + e.what()};
     }
 }
 

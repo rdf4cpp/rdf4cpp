@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <regex>
 
+#include <rdf4cpp/InvalidNode.hpp>
+
 namespace rdf4cpp::datatypes::registry {
 
 #ifndef DOXYGEN_PARSER
@@ -14,7 +16,7 @@ capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>:
     static std::regex const decimal_regex{R"#((\+|-)?([0-9]+(\.[0-9]*)?|\.[0-9]+))#", std::regex_constants::optimize};
 
     if (!std::regex_match(s.begin(), s.end(), decimal_regex)) {
-        throw std::runtime_error{"XSD Parsing Error"};
+        throw InvalidNode{"XSD Parsing Error"};
     }
 
     if (s.starts_with('+')) {

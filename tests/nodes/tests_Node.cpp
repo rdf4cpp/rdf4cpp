@@ -270,8 +270,8 @@ TEST_CASE("node format") {
 
 TEST_CASE("IRI validity") {
     IRI i{};
-    CHECK_THROWS_AS(i = IRI::make("something not iri"), ParsingError);
-    CHECK_THROWS_AS(i = IRI("something not iri"), ParsingError);
+    CHECK_THROWS_AS(i = IRI::make("something not iri"), InvalidNode);
+    CHECK_THROWS_AS(i = IRI("something not iri"), InvalidNode);
     CHECK(IRI::make_unchecked("something not iri").identifier() == "something not iri");
     CHECK(IRI::make("https://this.is/a/valid/iri").identifier() == "https://this.is/a/valid/iri");
     CHECK(i == IRI());
@@ -279,8 +279,8 @@ TEST_CASE("IRI validity") {
 
 TEST_CASE("BlankNode validity") {
     BlankNode n{};
-    CHECK_THROWS_AS(n = BlankNode::make("-may_not_be_first"), ParsingError);
-    CHECK_THROWS_AS(n = BlankNode("may_not_be_last."), ParsingError);
+    CHECK_THROWS_AS(n = BlankNode::make("-may_not_be_first"), InvalidNode);
+    CHECK_THROWS_AS(n = BlankNode("may_not_be_last."), InvalidNode);
     CHECK(BlankNode::make_unchecked("may_not_be_last.").identifier() == "may_not_be_last.");
     CHECK(BlankNode::make("a_middle.is_allowed").identifier() == "a_middle.is_allowed");
     CHECK(BlankNode::make("012_numbers_too567").identifier() == "012_numbers_too567");

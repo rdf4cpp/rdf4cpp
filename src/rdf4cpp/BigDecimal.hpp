@@ -10,6 +10,7 @@
 #include <dice/hash.hpp>
 
 #include <rdf4cpp/Expected.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
 
 namespace rdf4cpp {
 enum struct RoundingMode {
@@ -123,8 +124,7 @@ public:
      * parses a BigDecimal from a string_view.
      * may include a leading sign and one decimal point ., everything else needs to be numeric.
      * @param value
-     * @throw std::invalid_argument if a invalid char is found
-     * @throw std::overflow_error on exceeding the types numeric limits
+     * @throw rdf4cpp::InvalidNode if a invalid char is found, or on exceeding the types numeric limits
      */
     constexpr explicit BigDecimal(std::string_view value) : unscaled_value(0), exponent(0) {
         bool begin = true;
@@ -141,20 +141,20 @@ public:
             }
             if (c == '.') {
                 if (decimal)
-                    throw std::invalid_argument{"more than one . found"};
+                    throw InvalidNode{"more than one . found"};
                 decimal = true;
                 continue;
             }
             if (c < '0' || c > '9')
-                throw std::invalid_argument{"non-numeric char found"};
+                throw InvalidNode{"non-numeric char found"};
             auto n = c - '0';
             if (mul_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{base}, unscaled_value))
-                throw std::overflow_error{"ctor unscaled_value overflow"};
+                throw InvalidNode{"ctor unscaled_value overflow"};
             if (add_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{n}, unscaled_value))
-                throw std::overflow_error{"ctor unscaled_value overflow"};
+                throw InvalidNode{"ctor unscaled_value overflow"};
             if (decimal) {
                 if (add_checked<OverflowMode::Checked>(exponent, Exponent_t{1}, exponent))
-                    throw std::overflow_error{"ctor exponent overflow"};
+                    throw InvalidNode{"ctor exponent overflow"};
             }
         }
         if (unscaled_value == 0)

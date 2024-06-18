@@ -89,7 +89,6 @@ add_library(rdf4cpp
         src/rdf4cpp/Node.cpp
         src/rdf4cpp/Quad.cpp
         src/rdf4cpp/Statement.cpp
-        src/rdf4cpp/ParsingError.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
         src/rdf4cpp/datatypes/registry/DatatypeRegistry.cpp
