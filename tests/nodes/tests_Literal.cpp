@@ -742,7 +742,7 @@ TEST_CASE("Literal - misc functions") {
         auto const poem_lit = Literal::make_simple(poem);
 
         CHECK_EQ(poem_lit.as_regex_matches("Kaum.*krähen"_xsd_string).ebv(), TriBool::False);
-        //CHECK(poem_lit.regex_match("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv()); TODO: support multiline flag
+        CHECK(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string, "m"_xsd_string).ebv());
         CHECK_EQ(poem_lit.as_regex_matches("^Kaum.*gesehen,$"_xsd_string).ebv(), TriBool::False);
         CHECK(poem_lit.as_regex_matches("kiki"_xsd_string, "i"_xsd_string).ebv());
 
@@ -750,6 +750,17 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches("b"_xsd_string).ebv());
         CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches(Literal::make_lang_tagged("b", "en")).ebv());
         CHECK(Literal::make_lang_tagged("abcd", "en").as_regex_matches(Literal::make_lang_tagged("b", "fr")).null());
+
+        CHECK(!Literal::make_simple("abc\ndef\ngh").as_regex_matches("^def$"_xsd_string).ebv());
+        CHECK(Literal::make_simple("abc\ndef\ngh").as_regex_matches("^def$"_xsd_string, "m"_xsd_string).ebv());
+
+        // most of these are adapted from examples in https://www.w3.org/TR/xpath-functions/#flags
+        CHECK(!Literal::make_simple("helloworld").as_regex_matches("hello world"_xsd_string).ebv());
+        CHECK(!Literal::make_simple("hello world").as_regex_matches("hello world"_xsd_string, "x"_xsd_string).ebv());
+        CHECK(Literal::make_simple("helloworld").as_regex_matches("hello world"_xsd_string, "x"_xsd_string).ebv());
+        CHECK(Literal::make_simple("hello world").as_regex_matches("hello[ ]world"_xsd_string, "x"_xsd_string).ebv());
+        CHECK(Literal::make_simple("hello world").as_regex_matches("hello\\ sworld"_xsd_string, "x"_xsd_string).ebv());
+        CHECK(Literal::make_simple("hello[world").as_regex_matches("hello\\ [worl d"_xsd_string, "x"_xsd_string).ebv());
     }
 
     SUBCASE("regex_replace") {
@@ -780,6 +791,11 @@ TEST_CASE("Literal - misc functions") {
 
         CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\\\hgfhf World"_xsd_string) == "Hello Hello \\hgfhf World World"_xsd_string);
         CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\hgfhf World"_xsd_string) == Literal{});
+
+        CHECK(Literal::make_simple("abc\ndef\ngh").regex_replace("(def)"_xsd_string, "y$1x"_xsd_string, ""_xsd_string) == Literal::make_simple("abc\nydefx\ngh"));
+        CHECK(Literal::make_simple("abc\ndef\ngh").regex_replace("^(def)$"_xsd_string, "y$1x"_xsd_string, "m"_xsd_string) == Literal::make_simple("abc\nydefx\ngh"));
+
+        CHECK(Literal::make_simple("hello[world").regex_replace("\\ [wo(rl) d"_xsd_string, " wo$1d"_xsd_string, "x"_xsd_string) == Literal::make_simple("hello world"));
     }
 
     SUBCASE("hashes") {
