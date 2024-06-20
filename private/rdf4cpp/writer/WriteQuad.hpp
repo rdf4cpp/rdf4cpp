@@ -41,7 +41,7 @@ bool write_pred(Node const pred, writer::BufWriterParts const writer) {
 
 [[nodiscard]] inline bool is_default_graph(Node const &graph) noexcept {
     auto const g = graph.as_iri();
-    return !g.null() && g.is_default_graph();
+    return g.is_default_graph();
 }
 
 template<writer::OutputFormat F, typename Q>
