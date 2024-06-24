@@ -27,7 +27,7 @@ class Recipe(ConanFile):
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
-        self.requires("boost/1.83.0", transitive_headers=True, force=True)
+        self.requires("boost/1.83.0", transitive_headers=True, libs=False)
         self.requires("expected-lite/0.6.3", transitive_headers=True)
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
