@@ -10,6 +10,8 @@ enum struct RegexFlag : uint8_t {
     DotAll = 1 << 0,
     CaseInsensitive = 1 << 1,
     Literal = 1 << 2,
+    Multiline = 1 << 3,
+    RemoveWhitespace = 1 << 4,
 };
 
 struct RegexFlags {

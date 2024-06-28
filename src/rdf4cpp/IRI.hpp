@@ -123,7 +123,12 @@ public:
      * @param node_storage  optional custom node_storage where the returned IRI lives
      * @return default graph IRI
      */
-    static IRI default_graph(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+    [[nodiscard]] static IRI default_graph(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+
+    /**
+     * @return if this IRI is the default graph IRI
+     */
+    [[nodiscard]] bool is_default_graph() const noexcept;
 };
 
 inline namespace shorthands {

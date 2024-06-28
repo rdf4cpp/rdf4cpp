@@ -3,17 +3,17 @@
 
 #include <rdf4cpp/ClosedNamespace.hpp>
 #include <rdf4cpp/Dataset.hpp>
+#include <rdf4cpp/IRIFactory.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
 #include <rdf4cpp/Namespace.hpp>
 #include <rdf4cpp/Node.hpp>
 #include <rdf4cpp/namespaces.hpp>
 #include <rdf4cpp/bnode_mngt/NodeGenerator.hpp>
 #include <rdf4cpp/parser/IStreamQuadIterator.hpp>
 #include <rdf4cpp/parser/RDFFileParser.hpp>
-#include <rdf4cpp/version.hpp>
-#include <rdf4cpp/IRIFactory.hpp>
-#include <rdf4cpp/writer/SerializationState.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
-#include <rdf4cpp/ParsingError.hpp>
+#include <rdf4cpp/version.hpp>
+#include <rdf4cpp/writer/SerializationState.hpp>
 
 
 /**

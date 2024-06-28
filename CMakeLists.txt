@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(rdf4cpp VERSION 0.0.32)
+project(rdf4cpp VERSION 0.0.34)
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -77,7 +77,6 @@ add_library(rdf4cpp
         src/rdf4cpp/Node.cpp
         src/rdf4cpp/Quad.cpp
         src/rdf4cpp/Statement.cpp
-        src/rdf4cpp/ParsingError.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/RandomIdGenerator.cpp
         src/rdf4cpp/bnode_mngt/reference_backends/generator/IncreasingIdGenerator.cpp
         src/rdf4cpp/datatypes/registry/DatatypeRegistry.cpp

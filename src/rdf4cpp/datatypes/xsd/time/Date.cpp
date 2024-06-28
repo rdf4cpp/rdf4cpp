@@ -16,7 +16,7 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     if (registry::relaxed_parsing_mode && !date.ok())
         date = normalize(date);
     if (!date.ok()) {
-        throw std::runtime_error("invalid date");
+        throw InvalidNode("invalid date");
     }
 
     return std::make_pair(date, tz);

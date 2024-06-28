@@ -42,7 +42,7 @@ nonstd::expected<Node, SerdStatus> IStreamQuadIterator::Impl::get_bnode(std::str
         }
 
         return this->state->blank_node_scope_manager.scope(graph_str).get_or_generate_node(node_str, this->state->node_storage);
-    } catch (std::runtime_error const &e) {
+    } catch (InvalidNode const &e) {
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
         this->last_error = ParsingError{.error_type = ParsingError::Type::BadBlankNode,
                                         .line = serd_reader_get_current_line(this->reader),
@@ -152,7 +152,7 @@ nonstd::expected<Literal, SerdStatus> IStreamQuadIterator::Impl::get_literal(Ser
         } else {
             return Literal::make_simple(literal_value, this->state->node_storage);
         }
-    } catch (std::runtime_error const &e) {
+    } catch (InvalidNode const &e) {
         // NOTE: line, col not entirely accurate as this function is called after a triple was parsed
         this->last_error = ParsingError{.error_type = ParsingError::Type::BadLiteral,
                                         .line = serd_reader_get_current_line(this->reader),

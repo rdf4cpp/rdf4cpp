@@ -1,7 +1,7 @@
 #include "IRI.hpp"
-#include <rdf4cpp/writer/TryWrite.hpp>
 #include <rdf4cpp/IRIView.hpp>
-#include <rdf4cpp/ParsingError.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
+#include <rdf4cpp/writer/TryWrite.hpp>
 
 #include <sstream>
 
@@ -57,7 +57,7 @@ IRI IRI::make_uuid(storage::DynNodeStoragePtr node_storage) {
 void IRI::validate(std::string_view s) {
     auto v = IRIView(s).quick_validate();
     if (v != IRIFactoryError::Ok)
-        throw ParsingError(std::format("IRI {} is invalid: {}", s, v));
+        throw InvalidNode(std::format("IRI {} is invalid: {}", s, v));
 }
 
 IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
@@ -140,8 +140,17 @@ bool IRI::is_iri() const noexcept { return true; }
 
 
 IRI IRI::default_graph(storage::DynNodeStoragePtr node_storage) {
-    return IRI::make_unchecked("", node_storage);
+    auto const id = datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri];
+    return IRI{storage::identifier::NodeBackendHandle{storage::identifier::literal_type_to_iri_node_id(id),
+               node_storage}};
 }
+
+bool IRI::is_default_graph() const noexcept {
+    auto const expected_id = datatypes::registry::reserved_datatype_ids[datatypes::registry::default_graph_iri];
+    auto const this_id = storage::identifier::iri_node_id_to_literal_type(backend_handle().id());
+    return this_id == expected_id;
+}
+
 std::ostream &operator<<(std::ostream &os, IRI const &iri) {
     writer::BufOStreamWriter w{os};
     iri.serialize(w);

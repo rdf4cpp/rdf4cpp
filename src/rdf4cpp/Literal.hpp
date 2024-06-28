@@ -1117,9 +1117,6 @@ public:
      * @param pattern xsd:string containing a regex to match against
      * @return whether this' lexical form matches the regex or the null literal if
      *      - this is not string-like
-     *
-     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
-     * @todo implement other flags
      */
     [[nodiscard]] Literal as_regex_matches(regex::Regex const &pattern, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
@@ -1132,9 +1129,6 @@ public:
      *      - this is not string-like
      *      - regex is not string-like
      *      - flags is not string-like or not parsable as flags
-     *
-     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
-     * @todo implement other flags
      */
     [[nodiscard]] Literal as_regex_matches(Literal const &pattern, Literal const &flags = Literal::make_simple(""), storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
@@ -1153,9 +1147,6 @@ public:
      * @param replacement string to replace the matched pattern
      * @param flags regex flags to use for matching (https://www.w3.org/TR/xpath-functions/#flags)
      * @return the new string with the matches substring replaced by replacement
-     *
-     * @note currently only flags `m` and `i` are supported, the other valid flags from the XPATH standard will be ignored
-     * @todo implement other flags
      */
     [[nodiscard]] Literal regex_replace(Literal const &pattern, Literal const &replacement,
                                         Literal const &flags = Literal::make_simple(""),
