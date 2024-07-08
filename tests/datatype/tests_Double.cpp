@@ -86,7 +86,8 @@ TEST_CASE("Datatype Double") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal::make_typed("454sdsd", type_iri));
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("454sdsd", type_iri), "http://www.w3.org/2001/XMLSchema#double parsing error: found s, invalid for datatype", rdf4cpp::InvalidNode);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("-", type_iri), "http://www.w3.org/2001/XMLSchema#double parsing error: literal is empty", rdf4cpp::InvalidNode);
 }
 
 TEST_CASE("round-trip") {

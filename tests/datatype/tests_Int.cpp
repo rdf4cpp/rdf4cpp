@@ -68,7 +68,7 @@ TEST_CASE("Datatype Int") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS(no_discard_dummy = Literal::make_typed("2147483649", type_iri));
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("2147483649", type_iri), "http://www.w3.org/2001/XMLSchema#int parsing error: 2147483649 is out of range", InvalidNode);
 
     CHECK_THROWS(no_discard_dummy = Literal::make_typed("-2147483650", type_iri));
 

@@ -12,34 +12,6 @@
 #include <rdf4cpp/InvalidNode.hpp>
 
 namespace rdf4cpp::datatypes::registry::util {
-
-/**
- * Parses a valid string representation of a integral number
- *
- * @tparam I the resulting integral type
- * @param s the string to be parsed
- * @return the resulting value
- * @throws rdf4cpp::InvalidNode if the string cannot be parsed
- */
-template<std::integral I, ConstexprString datatype>
-I from_chars(std::string_view s) {
-    if (s.starts_with('+')) {
-        // from_chars does not allow initial +
-        s.remove_prefix(1);
-    }
-
-    I value;
-    auto const res = std::from_chars(s.data(), s.data() + s.size(), value);
-
-    if (res.ec != std::errc{}) {
-        throw rdf4cpp::InvalidNode{std::format("{} parsing error: {} at {}", datatype, std::make_error_code(res.ec).message(), std::string_view(res.ptr, s.data() + s.size()))};
-    } else if (res.ptr != s.data() + s.size()) {
-        throw rdf4cpp::InvalidNode{std::format("{} parsing error: unexpected char at {}", datatype, std::string_view(res.ptr, s.data() + s.size()))};
-    } else {
-        return value;
-    }
-}
-
 /**
  * Serializes an integral type into its (SPARQL) representation.
  * For integers the canonical and simplified representation are identical.
@@ -65,14 +37,15 @@ bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noex
 }
 
 /**
- * Parses a valid string representation of a floating point number
+ * Parses a valid string representation of a floating point or integral number
  *
  * @tparam F the result floating point type
  * @param s the string to be parsed
  * @return the resulting value
  * @throws rdf4cpp::InvalidNode if the string cannot be parsed
  */
-template<std::floating_point F, ConstexprString datatype>
+template<typename F, ConstexprString datatype>
+requires (std::floating_point<F> || std::integral<F>)
 F from_chars(std::string_view s) {
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
@@ -80,11 +53,26 @@ F from_chars(std::string_view s) {
     }
 
     F value;
-    std::from_chars_result const res = std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
+    std::from_chars_result res = [&]() {
+        if constexpr (std::floating_point<F>) {
+            return std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
+        } else {
+            return std::from_chars(s.data(), s.data() + s.size(), value);
+        }
+    }();
 
-    if (res.ec != std::errc{} || res.ptr != s.data() + s.size()) {
-        // parsing did not reach end of string => it contains invalid characters
+    if (res.ec != std::errc{}) {
+        if (res.ec == std::errc::invalid_argument) {
+            throw rdf4cpp::InvalidNode{std::format("{} parsing error: literal is empty", datatype)};
+        }
+        if (res.ec == std::errc::result_out_of_range) {
+            throw rdf4cpp::InvalidNode{std::format("{} parsing error: {} is out of range", datatype, s)};
+        }
         throw rdf4cpp::InvalidNode{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
+    }
+    else if(res.ptr != s.data() + s.size()) {
+        // parsing did not reach end of string => it contains invalid characters
+        throw rdf4cpp::InvalidNode{std::format("{} parsing error: found {}, invalid for datatype", datatype, *res.ptr)};
     }
 
     return value;
