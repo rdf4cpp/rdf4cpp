@@ -38,11 +38,10 @@ Currently, rdf4cpp builds only on linux with a C++20 compatible compiler.
 CI builds and tests rdf4cpp with gcc-{13}, clang-{15,16} with libstdc++-13 on ubuntu 22.04. 
 
 ### Dependencies
-
-It is recommended to include build dependencies via conan version 1. Set up Conan as follows on Ubuntu 22.04+:
+It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
 ```shell
 sudo apt install python3-pip
-pip3 install --user "conan<2"
+pip3 install --user conan
 conan user
 conan profile new --detect default
 conan profile update settings.compiler.libcxx=libstdc++13 default
@@ -51,14 +50,16 @@ conan remote add dice-group https://conan.dice-research.org/artifactory/api/cona
 
 
 ### Compile
-rdf4cpp uses CMake. To build it, run: 
+rdf4cpp uses CMake and conan 2. To build it, run: 
 ```shell
-cmake -B build_dir # configure and generate
+wget https://github.com/conan-io/cmake-conan/raw/develop2/conan_provider.cmake -O conan_provider.cmake # download conan provider
+cmake -B build_dir -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake # configure and generate
 cmake --build build_dir # compile
 ```
 
 To install it to your system, run afterward:
 ```shell
+cd build_dir
 sudo make install
 ```
 
@@ -69,6 +70,3 @@ sudo make install
 `-DBUILD_TESTING=ON/OFF [default: OFF]`: Build  the tests.
 
 `-DBUILD_SHARED_LIBS=ON/OFF [default: OFF]`: Build a shared library instead of a static one.
-
-`-DUSE_CONAN=ON/OFF [default: ON]`: If available, use Conan to retrieve dependencies.
-
