@@ -1,7 +1,7 @@
 import os
 import re
 
-from conan.tools.cmake import CMake
+from conan.tools.cmake import cmake_layout, CMake
 
 from conan import ConanFile
 
@@ -17,31 +17,28 @@ class Recipe(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
-        "with_test_deps": [True, False],
     }
     default_options = {
         "shared": False,
         "fPIC": True,
-        "with_test_deps": False,
     }
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
-        self.requires("boost/1.83.0", transitive_headers=True)
+        self.requires("boost/1.83.0", transitive_headers=True, libs=False)
         self.requires("expected-lite/0.6.3", transitive_headers=True)
         self.requires("re2/20221201")
         self.requires("openssl/3.0.8")
         self.requires("uni-algo/1.2.0")
         self.requires("highway/1.1.0")
-        self.requires("dice-hash/0.4.4", transitive_headers=True)
-        self.requires("dice-sparse-map/0.2.5", transitive_headers=True)
-        self.requires("dice-template-library/1.4.0", transitive_headers=True)
+        self.requires("dice-hash/0.4.5", transitive_headers=True)
+        self.requires("dice-sparse-map/0.2.6", transitive_headers=True)
+        self.requires("dice-template-library/1.5.1", transitive_headers=True)
 
-        if self.options.with_test_deps:
-            self.requires("doctest/2.4.11")
-            self.requires("nanobench/4.3.11")
+        self.test_requires("doctest/2.4.11")
+        self.test_requires("nanobench/4.3.11")
 
     def set_name(self):
         if not hasattr(self, 'name') or self.version is None:
@@ -57,21 +54,17 @@ class Recipe(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    _cmake = None
-
-    def _configure_cmake(self):
-        if self._cmake:
-            return self._cmake
-        self._cmake = CMake(self)
-        self._cmake.configure(variables={"USE_CONAN": False})
-
-        return self._cmake
+    def layout(self):
+        cmake_layout(self)
 
     def build(self):
-        self._configure_cmake().build()
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
 
     def package(self):
-        self._configure_cmake().install()
+        cmake = CMake(self)
+        cmake.install()
         rmdir(self, os.path.join(self.package_folder, "cmake"))
         rmdir(self, os.path.join(self.package_folder, "share"))
         copy(self, "LICENSE", src=self.recipe_folder, dst="licenses")

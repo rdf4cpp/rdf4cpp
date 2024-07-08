@@ -15,7 +15,7 @@ jobs:
     with:
       os: ${{ matrix.cppenv.os }}
       compiler: ${{ matrix.cppenv.compiler }}
-      cmake-version: 3.22.6
+      cmake-version: 3.24.0
       with-coverage: true
       with-sanitizer: false
       build-shared-libs: true

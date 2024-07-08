@@ -22,26 +22,14 @@ jobs:
 
     steps:
       - name: Add Repos for for gcc-13 and clang-16,17
-        run: |
-          # gcc-13
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-
-          source /etc/os-release
-
-          # clang-16
-          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-16 main" | sudo tee /etc/apt/sources.list.d/llvm-16.list
-
-          # clang-17
-          echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-17 main" | sudo tee /etc/apt/sources.list.d/llvm-17.list
-          
-          curl https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/llvm.gpg > /dev/null
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@main
 
       - name: Ensure stdlib version
         run: |
-          sudo apt install libstdc++-13-dev -y
+          sudo apt install libstdc++-13-dev jq -y
 
       - name: Get minimum cmake version
-        uses: lukka/get-cmake@v3.24.3
+        uses: lukka/get-cmake@v3.29.3
         with:
           cmakeVersion: ${{ inputs.cmake-version }}
 
@@ -55,19 +43,20 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@main
+        with:
+          conan-version: 2.3.1
+
+      - name: add conan user
         run: |
-          pip3 install conan==1.62.0
-          conan user
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
           conan remote add -f dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 
       - name: Cache conan data
         id: cache-conan
-        uses: actions/cache@v3
+        uses: actions/cache@v4.0.2
         with:
-          path: ~/.conan/data
-          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan
+          path: ~/.conan2/p
+          key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2
 
       - name: Check out sources
         uses: actions/checkout@v3
@@ -78,5 +67,8 @@ jobs:
           CXX: ${{ steps.install_cc.outputs.cxx }}
         run: |
           # build and test package
-          conan create . $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing -pr:b=default --build missing -o boost:header_only=True
-          conan remove -f $(conan inspect . --raw name)/$(conan inspect . --raw version)@ci/testing
+          pkg_name=$(conan inspect --format json . | jq -r '.name')
+          pkg_ver=$(conan inspect --format json . | jq -r '.version')
+          
+          conan create . --name "${pkg_name}" --version "${pkg_ver}" --user ci --channel testing -pr:b=default --build missing -o boost/*:header_only=True
+          conan remove -c "${pkg_name}/*"
