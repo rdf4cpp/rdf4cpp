@@ -15,7 +15,7 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
         s = s.substr(1);
     }
     if (s[0] != 'P')
-        throw InvalidNode{"duration missing P"};
+        throw InvalidNode{std::format("{} parsing error: duration missing P", identifier)};
     s = s.substr(1);
     auto years = parse_duration_fragment<std::chrono::years, uint64_t, 'Y', identifier>(s);
     auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M', identifier>(s);
@@ -24,10 +24,11 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
         m += *years;
     if (months.has_value())
         m += *months;
-    if (!s.empty())
-        throw InvalidNode{"expected end of string"};
+    if (!s.empty()) {
+        throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, s)};
+    }
     if (!years.has_value() && !months.has_value()) {
-        throw InvalidNode{"duration without any fields"};
+        throw InvalidNode{std::format("{} parsing error: duration without any fields", identifier)};
     }
     if (negative) {
         m = -m;

@@ -9,17 +9,17 @@ template<>
 capabilities::Default<xsd_gMonthDay>::cpp_type capabilities::Default<xsd_gMonthDay>::from_string(std::string_view s) {
     using namespace registry::util;
     if (!s.starts_with("--")) {
-        throw InvalidNode{"gMonth prefix missing"};
+        throw InvalidNode{std::format("{} parsing error: gMonth prefix missing", identifier)};
     }
 
     s.remove_prefix(2);
 
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '-', identifier>(s);
-    auto tz = rdf4cpp::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = month / day;
     if (!date.ok()) {
-        throw InvalidNode("invalid date");
+        throw InvalidNode(std::format("{} parsing error: {:%m-%d} is invalid", identifier, date));
     }
 
     return std::make_pair(date, tz);

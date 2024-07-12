@@ -32,7 +32,7 @@ struct Timezone {
 
     constexpr auto operator<=>(const Timezone &) const noexcept = default;
 
-    static constexpr Timezone parse(std::string_view v) {
+    static constexpr Timezone parse(std::string_view v, std::string_view dt) {
         Timezone tz{};
         if (v == "Z")
             return tz;
@@ -43,22 +43,22 @@ struct Timezone {
         v = v.substr(1);
         auto sep = v.find(':');
         if (sep == std::string::npos)
-            throw std::runtime_error{"timezone missing :"};
+            throw InvalidNode{std::format("{} parsing error: timezone expected :", dt)};
         std::chrono::hours h{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(0, sep))};
         tz.offset = std::chrono::minutes{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(sep + 1))} + std::chrono::minutes{h};
         if (negative)
             tz.offset *= -1;
         if (tz.offset.count() < -840 || tz.offset.count() > 840)
-            throw std::runtime_error{"timezone offset too big"};
+            throw InvalidNode{std::format("{} parsing error: timezone offset too big", dt)};
         return tz;
     }
 
-    static constexpr std::optional<Timezone> parse_optional(std::string_view &s) {
+    static constexpr std::optional<Timezone> parse_optional(std::string_view &s, std::string_view dt) {
         auto p = s.find_first_of(begin_tokens, 1);
         if (p == 0 || p == std::string::npos)
             return std::nullopt;
         auto pre = s.substr(0, p);
-        auto tz = parse(s.substr(p));
+        auto tz = parse(s.substr(p), dt);
         s = pre;
         return tz;
     }

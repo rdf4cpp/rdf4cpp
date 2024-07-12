@@ -9,15 +9,15 @@ template<>
 capabilities::Default<xsd_gDay>::cpp_type capabilities::Default<xsd_gDay>::from_string(std::string_view s) {
     using namespace registry::util;
     if (!s.starts_with("---")) {
-        throw InvalidNode{"missing gDay prexfix"};
+        throw InvalidNode{std::format("{} parsing error: missing gDay prexfix", identifier)};
     }
 
     s.remove_prefix(3);
 
-    auto tz = rdf4cpp::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     if (!day.ok()) {
-        throw InvalidNode("invalid day");
+        throw InvalidNode(std::format("{} parsing error: {:%d} is invalid", identifier, day));
     }
 
     return std::make_pair(day, tz);

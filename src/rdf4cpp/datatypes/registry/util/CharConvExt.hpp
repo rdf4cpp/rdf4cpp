@@ -63,14 +63,25 @@ F from_chars(std::string_view s) {
 
     if (res.ec != std::errc{}) {
         if (res.ec == std::errc::invalid_argument) {
-            throw rdf4cpp::InvalidNode{std::format("{} parsing error: literal is empty", datatype)};
+            bool neg = true;
+            if constexpr(!std::unsigned_integral<F>) {
+                neg = *res.ptr != '-';
+            }
+            if(res.ptr != s.data() + s.size() && neg) {
+                // fallthrough to data check
+            }
+            else {
+                throw rdf4cpp::InvalidNode{std::format("{} parsing error: literal is empty", datatype)};
+            }
         }
-        if (res.ec == std::errc::result_out_of_range) {
+        else if (res.ec == std::errc::result_out_of_range) {
             throw rdf4cpp::InvalidNode{std::format("{} parsing error: {} is out of range", datatype, s)};
         }
-        throw rdf4cpp::InvalidNode{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
+        else {
+            throw rdf4cpp::InvalidNode{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
+        }
     }
-    else if(res.ptr != s.data() + s.size()) {
+    if(res.ptr != s.data() + s.size()) {
         // parsing did not reach end of string => it contains invalid characters
         throw rdf4cpp::InvalidNode{std::format("{} parsing error: found {}, invalid for datatype", datatype, *res.ptr)};
     }
