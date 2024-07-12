@@ -193,6 +193,15 @@ static bool erase_impl(Storage &storage, identifier::NodeBackendID const id) {
 }
 
 bool SyncReferenceNodeStorage::erase_iri(identifier::NodeBackendID const id) {
+    // check predefined IRIs
+    auto id_to_remove = id.node_id();
+    for (const auto &[iri, literal_type] : datatypes::registry::reserved_datatype_ids) {
+        auto const id_cmp = identifier::NodeID{literal_type.to_underlying()};
+        if (id_to_remove == id_cmp) {
+            return false;
+        }
+    }
+
     return erase_impl(iri_storage_, id);
 }
 
