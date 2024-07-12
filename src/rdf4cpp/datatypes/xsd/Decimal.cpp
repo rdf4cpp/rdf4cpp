@@ -12,13 +12,6 @@ namespace rdf4cpp::datatypes::registry {
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_decimal>::cpp_type capabilities::Default<xsd_decimal>::from_string(std::string_view s) {
-    // https://www.w3.org/TR/xmlschema11-2/#decimal
-    static std::regex const decimal_regex{R"#((\+|-)?([0-9]+(\.[0-9]*)?|\.[0-9]+))#", std::regex_constants::optimize};
-
-    if (!std::regex_match(s.begin(), s.end(), decimal_regex)) {
-        throw InvalidNode{"XSD Parsing Error"};
-    }
-
     if (s.starts_with('+')) {
         s.remove_prefix(1);
     }

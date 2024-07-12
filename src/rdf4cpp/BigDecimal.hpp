@@ -141,20 +141,20 @@ public:
             }
             if (c == '.') {
                 if (decimal)
-                    throw InvalidNode{"more than one . found"};
+                    throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: more than one . found"};
                 decimal = true;
                 continue;
             }
             if (c < '0' || c > '9')
-                throw InvalidNode{"non-numeric char found"};
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found"};
             auto n = c - '0';
             if (mul_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{base}, unscaled_value))
-                throw InvalidNode{"ctor unscaled_value overflow"};
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: unscaled_value overflow"};
             if (add_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{n}, unscaled_value))
-                throw InvalidNode{"ctor unscaled_value overflow"};
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: unscaled_value overflow"};
             if (decimal) {
                 if (add_checked<OverflowMode::Checked>(exponent, Exponent_t{1}, exponent))
-                    throw InvalidNode{"ctor exponent overflow"};
+                    throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: exponent overflow"};
             }
         }
         if (unscaled_value == 0)
