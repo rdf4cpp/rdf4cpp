@@ -17,10 +17,12 @@ class Recipe(ConanFile):
     options = {
         "shared": [True, False],
         "fPIC": [True, False],
+        "with_test_deps": [True, False],
     }
     default_options = {
         "shared": False,
         "fPIC": True,
+        "with_test_deps": False,
     }
     exports = "LICENSE",
     exports_sources = "src/*", "private/*", "CMakeLists.txt", "cmake/*"
@@ -37,8 +39,9 @@ class Recipe(ConanFile):
         self.requires("dice-sparse-map/0.2.6", transitive_headers=True)
         self.requires("dice-template-library/1.5.1", transitive_headers=True)
 
-        self.test_requires("doctest/2.4.11")
-        self.test_requires("nanobench/4.3.11")
+        if self.options.with_test_deps:
+            self.test_requires("doctest/2.4.11")
+            self.test_requires("nanobench/4.3.11")
 
     def set_name(self):
         if not hasattr(self, 'name') or self.version is None:
