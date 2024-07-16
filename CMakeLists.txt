@@ -4,6 +4,14 @@ project(rdf4cpp VERSION 0.0.35)
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
+if (PROJECT_IS_TOP_LEVEL)
+    set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=boost/*:header_only=True")
+
+    if (BUILD_TESTING)
+        set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=&:with_test_deps=True")
+    endif ()
+endif ()
+
 # find packages
 find_package(expected-lite REQUIRED)
 find_package(Boost REQUIRED)
