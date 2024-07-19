@@ -53,7 +53,7 @@ F from_chars(std::string_view s) {
     }
 
     F value;
-    std::from_chars_result res = [&]() {
+    std::from_chars_result res = [&]() noexcept {
         if constexpr (std::floating_point<F>) {
             return std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
         } else {
@@ -67,17 +67,15 @@ F from_chars(std::string_view s) {
             if constexpr(!std::unsigned_integral<F>) {
                 neg = *res.ptr != '-';
             }
-            if(res.ptr != s.data() + s.size() && neg) {
+
+            if (res.ptr != s.data() + s.size() && neg) {
                 // fallthrough to data check
-            }
-            else {
+            } else {
                 throw rdf4cpp::InvalidNode{std::format("{} parsing error: literal is empty", datatype)};
             }
-        }
-        else if (res.ec == std::errc::result_out_of_range) {
+        } else if (res.ec == std::errc::result_out_of_range) {
             throw rdf4cpp::InvalidNode{std::format("{} parsing error: {} is out of range", datatype, s)};
-        }
-        else {
+        } else {
             throw rdf4cpp::InvalidNode{std::format("{} parsing error: {}", datatype, std::make_error_code(res.ec).message())};
         }
     }

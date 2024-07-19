@@ -16,25 +16,30 @@ capabilities::Default<xsd_dateTime>::cpp_type capabilities::Default<xsd_dateTime
     auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     std::chrono::milliseconds ms = parse_milliseconds<identifier>(s);
     auto date = year / month / day;
-    if (registry::relaxed_parsing_mode && !date.ok())
+    if (registry::relaxed_parsing_mode && !date.ok()) {
         date = normalize(date);
+    }
     if (!date.ok()) {
         throw InvalidNode(std::format("{} parsing error: {:%Y-%m-%d} is invalid", identifier, date));
     }
     if (!registry::relaxed_parsing_mode) {
-        if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1))
+        if (minutes < std::chrono::minutes(0) || minutes > std::chrono::hours(1)) {
             throw InvalidNode(std::format("{} parsing error: minutes out of range", identifier));
-        if (hours < std::chrono::hours(0) || hours > std::chrono::days(1))
+        }
+        if (hours < std::chrono::hours(0) || hours > std::chrono::days(1)) {
             throw InvalidNode(std::format("{} parsing error: hours out of range", identifier));
-        if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1))
+        }
+        if (ms < std::chrono::seconds(0) || ms > std::chrono::minutes(1)) {
             throw InvalidNode(std::format("{} parsing error: seconds out of range", identifier));
+        }
     }
     auto time = hours + minutes + ms;
     if (!registry::relaxed_parsing_mode) {
         if (time == std::chrono::hours{24}) {
             date = std::chrono::year_month_day{std::chrono::local_days{date} + std::chrono::days{1}};
-            if (!date.ok())
+            if (!date.ok()) {
                 throw InvalidNode(std::format("{} parsing error: {:%Y-%m-%d} is invalid", identifier, date));
+            }
             time = std::chrono::hours{0};
         } else if (time > std::chrono::hours{24}) {
             throw InvalidNode(std::format("{} parsing error: invalid time of day", identifier));

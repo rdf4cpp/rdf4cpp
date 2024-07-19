@@ -13,8 +13,9 @@ capabilities::Default<xsd_date>::cpp_type capabilities::Default<xsd_date>::from_
     auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     auto day = parse_date_time_fragment<std::chrono::day, unsigned int, '\0', identifier>(s);
     auto date = year / month / day;
-    if (registry::relaxed_parsing_mode && !date.ok())
+    if (registry::relaxed_parsing_mode && !date.ok()) {
         date = normalize(date);
+    }
     if (!date.ok()) {
         throw InvalidNode(std::format("{} parsing error: {:%Y-%m-%d} is invalid", identifier, date));
     }

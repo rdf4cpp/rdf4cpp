@@ -34,22 +34,26 @@ struct Timezone {
 
     static constexpr Timezone parse(std::string_view v, std::string_view dt) {
         Timezone tz{};
-        if (v == "Z")
+        if (v == "Z") {
             return tz;
+        }
         bool negative = false;
         if (v[0] == '-') {
             negative = true;
         }
         v = v.substr(1);
         auto sep = v.find(':');
-        if (sep == std::string::npos)
+        if (sep == std::string::npos) {
             throw InvalidNode{std::format("{} parsing error: timezone expected :", dt)};
+        }
         std::chrono::hours h{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(0, sep))};
         tz.offset = std::chrono::minutes{datatypes::registry::util::from_chars<int32_t, "timezone">(v.substr(sep + 1))} + std::chrono::minutes{h};
-        if (negative)
+        if (negative) {
             tz.offset *= -1;
-        if (tz.offset.count() < -840 || tz.offset.count() > 840)
+        }
+        if (tz.offset.count() < -840 || tz.offset.count() > 840) {
             throw InvalidNode{std::format("{} parsing error: timezone offset too big", dt)};
+        }
         return tz;
     }
 

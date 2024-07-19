@@ -14,16 +14,19 @@ capabilities::Default<xsd_yearMonthDuration>::cpp_type capabilities::Default<xsd
         negative = true;
         s = s.substr(1);
     }
-    if (s[0] != 'P')
+    if (s[0] != 'P') {
         throw InvalidNode{std::format("{} parsing error: duration missing P", identifier)};
+    }
     s = s.substr(1);
     auto years = parse_duration_fragment<std::chrono::years, uint64_t, 'Y', identifier>(s);
     auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M', identifier>(s);
     std::chrono::months m{};
-    if (years.has_value())
+    if (years.has_value()) {
         m += *years;
-    if (months.has_value())
+    }
+    if (months.has_value()) {
         m += *months;
+    }
     if (!s.empty()) {
         throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, s)};
     }
