@@ -167,6 +167,11 @@ static bool erase_impl(Storage &storage, identifier::NodeBackendID const id) {
 }
 
 bool UnsyncReferenceNodeStorage::erase_iri(identifier::NodeBackendID const id) {
+    // check predefined IRIs
+    if (identifier::iri_node_id_to_literal_type(id).is_fixed()) {
+        return false;
+    }
+
     return erase_impl(iri_storage_, id);
 }
 

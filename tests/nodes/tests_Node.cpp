@@ -287,3 +287,21 @@ TEST_CASE("BlankNode validity") {
     CHECK(BlankNode::make("\U0001f34cthrow_some_unicode_at_it\U0001f34c").identifier() == "\U0001f34cthrow_some_unicode_at_it\U0001f34c");
     CHECK(n == BlankNode{});
 }
+
+TEST_CASE_TEMPLATE("NodeStorage erase IRI", T, reference_node_storage::SyncReferenceNodeStorage, reference_node_storage::UnsyncReferenceNodeStorage) {
+    static constexpr std::string_view example = "https://example.com";
+    T ns{};
+
+    // normal erase
+    IRI i = IRI::make(example);
+    CHECK(i.try_get_in_node_storage(ns) == IRI());
+    CHECK(i.to_node_storage(ns) != IRI());
+    CHECK(i.try_get_in_node_storage(ns) != IRI());
+    CHECK(ns.erase_iri(i.try_get_in_node_storage(ns).backend_handle().id()));
+    CHECK(i.try_get_in_node_storage(ns) == IRI());
+
+    // try erase predefined
+    CHECK(IRI::find(rdf4cpp::datatypes::xsd::Int::identifier, ns) != IRI());
+    CHECK(!ns.erase_iri(IRI::find(rdf4cpp::datatypes::xsd::Int::identifier, ns).backend_handle().id()));
+    CHECK(IRI::find(rdf4cpp::datatypes::xsd::Int::identifier, ns) != IRI());
+}
