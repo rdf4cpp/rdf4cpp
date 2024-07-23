@@ -38,7 +38,7 @@ static constexpr std::array<uint8_t, 128> decode_lut{
 static uint8_t hex_decode(char const ch) {
     auto const decoded = decode_lut[static_cast<size_t>(ch)];
     if (decoded == 127) {
-        throw InvalidNode{"xsd:binaryHex parsing error: invalid digit"};
+        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#hexBinary parsing error: invalid digit"};
     }
 
     return decoded;

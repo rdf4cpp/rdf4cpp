@@ -16,7 +16,7 @@ capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_integer>:
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"xsd:integer parsing error: "} + e.what()};
+        throw InvalidNode{std::string{"http://www.w3.org/2001/XMLSchema#integer parsing error: "} + e.what()};
     }
 }
 
