@@ -18,21 +18,46 @@ concept format_has_prefix = (F == OutputFormat::Turtle || F == OutputFormat::Tri
 
 using namespace rdf4cpp;
 
-TEST_CASE("Literal short type") {
+TEST_CASE("Literal short form and prefixed") {
     std::string buf;
     writer::StringWriter ser{buf};
-    Literal::make_typed<datatypes::xsd::Date>("2042-5-4").serialize_short_form(ser);
-    writer::write_str("\n", ser);
-    Literal::make_typed<datatypes::xsd::Boolean>("true").serialize_short_form(ser);
-    writer::write_str("\n", ser);
-    Literal::make_typed<datatypes::xsd::Float>("4").serialize_short_form(ser);
-    writer::write_str("\n", ser);
-    Literal::make_typed<datatypes::xsd::UnsignedByte>("4").serialize_short_form(ser);
-    writer::write_str("\n", ser);
-    Literal::make_typed<datatypes::xsd::Integer>("4").serialize_short_form(ser);
+    Literal::make_typed<datatypes::xsd::Date>("2042-5-4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Boolean>("true").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Decimal>("4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Double>("4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Float>("4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::UnsignedByte>("4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Integer>("4").serialize(ser, NodeSerializationOpts::prefixed_and_short_form());
     ser.finalize();
 
-    CHECK_EQ(buf, "\"2042-05-04\"^^xsd:date\ntrue\n\"4.0E0\"^^xsd:float\n\"4\"^^xsd:unsignedByte\n4");
+    CHECK_EQ(buf, R"("2042-05-04"^^xsd:date,true,4.0,4.0E0,"4.0E0"^^xsd:float,"4"^^xsd:unsignedByte,4)");
+}
+
+TEST_CASE("Literal short form") {
+    std::string buf;
+    writer::StringWriter ser{buf};
+    Literal::make_typed<datatypes::xsd::Date>("2042-5-4").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Boolean>("true").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Decimal>("4").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Double>("4").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Float>("4").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::UnsignedByte>("4").serialize(ser, NodeSerializationOpts::short_form());
+    writer::write_str(",", ser);
+    Literal::make_typed<datatypes::xsd::Integer>("4").serialize(ser, NodeSerializationOpts::short_form());
+    ser.finalize();
+
+    CHECK_EQ(buf, R"("2042-05-04"^^<http://www.w3.org/2001/XMLSchema#date>,true,4.0,4.0E0,"4.0E0"^^<http://www.w3.org/2001/XMLSchema#float>,"4"^^<http://www.w3.org/2001/XMLSchema#unsignedByte>,4)");
 }
 
 template<OutputFormat F>

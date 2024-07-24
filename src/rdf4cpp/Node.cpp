@@ -57,7 +57,7 @@ Node Node::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) cons
     }
 }
 
-bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
+bool Node::serialize(writer::BufWriterParts const writer, NodeSerializationOpts opts) const noexcept {
     if (null()) {
         return rdf4cpp::writer::write_str("null", writer);
     }
@@ -73,27 +73,7 @@ bool Node::serialize(writer::BufWriterParts const writer) const noexcept {
             return BlankNode{handle_}.serialize(writer);
         }
         case storage::identifier::RDFNodeType::Literal: {
-            return Literal{handle_}.serialize(writer);
-        }
-        default: {
-            assert(false);
-            __builtin_unreachable();
-        }
-    }
-}
-bool Node::serialize_short_form(writer::BufWriterParts const writer) const noexcept {
-    switch (handle_.type()) {
-        [[likely]] case storage::identifier::RDFNodeType::IRI: {
-            return IRI{handle_}.serialize(writer);
-        }
-        case storage::identifier::RDFNodeType::Variable: {
-            return query::Variable{handle_}.serialize(writer);
-        }
-        case storage::identifier::RDFNodeType::BNode: {
-            return BlankNode{handle_}.serialize(writer);
-        }
-        case storage::identifier::RDFNodeType::Literal: {
-            return Literal{handle_}.serialize_short_form(writer);
+            return Literal{handle_}.serialize(writer, opts);
         }
         default: {
             assert(false);
