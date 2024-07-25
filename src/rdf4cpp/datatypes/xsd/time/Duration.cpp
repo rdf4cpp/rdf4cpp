@@ -14,8 +14,9 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
         negative = true;
         s = s.substr(1);
     }
-    if (s.empty() || s[0] != 'P')
-        throw InvalidNode{"duration missing P"};
+    if (s.empty() || s[0] != 'P') {
+        throw InvalidNode{std::format("{} parsing error: duration missing P", identifier)};
+    }
     s = s.substr(1);
     auto p = s.find('T');
     auto date = s.substr(0, p);
@@ -24,8 +25,9 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
     auto months = parse_duration_fragment<std::chrono::months, uint64_t, 'M', identifier>(date);
     auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D', identifier>(date);
     if (!time.empty()) {
-        if (time[0] != 'T')
-            throw InvalidNode{"duration missing T"};
+        if (time[0] != 'T') {
+            throw InvalidNode{std::format("{} parsing error: duration missing T", identifier)};
+        }
         time = time.substr(1);
     }
     auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H', identifier>(time);
@@ -33,24 +35,34 @@ capabilities::Default<xsd_duration>::cpp_type capabilities::Default<xsd_duration
     auto seconds = parse_duration_milliseconds<identifier>(time);
 
     std::chrono::months m{};
-    if (years.has_value())
+    if (years.has_value()) {
         m += *years;
-    if (months.has_value())
-        m += *months;
-    std::chrono::milliseconds ms{};
-    if (days.has_value())
-        ms += *days;
-    if (!date.empty() || !time.empty())
-        throw InvalidNode{"expected end of string"};
-    if (!years.has_value() && !months.has_value() && !days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
-        throw InvalidNode{"duration without any fields"};
     }
-    if (hours.has_value())
+    if (months.has_value()) {
+        m += *months;
+    }
+    std::chrono::milliseconds ms{};
+    if (days.has_value()) {
+        ms += *days;
+    }
+    if (!date.empty()) {
+        throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, date)};
+    }
+    if (!time.empty()) {
+        throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, time)};
+    }
+    if (!years.has_value() && !months.has_value() && !days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
+        throw InvalidNode{std::format("{} parsing error: duration without any fields", identifier)};
+    }
+    if (hours.has_value()) {
         ms += *hours;
-    if (minutes.has_value())
+    }
+    if (minutes.has_value()) {
         ms += *minutes;
-    if (seconds.has_value())
+    }
+    if (seconds.has_value()) {
         ms += *seconds;
+    }
     if (negative) {
         m = -m;
         ms = -ms;

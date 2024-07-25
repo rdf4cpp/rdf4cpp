@@ -20,18 +20,18 @@ template<>
 capabilities::Default<owl_rational>::cpp_type capabilities::Default<owl_rational>::from_string(std::string_view s) {
     if (auto pos = s.find_last_of('-'); pos != std::string_view::npos && pos != 0) {
         // owl:rational only allows - at beginning, boost also allows it in the denominator
-        throw InvalidNode{"owl:rational parsing error: invalid sign position"};
+        throw InvalidNode{std::format("{} parsing error: invalid sign position", identifier)};
     }
 
     if (s.find_first_not_of("0123456789/-") != std::string_view::npos) {
         // owl:rational does not allow hex, boost does
-        throw InvalidNode{"owl:rational parsing error: invalid character in string"};
+        throw InvalidNode{std::format("{} parsing error: invalid character in string", identifier)};
     }
 
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"owl:rational parsing error: "} + e.what()};
+        throw InvalidNode{std::format("{} parsing error: {}", identifier, e.what())};
     }
 }
 

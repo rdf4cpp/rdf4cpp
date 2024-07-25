@@ -14,16 +14,18 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
         negative = true;
         s = s.substr(1);
     }
-    if (s.empty() || s[0] != 'P')
-        throw InvalidNode{"duration missing P"};
+    if (s.empty() || s[0] != 'P') {
+        throw InvalidNode{std::format("{} parsing error: duration missing P", identifier)};
+    }
     s = s.substr(1);
     auto p = s.find('T');
     auto date = s.substr(0, p);
     auto time = p == std::string::npos ? std::string_view{""} : s.substr(p);
     auto days = parse_duration_fragment<std::chrono::days, uint64_t, 'D', identifier>(date);
     if (!time.empty()) {
-        if (time[0] != 'T')
-            throw InvalidNode{"duration missing T"};
+        if (time[0] != 'T') {
+            throw InvalidNode{std::format("{} parsing error: duration missing T", identifier)};
+        }
         time = time.substr(1);
     }
     auto hours = parse_duration_fragment<std::chrono::hours, uint64_t, 'H', identifier>(time);
@@ -31,19 +33,27 @@ capabilities::Default<xsd_dayTimeDuration>::cpp_type capabilities::Default<xsd_d
     auto seconds = parse_duration_milliseconds<identifier>(time);
 
     std::chrono::milliseconds ms{};
-    if (days.has_value())
+    if (days.has_value()) {
         ms += *days;
-    if (!date.empty() || !time.empty())
-        throw InvalidNode{"expected end of string"};
-    if (!days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
-        throw InvalidNode{"duration without any fields"};
     }
-    if (hours.has_value())
+    if (!date.empty()) {
+        throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, date)};
+    }
+    if (!time.empty()) {
+        throw InvalidNode{std::format("{} parsing error: found {}, expected empty", identifier, time)};
+    }
+    if (!days.has_value() && !hours.has_value() && !minutes.has_value() && !seconds.has_value()) {
+        throw InvalidNode{std::format("{} parsing error: duration without any fields", identifier)};
+    }
+    if (hours.has_value()) {
         ms += *hours;
-    if (minutes.has_value())
+    }
+    if (minutes.has_value()) {
         ms += *minutes;
-    if (seconds.has_value())
+    }
+    if (seconds.has_value()) {
         ms += *seconds;
+    }
     if (negative) {
         ms = -ms;
     }

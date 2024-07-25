@@ -60,7 +60,7 @@ static std::array<char, 4> base64_encode(std::byte const h1, std::byte const h2,
 static uint8_t base64_decode_single(char const c) {
     auto const decoded = decode_lut[static_cast<size_t>(c)];
     if (decoded == 127) {
-        throw InvalidNode{"xsd:base64Binary parsing error: invalid digit"};
+        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: invalid digit"};
     }
 
     return decoded;
@@ -100,15 +100,15 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
 
     size_t const len = std::count_if(base64encoded.begin(), base64encoded.end(), [](auto const ch) noexcept { return ch != ' '; });
     if (len % 4 != 0) {
-        throw InvalidNode{"xsd:base64Binary parsing error: Invalid number of digits."};
+        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: Invalid number of digits."};
     }
 
     if (base64encoded.starts_with(' ')) {
-        throw InvalidNode{"xsd:base64Binary parsing error: Stray space at start of encoded string"};
+        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: Stray space at start of encoded string"};
     }
 
     if (base64encoded.ends_with(' ')) {
-        throw InvalidNode{"xsd:base64Binary parsing error: Stray space at end of encoded string"};
+        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: Stray space at end of encoded string"};
     }
 
     auto next_char = [&, pos = size_t{0}]() mutable {
@@ -121,7 +121,7 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
         }
 
         if (pos - old_pos > 2) {
-            throw InvalidNode{"xsd:base64Binary parsing error: too many consecutive spaces"};
+            throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: too many consecutive spaces"};
         }
 
         return ch;
@@ -150,7 +150,7 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
         auto const c4_pad = c4 == '=';
 
         if (c3_pad && !c4_pad) {
-            throw InvalidNode{"xsd:binary64 parsing error: Invalid padding"};
+            throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: Invalid padding"};
         }
 
         size_t const n = c3_pad + c4_pad;

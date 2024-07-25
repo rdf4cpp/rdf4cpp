@@ -9,11 +9,11 @@ template<>
 capabilities::Default<xsd_gYearMonth>::cpp_type capabilities::Default<xsd_gYearMonth>::from_string(std::string_view s) {
     using namespace registry::util;
     auto year = parse_date_time_fragment<std::chrono::year, int, '-', identifier>(s);
-    auto tz = rdf4cpp::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     auto month = parse_date_time_fragment<std::chrono::month, unsigned int, '\0', identifier>(s);
     auto date = year / month;
     if (!date.ok()) {
-        throw InvalidNode("invalid date");
+        throw InvalidNode(std::format("{} parsing error: {:%Y-%m} is invalid", identifier, date));
     }
 
     return std::make_pair(date, tz);
