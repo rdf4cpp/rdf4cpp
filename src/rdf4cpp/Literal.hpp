@@ -872,12 +872,7 @@ public:
     /**
      * See Node::serialize
      */
-    bool serialize(writer::BufWriterParts writer) const noexcept;
-
-    /**
-     * See Node::serialize_short_form
-     */
-    bool serialize_short_form(writer::BufWriterParts writer) const noexcept;
+    bool serialize(writer::BufWriterParts writer, NodeSerializationOpts opts = NodeSerializationOpts::long_form()) const noexcept;
 
     /**
      * Serializes this Literal's canonical lexical form into the decomposed writer

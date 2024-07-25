@@ -51,11 +51,10 @@ static constexpr auto type_iri_buffer = make_type_iri_buf<1 << storage::identifi
 } // namespace detail
 
 // will only get called with fixed ids
-template<bool short_form>
-static bool write_fixed_type_iri(datatypes::registry::LiteralType t, writer::BufWriterParts const writer) noexcept {
+inline bool write_fixed_type_iri(datatypes::registry::LiteralType t, BufWriterParts const writer, bool use_prefixes) noexcept {
     assert(t.is_fixed());
 
-    if constexpr (short_form) {
+    if (use_prefixes) {
         auto const &p = detail::type_iri_buffer[t.to_underlying()];
         if (!p.empty()) {
             return write_str(p, writer);
