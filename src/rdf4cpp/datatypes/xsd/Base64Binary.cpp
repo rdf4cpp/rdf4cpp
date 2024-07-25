@@ -150,7 +150,7 @@ Base64BinaryRepr Base64BinaryRepr::from_encoded(std::string_view const base64enc
         auto const c4_pad = c4 == '=';
 
         if (c3_pad && !c4_pad) {
-            throw InvalidNode{"xsd:binary64 parsing error: Invalid padding"};
+            throw InvalidNode{"http://www.w3.org/2001/XMLSchema#base64Binary parsing error: Invalid padding"};
         }
 
         size_t const n = c3_pad + c4_pad;

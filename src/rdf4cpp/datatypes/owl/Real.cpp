@@ -9,7 +9,7 @@ capabilities::Default<owl_real>::cpp_type capabilities::Default<owl_real>::from_
     try {
         return cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"http://www.w3.org/2002/07/owl#real parsing error: "} + e.what()};
+        throw InvalidNode{std::format("{} parsing error: {}", identifier, e.what())};
     }
 }
 

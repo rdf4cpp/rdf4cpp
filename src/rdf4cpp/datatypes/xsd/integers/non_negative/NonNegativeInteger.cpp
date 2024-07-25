@@ -14,11 +14,11 @@ capabilities::Default<xsd_non_negative_integer>::cpp_type capabilities::Default<
     try {
         ret = cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"http://www.w3.org/2001/XMLSchema#nonNegativeInteger parsing error: "} + e.what()};
+        throw InvalidNode{std::format("{} parsing error: {}", identifier, e.what())};
     }
 
     if (ret < 0) {
-        throw InvalidNode{"http://www.w3.org/2001/XMLSchema#nonNegativeInteger parsing error: found negative value"};
+        throw InvalidNode{std::format("{} parsing error: found negative value", identifier)};
     }
 
     return ret;
