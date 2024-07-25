@@ -23,7 +23,7 @@ struct Variable;
  */
 struct NodeSerializationOpts {
     bool use_short_form; ///< use the short form of the literals, for example: if this option is true "1"^^xsd:integer serializes to 1
-    bool use_prefixes;   ///< use prefixes for known datatypes, for example: if this option is true "1"^^xsd:byte serializes to "1"^^xsd:byte
+    bool use_prefixes;   ///< use prefixes for fixed datatypes (by default all registered xsd and rdf datatypes), for example: if this option is true "1"^^xsd:byte serializes to "1"^^xsd:byte
 
     /**
      * Do not use short forms and do not use prefixes. This is used in N-Triples for example.
