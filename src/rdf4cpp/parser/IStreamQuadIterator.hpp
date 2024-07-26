@@ -24,16 +24,18 @@ namespace rdf4cpp::parser {
  * @param count number of elements to read
  * @param stream pointer to any object.
  * @return number of elements read
+ * @note should not throw exceptions, but is not noexcept so you can easily use c functions
  */
-using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream) noexcept;
+using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream);
 
 /**
  * Identical semantics to ferror.
  *
  * @param stream pointer to any object
  * @return nonzero value if there is an error in stream, zero value otherwise
+ * @note should not throw exceptions, but is not noexcept so you can easily use c functions
  */
-using ErrorFunc = int (*)(void *stream) noexcept;
+using ErrorFunc = int (*)(void *stream);
 
 /**
  * Similar to std::istream_iterator<>.
@@ -87,7 +89,6 @@ public:
      * @param initial_state optionally specifies the initial state of the parser,
      *          providing nullptr as the initial state results in the parser creating its own,fresh state
      *          instead of writing to the provided state.
-     * @param node_storage where to place the resulting nodes
      */
     IStreamQuadIterator(void *stream,
                         ReadFunc read,

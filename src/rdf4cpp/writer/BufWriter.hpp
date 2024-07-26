@@ -12,38 +12,6 @@
 namespace rdf4cpp::writer {
 
 /**
- * A cursor into a buffer
- * Describes remaining length (size()) and current write head (data())
- *
- * Memory layout is guaranteed to be identical to:
- * @code
- * struct Cursor {
- *      char *data;
- *      size_t size;
- * };
- * @endcode
- */
-struct Cursor {
-private:
-    char *data_ = nullptr;
-    size_t size_ = 0;
-
-public:
-    [[nodiscard]] constexpr char *data() const noexcept { return data_; }
-    [[nodiscard]] constexpr size_t size() const noexcept { return size_; }
-
-    constexpr void advance(size_t n) noexcept {
-        data_ += n;
-        size_ -= n;
-    }
-
-    constexpr void repoint(char *new_data, size_t new_size) noexcept {
-        data_ = new_data;
-        size_ = new_size;
-    }
-};
-
-/**
  * A type that can be used for buffered output.
  * To write bytes to a BufWriter use write_str(std::string_view, BufWriter &w) below.
  *
@@ -67,9 +35,14 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
     { bw.buffer() } -> std::same_as<typename W::Buffer &>;
 
     /**
-     * The cursor pointing inside of w.buffer()
+     * The cursor pointing to the free space/write area inside of w.buffer()
      */
-    { bw.cursor() } -> std::same_as<Cursor &>;
+    { bw.write_area() } -> std::same_as<char *&>;
+
+    /**
+     * The size of the free space/write area inside of w.buffer()
+     */
+    { bw.write_area_size() } -> std::same_as<size_t &>;
 
     /**
      * Triggers a final flush, needs to be called after you are done using this BufWriter
@@ -79,18 +52,20 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
     /**
      * Flushes bw.buffer() and repoints bw.cursor() to the new free space
      */
-    W::flush(&bw.buffer(), &bw.cursor(), additional_cap);
+    W::flush(&bw.buffer(), &bw.write_area(), &bw.write_area_size(), additional_cap);
 };
 
 /**
  * Flushes user defined data.
- * the functions task is it to somehow make room in buffer and point the cursor to that new, free space
+ * the functions task is it to somehow make room in buffer and point the cursor and remaining_size to that new, free space
  *
  * @param buffer buffer to make room in
- * @param cursor a pointer + size pair into buffer (pointing to the free space)
+ * @param write_area a pointer to the start of the free space, should be moved to the start of the new free space
+ * @param write_area_size the remaining size of the free space, should be set to the size of the new free space
  * @param additional_cap how much additional space is needed right now
+ * @note should not throw exceptions, but is not marked noexcept so that C functions can be easily used
  */
-using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) noexcept;
+using FlushFunc = void (*)(void *buffer, char **write_area, size_t *write_area_size, size_t additional_cap);
 
 /**
  * The fundamental parts of a BufWriter.
@@ -108,7 +83,8 @@ using FlushFunc = void (*)(void *buffer, Cursor *cursor, size_t additional_cap) 
  */
 struct BufWriterParts {
     void *buffer; //< pointer to arbitrary buffer structure
-    Cursor *cursor; //< cursor into buffer
+    char **write_area; //< pointer to free space
+    size_t *write_area_size; //< size of free space
     FlushFunc flush; //< function to flush the contents of buffer and update cursor to point to the new free space
 
     BufWriterParts() = delete;
@@ -120,13 +96,15 @@ struct BufWriterParts {
 
     template<BufWriter W>
     BufWriterParts(W &w) noexcept : buffer{&w.buffer()},
-                                    cursor{&w.cursor()},
+                                    write_area{&w.write_area()},
+                                    write_area_size{&w.write_area_size()},
                                     flush{&W::flush} {
     }
 
-    BufWriterParts(void *buffer, Cursor *cursor, FlushFunc flush) noexcept : buffer{buffer},
-                                                                             cursor{cursor},
-                                                                             flush{flush} {
+    BufWriterParts(void *buffer, char **cursor, size_t *remaining_size, FlushFunc flush) noexcept : buffer{buffer},
+                                                                                                    write_area{cursor},
+                                                                                                    write_area_size{remaining_size},
+                                                                                                    flush{flush} {
     }
 };
 
@@ -143,9 +121,10 @@ struct BufWriterParts {
  */
 inline bool write_str(std::string_view str, BufWriterParts const writer) noexcept {
     while (true) {
-        auto const max_write = std::min(str.size(), writer.cursor->size());
-        memcpy(writer.cursor->data(), str.data(), max_write);
-        writer.cursor->advance(max_write);
+        auto const max_write = std::min(str.size(), *writer.write_area_size);
+        memcpy(*writer.write_area, str.data(), max_write);
+        *writer.write_area += max_write;
+        *writer.write_area_size -= max_write;
 
         if (max_write == str.size()) [[likely]] {
             break;
@@ -153,7 +132,7 @@ inline bool write_str(std::string_view str, BufWriterParts const writer) noexcep
 
         str.remove_prefix(max_write);
 
-        if (writer.flush(writer.buffer, writer.cursor, str.size()); writer.cursor->size() == 0) [[unlikely]] {
+        if (writer.flush(writer.buffer, writer.write_area, writer.write_area_size, str.size()); *writer.write_area_size == 0) [[unlikely]] {
             return false;
         }
     }
@@ -171,21 +150,24 @@ template<typename CRTP, typename Buffer>
 struct BufWriterBase {
 private:
     Buffer buffer_;
-    Cursor cursor_;
+    char *write_area_ = nullptr;
+    size_t write_area_size_ = 0;
 
 public:
     template<typename ...BufferArgs>
     explicit constexpr BufWriterBase(BufferArgs &&...buffer_args) : buffer_{std::forward<BufferArgs>(buffer_args)...} {
     }
 
-    [[nodiscard]] constexpr Cursor &cursor() noexcept { return cursor_; }
+    [[nodiscard]] constexpr char *&write_area() noexcept { return write_area_; }
+    [[nodiscard]] constexpr size_t &write_area_size() noexcept { return write_area_size_; }
     [[nodiscard]] constexpr Buffer &buffer() noexcept { return buffer_; }
 
-    [[nodiscard]] constexpr Cursor const &cursor() const noexcept { return cursor_; }
+    [[nodiscard]] constexpr char *write_area() const noexcept { return write_area_; }
+    [[nodiscard]] constexpr size_t write_area_size() const noexcept { return write_area_size_; }
     [[nodiscard]] constexpr Buffer const &buffer() const noexcept { return buffer_; }
 
-    static void flush(void *buffer, Cursor *cursor, size_t additional_cap) noexcept {
-        CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), *cursor, additional_cap);
+    static void flush(void *buffer, char **write_area, size_t *write_area_size, size_t additional_cap) noexcept {
+        CRTP::flush_impl(*static_cast<typename CRTP::Buffer *>(buffer), *write_area, *write_area_size, additional_cap);
     }
 };
 
@@ -205,29 +187,30 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
     using Buffer = StringBuffer;
 
     constexpr StringWriter(std::string &buf) noexcept : BufWriterBase<StringWriter, StringBuffer>{buf} {
-        cursor().repoint(buffer().buffer_->data(),
-                         buffer().buffer_->size());
+        clear();
     }
 
     bool finalize() noexcept {
-        buffer().buffer_->resize(static_cast<size_t>(cursor().data() - buffer().buffer_->data()));
+        buffer().buffer_->resize(static_cast<size_t>(write_area() - buffer().buffer_->data()));
         return true;
     }
 
     [[nodiscard]] std::string_view view() const noexcept {
-        return std::string_view{buffer().buffer_->data(), static_cast<size_t>(cursor().data() - buffer().buffer_->data())};
+        return std::string_view{buffer().buffer_->data(), static_cast<size_t>(write_area() - buffer().buffer_->data())};
     }
 
     void clear() noexcept {
-        cursor().repoint(buffer().buffer_->data(), buffer().buffer_->size());
+        write_area() = buffer().buffer_->data();
+        write_area_size() = buffer().buffer_->size();
     }
 
-    static void flush_impl(Buffer &buffer, Cursor &cursor, size_t additional_cap) noexcept {
-        auto const bytes_filled = cursor.data() - buffer.buffer_->data();
+    static void flush_impl(Buffer &buffer, char *&write_area, size_t &write_area_size, size_t additional_cap) noexcept {
+        auto const bytes_filled = write_area - buffer.buffer_->data();
 
         buffer.buffer_->resize(std::bit_ceil(buffer.buffer_->size() + additional_cap));
-        cursor.repoint(buffer.buffer_->data() + bytes_filled,
-                       buffer.buffer_->size() - bytes_filled);
+
+        write_area = buffer.buffer_->data() + bytes_filled;
+        write_area_size = buffer.buffer_->size() - bytes_filled;
     }
 
     template<typename F>
@@ -263,19 +246,19 @@ struct BufCFileWriter : BufWriterBase<BufCFileWriter, CFileBuffer> {
     using Buffer = CFileBuffer;
 
     explicit constexpr BufCFileWriter(FILE *file) noexcept : BufWriterBase<BufCFileWriter, CFileBuffer>{file} {
-        cursor().repoint(buffer().buffer_.data(),
-                         buffer().buffer_.size());
+        write_area() = buffer().buffer_.data();
+        write_area_size() = buffer().buffer_.size();
     }
 
     bool finalize() {
-        auto const to_write = static_cast<size_t>(cursor().data() - buffer().buffer_.data());
+        auto const to_write = static_cast<size_t>(write_area() - buffer().buffer_.data());
         return fwrite(buffer().buffer_.data(), 1, to_write, buffer().file_) == to_write;
     }
 
-    static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
-        auto const bytes_flushed = fwrite(buffer.buffer_.data(), 1, static_cast<size_t>(cursor.data() - buffer.buffer_.data()), buffer.file_);
-        cursor.repoint(cursor.data() - bytes_flushed,
-                       cursor.size() + bytes_flushed);
+    static void flush_impl(Buffer &buffer, char *&write_area, size_t &write_area_size, [[maybe_unused]] size_t additional_cap) noexcept {
+        auto const bytes_flushed = fwrite(buffer.buffer_.data(), 1, static_cast<size_t>(write_area - buffer.buffer_.data()), buffer.file_);
+        write_area -= bytes_flushed;
+        write_area_size += bytes_flushed;
     }
 };
 
@@ -297,21 +280,21 @@ struct BufOStreamWriter : BufWriterBase<BufOStreamWriter, OStreamBuffer> {
     using Buffer = OStreamBuffer;
 
     explicit constexpr BufOStreamWriter(std::ostream &os) noexcept : BufWriterBase<BufOStreamWriter, OStreamBuffer>{os} {
-        cursor().repoint(buffer().buffer_.data(),
-                         buffer().buffer_.size());
+        write_area() = buffer().buffer_.data();
+        write_area_size() = buffer().buffer_.size();
     }
 
     bool finalize() {
-        return static_cast<bool>(buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(cursor().data() - buffer().buffer_.data())));
+        return static_cast<bool>(buffer().os_->write(buffer().buffer_.data(), static_cast<std::streamsize>(write_area() - buffer().buffer_.data())));
     }
 
-    static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
-        if (!buffer.os_->write(buffer.buffer_.data(), static_cast<std::streamsize>(cursor.data() - buffer.buffer_.data()))) {
+    static void flush_impl(Buffer &buffer, char *&write_area, size_t &write_area_size, [[maybe_unused]] size_t additional_cap) noexcept {
+        if (!buffer.os_->write(buffer.buffer_.data(), static_cast<std::streamsize>(write_area - buffer.buffer_.data()))) {
             return;
         }
 
-        cursor.repoint(buffer.buffer_.data(),
-                       buffer.buffer_.size());
+        write_area = buffer.buffer_.data();
+        write_area_size = buffer.buffer_.size();
     }
 };
 
@@ -344,25 +327,22 @@ template<std::output_iterator<char> OutIter>
 struct BufOutputIteratorWriter : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>> {
     using Buffer = OutputIteratorBuffer<OutIter>;
 
-    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::cursor;
-    using BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>::buffer;
-
     explicit constexpr BufOutputIteratorWriter(OutIter i) noexcept
         : BufWriterBase<BufOutputIteratorWriter<OutIter>, OutputIteratorBuffer<OutIter>>{i} {
-        cursor().repoint(buffer().buffer_.data(),
-                         buffer().buffer_.size());
+
+        this->write_area() = this->buffer().buffer_.data();
+        this->write_area_size() = this->buffer().buffer_.size();
     }
 
     bool finalize() {
-        buffer().write_out(cursor().data());
+        this->buffer().write_out(this->write_area());
         return true;
     }
 
-    static void flush_impl(Buffer &buffer, Cursor &cursor, [[maybe_unused]] size_t additional_cap) noexcept {
-        buffer.write_out(cursor.data());
-
-        cursor.repoint(buffer.buffer_.data(),
-                       buffer.buffer_.size());
+    static void flush_impl(Buffer &buffer, char *&write_area, size_t &write_area_size, [[maybe_unused]] size_t additional_cap) noexcept {
+        buffer.write_out(write_area);
+        write_area = buffer.buffer_.data();
+        write_area_size = buffer.buffer_.size();
     }
 };
 } // namespace rdf4cpp::writer
