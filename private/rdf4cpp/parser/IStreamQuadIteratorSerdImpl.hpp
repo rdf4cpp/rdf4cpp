@@ -80,7 +80,7 @@ public:
      *      expected Quad: if there was a next element and it could be parsed
      *      unexpected ParsingError: if there was a next element but it could not be parsed
      */
-    [[nodiscard]] std::optional<nonstd::expected<ok_type, error_type>> next() noexcept;
+    [[nodiscard]] std::optional<nonstd::expected<ok_type, error_type>> next();
 
     [[nodiscard]] uint64_t current_line() const noexcept;
     [[nodiscard]] uint64_t current_column() const noexcept;

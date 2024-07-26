@@ -92,7 +92,7 @@ public:
                         ReadFunc read,
                         ErrorFunc error,
                         flags_type flags = ParsingFlags::none(),
-                        state_type *initial_state = nullptr) noexcept;
+                        state_type *initial_state = nullptr);
 
     /**
      * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
@@ -105,7 +105,7 @@ public:
      */
     explicit IStreamQuadIterator(std::istream &istream,
                                  flags_type flags = ParsingFlags::none(),
-                                 state_type *initial_state = nullptr) noexcept;
+                                 state_type *initial_state = nullptr);
 
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
