@@ -24,7 +24,6 @@ namespace rdf4cpp::parser {
  * @param count number of elements to read
  * @param stream pointer to any object.
  * @return number of elements read
- * @note should not throw exceptions, but is not noexcept so you can easily use c functions
  */
 using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream);
 
@@ -33,7 +32,6 @@ using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *
  *
  * @param stream pointer to any object
  * @return nonzero value if there is an error in stream, zero value otherwise
- * @note should not throw exceptions, but is not noexcept so you can easily use c functions
  */
 using ErrorFunc = int (*)(void *stream);
 
