@@ -49,7 +49,7 @@ IStreamQuadIterator::IStreamQuadIterator(void *stream,
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
                                          flags_type flags,
-                                         state_type *state) noexcept
+                                         state_type *state)
     : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state} {
 }
 
