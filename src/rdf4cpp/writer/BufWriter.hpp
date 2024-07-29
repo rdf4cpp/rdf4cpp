@@ -199,7 +199,7 @@ struct StringWriter : BufWriterBase<StringWriter, StringBuffer> {
         return std::string_view{buffer().buffer_->data(), static_cast<size_t>(write_area() - buffer().buffer_->data())};
     }
 
-    void clear() noexcept {
+    constexpr void clear() noexcept {
         write_area() = buffer().buffer_->data();
         write_area_size() = buffer().buffer_->size();
     }
