@@ -50,6 +50,7 @@ set(serd_source_files
         src/try.h
         src/uri.c
         src/uri_utils.h
+        src/warnings.h
         src/writer.c
 )
 set(style_files
@@ -58,7 +59,7 @@ set(style_files
 )
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/4352d002c55322fbc1a8baca6b0af6afa0142f5b/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/58a35eb5a4b2b117b252895f1f11e7c0ebe2c15c/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()
