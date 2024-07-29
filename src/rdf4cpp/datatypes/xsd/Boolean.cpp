@@ -14,7 +14,7 @@ capabilities::Default<xsd_boolean>::cpp_type capabilities::Default<xsd_boolean>:
     } else if (s == "false" || s == "0") {
         return false;
     } else {
-        throw InvalidNode{"XSD Parsing Error"};
+        throw InvalidNode{std::format("{} Parsing Error: found {}, expected true/false", identifier, s)};
     }
 }
 

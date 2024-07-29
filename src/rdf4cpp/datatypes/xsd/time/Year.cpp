@@ -7,7 +7,7 @@ namespace rdf4cpp::datatypes::registry {
 #ifndef DOXYGEN_PARSER
 template<>
 capabilities::Default<xsd_gYear>::cpp_type capabilities::Default<xsd_gYear>::from_string(std::string_view s) {
-    auto tz = rdf4cpp::Timezone::parse_optional(s);
+    auto tz = rdf4cpp::Timezone::parse_optional(s, identifier);
     auto year = registry::util::parse_date_time_fragment<std::chrono::year, int, '\0', identifier>(s);
     return std::make_pair(year, tz);
 }

@@ -692,8 +692,8 @@ Literal Literal::as_language_tag_eq(Literal const &other, storage::DynNodeStorag
     }                                                  \
     RDF4CPP_DETAIL_TRY_WRITE_STR("\"");
 
-template<bool short_form>
-bool Literal::serialize_impl(writer::BufWriterParts const writer) const noexcept {
+
+bool Literal::serialize(writer::BufWriterParts const writer, NodeSerializationOpts opts) const noexcept {
     if (this->null()) {
         RDF4CPP_DETAIL_TRY_WRITE_STR("null");
         return true;
@@ -725,7 +725,7 @@ bool Literal::serialize_impl(writer::BufWriterParts const writer) const noexcept
         RDF4CPP_DETAIL_TRY_WRITE_STR("@");
         RDF4CPP_DETAIL_TRY_WRITE_STR(value.language_tag);
         return true;
-    } else if (short_form && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
+    } else if (opts.use_short_form && (this->datatype_eq<datatypes::xsd::Integer>() || this->datatype_eq<datatypes::xsd::Double>()
             || this->datatype_eq<datatypes::xsd::Decimal>() || this->datatype_eq<datatypes::xsd::Boolean>())) {
 
         return this->serialize_lexical_form(writer);
@@ -747,7 +747,7 @@ bool Literal::serialize_impl(writer::BufWriterParts const writer) const noexcept
         }
 
         RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-        return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), writer);
+        return writer::write_fixed_type_iri(this->backend_handle().node_id().literal_type(), writer, opts.use_prefixes);
     } else {
         using storage::NodeStorage;
         using storage::identifier::NodeBackendHandle;
@@ -784,19 +784,12 @@ bool Literal::serialize_impl(writer::BufWriterParts const writer) const noexcept
                     }
 
                     RDF4CPP_DETAIL_TRY_WRITE_STR("\"^^");
-                    return writer::write_fixed_type_iri<short_form>(this->backend_handle().node_id().literal_type(), writer);
+                    return writer::write_fixed_type_iri(this->backend_handle().node_id().literal_type(), writer, opts.use_prefixes);
                 });
     }
 }
 
 #undef RDF4CPP_DETAIL_TRY_SER_QUOTED_LEXICAL
-
-bool Literal::serialize(writer::BufWriterParts const writer) const noexcept {
-    return serialize_impl<false>(writer);
-}
-bool Literal::serialize_short_form(writer::BufWriterParts const writer) const noexcept {
-    return serialize_impl<true>(writer);
-}
 
 bool Literal::serialize_lexical_form(writer::BufWriterParts const writer) const noexcept {
     return serialize_lexical_form_impl<false>(ConsumeSerialize{writer});

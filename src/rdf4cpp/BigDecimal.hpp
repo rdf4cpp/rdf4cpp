@@ -136,31 +136,39 @@ public:
                 if (c == '-') {
                     neg = true;
                     continue;
-                } else if (c == '+')
+                } else if (c == '+') {
                     continue;
+                }
             }
             if (c == '.') {
-                if (decimal)
-                    throw InvalidNode{"more than one . found"};
+                if (decimal) {
+                    throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: more than one . found"};
+                }
                 decimal = true;
                 continue;
             }
-            if (c < '0' || c > '9')
-                throw InvalidNode{"non-numeric char found"};
+            if (c < '0' || c > '9') {
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found"};
+            }
             auto n = c - '0';
-            if (mul_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{base}, unscaled_value))
-                throw InvalidNode{"ctor unscaled_value overflow"};
-            if (add_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{n}, unscaled_value))
-                throw InvalidNode{"ctor unscaled_value overflow"};
+            if (mul_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{base}, unscaled_value)) {
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: unscaled_value overflow"};
+            }
+            if (add_checked<OverflowMode::Checked>(unscaled_value, UnscaledValue_t{n}, unscaled_value)) {
+                throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: unscaled_value overflow"};
+            }
             if (decimal) {
-                if (add_checked<OverflowMode::Checked>(exponent, Exponent_t{1}, exponent))
-                    throw InvalidNode{"ctor exponent overflow"};
+                if (add_checked<OverflowMode::Checked>(exponent, Exponent_t{1}, exponent)) {
+                    throw InvalidNode{"http://www.w3.org/2001/XMLSchema#decimal parsing error: exponent overflow"};
+                }
             }
         }
-        if (unscaled_value == 0)
+        if (unscaled_value == 0) {
             neg = false;
-        if (neg)
+        }
+        if (neg) {
             unscaled_value = -unscaled_value;
+        }
     }
 
     /**

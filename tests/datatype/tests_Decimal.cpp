@@ -112,19 +112,13 @@ TEST_CASE("Datatype Decimal") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("NAN", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("NAN", type_iri), "http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found", InvalidNode);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("INF", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("INF", type_iri), "http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found", InvalidNode);
 
-    //value = INFINITY;
-    //CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed(to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("454sdsd", type_iri), "http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found", InvalidNode);
 
-    //value = NAN;
-    //CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed(to_string(value), type_iri), "XSD Parsing Error", std::runtime_error);
-
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("454sdsd", type_iri), "XSD Parsing Error", std::runtime_error);
-
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("2.225E-307", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("2.225E-307", type_iri), "http://www.w3.org/2001/XMLSchema#decimal parsing error: non-numeric char found", InvalidNode);
 }
 
 TEST_CASE("precision") {

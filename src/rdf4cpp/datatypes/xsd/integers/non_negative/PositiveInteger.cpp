@@ -12,11 +12,11 @@ capabilities::Default<xsd_positive_integer>::cpp_type capabilities::Default<xsd_
     try {
         ret = cpp_type{s};
     } catch (std::runtime_error const &e) {
-        throw InvalidNode{std::string{"xsd:positiveInteger parsing error: "} + e.what()};
+        throw InvalidNode{std::format("{} parsing error: {}", identifier, e.what())};
     }
 
     if (ret < 1) {
-        throw InvalidNode{"xsd:positiveInteger parsing error: found non-positive value"};
+        throw InvalidNode{std::format("{} parsing error: found non-positive value", identifier)};
     }
 
     return ret;

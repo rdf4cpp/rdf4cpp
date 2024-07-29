@@ -83,11 +83,11 @@ TEST_CASE("Datatype Boolean") {
     // suppress warnings regarding attribute ‘nodiscard’
     Literal no_discard_dummy;
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("5", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy = Literal::make_typed("5", type_iri), "http://www.w3.org/2001/XMLSchema#boolean Parsing Error: found 5, expected true/false", rdf4cpp::InvalidNode);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("adsfg", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("adsfg", type_iri), "http://www.w3.org/2001/XMLSchema#boolean Parsing Error: found adsfg, expected true/false", rdf4cpp::InvalidNode);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("5.64566", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("5.64566", type_iri), "http://www.w3.org/2001/XMLSchema#boolean Parsing Error: found 5.64566, expected true/false", rdf4cpp::InvalidNode);
 
-    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("1.7e", type_iri), "XSD Parsing Error", std::runtime_error);
+    CHECK_THROWS_WITH_AS(no_discard_dummy =  Literal::make_typed("1.7e", type_iri), "http://www.w3.org/2001/XMLSchema#boolean Parsing Error: found 1.7e, expected true/false", rdf4cpp::InvalidNode);
 }

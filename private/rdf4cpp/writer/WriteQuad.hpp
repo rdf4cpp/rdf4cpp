@@ -10,9 +10,9 @@ namespace rdf4cpp::writer {
 template<writer::OutputFormat F>
 bool write_node(Node const node, writer::BufWriterParts const writer) noexcept {
     if constexpr (writer::format_has_prefix<F>) {
-        return node.serialize_short_form(writer);
+        return node.serialize(writer, NodeSerializationOpts::prefixed_and_short_form());
     } else {
-        return node.serialize(writer);
+        return node.serialize(writer, NodeSerializationOpts::long_form());
     }
 }
 

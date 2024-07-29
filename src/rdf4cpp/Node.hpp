@@ -18,6 +18,57 @@ namespace query {
 struct Variable;
 } // namespace rdf4cpp
 
+/**
+ * Options to control the serialization of Nodes/Literals
+ */
+struct NodeSerializationOpts {
+    bool use_short_form; ///< use the short form of the literals, for example: if this option is true "1"^^xsd:integer serializes to 1
+    bool use_prefixes;   ///< use prefixes for fixed datatypes (by default all registered xsd and rdf datatypes), for example: if this option is true "1"^^xsd:byte serializes to "1"^^xsd:byte
+
+    /**
+     * Do not use short forms and do not use prefixes. This is used in N-Triples for example.
+     *
+     * Examples:
+     *     "1"^^xsd:integer serializes to "1"^^<http://www.w3.org/2001/XMLSchema#integer>
+     *     "1"^^xsd:byte serializes to "1"^^<http://www.w3.org/2001/XMLSchema#byte>
+     */
+    [[nodiscard]] static NodeSerializationOpts long_form() noexcept {
+        return NodeSerializationOpts{};
+    }
+
+    /**
+     * Use the short form of literals, but do not use prefixes. This is used in sparql TSV results for example.
+     *
+     * Examples:
+     *     "1"^^xsd:integer serializes to 1
+     *     "1"^^xsd:byte serializes to "1"^^<http://www.w3.org/2001/XMLSchema#byte>
+     */
+    [[nodiscard]] static NodeSerializationOpts short_form() noexcept {
+        return NodeSerializationOpts{.use_short_form = true, .use_prefixes = false};
+    }
+
+    /**
+     * Do not use the short form of literals, but do use prefixes.
+     *
+     * Examples:
+     *     "1"^^xsd:integer serializes to "1"^^xsd:integer
+     *     "1"^^xsd:byte serializes to "1"^^xsd:byte
+     */
+    [[nodiscard]] static NodeSerializationOpts prefixed() noexcept {
+        return NodeSerializationOpts{.use_short_form = false, .use_prefixes = true};
+    }
+
+    /**
+     * Use the short form of literals and use prefixes. This is commonly used in turtle (with prefix definitions).
+     *
+     * Examples:
+     *     "1"^^xsd:integer serializes to 1
+     *     "1"^^xsd:byte serializes to "1"^^xsd:byte
+     */
+    [[nodiscard]] static NodeSerializationOpts prefixed_and_short_form() noexcept {
+        return NodeSerializationOpts{.use_short_form = true, .use_prefixes = true};
+    }
+};
 
 inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
 
@@ -67,21 +118,12 @@ public:
      * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
      *
      * @param writer Typically, you pass in an instance of a writer::BufWriter (Concept) instance. Any writer::BufWriter instance is implicitly convertible to writer::BufWriterParts.
+     * @param opts determines the formatting style. See doc of NodeSerializationOpts for details.
      * @return true if serialization was successful, false if a call to flush was not able to make room
      *
      * For specific usage examples have a look at tests/bench_SerDe.cpp#serialize.
      */
-    bool serialize(writer::BufWriterParts writer) const noexcept;
-
-    /**
-     * Serialize the string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/rdf12-turtle/">Turtle</a> and <a href="https://www.w3.org/TR/rdf12-trig/">TriG</a>.
-     *
-     * @param writer writer parts
-     * @return true if serialization was successful, false if a call to flush was not able to make room
-     *
-     * For specific usage examples have a look at tests/bench_SerDe.cpp#serialize.
-     */
-    bool serialize_short_form(writer::BufWriterParts writer) const noexcept;
+    bool serialize(writer::BufWriterParts writer, NodeSerializationOpts opts = NodeSerializationOpts::long_form()) const noexcept;
 
     /**
      * Returns a string representation of the given node in N-format as defined by <a href="https://www.w3.org/TR/n-triples/">N-Triples</a> and <a href="https://www.w3.org/TR/n-quads/">N-Quads</a>.
