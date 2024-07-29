@@ -1,0 +1,28 @@
+name: Detect POBR diff
+
+on: [ pull_request ]
+
+concurrency:
+  group: detect-pobr-diff-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-pobr-diff:
+    uses: dice-group/cpp-conan-release-reusable-workflow/.github/workflows/abi-diff.yml@main
+    with:
+      os: ubuntu-22.04
+      compiler: clang-16
+      cmake-version: 3.24.0
+      conan-version: 2.3.1
+      base-branch: ${{ github.base_ref }}
+      search-path: >
+        src/rdf4cpp/storage/identifier
+        src/rdf4cpp/storage/view
+        src/rdf4cpp/storage/reference_node_storage/detail/BiDirFlatMap.hpp
+        src/rdf4cpp/storage/reference_node_storage/detail/ConstString.hpp
+        src/rdf4cpp/storage/reference_node_storage/detail/IndexFreeList.hpp
+      abi-version-header: src/rdf4cpp/version.hpp
+      abi-version-const: rdf4cpp::pobr_version
+    secrets:
+      CONAN_USER: ${{ secrets.CONAN_USER }}
+      CONAN_PW: ${{ secrets.CONAN_PW }}
