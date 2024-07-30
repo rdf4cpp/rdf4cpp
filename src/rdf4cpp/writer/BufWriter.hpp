@@ -57,13 +57,13 @@ concept BufWriter = requires (W &bw, size_t additional_cap) {
 
 /**
  * Flushes user defined data.
- * the functions task is it to somehow make room in buffer and point the cursor and remaining_size to that new, free space
+ * The function's task is it to somehow make room in `buffer` and point the cursor and remaining_size to this new, free space.
  *
  * @param buffer buffer to make room in
- * @param write_area a pointer to the start of the free space, should be moved to the start of the new free space
- * @param write_area_size the remaining size of the free space, should be set to the size of the new free space
+ * @param write_area a pointer to the start of the free space, must be repointed to the start of the new free space
+ * @param write_area_size the remaining size of the free space, must be set to the size of the new free space
  * @param additional_cap how much additional space is needed right now
- * @note should not throw exceptions, but is not marked noexcept so that C functions can be easily used
+ * @note must not throw exceptions, but is not marked noexcept so that C functions can be easily used
  */
 using FlushFunc = void (*)(void *buffer, char **write_area, size_t *write_area_size, size_t additional_cap);
 
