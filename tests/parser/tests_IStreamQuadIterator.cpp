@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <serd/serd.h>
+
 using namespace rdf4cpp;
 using namespace rdf4cpp::parser;
 
@@ -609,4 +611,101 @@ TEST_SUITE("IStreamQuadIterator") {
         }
     }
 
+    size_t read_func(void *buffer, size_t size, size_t count, void *stream_) noexcept {
+        assert(size == 1);
+
+        auto *stream = static_cast<FILE *>(stream_);
+
+        auto const n_read = fread(buffer, 1, count, stream);
+        //memset(static_cast<char *>(buffer) + n_read, 0, count - n_read);
+
+        return n_read;
+    }
+
+    int error_func(void *stream_) noexcept {
+        auto *stream = static_cast<FILE *>(stream_);
+        return ferror(stream);
+    }
+
+    TEST_CASE("buggy parse") {
+        std::string garbage;
+        garbage.append("<http://url.com#");
+        for (size_t i = 0; i < 4096; ++i) {
+            garbage.push_back('a');
+        }
+        garbage.append("> <http://url.com#abc> <http://url.com#abc> .");
+
+        std::istringstream iss{garbage};
+
+
+        FILE *f = fopen("/home/liss/Dokumente/rdf/artgraph2.ttl", "rb");
+        IStreamQuadIterator qit{iss, ParsingFlag::Turtle};
+
+        size_t count = 0;
+        for (; qit != std::default_sentinel; ++qit) {
+            if (qit->has_value()) {
+                std::cout << **qit << std::endl;
+            } else {
+                std::cerr << qit->error() << std::endl;
+            }
+
+            count += 1;
+        }
+    }
+
+    struct Source {
+        char buffer[128];
+        size_t size;
+        size_t read_head;
+    };
+
+    size_t src_read(void *buffer, size_t size, size_t count, void *src_) {
+        assert(size == 1);
+        Source *src = (Source *) src_;
+
+        size_t const bytes_left = src->size - src->read_head;
+        if (bytes_left == 0) {
+            return 0;
+        }
+
+        size_t const max_read = bytes_left < count ? bytes_left : count;
+
+        memcpy(buffer, src->buffer + src->read_head, max_read);
+        src->read_head += max_read;
+
+        return max_read;
+    }
+
+    int src_error(void *src_) {
+        return 0;
+    }
+
+    Source *get_overread_source() {
+        Source *src = (Source *) malloc(sizeof(Source));
+        memset(src, 0, sizeof(Source));
+
+        strcpy(src->buffer, "<http://url.com#s> <http://url.com#p> <http://url.com#o> .");
+        src->size = strlen(src->buffer);
+
+        return src;
+    }
+
+    TEST_CASE("buggy parse 2") {
+        Source *src = get_overread_source();
+
+        SerdReader *rdr = serd_reader_new(SERD_NTRIPLES, NULL, NULL, NULL, NULL, NULL, NULL);
+        serd_reader_start_source_stream(rdr, src_read, src_error, src, NULL, 42);
+
+        SerdStatus st = SERD_SUCCESS;
+
+        st = serd_reader_read_chunk(rdr);
+        assert(st == SERD_SUCCESS);
+
+        st = serd_reader_read_chunk(rdr);
+        assert(st == SERD_FAILURE);
+
+        serd_reader_end_stream(rdr);
+        serd_reader_free(rdr);
+        free(src);
+    }
 }
