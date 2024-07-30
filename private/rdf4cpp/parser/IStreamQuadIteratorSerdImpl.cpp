@@ -330,7 +330,7 @@ IStreamQuadIterator::Impl::~Impl() noexcept {
     }
 }
 
-std::optional<nonstd::expected<IStreamQuadIterator::ok_type, IStreamQuadIterator::error_type>> IStreamQuadIterator::Impl::next() noexcept {
+std::optional<nonstd::expected<IStreamQuadIterator::ok_type, IStreamQuadIterator::error_type>> IStreamQuadIterator::Impl::next() {
     while (this->quad_buffer.empty()) {
         if (this->last_error.has_value()) {
             // handle error from last time

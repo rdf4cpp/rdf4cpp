@@ -25,7 +25,7 @@ namespace rdf4cpp::parser {
  * @param stream pointer to any object.
  * @return number of elements read
  */
-using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream) noexcept;
+using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *stream);
 
 /**
  * Identical semantics to ferror.
@@ -33,7 +33,7 @@ using ReadFunc = size_t (*)(void *buffer, size_t elem_size, size_t count, void *
  * @param stream pointer to any object
  * @return nonzero value if there is an error in stream, zero value otherwise
  */
-using ErrorFunc = int (*)(void *stream) noexcept;
+using ErrorFunc = int (*)(void *stream);
 
 /**
  * Similar to std::istream_iterator<>.
@@ -87,13 +87,12 @@ public:
      * @param initial_state optionally specifies the initial state of the parser,
      *          providing nullptr as the initial state results in the parser creating its own,fresh state
      *          instead of writing to the provided state.
-     * @param node_storage where to place the resulting nodes
      */
     IStreamQuadIterator(void *stream,
                         ReadFunc read,
                         ErrorFunc error,
                         flags_type flags = ParsingFlags::none(),
-                        state_type *initial_state = nullptr) noexcept;
+                        state_type *initial_state = nullptr);
 
     /**
      * Constructs an IStreamQuadIterator to parse an input stream in turtle syntax to quads
@@ -106,7 +105,7 @@ public:
      */
     explicit IStreamQuadIterator(std::istream &istream,
                                  flags_type flags = ParsingFlags::none(),
-                                 state_type *initial_state = nullptr) noexcept;
+                                 state_type *initial_state = nullptr);
 
     IStreamQuadIterator(IStreamQuadIterator const &) = delete;
     IStreamQuadIterator(IStreamQuadIterator &&) noexcept;
