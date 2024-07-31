@@ -611,101 +611,80 @@ TEST_SUITE("IStreamQuadIterator") {
         }
     }
 
-    size_t read_func(void *buffer, size_t size, size_t count, void *stream_) noexcept {
+    size_t istream_read_with_mitigation(void *buffer_, size_t size, size_t count, void *stream_) {
         assert(size == 1);
 
-        auto *stream = static_cast<FILE *>(stream_);
+        auto *stream = static_cast<std::istream *>(stream_);
+        auto *buffer = static_cast<char *>(buffer_);
 
-        auto const n_read = fread(buffer, 1, count, stream);
-        //memset(static_cast<char *>(buffer) + n_read, 0, count - n_read);
+        stream->read(buffer, static_cast<std::streamsize>(count));
+        auto const bytes_written = stream->gcount();
 
-        return n_read;
+        memset(buffer + bytes_written, 0, count - bytes_written);
+        return bytes_written;
     }
 
-    int error_func(void *stream_) noexcept {
-        auto *stream = static_cast<FILE *>(stream_);
-        return ferror(stream);
+    int istream_error(void *voided_self) noexcept {
+        auto *self = static_cast<std::istream *>(voided_self);
+        return static_cast<int>(self->fail() && !self->eof());
     }
 
-    TEST_CASE("buggy parse") {
-        std::string garbage;
-        garbage.append("<http://url.com#");
-        for (size_t i = 0; i < 4096; ++i) {
-            garbage.push_back('a');
-        }
-        garbage.append("> <http://url.com#abc> <http://url.com#abc> .");
+    TEST_CASE("Buffer overread") {
+        // this test case tests for a presence of a buffer overread bug
+        // that happened whenever a file was missing a '\n' at the very end
 
-        std::istringstream iss{garbage};
-
-
-        FILE *f = fopen("/home/liss/Dokumente/rdf/artgraph2.ttl", "rb");
-        IStreamQuadIterator qit{iss, ParsingFlag::Turtle};
-
-        size_t count = 0;
-        for (; qit != std::default_sentinel; ++qit) {
-            if (qit->has_value()) {
-                std::cout << **qit << std::endl;
-            } else {
-                std::cerr << qit->error() << std::endl;
+        auto run_overread = [](size_t buffer_len, bool mitigate) {
+            std::string s;
+            s.reserve(buffer_len);
+            s.append("<http://url.com#s> <http://url.com#p> <http://url.com#");
+            while (s.size() < buffer_len - 3) {
+                s.push_back('o');
             }
+            s.append("> .");
+            assert(s.size() == buffer_len);
 
-            count += 1;
+
+            std::istringstream iss{s};
+            auto qit = [&]() {
+                if (mitigate) {
+                    return IStreamQuadIterator{&iss, istream_read_with_mitigation, istream_error, ParsingFlag::NTriples};
+                } else {
+                    return IStreamQuadIterator{iss, ParsingFlag::NTriples};
+                }
+            }();
+
+            CHECK_NE(qit, std::default_sentinel);
+
+            ++qit;
+            CHECK_EQ(qit, std::default_sentinel);
+
+            for (; qit != std::default_sentinel; ++qit) {
+                if (qit->has_value()) {
+                    std::cout << **qit << std::endl;
+                } else {
+                    std::cerr << qit->error() << std::endl;
+                }
+            }
+        };
+
+        SUBCASE("less than one chunk") {
+            run_overread(100);
         }
-    }
 
-    struct Source {
-        char buffer[128];
-        size_t size;
-        size_t read_head;
-    };
-
-    size_t src_read(void *buffer, size_t size, size_t count, void *src_) {
-        assert(size == 1);
-        Source *src = (Source *) src_;
-
-        size_t const bytes_left = src->size - src->read_head;
-        if (bytes_left == 0) {
-            return 0;
+        SUBCASE("exactly one chunk") {
+            run_overread(4096);
         }
 
-        size_t const max_read = bytes_left < count ? bytes_left : count;
+        SUBCASE("slightly more than a chunk") {
+            run_overread(4096 + 100);
+        }
 
-        memcpy(buffer, src->buffer + src->read_head, max_read);
-        src->read_head += max_read;
+        SUBCASE("exactly two chunks") {
+            run_overread(4096 * 2);
+        }
 
-        return max_read;
-    }
-
-    int src_error(void *src_) {
-        return 0;
-    }
-
-    Source *get_overread_source() {
-        Source *src = (Source *) malloc(sizeof(Source));
-        memset(src, 0, sizeof(Source));
-
-        strcpy(src->buffer, "<http://url.com#s> <http://url.com#p> <http://url.com#o> .");
-        src->size = strlen(src->buffer);
-
-        return src;
-    }
-
-    TEST_CASE("buggy parse 2") {
-        Source *src = get_overread_source();
-
-        SerdReader *rdr = serd_reader_new(SERD_NTRIPLES, NULL, NULL, NULL, NULL, NULL, NULL);
-        serd_reader_start_source_stream(rdr, src_read, src_error, src, NULL, 42);
-
-        SerdStatus st = SERD_SUCCESS;
-
-        st = serd_reader_read_chunk(rdr);
-        assert(st == SERD_SUCCESS);
-
-        st = serd_reader_read_chunk(rdr);
-        assert(st == SERD_FAILURE);
-
-        serd_reader_end_stream(rdr);
-        serd_reader_free(rdr);
-        free(src);
+        SUBCASE("slightly more than two chunks") {
+            run_overread(4096 * 2 + 100);
+        }
     }
 }
