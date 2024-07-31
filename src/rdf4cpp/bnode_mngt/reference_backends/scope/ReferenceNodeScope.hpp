@@ -77,6 +77,16 @@ public:
         handle_to_label_.emplace(it->second, it->first);
         return node;
     }
+
+    /**
+     * Clear the mappings from this scope
+     * @note does not delete nodes from node storage
+     */
+    void clear() noexcept {
+        std::unique_lock lock{mutex_};
+        label_to_handle_.clear();
+        handle_to_label_.clear();
+    }
 };
 static_assert(NodeScope<ReferenceNodeScope<>>);
 
