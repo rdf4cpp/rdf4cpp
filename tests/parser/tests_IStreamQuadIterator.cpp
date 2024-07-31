@@ -6,7 +6,6 @@
 
 #include <iostream>
 
-#include <serd/serd.h>
 
 using namespace rdf4cpp;
 using namespace rdf4cpp::parser;
