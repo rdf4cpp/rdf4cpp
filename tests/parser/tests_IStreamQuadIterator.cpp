@@ -611,30 +611,11 @@ TEST_SUITE("IStreamQuadIterator") {
         }
     }
 
-    size_t istream_read_with_mitigation(void *buffer_, size_t size, size_t count, void *stream_) {
-        assert(size == 1);
-
-        auto *stream = static_cast<std::istream *>(stream_);
-        auto *buffer = static_cast<char *>(buffer_);
-
-        stream->read(buffer, static_cast<std::streamsize>(count));
-        auto const bytes_written = stream->gcount();
-
-        // zero the rest of the buffer to ensure serd will not read the same bytes from before again
-        memset(buffer + bytes_written, 0, count - bytes_written);
-        return bytes_written;
-    }
-
-    int istream_error(void *voided_self) noexcept {
-        auto *self = static_cast<std::istream *>(voided_self);
-        return static_cast<int>(self->fail() && !self->eof());
-    }
-
     TEST_CASE("Buffer overread") {
         // this test case tests for a presence of a buffer overread bug
         // that happened whenever a file was missing a '\n' at the very end
 
-        auto run_overread = [](size_t buffer_len, bool mitigate) {
+        auto run_overread = [](size_t buffer_len) {
             std::string s;
             s.reserve(buffer_len);
             s.append("<http://url.com#s> <http://url.com#p> <http://url.com#");
@@ -646,14 +627,7 @@ TEST_SUITE("IStreamQuadIterator") {
 
 
             std::istringstream iss{s};
-            auto qit = [&]() {
-                if (mitigate) {
-                    return IStreamQuadIterator{&iss, istream_read_with_mitigation, istream_error, ParsingFlag::NTriples};
-                } else {
-                    return IStreamQuadIterator{iss, ParsingFlag::NTriples};
-                }
-            }();
-
+            IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
             CHECK_NE(qit, std::default_sentinel);
 
             ++qit;
@@ -669,48 +643,23 @@ TEST_SUITE("IStreamQuadIterator") {
         };
 
         SUBCASE("less than one chunk") {
-            SUBCASE("mitigated") {
-                run_overread(100, true);
-            }
-            SUBCASE("vulnerable") {
-                run_overread(100, false);
-            }
+            run_overread(100);
         }
 
         SUBCASE("exactly one chunk") {
-            SUBCASE("mitigated") {
-                run_overread(4096, true);
-            }
-            SUBCASE("vulnerable") {
-                run_overread(4096, false);
-            };
+            run_overread(4096);
         }
 
         SUBCASE("slightly more than a chunk") {
-            SUBCASE("mitigated") {
-                run_overread(4096 + 100, true);
-            }
-            SUBCASE("vulnerable") {
-                run_overread(4096 + 100, false);
-            }
+            run_overread(4096 + 100);
         }
 
         SUBCASE("exactly two chunks") {
-            SUBCASE("mitigated") {
-                run_overread(4096 * 2, true);
-            }
-            SUBCASE("vulnerable") {
-                run_overread(4096 * 2, false);
-            }
+            run_overread(4096 * 2);
         }
 
         SUBCASE("slightly more than two chunks") {
-            SUBCASE("mitigated") {
-                run_overread(4096 * 2 + 100, true);
-            }
-            SUBCASE("vulnerable") {
-                run_overread(4096 * 2 + 100, false);
-            }
+            run_overread(4096 * 2 + 100);
         }
     }
 }
