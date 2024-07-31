@@ -75,6 +75,12 @@ TEST_SUITE("blank node id management") {
             auto fresh = scope.generate_node();
             CHECK(fresh != b1);
             CHECK(fresh != b2);
+
+            scope.clear();
+            CHECK(scope.try_get_node("abc").null());
+            CHECK(scope.try_get_node("bcd").null());
+            CHECK_FALSE(scope.try_get_label(b1).has_value());
+            CHECK_FALSE(scope.try_get_label(b2).has_value());
         }
 
         ReferenceNodeScope<> mng2;
