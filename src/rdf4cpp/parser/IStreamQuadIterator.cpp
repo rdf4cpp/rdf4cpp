@@ -42,14 +42,14 @@ IStreamQuadIterator::IStreamQuadIterator(void *stream,
                                          ReadFunc read,
                                          ErrorFunc error,
                                          flags_type flags,
-                                         state_type *state) noexcept
+                                         state_type *state)
     : impl{std::make_unique<Impl>(stream, read, error, flags, state)},
       cur{impl->next()} {
 }
 
 IStreamQuadIterator::IStreamQuadIterator(std::istream &istream,
                                          flags_type flags,
-                                         state_type *state) noexcept
+                                         state_type *state)
     : IStreamQuadIterator{&istream, &istream_read, &istream_error, flags, state} {
 }
 
