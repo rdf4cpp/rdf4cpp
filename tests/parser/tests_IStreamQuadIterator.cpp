@@ -6,6 +6,7 @@
 
 #include <iostream>
 
+
 using namespace rdf4cpp;
 using namespace rdf4cpp::parser;
 
@@ -609,4 +610,55 @@ TEST_SUITE("IStreamQuadIterator") {
         }
     }
 
+    TEST_CASE("Buffer overread") {
+        // this test case tests for a presence of a buffer overread bug
+        // that happened whenever a file was missing a '\n' at the very end
+
+        auto run_overread = [](size_t buffer_len) {
+            std::string s;
+            s.reserve(buffer_len);
+            s.append("<http://url.com#s> <http://url.com#p> <http://url.com#");
+            while (s.size() < buffer_len - 3) {
+                s.push_back('o');
+            }
+            s.append("> .");
+            assert(s.size() == buffer_len);
+
+
+            std::istringstream iss{s};
+            IStreamQuadIterator qit{iss, ParsingFlag::NTriples};
+            CHECK_NE(qit, std::default_sentinel);
+
+            ++qit;
+            CHECK_EQ(qit, std::default_sentinel);
+
+            for (; qit != std::default_sentinel; ++qit) {
+                if (qit->has_value()) {
+                    std::cout << **qit << std::endl;
+                } else {
+                    std::cerr << qit->error() << std::endl;
+                }
+            }
+        };
+
+        SUBCASE("less than one chunk") {
+            run_overread(100);
+        }
+
+        SUBCASE("exactly one chunk") {
+            run_overread(4096);
+        }
+
+        SUBCASE("slightly more than a chunk") {
+            run_overread(4096 + 100);
+        }
+
+        SUBCASE("exactly two chunks") {
+            run_overread(4096 * 2);
+        }
+
+        SUBCASE("slightly more than two chunks") {
+            run_overread(4096 * 2 + 100);
+        }
+    }
 }

@@ -26,6 +26,7 @@ find_package(dice-template-library REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
+set(serd_rev ea27f19617d039a9b37c87e799b18a7fac101389)
 set(serd_source_files
         include/serd/serd.h
         src/attributes.h
@@ -50,6 +51,7 @@ set(serd_source_files
         src/try.h
         src/uri.c
         src/uri_utils.h
+        src/warnings.h
         src/writer.c
 )
 set(style_files
@@ -58,11 +60,11 @@ set(style_files
 )
 
 foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/4352d002c55322fbc1a8baca6b0af6afa0142f5b/${serd_source_file}"
+    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/${serd_rev}/${serd_source_file}"
             "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
             TLS_VERIFY ON)
 endforeach()
-file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/4352d002c55322fbc1a8baca6b0af6afa0142f5b/COPYING"
+file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/${serd_rev}/COPYING"
         "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
         TLS_VERIFY ON)
 foreach(style_file ${style_files})

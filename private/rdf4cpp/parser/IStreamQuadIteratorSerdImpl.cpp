@@ -336,7 +336,10 @@ std::optional<nonstd::expected<IStreamQuadIterator::ok_type, IStreamQuadIterator
             // handle error from last time
             if (this->last_error_requires_skip) {
                 this->last_error_requires_skip = false;
-                serd_reader_skip_until_byte(this->reader, '\n');
+                if (serd_reader_skip_until_byte(this->reader, '\n') != SERD_SUCCESS) {
+                    // EOF reached
+                    this->end_flag = true;
+                }
             }
             return nonstd::make_unexpected(*std::exchange(this->last_error, std::nullopt));
         } else if (this->end_flag) {
