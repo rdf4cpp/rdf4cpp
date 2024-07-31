@@ -620,6 +620,7 @@ TEST_SUITE("IStreamQuadIterator") {
         stream->read(buffer, static_cast<std::streamsize>(count));
         auto const bytes_written = stream->gcount();
 
+        // zero the rest of the buffer to ensure serd will not read the same bytes from before again
         memset(buffer + bytes_written, 0, count - bytes_written);
         return bytes_written;
     }
@@ -668,23 +669,48 @@ TEST_SUITE("IStreamQuadIterator") {
         };
 
         SUBCASE("less than one chunk") {
-            run_overread(100);
+            SUBCASE("mitigated") {
+                run_overread(100, true);
+            }
+            SUBCASE("vulnerable") {
+                run_overread(100, false);
+            }
         }
 
         SUBCASE("exactly one chunk") {
-            run_overread(4096);
+            SUBCASE("mitigated") {
+                run_overread(4096, true);
+            }
+            SUBCASE("vulnerable") {
+                run_overread(4096, false);
+            };
         }
 
         SUBCASE("slightly more than a chunk") {
-            run_overread(4096 + 100);
+            SUBCASE("mitigated") {
+                run_overread(4096 + 100, true);
+            }
+            SUBCASE("vulnerable") {
+                run_overread(4096 + 100, false);
+            }
         }
 
         SUBCASE("exactly two chunks") {
-            run_overread(4096 * 2);
+            SUBCASE("mitigated") {
+                run_overread(4096 * 2, true);
+            }
+            SUBCASE("vulnerable") {
+                run_overread(4096 * 2, false);
+            }
         }
 
         SUBCASE("slightly more than two chunks") {
-            run_overread(4096 * 2 + 100);
+            SUBCASE("mitigated") {
+                run_overread(4096 * 2 + 100, true);
+            }
+            SUBCASE("vulnerable") {
+                run_overread(4096 * 2 + 100, false);
+            }
         }
     }
 }
