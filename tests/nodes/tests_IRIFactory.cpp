@@ -209,22 +209,19 @@ TEST_CASE("relative prefix") {
     CHECK(fact.from_prefix("pre", "bar").error() == IRIFactoryError::UnknownPrefix);
 }
 
-TEST_CASE("IRIFactor iterators") {
-    IRIFactory fact{};
+TEST_CASE("IRIFactory iterators") {
+    IRIFactory factory{};
 
-    fact.assign_prefix("pre", "http://ex.org/");
-    fact.assign_prefix("foo", "http://foo.org/");
-    std::set<std::string> prefix_values = {"pre", "foo"};
-    std::set<std::string> url_values = {"http://ex.org/", "http://foo.org/"};
-    for (auto const &[prefix, url] : fact) {
-        prefix_values.erase(prefix);
-        url_values.erase(url);
+    factory.assign_prefix("pre", "http://ex.org/");
+    factory.assign_prefix("foo", "http://foo.org/");
+    std::set<std::pair<std::string,std::string>> factory_as_set = {{"pre", "http://ex.org/"}, {"foo", "http://foo.org/"}};
+    for (auto const &item : factory) {
+        factory_as_set.erase(item);
     }
-    CHECK(prefix_values.empty());
-    CHECK(url_values.empty());
+    CHECK(factory_as_set.empty());
 
-    auto iter = fact.begin();
-    auto riter = fact.rbegin();
+    auto iter = factory.begin();
+    auto riter = factory.rbegin();
     CHECK(*iter != *riter);
     ++iter;
     CHECK(*iter == *riter);
