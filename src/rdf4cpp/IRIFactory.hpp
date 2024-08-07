@@ -39,6 +39,15 @@ public:
     IRIFactory(IRIFactory &&) noexcept = default;
     IRIFactory &operator=(IRIFactory &&) noexcept = default;
 
+    // provide only const iterators to ensure that no key/values will be changed
+    using const_iterator = prefix_map_type::const_iterator;
+    using const_reverse_iterator = prefix_map_type::const_reverse_iterator;
+
+    [[nodiscard]] const_iterator begin() const noexcept { return prefixes.begin(); }
+    [[nodiscard]] const_iterator end() const noexcept { return prefixes.end(); }
+    [[nodiscard]] const_reverse_iterator rbegin() const noexcept { return prefixes.rbegin(); }
+    [[nodiscard]] const_reverse_iterator rend() const noexcept { return prefixes.rend(); }
+
     /**
      * Creates a IRI from a possibly relative IRI.
      * Implements https://datatracker.ietf.org/doc/html/rfc3986#section-5.2.

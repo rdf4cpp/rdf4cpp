@@ -208,6 +208,28 @@ TEST_CASE("relative prefix") {
     fact.clear_prefix("pre");
     CHECK(fact.from_prefix("pre", "bar").error() == IRIFactoryError::UnknownPrefix);
 }
+
+TEST_CASE("IRIFactor iterators") {
+    IRIFactory fact{};
+
+    fact.assign_prefix("pre", "http://ex.org/");
+    fact.assign_prefix("foo", "http://foo.org/");
+    std::set<std::string> prefix_values = {"pre", "foo"};
+    std::set<std::string> url_values = {"http://ex.org/", "http://foo.org/"};
+    for (auto const &[prefix, url] : fact) {
+        prefix_values.erase(prefix);
+        url_values.erase(url);
+    }
+    CHECK(prefix_values.empty());
+    CHECK(url_values.empty());
+
+    auto iter = fact.begin();
+    auto riter = fact.rbegin();
+    CHECK(*iter != *riter);
+    ++iter;
+    CHECK(*iter == *riter);
+}
+
 TEST_CASE("char matcher") {
     using namespace util::char_matcher_detail;
 
