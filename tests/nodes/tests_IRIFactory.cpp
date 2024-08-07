@@ -208,6 +208,36 @@ TEST_CASE("relative prefix") {
     fact.clear_prefix("pre");
     CHECK(fact.from_prefix("pre", "bar").error() == IRIFactoryError::UnknownPrefix);
 }
+
+TEST_CASE("IRIFactory iterators") {
+    std::set<std::pair<std::string, std::string>> const expected{{"pre", "http://ex.org/"}, {"foo", "http://foo.org/"}};
+
+    IRIFactory factory{};
+    factory.assign_prefix("pre", "http://ex.org/");
+    factory.assign_prefix("foo", "http://foo.org/");
+
+    std::vector<std::pair<std::string, std::string>> actual;
+    for (auto const &entry : factory) {
+        actual.push_back(entry);
+    }
+
+    std::vector<std::pair<std::string, std::string>> actual_reversed;
+    for (auto const &entry : std::views::reverse(factory)) {
+        actual_reversed.push_back(entry);
+    }
+
+    CHECK(std::ranges::equal(actual, std::views::reverse(actual_reversed)));
+
+    std::ranges::sort(actual);
+    CHECK(std::ranges::equal(actual, expected));
+
+    auto iter = factory.begin();
+    auto riter = factory.rbegin();
+    CHECK(*iter != *riter);
+    ++iter;
+    CHECK(*iter == *riter);
+}
+
 TEST_CASE("char matcher") {
     using namespace util::char_matcher_detail;
 
