@@ -47,8 +47,10 @@ private:
                UnsyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::DayTimeDuration>>,
                UnsyncNodeTypeStorage<SpecializedLiteralBackend<datatypes::xsd::YearMonthDuration>>> specialized_literal_storage_;
 
+    void init();
+
 public:
-    UnsyncReferenceNodeStorage() noexcept;
+    UnsyncReferenceNodeStorage();
 
     [[nodiscard]] size_t size() const noexcept;
     void shrink_to_fit();
