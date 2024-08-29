@@ -661,4 +661,14 @@ TEST_SUITE("IStreamQuadIterator") {
             run_overread(4096 * 2 + 100);
         }
     }
+
+    TEST_CASE("lang tagged literal in datatype style") {
+        std::istringstream iss{R"(<http://a.com#s> <http://a.com#p> "AA"^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#langString> .)"};
+        IStreamQuadIterator qit{iss};
+
+        for (; qit != std::default_sentinel; ++qit) {
+            REQUIRE(!qit->has_value());
+            CHECK_EQ(qit->error().error_type, ParsingError::Type::BadLiteral);
+        }
+    }
 }
