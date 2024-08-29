@@ -5,7 +5,7 @@
 
 namespace rdf4cpp::storage::reference_node_storage {
 
-UnsyncReferenceNodeStorage::UnsyncReferenceNodeStorage() noexcept {
+void UnsyncReferenceNodeStorage::init() {
     iri_storage_.mapping.reserve_until(identifier::NodeID::min_iri_id);
     bnode_storage_.mapping.reserve_until(identifier::NodeID::min_bnode_id);
     variable_storage_.mapping.reserve_until(identifier::NodeID::min_variable_id);
@@ -20,6 +20,10 @@ UnsyncReferenceNodeStorage::UnsyncReferenceNodeStorage() noexcept {
         auto const id = literal_type.to_underlying();
         iri_storage_.mapping.insert_assume_not_present_at(view::IRIBackendView{.identifier = iri}, identifier::NodeID{id});
     }
+}
+
+UnsyncReferenceNodeStorage::UnsyncReferenceNodeStorage() {
+    init();
 }
 
 size_t UnsyncReferenceNodeStorage::size() const noexcept {
@@ -202,6 +206,8 @@ void UnsyncReferenceNodeStorage::clear() noexcept {
     dice::template_library::tuple_for_each(specialized_literal_storage_, [](auto &storage) {
         storage.mapping.clear();
     });
+
+    init();
 }
 
 }  // namespace rdf4cpp::storage::reference_node_storage
