@@ -1,7 +1,7 @@
 import os
 import re
 
-from conan.tools.cmake import cmake_layout, CMake
+from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 from conan import ConanFile
 
@@ -60,6 +60,12 @@ class Recipe(ConanFile):
     def layout(self):
         cmake_layout(self)
 
+    def generate(self):
+        for _, dep in self.dependencies.items():
+            if dep.package_folder is None:
+                continue
+            copy(self, "*LICENSE*", src=dep.package_folder, dst=os.path.join(self.recipe_folder, "licenses", dep.ref.name), ignore_case=True)
+
     def build(self):
         cmake = CMake(self)
         cmake.configure()
@@ -70,8 +76,9 @@ class Recipe(ConanFile):
         cmake.install()
         rmdir(self, os.path.join(self.package_folder, "cmake"))
         rmdir(self, os.path.join(self.package_folder, "share"))
-        copy(self, "LICENSE", src=self.recipe_folder, dst="licenses")
-        copy(self, os.path.join("serd", "COPYING"), src=self.build_folder, dst="licenses")
+        copy(self, "LICENSE", src=self.recipe_folder, dst=os.path.join(self.package_folder, "licenses"))
+        copy(self, "*", os.path.join(self.recipe_folder, "licenses"), dst=os.path.join(self.package_folder, "licenses"))
+        self.output.info(copy(self, "COPYING", src=os.path.join(self.build_folder, "serd"), dst=os.path.join(self.package_folder, "licenses", "serd")))
 
     def package_info(self):
         self.cpp_info.libs = ["rdf4cpp"]
