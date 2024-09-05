@@ -241,7 +241,7 @@ Literal Literal::to_node_storage(storage::DynNodeStoragePtr node_storage) const 
     using datatypes::registry::DatatypeRegistry;
 
     node_storage = select_node_storage(node_storage);
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
@@ -314,7 +314,7 @@ Literal Literal::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage
     using datatypes::registry::DatatypeRegistry;
 
     node_storage = select_node_storage(node_storage);
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 

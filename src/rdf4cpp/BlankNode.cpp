@@ -29,7 +29,7 @@ BlankNode BlankNode::make_unchecked(std::string_view identifier, storage::DynNod
 }
 
 BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
@@ -38,7 +38,7 @@ BlankNode BlankNode::to_node_storage(storage::DynNodeStoragePtr node_storage) co
 }
 
 BlankNode BlankNode::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 

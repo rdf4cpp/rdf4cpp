@@ -28,7 +28,7 @@ Variable Variable::make_unchecked(std::string_view name, bool anonymous, storage
 }
 
 Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
@@ -37,7 +37,7 @@ Variable Variable::to_node_storage(storage::DynNodeStoragePtr node_storage) cons
 }
 
 Variable Variable::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
