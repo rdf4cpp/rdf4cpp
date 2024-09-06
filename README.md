@@ -1,7 +1,5 @@
 ⚠️ This repo is work-in-progress! Before v0.1.0 all APIs are considered unstable and might be subject to change. ⚠️
 
-⚠️ Conan 2 only works when consuming the rdf4cpp conan package. Other usecases (e.g. development) still require Conan 1. ⚠️
-
 # rdf4cpp
 
 rdf4cpp aims to be a stable, modern RDF library for C++.
@@ -35,7 +33,7 @@ If you want to include rdf4cpp without using conan, make sure you also include i
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{13}, clang-{15,16} with libstdc++-13 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{13}, clang-{16,17} with libstdc++-13 on ubuntu 22.04. 
 
 ### Dependencies
 It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
@@ -44,7 +42,7 @@ sudo apt install python3-pip
 pip3 install --user conan
 conan user
 conan profile new --detect default
-conan profile update settings.compiler.libcxx=libstdc++13 default
+conan profile update settings.compiler.libcxx=libstdc++11 default
 conan remote add dice-group https://conan.dice-research.org/artifactory/api/conan/tentris
 ```
 
