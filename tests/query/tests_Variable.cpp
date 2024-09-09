@@ -61,13 +61,13 @@ TEST_CASE("Variable::find") {
 }
 
 TEST_CASE("Variable validity") {
-    query::Variable n{};
-    CHECK_THROWS_AS(n = query::Variable::make_named("\U00000312_not_first"), InvalidNode);
-    CHECK_THROWS_AS(n = query::Variable::make_anonymous("no-"), InvalidNode);
-    CHECK_THROWS_AS(n = query::Variable::make_anonymous("-no"), InvalidNode);
-    CHECK_THROWS_AS(n = query::Variable("may_not_contain."), InvalidNode);
+    CHECK_THROWS_AS((void) query::Variable::make_named("\U00000312_not_first"), InvalidNode);
+    CHECK_THROWS_AS((void) query::Variable::make_named("no-"), InvalidNode);
+    CHECK(query::Variable::make_anonymous("no-").name() == "no-");
+    CHECK_THROWS_AS((void) query::Variable::make_named("-no"), InvalidNode);
+    CHECK_THROWS_AS((void) query::Variable::make_anonymous("-no"), InvalidNode);
+    CHECK_THROWS_AS((void) query::Variable("may_not_contain."), InvalidNode);
     CHECK(query::Variable::make_unchecked("may_not_contain.").name() == "may_not_contain.");
     CHECK(query::Variable::make_named("012_numbers_too567").name() == "012_numbers_too567");
     CHECK(query::Variable::make_named("\U0001f34cthrow_some_unicode_at_it\U0001f34c").name() == "\U0001f34cthrow_some_unicode_at_it\U0001f34c");
-    CHECK(n == query::Variable{});
 }
