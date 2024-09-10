@@ -61,7 +61,7 @@ void IRI::validate(std::string_view s) {
 }
 
 IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
@@ -70,7 +70,7 @@ IRI IRI::to_node_storage(storage::DynNodeStoragePtr node_storage) const {
 }
 
 IRI IRI::try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
-    if (handle_.storage() == node_storage) {
+    if (handle_.storage() == node_storage || null()) {
         return *this;
     }
 
