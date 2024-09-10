@@ -125,7 +125,7 @@ void Variable::validate(std::string_view n, bool anonymous) {
     }
     ++it;
 
-    static constexpr auto matcher = ASCIINumMatcher{} | PNCharsUMatcher | PNChars_UniMatcher{};
+    static constexpr auto matcher = ASCIINumMatcher{} | PNCharsUMatcher | PNChars_UnicodePartMatcher{};
     while (it != r.end()) {
         if (!matcher.match(*it)) {
             throw InvalidNode(std::format("invalid blank node label {}", n));

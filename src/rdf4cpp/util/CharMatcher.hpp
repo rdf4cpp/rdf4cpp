@@ -264,9 +264,9 @@ struct IPrivateMatcher {
 };
 
 /**
- * matches PN_CHARS_BASE of the Turtle/SPARQL specification, without ASCII alpha (or with ASCIIAlphaMatcher).
+ * Matches the unicode part (the characters listed as numbers) of PN_CHARS_BASE of the Turtle/SPARQL specification
  */
-struct PNCharsBase_UniMatcher {
+struct PNCharsBase_UnicodePartMatcher {
     [[nodiscard]] static constexpr bool match(int c) noexcept {
         return (c >= 0xC0 && c <= 0xD6) ||
                (c >= 0xD8 && c <= 0xF6) ||
@@ -295,7 +295,7 @@ struct PNCharsBase_UniMatcher {
 /**
  * matches PN_CHARS_BASE of the Turtle/SPARQL specification
  */
-constexpr auto PNCharsBaseMatcher = ASCIIAlphaMatcher{} | PNCharsBase_UniMatcher{};
+constexpr auto PNCharsBaseMatcher = ASCIIAlphaMatcher{} | PNCharsBase_UnicodePartMatcher{};
 
 /**
  * matches PN_CHARS_U of the Turtle/SPARQL specificiation
@@ -303,9 +303,9 @@ constexpr auto PNCharsBaseMatcher = ASCIIAlphaMatcher{} | PNCharsBase_UniMatcher
 constexpr auto PNCharsUMatcher = ASCIIPatternMatcher{"_"} | PNCharsBaseMatcher;
 
 /**
- * matches PN_CHARS of the Turtle/SPARQL specification, without ASCII num and PN_CHARS_BASE.
+ * Matches the unicode part (the characters listed as numbers) of PN_CHARS of the Turtle/SPARQL specification
  */
-struct PNChars_UniMatcher {
+struct PNChars_UnicodePartMatcher {
     [[nodiscard]] static constexpr bool match(int c) noexcept {
         return c == 0xB7 ||
                (c >= 0x0300 && c <= 0x036F) ||
@@ -325,7 +325,7 @@ struct PNChars_UniMatcher {
 /**
  * matches PN_CHARS of the Turtle/SPARQL specification.
  */
-constexpr auto PNCharsMatcher = ASCIINumMatcher{} | ASCIIPatternMatcher{"-"} | PNCharsUMatcher | PNChars_UniMatcher{};
+constexpr auto PNCharsMatcher = ASCIINumMatcher{} | ASCIIPatternMatcher{"-"} | PNCharsUMatcher | PNChars_UnicodePartMatcher{};
 
 /**
   * iterates over s and tries to match all in m.
