@@ -91,7 +91,7 @@ std::ostream &operator<<(std::ostream &os, BlankNode const &bnode) {
 
 void BlankNode::validate(std::string_view v) {
     using namespace util::char_matcher_detail;
-    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
+    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsUMatcher;
     auto r = v | una::views::utf8;
     auto it = r.begin();
     if (it == r.end()) {
@@ -102,7 +102,7 @@ void BlankNode::validate(std::string_view v) {
     }
     auto lastchar = *it;
     ++it;
-    static constexpr auto pn_matcher = PNCharsMatcher | ASCIIPatternMatcher(".-");
+    static constexpr auto pn_matcher = PNCharsMatcher | ASCIIPatternMatcher{"."};
     while (it != r.end()) {
         if (!pn_matcher.match(*it))
         {

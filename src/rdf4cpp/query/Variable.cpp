@@ -10,7 +10,7 @@ Variable::Variable() noexcept : Node{storage::identifier::NodeBackendHandle{{}, 
 }
 
 Variable::Variable(std::string_view name, bool anonymous, storage::DynNodeStoragePtr node_storage)
-    : Variable{make_unchecked((validate(name), name), anonymous, node_storage)} {}
+    : Variable{make_unchecked((validate(name, anonymous), name), anonymous, node_storage)} {}
 
 Variable::Variable(storage::identifier::NodeBackendHandle handle) noexcept : Node{handle} {}
 
@@ -108,9 +108,13 @@ std::ostream &operator<<(std::ostream &os, Variable const &variable) {
     return os;
 }
 
-void Variable::validate(std::string_view n) {
+void Variable::validate(std::string_view n, bool anonymous) {
+    if (anonymous) {
+        return BlankNode::validate(n);
+    }
+
     using namespace util::char_matcher_detail;
-    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsBaseMatcher;
+    static constexpr auto first_matcher = ASCIINumMatcher{} | PNCharsUMatcher;
     auto r = n | una::views::utf8;
     auto it = r.begin();
     if (it == r.end()) {
@@ -120,9 +124,10 @@ void Variable::validate(std::string_view n) {
         throw InvalidNode(std::format("invalid blank node label {}", n));
     }
     ++it;
+
+    static constexpr auto matcher = ASCIINumMatcher{} | PNCharsUMatcher | PNChars_UnicodePartMatcher{};
     while (it != r.end()) {
-        if (!PNCharsMatcher.match(*it))
-        {
+        if (!matcher.match(*it)) {
             throw InvalidNode(std::format("invalid blank node label {}", n));
         }
         ++it;
