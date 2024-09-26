@@ -278,11 +278,11 @@ Literal Node::as_order_ge(Node const &other, storage::DynNodeStoragePtr node_sto
 }
 
 std::partial_ordering Node::operator<=>(Node const &other) const noexcept {
-    return compare(other);
+    return order(other);
 }
 
 bool Node::operator==(const Node &other) const noexcept {
-    return eq(other);
+    return order_eq(other);
 }
 
 BlankNode Node::as_blank_node() const noexcept {

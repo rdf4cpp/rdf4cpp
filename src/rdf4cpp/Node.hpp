@@ -204,12 +204,12 @@ public:
     [[nodiscard]] Literal as_order_ge(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
 
     /**
-     * Equivalent to this->eq(other)
+     * Equivalent to this->order_eq(other)
      */
     bool operator==(const Node &other) const noexcept;
 
     /**
-     * Equivalent to this->compare(other)
+     * Equivalent to this->order(other)
      */
     std::partial_ordering operator<=>(Node const &other) const noexcept;
 
