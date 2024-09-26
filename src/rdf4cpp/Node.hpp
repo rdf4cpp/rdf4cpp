@@ -11,11 +11,12 @@
 #include <string>
 
 namespace rdf4cpp {
+
 struct Literal;
 struct BlankNode;
 struct IRI;
 namespace query {
-struct Variable;
+    struct Variable;
 } // namespace rdf4cpp
 
 /**
@@ -83,6 +84,14 @@ inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
 struct Node {
 protected:
     storage::identifier::NodeBackendHandle handle_;
+
+    [[nodiscard]] storage::DynNodeStoragePtr select_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+        if (node_storage == keep_node_storage) {
+            return handle_.storage();
+        } else {
+            return node_storage;
+        }
+    }
 
 public:
     explicit Node(storage::identifier::NodeBackendHandle id) noexcept;
@@ -165,9 +174,44 @@ public:
      */
     [[nodiscard]] bool is_inlined() const noexcept;
 
+    [[nodiscard]] std::partial_ordering compare(Node const &other) const noexcept;
+    [[nodiscard]] std::weak_ordering order(Node const &other) const noexcept;
+
+    [[nodiscard]] TriBool eq(Node const &other) const noexcept;
+    [[nodiscard]] bool order_eq(Node const &other) const noexcept;
+    [[nodiscard]] TriBool ne(Node const &other) const noexcept;
+    [[nodiscard]] bool order_ne(Node const &other) const noexcept;
+    [[nodiscard]] TriBool lt(Node const &other) const noexcept;
+    [[nodiscard]] bool order_lt(Node const &other) const noexcept;
+    [[nodiscard]] TriBool le(Node const &other) const noexcept;
+    [[nodiscard]] bool order_le(Node const &other) const noexcept;
+    [[nodiscard]] TriBool gt(Node const &other) const noexcept;
+    [[nodiscard]] bool order_gt(Node const &other) const noexcept;
+    [[nodiscard]] TriBool ge(Node const &other) const noexcept;
+    [[nodiscard]] bool order_ge(Node const &other) const noexcept;
+
+    [[nodiscard]] Literal as_eq(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_eq(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ne(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ne(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_lt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_lt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_le(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_le(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_gt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_gt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ge(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ge(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+
+    /**
+     * Equivalent to this->eq(other)
+     */
     bool operator==(const Node &other) const noexcept;
 
-    std::weak_ordering operator<=>(const Node &other) const noexcept;
+    /**
+     * Equivalent to this->compare(other)
+     */
+    std::partial_ordering operator<=>(Node const &other) const noexcept;
 
     /**
      * @return the effective boolean value of this
@@ -231,6 +275,19 @@ public:
 
 static_assert(sizeof(Node) == sizeof(void *) * 3);
 static_assert(alignof(Node) == alignof(void *));
+
+
+struct OrderByLess {
+    bool operator()(Node lhs, Node rhs) const noexcept {
+        return lhs.order_lt(rhs);
+    }
+};
+
+struct OrderByGreater {
+    bool operator()(Node lhs, Node rhs) const noexcept {
+      return lhs.order_gt(rhs);
+    }
+};
 
 }  // namespace rdf4cpp
 

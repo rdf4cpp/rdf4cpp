@@ -192,15 +192,6 @@ private:
     template<bool simplified, typename C>
     auto serialize_lexical_form_impl(C &&consume) const noexcept;
 
-
-    [[nodiscard]] storage::DynNodeStoragePtr select_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
-        if (node_storage == keep_node_storage) {
-            return handle_.storage();
-        } else {
-            return node_storage;
-        }
-    }
-
     explicit Literal(storage::identifier::NodeBackendHandle handle) noexcept;
 
 public:
@@ -950,20 +941,12 @@ public:
     [[nodiscard]] bool is_numeric() const noexcept;
 
     /**
-     * The default (value-only) comparison function
-     * without SPARQL operator extensions.
-     *
-     * @return the value ordering of this and other
+     * The default literal comparison function for SPARQL filters (FILTER)
      */
     [[nodiscard]] std::partial_ordering compare(Literal const &other) const noexcept;
 
     /**
-     * A convenient (and equivalent) alternative to compare.
-     */
-    std::partial_ordering operator<=>(Literal const &other) const noexcept;
-
-    /**
-     * The comparison function with SPARQL operator extensions.
+     * The comparison function for SPARQL orderings (ORDER BY).
      *
      * @return similar to `compare` but:
      *      - values of an incomparable type are all considered equivalent
@@ -973,44 +956,43 @@ public:
      *          - at least one of the value's types is not comparable
      *          - there is no viable conversion to a common type to check for equality
      */
-    [[nodiscard]] std::weak_ordering compare_with_extensions(Literal const &other) const noexcept;
+    [[nodiscard]] std::weak_ordering order(Literal const &other) const noexcept;
 
     [[nodiscard]] TriBool eq(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_eq(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator==(Literal const &other) const noexcept;
-
+    [[nodiscard]] bool order_eq(Literal const &other) const noexcept;
     [[nodiscard]] TriBool ne(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_ne(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator!=(Literal const &other) const noexcept;
-
+    [[nodiscard]] bool order_ne(Literal const &other) const noexcept;
     [[nodiscard]] TriBool lt(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_lt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator<(Literal const &other) const noexcept;
-
+    [[nodiscard]] bool order_lt(Literal const &other) const noexcept;
     [[nodiscard]] TriBool le(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_le(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator<=(Literal const &other) const noexcept;
-
+    [[nodiscard]] bool order_le(Literal const &other) const noexcept;
     [[nodiscard]] TriBool gt(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_gt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator>(Literal const &other) const noexcept;
-
+    [[nodiscard]] bool order_gt(Literal const &other) const noexcept;
     [[nodiscard]] TriBool ge(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_ge(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    TriBool operator>=(Literal const &other) const noexcept;
+    [[nodiscard]] bool order_ge(Literal const &other) const noexcept;
 
-    [[nodiscard]] bool eq_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_eq_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    [[nodiscard]] bool ne_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_ne_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    [[nodiscard]] bool lt_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_lt_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    [[nodiscard]] bool le_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_le_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    [[nodiscard]] bool gt_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_gt_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
-    [[nodiscard]] bool ge_with_extensions(Literal const &other) const noexcept;
-    [[nodiscard]] Literal as_ge_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_eq(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_eq(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ne(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ne(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_lt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_lt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_le(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_le(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_gt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_gt(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ge(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ge(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+
+    /**
+     * Equivalent to this->compare(other)
+     */
+    std::partial_ordering operator<=>(Literal const &other) const noexcept;
+
+    /**
+     * Equivalent to this->eq(other)
+     */
+    bool operator==(Literal const &other) const noexcept;
 
     [[nodiscard]] Literal add(Literal const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const;
     Literal operator+(Literal const &other) const;

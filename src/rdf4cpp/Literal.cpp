@@ -1179,11 +1179,7 @@ std::partial_ordering Literal::compare(Literal const &other) const noexcept {
     return this->compare_impl(other);
 }
 
-std::partial_ordering Literal::operator<=>(Literal const &other) const noexcept {
-    return this->compare(other);
-}
-
-std::weak_ordering Literal::compare_with_extensions(Literal const &other) const noexcept {
+std::weak_ordering Literal::order(Literal const &other) const noexcept {
     // default to equivalent; as required by compare_impl
     // see doc for compare_impl
     std::strong_ordering alternative_cmp_res = std::strong_ordering::equivalent;
@@ -1207,20 +1203,12 @@ Literal Literal::as_eq(Literal const &other, storage::DynNodeStoragePtr node_sto
     return Literal::make_boolean(this->eq(other), select_node_storage(node_storage));
 }
 
-TriBool Literal::operator==(Literal const &other) const noexcept {
-    return this->eq(other);
-}
-
 TriBool Literal::ne(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::equivalent);
 }
 
 Literal Literal::as_ne(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
     return Literal::make_boolean(this->ne(other), select_node_storage(node_storage));
-}
-
-TriBool Literal::operator!=(Literal const &other) const noexcept {
-    return this->ne(other);
 }
 
 TriBool Literal::lt(Literal const &other) const noexcept {
@@ -1231,20 +1219,12 @@ Literal Literal::as_lt(Literal const &other, storage::DynNodeStoragePtr node_sto
     return Literal::make_boolean(this->lt(other), select_node_storage(node_storage));
 }
 
-TriBool Literal::operator<(Literal const &other) const noexcept {
-    return this->lt(other);
-}
-
 TriBool Literal::le(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::greater);
 }
 
 Literal Literal::as_le(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
     return Literal::make_boolean(this->le(other), select_node_storage(node_storage));
-}
-
-TriBool Literal::operator<=(Literal const &other) const noexcept {
-    return this->le(other);
 }
 
 TriBool Literal::gt(Literal const &other) const noexcept {
@@ -1255,10 +1235,6 @@ Literal Literal::as_gt(Literal const &other, storage::DynNodeStoragePtr node_sto
     return Literal::make_boolean(this->gt(other), select_node_storage(node_storage));
 }
 
-TriBool Literal::operator>(Literal const &other) const noexcept {
-    return this->gt(other);
-}
-
 TriBool Literal::ge(Literal const &other) const noexcept {
     return !util::partial_weak_ordering_eq(this->compare(other), std::weak_ordering::less);
 }
@@ -1267,56 +1243,60 @@ Literal Literal::as_ge(Literal const &other, storage::DynNodeStoragePtr node_sto
     return Literal::make_boolean(this->ge(other), select_node_storage(node_storage));
 }
 
-TriBool Literal::operator>=(Literal const &other) const noexcept {
-    return this->ge(other);
+bool Literal::order_eq(Literal const &other) const noexcept {
+    return order(other) == std::weak_ordering::equivalent;
 }
 
-bool Literal::eq_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) == std::weak_ordering::equivalent;
+Literal Literal::as_order_eq(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_eq(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_eq_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->eq_with_extensions(other), select_node_storage(node_storage));
+bool Literal::order_ne(Literal const &other) const noexcept {
+    return order(other) != std::weak_ordering::equivalent;
 }
 
-bool Literal::ne_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) != std::weak_ordering::equivalent;
+Literal Literal::as_order_ne(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_ne(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_ne_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->ne_with_extensions(other), select_node_storage(node_storage));
+bool Literal::order_lt(Literal const &other) const noexcept {
+    return order(other) == std::weak_ordering::less;
 }
 
-bool Literal::lt_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) == std::weak_ordering::less;
+Literal Literal::as_order_lt(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_lt(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_lt_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->lt_with_extensions(other), select_node_storage(node_storage));
+bool Literal::order_le(Literal const &other) const noexcept {
+    return order(other) != std::weak_ordering::greater;
 }
 
-bool Literal::le_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) != std::weak_ordering::greater;
+Literal Literal::as_order_le(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_le(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_le_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->le_with_extensions(other), select_node_storage(node_storage));
+bool Literal::order_gt(Literal const &other) const noexcept {
+    return order(other) == std::weak_ordering::greater;
 }
 
-bool Literal::gt_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) == std::weak_ordering::greater;
+Literal Literal::as_order_gt(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_gt(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_gt_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->gt_with_extensions(other), select_node_storage(node_storage));
+bool Literal::order_ge(Literal const &other) const noexcept {
+    return order(other) != std::weak_ordering::less;
 }
 
-bool Literal::ge_with_extensions(Literal const &other) const noexcept {
-    return this->compare_with_extensions(other) != std::weak_ordering::less;
+Literal Literal::as_order_ge(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(this->order_ge(other), select_node_storage(node_storage));
 }
 
-Literal Literal::as_ge_with_extensions(Literal const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
-    return Literal::make_boolean(this->ge_with_extensions(other), select_node_storage(node_storage));
+std::partial_ordering Literal::operator<=>(Literal const &other) const noexcept {
+    return compare(other);
+}
+
+bool Literal::operator==(Literal const &other) const noexcept {
+    return this->eq(other);
 }
 
 datatypes::registry::DatatypeIDView Literal::datatype_id() const noexcept {
