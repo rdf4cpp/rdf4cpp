@@ -1540,6 +1540,25 @@ Literal operator""_xsd_long(unsigned long long int i);
 Literal operator""_xsd_ulong(unsigned long long int i);
 
 }  // namespace shorthands
+
+/**
+ * Less-than comparator for use of Literals in ordered container (e.g. std::set)
+ */
+struct LiteralOrderByLess {
+    bool operator()(Literal lhs, Literal rhs) const noexcept {
+        return lhs.order_lt(rhs);
+    }
+};
+
+/**
+ * Greater-than comparator for use of Literals in ordered container (e.g. std::set)
+ */
+struct LiteralOrderByGreater {
+    bool operator()(Literal lhs, Literal rhs) const noexcept {
+        return lhs.order_gt(rhs);
+    }
+};
+
 }  // namespace rdf4cpp
 
 template<>

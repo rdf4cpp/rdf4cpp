@@ -276,19 +276,6 @@ public:
 static_assert(sizeof(Node) == sizeof(void *) * 3);
 static_assert(alignof(Node) == alignof(void *));
 
-
-struct OrderByLess {
-    bool operator()(Node lhs, Node rhs) const noexcept {
-        return lhs.order_lt(rhs);
-    }
-};
-
-struct OrderByGreater {
-    bool operator()(Node lhs, Node rhs) const noexcept {
-      return lhs.order_gt(rhs);
-    }
-};
-
 }  // namespace rdf4cpp
 
 template<>
