@@ -156,7 +156,7 @@ TEST_SUITE("comparisions") {
         BlankNode const blank_node{"some_random_id"};
         query::Variable const variable{"a_variable"};
 
-        std::set<Node, OrderByLess> const s{
+        std::set<Node> const s{
                 lit, iri, node, lit2, blank_node, null_iri, lit3, variable, lit4};
 
         std::vector<Node> const v{s.begin(), s.end()};

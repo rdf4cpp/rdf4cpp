@@ -120,15 +120,6 @@ bool Node::is_inlined() const noexcept {
     return handle_.is_inlined();
 }
 
-template<typename T>
-[[nodiscard]] static std::partial_ordering eq_else_unordered(T const &a, T const &b) noexcept {
-    if (a == b) {
-        return std::partial_ordering::equivalent;
-    }
-
-    return std::partial_ordering::unordered;
-}
-
 std::partial_ordering Node::compare(Node const &other) const noexcept{
     if (handle_ == other.handle_) {
         return std::partial_ordering::equivalent;
@@ -151,13 +142,13 @@ std::partial_ordering Node::compare(Node const &other) const noexcept{
             return Literal{handle_}.compare(Literal{other.handle_});
         }
         case RDFNodeType::IRI: {
-            return eq_else_unordered(handle_.iri_backend(), other.handle_.iri_backend());
+            return handle_.iri_backend() <=> other.handle_.iri_backend();
         }
         case RDFNodeType::BNode: {
-            return eq_else_unordered(handle_.bnode_backend(), other.handle_.bnode_backend());
+            return handle_.bnode_backend() <=> other.handle_.bnode_backend();
         }
         case RDFNodeType::Variable: {
-            return eq_else_unordered(handle_.variable_backend(), other.handle_.variable_backend());
+            return handle_.variable_backend() <=> other.handle_.variable_backend();
         }
         default: {
             assert(false); // unreachable
