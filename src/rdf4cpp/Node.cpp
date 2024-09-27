@@ -120,41 +120,60 @@ bool Node::is_inlined() const noexcept {
     return handle_.is_inlined();
 }
 
-std::partial_ordering Node::compare(Node const &other) const noexcept{
+TriBool Node::eq_impl(Node const &other) const noexcept {
     if (handle_ == other.handle_) {
-        return std::partial_ordering::equivalent;
+        return TriBool::True;
     }
 
     if (handle_.type() != other.handle_.type()) {
-        return std::partial_ordering::unordered;
+        return TriBool::Err;
     }
 
-    // unbound
     if (null()) {
-        return std::weak_ordering::less;
-    } else if (other.null()) {
-        return std::weak_ordering::greater;
+        assert(!other.null()); // otherwise handle_ would equal other.handle (handled above)
+        return TriBool::False;
     }
 
     using storage::identifier::RDFNodeType;
     switch (handle_.type()) {
         case RDFNodeType::Literal: {
-            return Literal{handle_}.compare(Literal{other.handle_});
+            return Literal{handle_}.eq(Literal{other.handle_});
         }
         case RDFNodeType::IRI: {
-            return handle_.iri_backend() <=> other.handle_.iri_backend();
+            return handle_.iri_backend() == other.handle_.iri_backend();
         }
         case RDFNodeType::BNode: {
-            return handle_.bnode_backend() <=> other.handle_.bnode_backend();
+            return handle_.bnode_backend() == other.handle_.bnode_backend();
         }
         case RDFNodeType::Variable: {
-            return handle_.variable_backend() <=> other.handle_.variable_backend();
+            return handle_.variable_backend() == other.handle_.variable_backend();
         }
         default: {
             assert(false); // unreachable
-            return std::partial_ordering::unordered;
+            return TriBool::Err;
         }
     }
+}
+
+std::partial_ordering Node::compare_impl(Node const &other) const noexcept{
+    if (handle_ == other.handle_) {
+        return std::partial_ordering::equivalent;
+    }
+
+    if (handle_.type() != other.handle_.type() || handle_.type() != storage::identifier::RDFNodeType::Literal) {
+        // mismatched node types are not comparable
+        // and nodes other than literals are not comparable with <,<=,>,>=
+        return std::partial_ordering::unordered;
+    }
+
+    // unbound
+    if (null()) {
+        return std::partial_ordering::less;
+    } else if (other.null()) {
+        return std::partial_ordering::greater;
+    }
+
+    return Literal{handle_}.compare(Literal{other.handle_});
 }
 
 std::weak_ordering Node::order(Node const &other) const noexcept {
@@ -195,37 +214,37 @@ std::weak_ordering Node::order(Node const &other) const noexcept {
 }
 
 TriBool Node::eq(Node const &other) const noexcept {
-    return util::partial_weak_ordering_eq(compare(other), std::weak_ordering::equivalent);
+    return eq_impl(other);
 }
 bool Node::order_eq(Node const &other) const noexcept {
     return order(other) == std::weak_ordering::equivalent;
 }
 TriBool Node::ne(Node const &other) const noexcept {
-    return !util::partial_weak_ordering_eq(compare(other), std::weak_ordering::equivalent);
+    return !eq_impl(other);
 }
 bool Node::order_ne(Node const &other) const noexcept {
     return order(other) != std::weak_ordering::equivalent;
 }
 TriBool Node::lt(Node const &other) const noexcept {
-    return util::partial_weak_ordering_eq(compare(other), std::weak_ordering::less);
+    return util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::less);
 }
 bool Node::order_lt(Node const &other) const noexcept {
     return order(other) == std::weak_ordering::less;
 }
 TriBool Node::le(Node const &other) const noexcept {
-    return !util::partial_weak_ordering_eq(compare(other), std::weak_ordering::greater);
+    return !util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::greater);
 }
 bool Node::order_le(Node const &other) const noexcept {
     return order(other) != std::weak_ordering::greater;
 }
 TriBool Node::gt(Node const &other) const noexcept {
-    return util::partial_weak_ordering_eq(compare(other), std::weak_ordering::greater);
+    return util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::greater);
 }
 bool Node::order_gt(Node const &other) const noexcept {
     return order(other) == std::weak_ordering::greater;
 }
 TriBool Node::ge(Node const &other) const noexcept {
-    return !util::partial_weak_ordering_eq(compare(other), std::weak_ordering::less);
+    return !util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::less);
 }
 bool Node::order_ge(Node const &other) const noexcept {
     return order(other) != std::weak_ordering::less;

@@ -941,7 +941,9 @@ public:
     [[nodiscard]] bool is_numeric() const noexcept;
 
     /**
-     * The default literal comparison function for SPARQL filters (FILTER)
+     * The literal comparison function for SPARQL filters (FILTER).
+     * In contrast to Node we can provide a combined "compare" function
+     * here because in Literals the definitions of ==/!= and </<=/>/>= are not split.
      */
     [[nodiscard]] std::partial_ordering compare(Literal const &other) const noexcept;
 

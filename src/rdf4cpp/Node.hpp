@@ -93,6 +93,17 @@ protected:
         }
     }
 
+    /**
+     * Implementation for eq() and ne()
+     */
+    [[nodiscard]] TriBool eq_impl(Node const &other) const noexcept;
+
+    /**
+     * Implementation for lt(), gt(), le(), ge()
+     * Do not use for eq() or ne()
+     */
+    [[nodiscard]] std::partial_ordering compare_impl(Node const &other) const noexcept;
+
 public:
     explicit Node(storage::identifier::NodeBackendHandle id) noexcept;
 
@@ -174,9 +185,22 @@ public:
      */
     [[nodiscard]] bool is_inlined() const noexcept;
 
-    [[nodiscard]] std::partial_ordering compare(Node const &other) const noexcept;
+    /**
+     * The comparison function for SPARQL orderings (ORDER BY).
+     *
+     * For FILTER semantics, use eq,ne,lt,le,gt,ge.
+     *
+     * The difference between this and FILTER semantics, is that here BlankNode, Variable, IRI are compared
+     * based on their string representation, and thus have an ordering.
+     * For Literals you can find information about the differences in Literal::order
+     */
     [[nodiscard]] std::weak_ordering order(Node const &other) const noexcept;
 
+    /**
+     * The equality function for SPARQL filters (FILTER).
+     * Due to the split definition of ==/!= and </<=/>/>= in SPARQL
+     * we cannot provide a "compare" function for FILTER semantics.
+     */
     [[nodiscard]] TriBool eq(Node const &other) const noexcept;
     [[nodiscard]] bool order_eq(Node const &other) const noexcept;
     [[nodiscard]] TriBool ne(Node const &other) const noexcept;
