@@ -942,16 +942,19 @@ public:
 
     /**
      * The literal comparison function for SPARQL filters (FILTER).
-     * In contrast to Node we can provide a combined "compare" function
-     * here because in Literals the definitions of ==/!= and </<=/>/>= are not split.
+     * In contrast to Node, here we can provide a combined "compare" function
+     * here because for Literals the definitions of ==/!= and </<=/>/>= are not split in the SPARQL spec.
+     *
+     * https://www.w3.org/TR/sparql11-query/#OperatorMapping
      */
     [[nodiscard]] std::partial_ordering compare(Literal const &other) const noexcept;
 
     /**
      * The comparison function for SPARQL orderings (ORDER BY).
+     * For FILTER semantics use compare.
      *
      * @return similar to `compare` but:
-     *      - values of an incomparable type are all considered equivalent
+     *      - all values of an incomparable type are considered equivalent
      *      - a null literal is the smallest possible value of all types
      *      - the type ordering replaces the value ordering in the following cases
      *          - the values are equal

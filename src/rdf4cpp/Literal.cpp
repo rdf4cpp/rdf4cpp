@@ -1118,6 +1118,10 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
                                                 ? std::strong_ordering::less
                                                 : std::strong_ordering::greater;
         }
+
+        // TODO is an error or false?
+        // unbound == bound   => err ?
+        // unbount == unbound => err ?
         return std::partial_ordering::unordered;
     }
 

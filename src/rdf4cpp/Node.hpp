@@ -185,6 +185,17 @@ public:
      */
     [[nodiscard]] bool is_inlined() const noexcept;
 
+
+    /**
+     * Due to the split definition of ==/!= and </<=/>/>= in SPARQL
+     * we cannot provide a "compare" function for FILTER semantics.
+     * Specifically, in SPARQL IRIs,BlankNodes and Variables are comparable via == and !=, but not
+     * via <,<=,>,>=.
+     *
+     * https://www.w3.org/TR/sparql11-query/#OperatorMapping
+     */
+    // [[nodiscard]] std::partial_ordering compare(Node const &other) const noexcept;
+
     /**
      * The comparison function for SPARQL orderings (ORDER BY).
      *

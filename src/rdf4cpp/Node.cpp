@@ -129,9 +129,11 @@ TriBool Node::eq_impl(Node const &other) const noexcept {
         return TriBool::Err;
     }
 
-    if (null()) {
-        assert(!other.null()); // otherwise handle_ would equal other.handle (handled above)
-        return TriBool::False;
+    if (null() || other.null()) {
+        // TODO is an error or false?
+        // unbound == bound   => err ?
+        // unbount == unbound => err ?
+        return TriBool::Err;
     }
 
     using storage::identifier::RDFNodeType;
@@ -164,13 +166,6 @@ std::partial_ordering Node::compare_impl(Node const &other) const noexcept{
         // mismatched node types are not comparable
         // and nodes other than literals are not comparable with <,<=,>,>=
         return std::partial_ordering::unordered;
-    }
-
-    // unbound
-    if (null()) {
-        return std::partial_ordering::less;
-    } else if (other.null()) {
-        return std::partial_ordering::greater;
     }
 
     return Literal{handle_}.compare(Literal{other.handle_});
