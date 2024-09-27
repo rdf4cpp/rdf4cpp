@@ -42,6 +42,7 @@ private:
     nonstd::expected<IRI, SerdStatus> get_iri(SerdNode const *node) noexcept;
     nonstd::expected<IRI, SerdStatus> get_prefixed_iri(SerdNode const *node) noexcept;
     nonstd::expected<Literal, SerdStatus> get_literal(SerdNode const *literal, SerdNode const *datatype, SerdNode const *lang) noexcept;
+    SerdStatus inspect_node(Node const &node) noexcept;
 
     static SerdStatus on_error(void *voided_self, SerdError const *error) noexcept;
     static SerdStatus on_base(void *voided_self, SerdNode const *uri) noexcept;

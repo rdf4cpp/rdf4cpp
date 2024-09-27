@@ -48,6 +48,12 @@ struct ParsingState {
      * By default no scope is used, this means all blank nodes will keep the labels from the file.
      */
     bnode_mngt::DynNodeScopeManagerPtr blank_node_scope_manager = nullptr;
+
+    /**
+     * A function that is called for each node that is parsed.
+     * To discard a triple throw an exception from this function.
+     */
+    std::function<void(Node const &)> inspect_node_func = []([[maybe_unused]] Node const &n) { /* noop */ };
 };
 
 }  //namespace rdf4cpp::parser
