@@ -62,7 +62,7 @@ using Incomparable = registry::LiteralDatatypeImpl<registry::Incomparable>;
 
 
 
-TEST_SUITE("comparisions") {
+TEST_SUITE("comparisons") {
     using namespace datatypes::xsd;
 
     TEST_CASE("Ordering") {
@@ -119,7 +119,7 @@ TEST_SUITE("comparisions") {
         SUBCASE("nulls") {
             CHECK(Literal{}.order(Literal{}) == std::partial_ordering::equivalent);
 
-            // null <=> other (expecting null < any other a)
+            // null <=> other (expecting null < any other Literal)
             CHECK(Literal{}.order(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);
             CHECK(Literal::make_typed_from_value<String>("123").order(Literal{}) == std::weak_ordering::greater);
         }

@@ -190,10 +190,6 @@ std::weak_ordering Node::order(Node const &other) const noexcept {
         return std::weak_ordering::greater;
     }
 
-    if (this->handle_ == other.handle_) {
-        return std::weak_ordering::equivalent;
-    }
-
     // different type
     if (std::strong_ordering const type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent){
         return type_comp;
