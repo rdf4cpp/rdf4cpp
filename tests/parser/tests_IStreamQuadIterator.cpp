@@ -698,7 +698,10 @@ TEST_SUITE("IStreamQuadIterator") {
                 }
                 case 1: {
                     REQUIRE(qit->has_value());
-                    CHECK_EQ(qit->value().subject().as_iri().identifier(), "http://a.com#s2");
+                    CHECK_EQ(qit->value().graph(), IRI::default_graph());
+                    CHECK_EQ(qit->value().subject(), IRI::make("http://a.com#s2"));
+                    CHECK_EQ(qit->value().predicate(), IRI::make("http://a.com#p2"));
+                    CHECK_EQ(qit->value().object(), IRI::make("http://a.com#o2"));
                     break;
                 }
                 default: {
