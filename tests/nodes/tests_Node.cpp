@@ -80,7 +80,7 @@ TEST_SUITE("comparisions") {
 
     TEST_CASE("filter compare tests") {
         SUBCASE("nulls") {
-            CHECK(Literal{} <=> Literal{} == std::partial_ordering::equivalent);
+            CHECK(Literal{} <=> Literal{} == std::partial_ordering::unordered);
             CHECK(Literal{} <=> Literal::make_typed_from_value<Int>(1) == std::partial_ordering::unordered);
             CHECK(Literal::make_typed_from_value<Decimal>(rdf4cpp::BigDecimal(1.0)) <=> Literal{} == std::partial_ordering::unordered);
         }
@@ -117,7 +117,7 @@ TEST_SUITE("comparisions") {
         }
 
         SUBCASE("nulls") {
-            CHECK(Literal{}.order(Literal{}) == std::weak_ordering::equivalent);
+            CHECK(Literal{}.order(Literal{}) == std::partial_ordering::equivalent);
 
             // null <=> other (expecting null < any other a)
             CHECK(Literal{}.order(Literal::make_typed_from_value<Int>(1)) == std::weak_ordering::less);

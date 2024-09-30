@@ -35,5 +35,5 @@ TEST_CASE("date/time") {
     CHECK(Literal::make_typed<datatypes::xsd::DateTime>("1742-2-40T26:90:60") == Literal::make_typed<datatypes::xsd::DateTime>("1742-3-13T3:31:0"));
     CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("1742-2-40T26:90:60Z") == Literal::make_typed<datatypes::xsd::DateTimeStamp>("1742-3-13T3:31:0Z"));
     CHECK(Literal::make_typed<datatypes::xsd::DateTimeStamp>("1742-2-40T10:10:10Z") == Literal::make_typed<datatypes::xsd::DateTimeStamp>("1742-3-12T10:10:10Z"));
-    CHECK(u == Literal{});
+    CHECK(u.null());
 }

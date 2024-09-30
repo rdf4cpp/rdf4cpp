@@ -121,18 +121,17 @@ bool Node::is_inlined() const noexcept {
 }
 
 TriBool Node::eq_impl(Node const &other) const noexcept {
+    if (null() || other.null()) {
+        // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
+        // - https://www.w3.org/TR/sparql11-query/#evaluation
+        return TriBool::Err;
+    }
+
     if (handle_ == other.handle_) {
         return TriBool::True;
     }
 
     if (handle_.type() != other.handle_.type()) {
-        return TriBool::Err;
-    }
-
-    if (null() || other.null()) {
-        // TODO is an error or false?
-        // unbound == bound   => err ?
-        // unbount == unbound => err ?
         return TriBool::Err;
     }
 
@@ -157,7 +156,13 @@ TriBool Node::eq_impl(Node const &other) const noexcept {
     }
 }
 
-std::partial_ordering Node::compare_impl(Node const &other) const noexcept{
+std::partial_ordering Node::compare_impl(Node const &other) const noexcept {
+    if (null() || other.null()) {
+        // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
+        // - https://www.w3.org/TR/sparql11-query/#evaluation
+        return std::partial_ordering::unordered;
+    }
+
     if (handle_ == other.handle_) {
         return std::partial_ordering::equivalent;
     }
@@ -172,19 +177,21 @@ std::partial_ordering Node::compare_impl(Node const &other) const noexcept{
 }
 
 std::weak_ordering Node::order(Node const &other) const noexcept {
-    if (this->handle_ == other.handle_) {
-        return std::weak_ordering::equivalent;
-    }
-
+    // first, check for null nodes
+    // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
+    // - https://www.w3.org/TR/sparql11-query/#evaluation
     if (this->null() && other.null()) {
         return this->handle_.type() <=> other.handle_.type();
     }
-
-    // unbound
     if (this->null()) {
         return std::weak_ordering::less;
-    } else if (other.null()) {
+    }
+    if (other.null()) {
         return std::weak_ordering::greater;
+    }
+
+    if (this->handle_ == other.handle_) {
+        return std::weak_ordering::equivalent;
     }
 
     // different type

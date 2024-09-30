@@ -790,7 +790,7 @@ TEST_CASE("Literal - misc functions") {
         CHECK(Literal::make_lang_tagged("abcd", "en").regex_replace(Literal::make_lang_tagged("b", "fr"), "Z"_xsd_string).null());
 
         CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\\\hgfhf World"_xsd_string) == "Hello Hello \\hgfhf World World"_xsd_string);
-        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\hgfhf World"_xsd_string) == Literal{});
+        CHECK(("Hello 1 World"_xsd_string).regex_replace("[0-9]"_xsd_string, "Hello \\hgfhf World"_xsd_string).null());
 
         CHECK(Literal::make_simple("abc\ndef\ngh").regex_replace("(def)"_xsd_string, "y$1x"_xsd_string, ""_xsd_string) == Literal::make_simple("abc\nydefx\ngh"));
         CHECK(Literal::make_simple("abc\ndef\ngh").regex_replace("^(def)$"_xsd_string, "y$1x"_xsd_string, "m"_xsd_string) == Literal::make_simple("abc\nydefx\ngh"));
@@ -839,7 +839,7 @@ TEST_CASE("URI encoding") {
         CHECK_EQ(Literal::make_typed(data, IRI{"http://www.w3.org/2001/XMLSchema#string"}).encode_for_uri(), Literal::make_simple(data_encoded));
     }
     SUBCASE("invalid UTF-8") {
-        CHECK_EQ(Literal::encode_for_uri("\xce"), Literal{});
+        CHECK(Literal::encode_for_uri("\xce").null());
     }
 }
 
@@ -1087,11 +1087,11 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         static constexpr auto bv = get_find_values<T>::bv;
         auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
-        CHECK(Literal::find_typed_from_value<T>(av, nst) == Literal{});
+        CHECK(Literal::find_typed_from_value<T>(av, nst).null());
         Literal l = Literal::make_typed_from_value<T>(av, nst);
         CHECK(Literal::find_typed_from_value<T>(av, nst) == l);
         CHECK(Literal::find_typed_from_value<T>(av, nst).backend_handle() == l.backend_handle());
-        CHECK(Literal::find_typed_from_value<T>(bv, nst) == Literal{});
+        CHECK(Literal::find_typed_from_value<T>(bv, nst).null());
     }
     if constexpr (requires { get_find_values<T>::inl; }) {
         auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
@@ -1103,11 +1103,11 @@ TEST_CASE_TEMPLATE("Literal::find", T, datatypes::xsd::String, datatypes::rdf::L
         static constexpr auto bs = get_find_values<T>::bs;
         auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
 
-        CHECK(Literal::find_typed<T>(as, nst) == Literal{});
+        CHECK(Literal::find_typed<T>(as, nst).null());
         Literal l = Literal::make_typed<T>(as, nst);
         CHECK(Literal::find_typed<T>(as, nst) == l);
         CHECK(Literal::find_typed<T>(as, nst).backend_handle() == l.backend_handle());
-        CHECK(Literal::find_typed<T>(bs, nst) == Literal{});
+        CHECK(Literal::find_typed<T>(bs, nst).null());
     }
     if constexpr (requires { get_find_values<T>::inls; }) {
         auto nst = storage::reference_node_storage::SyncReferenceNodeStorage{};
