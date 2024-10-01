@@ -69,7 +69,7 @@ void comparisons() {
     assert(lit1 < lit2);
     assert(lit1 == lit3);
     assert(lit2 > lit3);
-    assert(lit1.compare_with_extensions(lit3) == std::partial_ordering::less);
+    assert(lit1.order(lit3) == std::partial_ordering::less);
 }
 
 int main() {

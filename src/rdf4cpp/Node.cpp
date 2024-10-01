@@ -120,49 +120,180 @@ bool Node::is_inlined() const noexcept {
     return handle_.is_inlined();
 }
 
-std::weak_ordering Node::operator<=>(const Node &other) const noexcept {
-    if (this->handle_ == other.handle_){
-        return std::strong_ordering::equivalent;
+TriBool Node::eq_impl(Node const &other) const noexcept {
+    if (null() || other.null()) {
+        // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
+        // - https://www.w3.org/TR/sparql11-query/#evaluation
+        return TriBool::Err;
     }
 
-    if (this->null() && other.null()) {
-        return this->handle_.type() <=> other.handle_.type();
+    if (handle_ == other.handle_) {
+        return TriBool::True;
     }
 
-    // unbound
-    if (this->null()) {
-        return std::strong_ordering::less;
-    } else if (other.null()) {
-        return std::strong_ordering::greater;
+    if (handle_.type() != other.handle_.type()) {
+        return TriBool::Err;
     }
 
-    // different type
-    if (std::strong_ordering type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent){
-        return type_comp;
-    } else {
-        switch (this->handle_.type()) {
-            case storage::identifier::RDFNodeType::IRI:
-                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case storage::identifier::RDFNodeType::BNode:
-                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case storage::identifier::RDFNodeType::Literal:
-                return Literal{handle_}.compare_with_extensions(Literal{other.handle_});
-            case storage::identifier::RDFNodeType::Variable:
-                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
-            default:{
-                assert(false); // this will never be reached because RDFNodeType has only 4 values.
-                return std::strong_ordering::less;
-            }
+    using storage::identifier::RDFNodeType;
+    switch (handle_.type()) {
+        case RDFNodeType::Literal: {
+            return Literal{handle_}.eq(Literal{other.handle_});
+        }
+        case RDFNodeType::IRI: {
+            return handle_.iri_backend() == other.handle_.iri_backend();
+        }
+        case RDFNodeType::BNode: {
+            return handle_.bnode_backend() == other.handle_.bnode_backend();
+        }
+        case RDFNodeType::Variable: {
+            return handle_.variable_backend() == other.handle_.variable_backend();
+        }
+        default: {
+            assert(false); // unreachable
+            return TriBool::Err;
         }
     }
 }
 
-bool Node::operator==(const Node &other) const noexcept {
-    if (!this->is_literal() && !other.is_literal() && this->backend_handle().storage() == other.backend_handle().storage()) {
-        // this short check does not work for Literals, because Literals that contain the same value as different Datatypes have different backend_handles.
-        return this->backend_handle() == other.backend_handle();
+std::partial_ordering Node::compare_impl(Node const &other) const noexcept {
+    if (null() || other.null()) {
+        // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
+        // - https://www.w3.org/TR/sparql11-query/#evaluation
+        return std::partial_ordering::unordered;
     }
-    return *this <=> other == std::strong_ordering::equivalent;
+
+    if (handle_ == other.handle_) {
+        return std::partial_ordering::equivalent;
+    }
+
+    if (handle_.type() != other.handle_.type() || handle_.type() != storage::identifier::RDFNodeType::Literal) {
+        // mismatched node types are not comparable
+        // and nodes other than literals are not comparable with <,<=,>,>=
+        return std::partial_ordering::unordered;
+    }
+
+    return Literal{handle_}.compare(Literal{other.handle_});
+}
+
+std::weak_ordering Node::order(Node const &other) const noexcept {
+    if (this->handle_ == other.handle_) {
+        return std::weak_ordering::equivalent;
+    }
+
+    // null nodes are the smallest nodes
+    // https://www.w3.org/TR/sparql11-query/#modOrderBy
+    if (this->null() && other.null()) {
+        return this->handle_.type() <=> other.handle_.type();
+    }
+    if (this->null()) {
+        return std::weak_ordering::less;
+    }
+    if (other.null()) {
+        return std::weak_ordering::greater;
+    }
+
+    // different type
+    if (std::strong_ordering const type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent) {
+        return type_comp;
+    }
+
+    switch (this->handle_.type()) {
+        case storage::identifier::RDFNodeType::IRI:
+            return this->handle_.iri_backend() <=> other.handle_.iri_backend();
+        case storage::identifier::RDFNodeType::BNode:
+            return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
+        case storage::identifier::RDFNodeType::Literal:
+            return Literal{handle_}.order(Literal{other.handle_});
+        case storage::identifier::RDFNodeType::Variable:
+            return this->handle_.variable_backend() <=> other.handle_.variable_backend();
+        default:{
+            assert(false); // this will never be reached because RDFNodeType has only 4 values.
+            return std::strong_ordering::less;
+        }
+    }
+}
+
+TriBool Node::eq(Node const &other) const noexcept {
+    return eq_impl(other);
+}
+bool Node::order_eq(Node const &other) const noexcept {
+    return order(other) == std::weak_ordering::equivalent;
+}
+TriBool Node::ne(Node const &other) const noexcept {
+    return !eq_impl(other);
+}
+bool Node::order_ne(Node const &other) const noexcept {
+    return order(other) != std::weak_ordering::equivalent;
+}
+TriBool Node::lt(Node const &other) const noexcept {
+    return util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::less);
+}
+bool Node::order_lt(Node const &other) const noexcept {
+    return order(other) == std::weak_ordering::less;
+}
+TriBool Node::le(Node const &other) const noexcept {
+    return !util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::greater);
+}
+bool Node::order_le(Node const &other) const noexcept {
+    return order(other) != std::weak_ordering::greater;
+}
+TriBool Node::gt(Node const &other) const noexcept {
+    return util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::greater);
+}
+bool Node::order_gt(Node const &other) const noexcept {
+    return order(other) == std::weak_ordering::greater;
+}
+TriBool Node::ge(Node const &other) const noexcept {
+    return !util::partial_weak_ordering_eq(compare_impl(other), std::weak_ordering::less);
+}
+bool Node::order_ge(Node const &other) const noexcept {
+    return order(other) != std::weak_ordering::less;
+}
+
+Literal Node::as_eq(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(eq(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_eq(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_eq(other), select_node_storage(node_storage));
+}
+Literal Node::as_ne(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(ne(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_ne(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_ne(other), select_node_storage(node_storage));
+}
+Literal Node::as_lt(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(lt(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_lt(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_lt(other), select_node_storage(node_storage));
+}
+Literal Node::as_le(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(le(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_le(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_le(other), select_node_storage(node_storage));
+}
+Literal Node::as_gt(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(gt(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_gt(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_gt(other), select_node_storage(node_storage));
+}
+Literal Node::as_ge(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(ge(other), select_node_storage(node_storage));
+}
+Literal Node::as_order_ge(Node const &other, storage::DynNodeStoragePtr node_storage) const noexcept {
+    return Literal::make_boolean(order_ge(other), select_node_storage(node_storage));
+}
+
+std::partial_ordering Node::operator<=>(Node const &other) const noexcept {
+    return order(other);
+}
+
+bool Node::operator==(const Node &other) const noexcept {
+    return order_eq(other);
 }
 
 BlankNode Node::as_blank_node() const noexcept {

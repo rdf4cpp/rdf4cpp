@@ -11,11 +11,12 @@
 #include <string>
 
 namespace rdf4cpp {
+
 struct Literal;
 struct BlankNode;
 struct IRI;
 namespace query {
-struct Variable;
+    struct Variable;
 } // namespace rdf4cpp
 
 /**
@@ -83,6 +84,25 @@ inline constexpr storage::DynNodeStoragePtr keep_node_storage{nullptr};
 struct Node {
 protected:
     storage::identifier::NodeBackendHandle handle_;
+
+    [[nodiscard]] storage::DynNodeStoragePtr select_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept {
+        if (node_storage == keep_node_storage) {
+            return handle_.storage();
+        } else {
+            return node_storage;
+        }
+    }
+
+    /**
+     * Implementation for eq() and ne()
+     */
+    [[nodiscard]] TriBool eq_impl(Node const &other) const noexcept;
+
+    /**
+     * Implementation for lt(), gt(), le(), ge()
+     * Do not use for eq() or ne()
+     */
+    [[nodiscard]] std::partial_ordering compare_impl(Node const &other) const noexcept;
 
 public:
     explicit Node(storage::identifier::NodeBackendHandle id) noexcept;
@@ -165,9 +185,68 @@ public:
      */
     [[nodiscard]] bool is_inlined() const noexcept;
 
+
+    /**
+     * Due to the split definition of ==/!= and </<=/>/>= in SPARQL
+     * we cannot provide a "compare" function for FILTER semantics.
+     * Specifically, in SPARQL IRIs,BlankNodes and Variables are comparable via == and !=, but not
+     * via <,<=,>,>=.
+     *
+     * https://www.w3.org/TR/sparql11-query/#OperatorMapping
+     */
+    // [[nodiscard]] std::partial_ordering compare(Node const &other) const noexcept;
+
+    /**
+     * The comparison function for SPARQL orderings (ORDER BY).
+     *
+     * For FILTER semantics, use eq,ne,lt,le,gt,ge.
+     *
+     * The difference between this and FILTER semantics, is that here BlankNode, Variable, IRI are compared
+     * based on their string representation, and thus have an ordering.
+     * For Literals you can find information about the differences in Literal::order
+     */
+    [[nodiscard]] std::weak_ordering order(Node const &other) const noexcept;
+
+    /**
+     * The equality function for SPARQL filters (FILTER).
+     * Due to the split definition of ==/!= and </<=/>/>= in SPARQL
+     * we cannot provide a "compare" function for FILTER semantics.
+     */
+    [[nodiscard]] TriBool eq(Node const &other) const noexcept;
+    [[nodiscard]] bool order_eq(Node const &other) const noexcept;
+    [[nodiscard]] TriBool ne(Node const &other) const noexcept;
+    [[nodiscard]] bool order_ne(Node const &other) const noexcept;
+    [[nodiscard]] TriBool lt(Node const &other) const noexcept;
+    [[nodiscard]] bool order_lt(Node const &other) const noexcept;
+    [[nodiscard]] TriBool le(Node const &other) const noexcept;
+    [[nodiscard]] bool order_le(Node const &other) const noexcept;
+    [[nodiscard]] TriBool gt(Node const &other) const noexcept;
+    [[nodiscard]] bool order_gt(Node const &other) const noexcept;
+    [[nodiscard]] TriBool ge(Node const &other) const noexcept;
+    [[nodiscard]] bool order_ge(Node const &other) const noexcept;
+
+    [[nodiscard]] Literal as_eq(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_eq(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ne(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ne(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_lt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_lt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_le(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_le(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_gt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_gt(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_ge(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+    [[nodiscard]] Literal as_order_ge(Node const &other, storage::DynNodeStoragePtr node_storage = keep_node_storage) const noexcept;
+
+    /**
+     * Equivalent to this->order_eq(other)
+     */
     bool operator==(const Node &other) const noexcept;
 
-    std::weak_ordering operator<=>(const Node &other) const noexcept;
+    /**
+     * Equivalent to this->order(other)
+     */
+    std::partial_ordering operator<=>(Node const &other) const noexcept;
 
     /**
      * @return the effective boolean value of this
