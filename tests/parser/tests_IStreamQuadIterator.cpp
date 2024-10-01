@@ -671,4 +671,46 @@ TEST_SUITE("IStreamQuadIterator") {
             CHECK_EQ(qit->error().error_type, ParsingError::Type::BadLiteral);
         }
     }
+
+    TEST_CASE("inspect and discard triple") {
+        std::istringstream iss{R"(<http://a.com#s> <http://a.com#p> <http://a.com#o> . <http://a.com#s2> <http://a.com#p2> <http://a.com#o2> . )"};
+
+        std::vector<Node> const expected_nodes{IRI::default_graph(),
+                                               IRI::default_graph(), "http://a.com#s2"_iri, "http://a.com#p2"_iri, "http://a.com#o2"_iri};
+
+        IStreamQuadIterator::state_type st{.inspect_node_func = [&expected_nodes, iter = size_t{0}](Node const &node) mutable {
+            CHECK_EQ(node, expected_nodes[iter++]);
+
+            if (iter == 1) {
+                throw std::runtime_error{"I don't want that"};
+            }
+        }};
+
+        IStreamQuadIterator qit{iss, ParsingFlags::none(), &st};
+
+        size_t iter = 0;
+        for (; qit != std::default_sentinel; ++qit) {
+            switch (iter) {
+                case 0: {
+                    REQUIRE(!qit->has_value());
+                    CHECK_EQ(qit->error().message, "Triple explicitly skipped by inspect function: I don't want that");
+                    break;
+                }
+                case 1: {
+                    REQUIRE(qit->has_value());
+                    CHECK_EQ(qit->value().graph(), IRI::default_graph());
+                    CHECK_EQ(qit->value().subject(), IRI::make("http://a.com#s2"));
+                    CHECK_EQ(qit->value().predicate(), IRI::make("http://a.com#p2"));
+                    CHECK_EQ(qit->value().object(), IRI::make("http://a.com#o2"));
+                    break;
+                }
+                default: {
+                    FAIL("too many iterations");
+                }
+            }
+
+            ++iter;
+        }
+
+    }
 }

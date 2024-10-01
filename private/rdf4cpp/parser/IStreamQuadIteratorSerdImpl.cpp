@@ -215,6 +215,26 @@ SerdStatus IStreamQuadIterator::Impl::on_prefix(void *voided_self, SerdNode cons
     return SERD_SUCCESS;
 }
 
+SerdStatus IStreamQuadIterator::Impl::inspect_node(Node const &node) noexcept {
+    try {
+        state->inspect_node_func(node);
+        return SERD_SUCCESS;
+    } catch (std::exception const &e) {
+        // skip
+        last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                  .line = serd_reader_get_current_line(reader),
+                                  .col = serd_reader_get_current_col(reader),
+                                  .message = std::format("Triple explicitly skipped by inspect function: {}", e.what())};
+    } catch (...) {
+        last_error = ParsingError{.error_type = ParsingError::Type::BadSyntax,
+                                  .line = serd_reader_get_current_line(reader),
+                                  .col = serd_reader_get_current_col(reader),
+                                  .message = "Triple explicitly skipped by inspect function"};
+    }
+
+    return SERD_FAILURE;
+}
+
 SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
                                               SerdStatementFlags,
                                               SerdNode const *graph,
@@ -247,6 +267,10 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
         return SERD_SUCCESS;
     }
 
+    if (self->inspect_node(*graph_node) != SERD_SUCCESS) {
+        return SERD_SUCCESS;
+    }
+
     auto const subj_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (subj->type) {
             case SERD_CURIE:
@@ -264,6 +288,10 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
         return SERD_SUCCESS;
     }
 
+    if (self->inspect_node(*subj_node) != SERD_SUCCESS) {
+        return SERD_SUCCESS;
+    }
+
     auto const pred_node = [&]() -> nonstd::expected<Node, SerdStatus> {
         switch (pred->type) {
             case SERD_CURIE:
@@ -276,6 +304,10 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     }();
 
     if (!pred_node.has_value()) {
+        return SERD_SUCCESS;
+    }
+
+    if (self->inspect_node(*pred_node) != SERD_SUCCESS) {
         return SERD_SUCCESS;
     }
 
@@ -297,6 +329,11 @@ SerdStatus IStreamQuadIterator::Impl::on_stmt(void *voided_self,
     if (!obj_node.has_value()) {
         return SERD_SUCCESS;
     }
+
+    if (self->inspect_node(*obj_node) != SERD_SUCCESS) {
+        return SERD_SUCCESS;
+    }
+
     self->quad_buffer.emplace_back(*graph_node, *subj_node, *pred_node, *obj_node);
     return SERD_SUCCESS;
 }
