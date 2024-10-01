@@ -177,9 +177,12 @@ std::partial_ordering Node::compare_impl(Node const &other) const noexcept {
 }
 
 std::weak_ordering Node::order(Node const &other) const noexcept {
-    // first, check for null nodes
-    // "Apart from BOUND, COALESCE, NOT EXISTS and EXISTS, all functions and operators operate on RDF Terms and will produce a type error if any arguments are unbound."
-    // - https://www.w3.org/TR/sparql11-query/#evaluation
+    if (this->handle_ == other.handle_) {
+        return std::weak_ordering::equivalent;
+    }
+
+    // null nodes are the smallest nodes
+    // https://www.w3.org/TR/sparql11-query/#modOrderBy
     if (this->null() && other.null()) {
         return this->handle_.type() <=> other.handle_.type();
     }
@@ -191,22 +194,22 @@ std::weak_ordering Node::order(Node const &other) const noexcept {
     }
 
     // different type
-    if (std::strong_ordering const type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent){
+    if (std::strong_ordering const type_comp = this->handle_.type() <=> other.handle_.type(); type_comp != std::strong_ordering::equivalent) {
         return type_comp;
-    } else {
-        switch (this->handle_.type()) {
-            case storage::identifier::RDFNodeType::IRI:
-                return this->handle_.iri_backend() <=> other.handle_.iri_backend();
-            case storage::identifier::RDFNodeType::BNode:
-                return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
-            case storage::identifier::RDFNodeType::Literal:
-                return Literal{handle_}.order(Literal{other.handle_});
-            case storage::identifier::RDFNodeType::Variable:
-                return this->handle_.variable_backend() <=> other.handle_.variable_backend();
-            default:{
-                assert(false); // this will never be reached because RDFNodeType has only 4 values.
-                return std::strong_ordering::less;
-            }
+    }
+
+    switch (this->handle_.type()) {
+        case storage::identifier::RDFNodeType::IRI:
+            return this->handle_.iri_backend() <=> other.handle_.iri_backend();
+        case storage::identifier::RDFNodeType::BNode:
+            return this->handle_.bnode_backend() <=> other.handle_.bnode_backend();
+        case storage::identifier::RDFNodeType::Literal:
+            return Literal{handle_}.order(Literal{other.handle_});
+        case storage::identifier::RDFNodeType::Variable:
+            return this->handle_.variable_backend() <=> other.handle_.variable_backend();
+        default:{
+            assert(false); // this will never be reached because RDFNodeType has only 4 values.
+            return std::strong_ordering::less;
         }
     }
 }
