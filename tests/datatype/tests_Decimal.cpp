@@ -223,3 +223,12 @@ TEST_CASE("decimal inlining sanity check") {
         }
     }
 }
+
+TEST_CASE("decimal possible bug") {
+    // This bug only occurs in boost versions < 1.86.0
+    auto const lit1 = Literal::make_typed_from_value<datatypes::xsd::Double>(5).cast<rdf4cpp::datatypes::xsd::Decimal>();
+    auto const lit2 = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::min()).cast<rdf4cpp::datatypes::xsd::Decimal>();
+
+    auto const div_res = lit1 / lit2; // program crashes here if the bug is present
+    CHECK(div_res.null());
+}
