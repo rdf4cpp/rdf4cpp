@@ -435,6 +435,25 @@ private:
         return false;
     }
 
+    static double cast_unscaled_to_double_safe(UnscaledValue_t const &value) noexcept {
+        // There is a bug in boost versions <1.86.0
+        // that can cause a crash in the cast `static_cast<double>(cpp_int)`
+        // https://github.com/boostorg/multiprecision/issues/553
+
+#if BOOST_VERSION < 108600
+        // workaround from https://github.com/scylladb/scylladb/commit/51d09e6a2a407ea9b9ad380ba30e5558a25bb8be#diff-81e6758bbedbe566a51706c5af1ea68be225c36feb68983c3de0a69138f01264R73
+        static auto const min = UnscaledValue_t{std::numeric_limits<double>::lowest()};
+        static auto const max = UnscaledValue_t{std::numeric_limits<double>::max()};
+        if (value < min) {
+            return -std::numeric_limits<double>::infinity();
+        } else if (value > max) {
+            return std::numeric_limits<double>::infinity();
+        }
+#endif // BOOST_VERSION
+
+        return static_cast<double>(value);
+    }
+
 public:
     /**
      * unary minus of this BigDecimal.
@@ -760,7 +779,7 @@ public:
      * @return
      */
     [[nodiscard]] explicit operator double() const noexcept {
-        double const v = static_cast<double>(unscaled_value) * std::pow(static_cast<double>(base), -static_cast<double>(exponent));
+        double const v = cast_unscaled_to_double_safe(unscaled_value) * std::pow(cast_unscaled_to_double_safe(base), -cast_unscaled_to_double_safe(exponent));
         if (!std::isnan(v) && !std::isinf(v))
             return v;
         // even Javas BigDecimal has no better solution
