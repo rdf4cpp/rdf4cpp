@@ -779,7 +779,7 @@ public:
      * @return
      */
     [[nodiscard]] explicit operator double() const noexcept {
-        double const v = cast_unscaled_to_double_safe(unscaled_value) * std::pow(cast_unscaled_to_double_safe(base), -cast_unscaled_to_double_safe(exponent));
+        double const v = cast_unscaled_to_double_safe(unscaled_value) * std::pow(base, -exponent);
         if (!std::isnan(v) && !std::isinf(v))
             return v;
         // even Javas BigDecimal has no better solution
