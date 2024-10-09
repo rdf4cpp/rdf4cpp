@@ -62,6 +62,28 @@ TEST_CASE("timezone") {
     CHECK(std::format("{:%Y-%m-%d-%H-%M-%S-%Z}", d_in0) == "2042-02-01-04-30-15-Z");
 }
 
+TEST_CASE("date") {
+    for (int y = -32767; y <= 32767; ++y) { // limits of std::chrono::year
+        for (unsigned int m = 1; m <= 12; ++m) {
+            for (unsigned int d = 1; d <= static_cast<unsigned int>((std::chrono::year{y} / m / std::chrono::last).day()); ++d) {
+                std::chrono::year_month_day base = std::chrono::year{y} / m / d;
+                auto base_sd = static_cast<std::chrono::sys_days>(base);
+                rdf4cpp::Date<int> date{base};
+                CHECK(date == rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(m), std::chrono::day(d)});
+                CHECK(date.to_time_point() == base_sd);
+                CHECK(date == rdf4cpp::Date<int>{base_sd});
+                CHECK(date.ok());
+            }
+            std::chrono::year_month_day base_last = std::chrono::year{y} / m / std::chrono::last;
+            CHECK(rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(m), std::chrono::last} == rdf4cpp::Date<int>{base_last});
+            CHECK(!rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(m), std::chrono::day{static_cast<unsigned int>(base_last.day()) + 1}}.ok());
+            CHECK(!rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(m), std::chrono::day{0}}.ok());
+        }
+        CHECK(!rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(0), std::chrono::day{1}}.ok());
+        CHECK(!rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(13), std::chrono::day{1}}.ok());
+    }
+}
+
 TEST_CASE("precision") {
     auto ms = std::chrono::microseconds::max();
     auto ys = std::chrono::floor<std::chrono::years>(ms);
