@@ -10,6 +10,8 @@
 #include <rdf4cpp/datatypes/rdf.hpp>
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 namespace rdf4cpp {
 struct Timezone {
     // heavily inspired by https://howardhinnant.github.io/date/tz.html#Examples
@@ -135,43 +137,48 @@ using TimePoint = std::chrono::time_point<std::chrono::local_t, std::chrono::mil
 using TimePointSys = std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>;
 using ZonedTime = std::chrono::zoned_time<std::chrono::milliseconds, Timezone>;
 
-template<std::signed_integral I>
+template<typename I>
 struct Year {
     // adapted from https://howardhinnant.github.io/date_algorithms.html
     I year;
 
-    [[nodiscard]] constexpr bool is_leap() const noexcept {
+    [[nodiscard]] constexpr bool is_leap() const noexcept(noexcept(year % 100)) {
         return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
     }
 
     constexpr auto operator<=>(Year const &) const noexcept = default;
 };
 
-template<std::signed_integral Y>
+template<typename Y>
 struct Date {
     // adapted from https://howardhinnant.github.io/date_algorithms.html
     Year<Y> year;
     std::chrono::month month;
     std::chrono::day day;
 
+    using time_point = std::chrono::time_point<std::chrono::system_clock, std::chrono::duration<Y, std::chrono::days::period>>;
+
 private:
-    static constexpr std::chrono::day last_day_in_month(Year<Y> year, std::chrono::month month) noexcept {
+    static constexpr bool arithmetic_noexcept = noexcept(Y{} + Y{}) && noexcept(Y{} - Y{}) && noexcept(Y{} / Y{}) && noexcept(Y{} * Y{});
+
+    static constexpr std::chrono::day last_day_in_month(Year<Y> year, std::chrono::month month) noexcept(noexcept(year.is_leap())) {
+        assert(month.ok());
         constexpr unsigned char common[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
         auto m = static_cast<unsigned int>(month);
         return std::chrono::day{m != 2 || !year.is_leap() ? common[m - 1] : 29u};
     }
 
 public:
-    constexpr explicit Date(std::chrono::year_month_day ymd) noexcept
+    constexpr explicit Date(std::chrono::year_month_day ymd) noexcept(noexcept(Year<Y>(static_cast<int>(ymd.year()))))
         : year(static_cast<int>(ymd.year())), month(ymd.month()), day(ymd.day()) {
     }
     constexpr Date(Year<Y> y, std::chrono::month m, std::chrono::day d) noexcept
         : year(y), month(m), day(d) {
     }
-    constexpr Date(Year<Y> y, std::chrono::month m, std::chrono::last_spec) noexcept
+    constexpr Date(Year<Y> y, std::chrono::month m, std::chrono::last_spec) noexcept(noexcept(last_day_in_month(y, m)))
         : year(y), month(m), day(last_day_in_month(y, m)) {
     }
-    constexpr explicit Date(std::chrono::sys_days sd) noexcept {
+    constexpr explicit Date(time_point sd) noexcept(arithmetic_noexcept) {
         static_assert(std::numeric_limits<unsigned>::digits >= 18, "This algorithm has not been ported to a 16 bit unsigned integer");
         static_assert(std::numeric_limits<Y>::digits >= 20, "This algorithm has not been ported to a 16 bit signed integer");
         Y z = sd.time_since_epoch().count();
@@ -189,7 +196,7 @@ public:
         day = std::chrono::day{d};
     }
 
-    [[nodiscard]] constexpr std::chrono::sys_days to_time_point() const noexcept {
+    [[nodiscard]] constexpr time_point to_time_point() const noexcept(arithmetic_noexcept) {
         static_assert(std::numeric_limits<unsigned>::digits >= 18, "This algorithm has not been ported to a 16 bit unsigned integer");
         static_assert(std::numeric_limits<Y>::digits >= 20, "This algorithm has not been ported to a 16 bit signed integer");
         auto y = year.year;
@@ -201,10 +208,10 @@ public:
         unsigned const doy = (153 * (m > 2 ? m - 3 : m + 9) + 2) / 5 + d - 1;  // [0, 365]
         unsigned const doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;            // [0, 146096]
         // note that the epoch of system_clock is specified as 00:00:00 Coordinated Universal Time (UTC), Thursday, 1 January 1970
-        return std::chrono::sys_days{std::chrono::days{era * 146097 + static_cast<Y>(doe) - 719468}};
+        return time_point{typename time_point::duration{era * 146097 + static_cast<Y>(doe) - 719468}};
     }
 
-    [[nodiscard]] constexpr bool ok() const noexcept {
+    [[nodiscard]] constexpr bool ok() const noexcept(noexcept(last_day_in_month(year, month))) {
         return month.ok() && day.ok() && day <= last_day_in_month(year, month);
     }
 
@@ -212,6 +219,9 @@ public:
 };
 
 namespace util {
+
+using duration_backend = boost::multiprecision::checked_int128_t;
+constexpr auto i = sizeof(__int128);
 
 inline constexpr std::chrono::year_month_day time_point_replacement_date = std::chrono::year(1972) / std::chrono::December / std::chrono::last;
 inline constexpr std::chrono::milliseconds time_point_replacement_time_of_day{0};

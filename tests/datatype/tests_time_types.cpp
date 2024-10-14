@@ -3,7 +3,9 @@
 #include <doctest/doctest.h>
 #include <format>
 #include <rdf4cpp.hpp>
+#include <rdf4cpp/datatypes/registry/util/DateTimeUtils.hpp>
 #include <rdf4cpp/storage/reference_node_storage/SyncReferenceNodeStorage.hpp>
+#include <rdf4cpp/util/CheckedInt.hpp>
 
 template<typename Datatype>
 void basic_test(typename Datatype::cpp_type a, std::string_view b, std::partial_ordering res, bool skip_string_comp = false) {
@@ -68,10 +70,10 @@ TEST_CASE("date") {
             for (unsigned int d = 1; d <= static_cast<unsigned int>((std::chrono::year{y} / m / std::chrono::last).day()); ++d) {
                 std::chrono::year_month_day base = std::chrono::year{y} / m / d;
                 auto base_sd = static_cast<std::chrono::sys_days>(base);
-                rdf4cpp::Date<int> date{base};
-                CHECK(date == rdf4cpp::Date<int>{rdf4cpp::Year<int>(y), std::chrono::month(m), std::chrono::day(d)});
+                rdf4cpp::Date<int64_t> date{base};
+                CHECK(date == rdf4cpp::Date<int64_t>{rdf4cpp::Year<int64_t>(y), std::chrono::month(m), std::chrono::day(d)});
                 CHECK(date.to_time_point() == base_sd);
-                CHECK(date == rdf4cpp::Date<int>{base_sd});
+                CHECK(date == rdf4cpp::Date<int64_t>{base_sd});
                 CHECK(date.ok());
             }
             std::chrono::year_month_day base_last = std::chrono::year{y} / m / std::chrono::last;
@@ -89,6 +91,16 @@ TEST_CASE("precision") {
     auto ys = std::chrono::floor<std::chrono::years>(ms);
     CHECK(ys > std::chrono::years{10000});
     CHECK(ys > std::chrono::years{static_cast<int>(std::chrono::year::max())});
+
+    rdf4cpp::util::duration_backend end_of_universe{"100000000000000"};
+    using checked_years = std::chrono::duration<rdf4cpp::util::duration_backend, std::chrono::years::period>;
+    using checked_nanos = std::chrono::duration<rdf4cpp::util::duration_backend, std::chrono::nanoseconds::period>;
+    auto nanos = static_cast<checked_nanos>(checked_years{end_of_universe});  // throws, if out of range
+    CHECK(nanos.count() > end_of_universe);
+
+    using date = rdf4cpp::Date<rdf4cpp::util::duration_backend>;
+    nanos = date(rdf4cpp::Year<rdf4cpp::util::duration_backend>(end_of_universe), std::chrono::January, std::chrono::day(1)).to_time_point().time_since_epoch();
+    CHECK(nanos.count() > end_of_universe);
 }
 
 TEST_CASE("datatype gYear") {
