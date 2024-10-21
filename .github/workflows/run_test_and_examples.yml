@@ -9,9 +9,11 @@ jobs:
             compiler: gcc-13
 
           - os: ubuntu-22.04
-            compiler: clang-16
-          - os: ubuntu-22.04
             compiler: clang-17
+          - os: ubuntu-22.04
+            compiler: clang-18
+          - os: ubuntu-22.04
+            compiler: clang-19
 
       fail-fast: false
     name: ${{ matrix.cppenv.compiler }}, ${{ matrix.cppenv.os }}
