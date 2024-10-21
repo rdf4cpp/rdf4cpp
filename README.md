@@ -33,7 +33,7 @@ If you want to include rdf4cpp without using conan, make sure you also include i
 ### Requirements
 
 Currently, rdf4cpp builds only on linux with a C++20 compatible compiler. 
-CI builds and tests rdf4cpp with gcc-{13}, clang-{16,17} with libstdc++-13 on ubuntu 22.04. 
+CI builds and tests rdf4cpp with gcc-{13}, clang-{17,18,19} with libstdc++-13 on ubuntu 22.04. 
 
 ### Dependencies
 It is recommended to include build dependencies via conan. Set up Conan as follows on Ubuntu 22.04+:
