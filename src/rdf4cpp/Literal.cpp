@@ -1372,25 +1372,31 @@ Literal Literal::add(Literal const &other, storage::DynNodeStoragePtr node_stora
     }
     // DateTime(&Subclasses) + Duration(&Subclasses)
     {
-        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
-        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
-        if (this_dt.has_value() && other_dt.has_value()) {
-            if (this->datatype_eq<datatypes::xsd::Time>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>())
-                return Literal{};
+        try
+        {
+            auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+            auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
+            if (this_dt.has_value() && other_dt.has_value()) {
+                if (this->datatype_eq<datatypes::xsd::Time>() && other.datatype_eq<datatypes::xsd::YearMonthDuration>()) {
+                    return Literal{};
+                }
 
-            auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, *other_dt);
-            if (tp.time_since_epoch().count().is_invalid())
-                return Literal{};
+                auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, *other_dt);
 
-            auto r = datatypes::registry::util::from_checked(tp);
+                if (this->datatype_eq<datatypes::xsd::Date>()) {
+                    auto [date, _] = util::deconstruct_timepoint(tp);
+                    return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(date, this_dt->second), node_storage);
+                }
 
-            if (this->datatype_eq<datatypes::xsd::Date>())
-                return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second), node_storage);
+                if (this->datatype_eq<datatypes::xsd::Time>()) {
+                    auto [_, time] = util::deconstruct_timepoint(tp);
+                    return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(std::chrono::duration_cast<std::chrono::nanoseconds>(time), this_dt->second), node_storage);
+                }
 
-            if (this->datatype_eq<datatypes::xsd::Time>())
-                return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second), node_storage);
-
-            return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second), node_storage);
+                return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(tp, this_dt->second), node_storage);
+            }
+        } catch (std::overflow_error const &) {
+            return Literal{};
         }
     }
 
@@ -1420,39 +1426,48 @@ Literal Literal::sub(Literal const &other, storage::DynNodeStoragePtr node_stora
 
     // DateTime(&Subclasses) - DateTime(&Subclasses)
     if (this->datatype_id() == other.datatype_id()) {
-        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
-        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::DateTime>();
-        if (this_dt.has_value() && other_dt.has_value()) {
-            datatypes::registry::util::CheckedZonedTime const this_tp{this_dt->second.has_value() ? *this_dt->second : Timezone{},
-                                                                      datatypes::registry::util::to_checked(this_dt->first)};
+        try {
+            auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+            auto other_dt = other.cast_to_supertype_value<datatypes::xsd::DateTime>();
+            if (this_dt.has_value() && other_dt.has_value()) {
+                ZonedTime const this_tp{this_dt->second.has_value() ? *this_dt->second : Timezone{},
+                                                                          this_dt->first};
 
-            datatypes::registry::util::CheckedZonedTime const other_tp{other_dt->second.has_value() ? *other_dt->second : Timezone{},
-                                                                       datatypes::registry::util::to_checked(other_dt->first)};
+                ZonedTime const other_tp{other_dt->second.has_value() ? *other_dt->second : Timezone{},
+                                                                           other_dt->first};
 
-            auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
-            if (d.count().is_invalid())
-                return Literal{};
-
-            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(datatypes::registry::util::from_checked(d), node_storage);
+                auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
+                // TODO change to nanos?
+                return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::duration_cast<std::chrono::milliseconds>(d), node_storage);
+            }
+        }
+        catch (std::overflow_error const &) {
+            return Literal{};
         }
     }
     // DateTime(&Subclasses) - Duration(&Subclasses)
     {
-        auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
-        auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
-        if (this_dt.has_value() && other_dt.has_value()) {
-            auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, std::make_pair(-other_dt->first, -other_dt->second));
-            if (tp.time_since_epoch().count().is_invalid())
-                return Literal{};
+        try {
+            auto this_dt = this->cast_to_supertype_value<datatypes::xsd::DateTime>();
+            auto other_dt = other.cast_to_supertype_value<datatypes::xsd::Duration>();
+            if (this_dt.has_value() && other_dt.has_value()) {
+                auto tp = datatypes::registry::util::add_duration_to_date_time(this_dt->first, std::make_pair(-other_dt->first, -other_dt->second));
 
-            auto r = datatypes::registry::util::from_checked(tp);
-            if (this->datatype_eq<datatypes::xsd::Date>())
-                return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(r)}, this_dt->second), node_storage);
+                if (this->datatype_eq<datatypes::xsd::Date>()) {
+                    auto [date, _] = util::deconstruct_timepoint(tp);
+                    return make_typed_from_value<datatypes::xsd::Date>(std::make_pair(date, this_dt->second), node_storage);
+                }
 
-            if (this->datatype_eq<datatypes::xsd::Time>())
-                return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(r - std::chrono::floor<std::chrono::days>(r), this_dt->second), node_storage);
+                if (this->datatype_eq<datatypes::xsd::Time>()) {
+                    auto [_, time] = util::deconstruct_timepoint(tp);
+                    return make_typed_from_value<datatypes::xsd::Time>(std::make_pair(std::chrono::duration_cast<std::chrono::nanoseconds>(time), this_dt->second), node_storage);
+                }
 
-            return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(r, this_dt->second), node_storage);
+                return make_typed_from_value<datatypes::xsd::DateTime>(std::make_pair(tp, this_dt->second), node_storage);
+            }
+        }
+        catch (std::overflow_error const &) {
+            return Literal{};
         }
     }
     // DayTimeDuration - DayTimeDuration
@@ -1525,7 +1540,7 @@ Literal Literal::mul(Literal const &other, storage::DynNodeStoragePtr node_stora
             if (!datatypes::registry::util::fits_into<int64_t>(r))
                 return Literal{};
 
-            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{static_cast<int64_t>(r)}, node_storage);
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::nanoseconds{static_cast<int64_t>(r)}, node_storage);
         }
     }
 
@@ -1558,11 +1573,11 @@ Literal Literal::div(Literal const &other, storage::DynNodeStoragePtr node_stora
         auto this_v = this->cast_to_supertype_value<datatypes::xsd::YearMonthDuration>();
         auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
         if (this_v.has_value() && other_v.has_value()) {
-            auto r = static_cast<int64_t>(std::round(static_cast<double>(this_v->count()) / *other_v));
+            auto r = std::round(static_cast<double>(this_v->count()) / *other_v);
             if (!datatypes::registry::util::fits_into<int64_t>(r))
                 return Literal{};
 
-            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{r}, node_storage);
+            return make_typed_from_value<datatypes::xsd::YearMonthDuration>(std::chrono::months{static_cast<int64_t>(r)}, node_storage);
         }
     }
     // DayTimeDuration / double
@@ -1570,11 +1585,11 @@ Literal Literal::div(Literal const &other, storage::DynNodeStoragePtr node_stora
         auto this_v = this->cast_to_supertype_value<datatypes::xsd::DayTimeDuration>();
         auto other_v = other.cast_to_supertype_value<datatypes::xsd::Double>();
         if (this_v.has_value() && other_v.has_value()) {
-            auto r = static_cast<int64_t>(std::round(static_cast<double>(this_v->count()) / *other_v));
+            auto r = std::round(static_cast<double>(this_v->count()) / *other_v);
             if (!datatypes::registry::util::fits_into<int64_t>(r))
                 return Literal{};
 
-            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::milliseconds{r}, node_storage);
+            return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::nanoseconds{static_cast<int64_t>(r)}, node_storage);
         }
     }
     // YearMonthDuration / YearMonthDuration
@@ -2317,9 +2332,8 @@ std::optional<std::chrono::hours> Literal::hours() const noexcept {
     auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
     if (!casted.has_value())
         return std::nullopt;
-    auto day = std::chrono::floor<std::chrono::days>(casted->first);
-    auto time = (casted->first - day);
-    return std::chrono::hh_mm_ss{time}.hours();
+    auto [_, time] = util::deconstruct_timepoint(casted->first);
+    return std::chrono::hh_mm_ss{std::chrono::duration_cast<std::chrono::nanoseconds>(time)}.hours();
 }
 
 Literal Literal::as_hours(storage::DynNodeStoragePtr node_storage) const {
@@ -2335,9 +2349,8 @@ std::optional<std::chrono::minutes> Literal::minutes() const noexcept {
     auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
     if (!casted.has_value())
         return std::nullopt;
-    auto day = std::chrono::floor<std::chrono::days>(casted->first);
-    auto time = (casted->first - day);
-    return std::chrono::hh_mm_ss{time}.minutes();
+    auto [_, time] = util::deconstruct_timepoint(casted->first);
+    return std::chrono::hh_mm_ss{std::chrono::duration_cast<std::chrono::nanoseconds>(time)}.minutes();
 }
 
 Literal Literal::as_minutes(storage::DynNodeStoragePtr node_storage) const {
@@ -2347,14 +2360,14 @@ Literal Literal::as_minutes(storage::DynNodeStoragePtr node_storage) const {
     return Literal::make_typed_from_value<datatypes::xsd::Integer>(r->count(), select_node_storage(node_storage));
 }
 
-std::optional<std::chrono::milliseconds> Literal::seconds() const noexcept {
+std::optional<std::chrono::nanoseconds> Literal::seconds() const noexcept {
     if (!datatype_eq<datatypes::xsd::DateTime>() && !datatype_eq<datatypes::xsd::DateTimeStamp>() && !datatype_eq<datatypes::xsd::Time>())
         return std::nullopt;
     auto casted = this->cast_to_value<datatypes::xsd::DateTime>();
     if (!casted.has_value())
         return std::nullopt;
-    auto day = std::chrono::floor<std::chrono::days>(casted->first);
-    auto time = std::chrono::hh_mm_ss{casted->first - day};
+    auto [_, t] = util::deconstruct_timepoint(casted->first);
+    std::chrono::hh_mm_ss time{std::chrono::duration_cast<std::chrono::nanoseconds>(t)};
     return time.seconds() + time.subseconds();
 }
 
@@ -2362,7 +2375,7 @@ Literal Literal::as_seconds(storage::DynNodeStoragePtr node_storage) const {
     auto r = this->seconds();
     if (!r.has_value())
         return Literal{};
-    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf4cpp::BigDecimal<>{r->count(), 3}, select_node_storage(node_storage));
+    return Literal::make_typed_from_value<datatypes::xsd::Decimal>(rdf4cpp::BigDecimal<>{r->count(), 9}, select_node_storage(node_storage));
 }
 
 std::optional<Timezone> Literal::timezone() const noexcept {
