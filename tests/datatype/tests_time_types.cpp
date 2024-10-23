@@ -119,6 +119,9 @@ TEST_CASE("datatype gYear") {
 
     rdf4cpp::OptionalTimezone tz = std::nullopt;
     basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{500}, tz), "0500", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{1500}, tz), "1500", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{-500}, tz), "-500", std::partial_ordering::equivalent);
+    basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{42500}, tz), "42500", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{500}, tz), "0501", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{500}, Timezone{std::chrono::hours{1}}), "0500+01:00", std::partial_ordering::equivalent);
     basic_test<datatypes::xsd::GYear>(std::make_pair(RDFYear{500}, Timezone{std::chrono::minutes{-65}}), "0500-01:05", std::partial_ordering::equivalent);
