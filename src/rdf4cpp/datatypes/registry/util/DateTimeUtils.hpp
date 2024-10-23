@@ -88,6 +88,19 @@ bool fits_into(double d) {
     return true;
 }
 
+/**
+ * checks if a boost::multiprecision::number fits into a specified integer type.
+ * @tparam I
+ * @tparam B
+ * @tparam e
+ * @param n
+ * @return
+ */
+template<std::integral I, typename B, boost::multiprecision::expression_template_option e>
+constexpr bool fits_into(boost::multiprecision::number<B, e> const &n) {
+    return n <= std::numeric_limits<I>::max() && n >= std::numeric_limits<I>::min();
+}
+
 template<typename ResultType, typename ParsingType, char Separator, ConstexprString datatype>
 ResultType parse_date_time_fragment(std::string_view &s) {
     std::string_view res_s = s;

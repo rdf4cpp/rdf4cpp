@@ -82,7 +82,7 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_dateT
     auto tp_sec = std::chrono::floor<std::chrono::seconds>(value.get_sys_time());
     if ((value.get_sys_time() - tp_sec).count() != 0)
         return std::nullopt;
-    if (tp_sec.time_since_epoch().count() > std::numeric_limits<int64_t>::max() || tp_sec.time_since_epoch().count() < std::numeric_limits<int64_t>::min())
+    if (!util::fits_into<int64_t>(tp_sec.time_since_epoch().count()))
         return std::nullopt;
     auto s = static_cast<int64_t>(tp_sec.time_since_epoch().count());
     return util::try_pack_integral<storage::identifier::LiteralID>(s);

@@ -41,7 +41,7 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_gYear
     if (value.second.has_value()) [[unlikely]] {
         return std::nullopt;
     }
-    if (auto const boundary = 1L << (storage::identifier::LiteralID::width - 1); value.first.year >= boundary || value.first.year < -boundary) [[unlikely]] {
+    if (!util::fits_into<int64_t>(value.first.year)) [[unlikely]] {
         return std::nullopt;
     }
     return util::try_pack_integral<storage::identifier::LiteralID>(static_cast<int64_t>(value.first.year));

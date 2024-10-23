@@ -203,7 +203,7 @@ TEST_CASE("datatype gYearMonth") {
     basic_test<datatypes::xsd::GYearMonth>("2042-05+1:00", "2042-05Z", std::partial_ordering::less);
     basic_test<datatypes::xsd::GYearMonth>("2042-05-1:00", "2042-05Z", std::partial_ordering::greater);
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("2042-05").is_inlined());
-    CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("32767-12").is_inlined());
+    CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("32769-12").is_inlined());
     CHECK(Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1").is_inlined());
     CHECK(!Literal::make_typed<datatypes::xsd::GYearMonth>("-32767-1-14:00").is_inlined());
     CHECK(storage::reference_node_storage::SyncReferenceNodeStorage::has_specialized_storage_for(datatypes::xsd::GYearMonth::fixed_id));

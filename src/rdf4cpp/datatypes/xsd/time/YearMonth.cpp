@@ -45,7 +45,7 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_gYear
     if (value.second.has_value()) [[unlikely]] {
         return std::nullopt;
     }
-    if (value.first.year.year >= std::numeric_limits<int16_t>::max() || value.first.year.year < std::numeric_limits<int16_t>::min()) [[unlikely]] {
+    if (!util::fits_into<int16_t>(value.first.year.year)) [[unlikely]] {
         return std::nullopt;
     }
     return util::pack<storage::identifier::LiteralID>(InliningHelperYearMonth{static_cast<int16_t>(value.first.year.year),

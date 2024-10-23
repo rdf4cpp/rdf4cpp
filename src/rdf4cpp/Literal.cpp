@@ -1437,8 +1437,7 @@ Literal Literal::sub(Literal const &other, storage::DynNodeStoragePtr node_stora
                                                                            other_dt->first};
 
                 auto d = this_tp.get_sys_time() - other_tp.get_sys_time();
-                // TODO change to nanos?
-                return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::duration_cast<std::chrono::milliseconds>(d), node_storage);
+                return make_typed_from_value<datatypes::xsd::DayTimeDuration>(std::chrono::duration_cast<std::chrono::nanoseconds>(d), node_storage);
             }
         }
         catch (std::overflow_error const &) {

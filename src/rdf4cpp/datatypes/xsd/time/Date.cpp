@@ -51,7 +51,7 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_date>
         return std::nullopt;
     }
     auto i = value.first.to_time_point().time_since_epoch().count();
-    if (auto const boundary = 1L << (storage::identifier::LiteralID::width - 1); i >= boundary || i < -boundary) [[unlikely]] {
+    if (!util::fits_into<int64_t>(i)) [[unlikely]] {
         return std::nullopt;
     }
     return util::try_pack_integral<storage::identifier::LiteralID>(static_cast<int64_t>(i));
