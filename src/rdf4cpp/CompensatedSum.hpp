@@ -9,7 +9,7 @@ namespace rdf4cpp {
 /**
  * @brief Sums numeric Literals incrementally, compensating for the rounding error that the
  * inexact datatypes (xsd:float, xsd:double, owl:real) accumulate over a long sequence.
- * See https://en.wikipedia.org/wiki/Kahan_summation_algorithm
+ * See https://en.wikipedia.org/wiki/Kahan_summation_algorithm#Further_enhancements
  *
  * @example
  * @code
@@ -25,18 +25,20 @@ private:
     storage::DynNodeStoragePtr node_storage_;
 
     std::optional<DeferredValue> sum_;  // running total (initially zero)
-    DeferredValue comp_;                // low-order bits lost by the additions so far, only valid if !empty_
+    DeferredValue comp_;                // low-order bits lost by the additions so far, the null-value until the first of them
 
     // latched as soon as an inexact datatype is involved, and never cleared because the numeric
     // hierarchy only ever widens: once the total is a double it stays one
     bool compensating_ = false;
 
-    // exactness of the datatype added last, so that a stream of a single datatype (the common case)
-    // costs one IRI comparison per element instead of a registry lookup
+    // registry entry of the datatype looked at last, so that a stream of a single datatype (the
+    // common case) costs one IRI comparison per element instead of a registry lookup
     IRI cached_datatype_;
-    bool cached_exact_ = false;
+    datatypes::registry::DatatypeRegistry::DatatypeEntry const *cached_entry_ = nullptr;
 
+    [[nodiscard]] datatypes::registry::DatatypeRegistry::DatatypeEntry const *datatype_entry(IRI const &datatype);
     [[nodiscard]] bool is_exact(IRI const &datatype);
+    [[nodiscard]] bool is_inf(DeferredValue const &value);
 
 public:
     /**

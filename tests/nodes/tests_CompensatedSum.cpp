@@ -205,24 +205,63 @@ TEST_CASE("intermediate results are not placed into the node storage") {
     CHECK_EQ(result.value<datatypes::xsd::Decimal>(), BigDecimal<>{"1.0"});
 }
 
-// both document current behaviour, so that a follow-up has a target
-TEST_CASE("known Kahan limitations") {
-    SUBCASE("a value dwarfing the running sum") {
-        // Kahan loses the compensation when |value| >> |sum|; Neumaier would return 1.0 here
+TEST_CASE("a value dwarfing the running sum") {
+    // the correction is accumulated instead of applied to the next value, which is what Kahan
+    // would lose here, in either order of magnitude
+    SUBCASE("|value| << |sum|") {
         std::vector<Literal> const lits{Literal::make_typed_from_value<datatypes::xsd::Double>(1e16),
                                         Literal::make_typed_from_value<datatypes::xsd::Double>(1.0),
                                         Literal::make_typed_from_value<datatypes::xsd::Double>(-1e16)};
 
-        CHECK_EQ(compensated_sum(lits).value<datatypes::xsd::Double>(), 0.0);
+        CHECK_EQ(naive_sum(lits).value<datatypes::xsd::Double>(), 0.0);
+        CHECK_EQ(compensated_sum(lits).value<datatypes::xsd::Double>(), 1.0);
     }
 
-    SUBCASE("an infinite value") {
-        // the correction term becomes inf - inf = NaN and poisons the total, where operator+ keeps
-        // the infinity. No compensation scheme avoids this, it needs a finiteness guard.
+    SUBCASE("|value| >> |sum|") {
         std::vector<Literal> const lits{Literal::make_typed_from_value<datatypes::xsd::Double>(1.0),
-                                        Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::infinity())};
+                                        Literal::make_typed_from_value<datatypes::xsd::Double>(1e16),
+                                        Literal::make_typed_from_value<datatypes::xsd::Double>(-1e16)};
 
-        CHECK(std::isinf(naive_sum(lits).value<datatypes::xsd::Double>()));
+        CHECK_EQ(naive_sum(lits).value<datatypes::xsd::Double>(), 0.0);
+        CHECK_EQ(compensated_sum(lits).value<datatypes::xsd::Double>(), 1.0);
+    }
+}
+
+TEST_CASE("infinity is a value, as it is for operator+") {
+    // an infinite total has no meaningful loss to compensate (it would be inf - inf = NaN),
+    // so the compensation is left untouched while it is one
+    auto const inf = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::infinity());
+    auto const one = Literal::make_typed_from_value<datatypes::xsd::Double>(1.0);
+
+    SUBCASE("as the first value") {
+        std::vector<Literal> const lits{inf, one};
+
+        CHECK(std::isinf(compensated_sum(lits).value<datatypes::xsd::Double>()));
+    }
+
+    SUBCASE("as a later value") {
+        std::vector<Literal> const lits{one, inf};
+
+        CHECK(std::isinf(compensated_sum(lits).value<datatypes::xsd::Double>()));
+    }
+
+    SUBCASE("reached by overflow") {
+        auto const lits = repeat<datatypes::xsd::Double>(std::numeric_limits<double>::max(), 3);
+
+        CHECK(std::isinf(compensated_sum(lits).value<datatypes::xsd::Double>()));
+    }
+
+    SUBCASE("owl:real, whose infinity is not std::isinf") {
+        std::vector<Literal> const lits{Literal::make_typed_from_value<datatypes::owl::Real>(boost::multiprecision::cpp_bin_float_quad{1}),
+                                        Literal::make_typed_from_value<datatypes::owl::Real>(std::numeric_limits<boost::multiprecision::cpp_bin_float_quad>::infinity())};
+
+        CHECK(isinf(compensated_sum(lits).value<datatypes::owl::Real>()));
+    }
+
+    SUBCASE("both signs still cancel to NaN") {
+        std::vector<Literal> const lits{one, inf, Literal::make_typed_from_value<datatypes::xsd::Double>(-std::numeric_limits<double>::infinity())};
+
+        CHECK(std::isnan(naive_sum(lits).value<datatypes::xsd::Double>()));
         CHECK(std::isnan(compensated_sum(lits).value<datatypes::xsd::Double>()));
     }
 }

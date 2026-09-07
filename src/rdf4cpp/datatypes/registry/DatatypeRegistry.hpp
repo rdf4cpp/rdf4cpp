@@ -54,6 +54,7 @@ struct DatatypeRegistry {
     using nullop_fptr_t = std::any (*)() noexcept;
     using unop_fptr_t = OpResult (*)(std::any const &) noexcept;
     using binop_fptr_t = OpResult (*)(std::any const &, std::any const &) noexcept;
+    using predicate_fptr_t = bool (*)(std::any const &) noexcept;
 
     using compare_fptr_t = std::partial_ordering (*)(std::any const &, std::any const &) noexcept;
 
@@ -78,6 +79,8 @@ struct DatatypeRegistry {
         unop_fptr_t round_fptr; // round(a)
         unop_fptr_t floor_fptr; // floor(a)
         unop_fptr_t ceil_fptr;  // ceil(a)
+
+        predicate_fptr_t is_inf_fptr; // is_inf(a)
     };
 
     struct NumericOpsStub {
@@ -577,7 +580,6 @@ inline void DatatypeRegistry::add() noexcept {
     using conversion_table_t = decltype(make_conversion_table_for<LiteralDatatype_t>());
 
     auto const num_ops = []() -> std::optional<NumericOps> {
-        // note: not std::floating_point, that would miss owl:real whose cpp_type is a class type
         if constexpr (datatypes::NumericImpl<LiteralDatatype_t>) {
             return NumericOps{make_numeric_ops_impl<LiteralDatatype_t>(),
                               std::numeric_limits<typename LiteralDatatype_t::cpp_type>::is_exact};
@@ -796,6 +798,11 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
                 return OpResult{
                         .result_type_id = detail::SelectOpResIRI<typename LiteralDatatype_t::ceil_result, LiteralDatatype_t>::select(),
                         .result_value = detail::map_expected(LiteralDatatype_t::ceil(operand_val))};
+            },
+            // is_inf(a)
+            .is_inf_fptr = [](std::any const &operand) noexcept -> bool {
+                auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type const &>(operand);
+                return LiteralDatatype_t::is_inf(operand_val);
             }};
 }
 
