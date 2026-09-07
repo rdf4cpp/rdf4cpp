@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <any>
+#include <compare>
 #include <functional>
 #include <limits>
 #include <optional>
@@ -81,6 +82,8 @@ struct DatatypeRegistry {
         unop_fptr_t ceil_fptr;  // ceil(a)
 
         predicate_fptr_t is_inf_fptr; // is_inf(a)
+
+        compare_fptr_t magnitude_compare_fptr; // compare(abs(a), abs(b)), only available if the datatype is also comparable
     };
 
     struct NumericOpsStub {
@@ -803,7 +806,30 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
             .is_inf_fptr = [](std::any const &operand) noexcept -> bool {
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type const &>(operand);
                 return LiteralDatatype_t::is_inf(operand_val);
-            }};
+            },
+            // |a| <=> |b|
+            .magnitude_compare_fptr = []() -> compare_fptr_t {
+                if constexpr (ComparableLiteralDatatype<LiteralDatatype_t>) {
+                    return [](std::any const &lhs, std::any const &rhs) noexcept -> std::partial_ordering {
+                        auto const &lhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type const &>(lhs);
+                        auto const &rhs_val = std::any_cast<typename LiteralDatatype_t::cpp_type const &>(rhs);
+
+                        auto const lhs_abs = LiteralDatatype_t::abs(lhs_val);
+                        if (!lhs_abs.has_value()) {
+                            return std::partial_ordering::unordered;
+                        }
+
+                        auto const rhs_abs = LiteralDatatype_t::abs(rhs_val);
+                        if (!rhs_abs.has_value()) {
+                            return std::partial_ordering::unordered;
+                        }
+
+                        return LiteralDatatype_t::compare(*lhs_abs, *rhs_abs);
+                    };
+                } else {
+                    return nullptr;
+                }
+            }()};
 }
 
 template<datatypes::TimepointLiteralDatatype LiteralDatatype_t>

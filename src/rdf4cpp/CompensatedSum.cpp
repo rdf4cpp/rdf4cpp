@@ -9,43 +9,36 @@ CompensatedSum::CompensatedSum(storage::DynNodeStoragePtr node_storage)
     : node_storage_{node_storage} {
 }
 
-datatypes::registry::DatatypeRegistry::DatatypeEntry const *CompensatedSum::datatype_entry(IRI const &datatype) {
-    if (datatype.null()) {
-        return nullptr;  // the null-value, let the deferred ops propagate it
-    }
-
-    if (datatype != cached_datatype_) {
-        cached_datatype_ = datatype;
-        cached_entry_ = datatypes::registry::DatatypeRegistry::get_entry(datatype);
-    }
-
-    return cached_entry_;
-}
-
 bool CompensatedSum::is_exact(IRI const &datatype) {
-    auto const *e = datatype_entry(datatype);
-    return e != nullptr && e->numeric_ops.has_value() && e->numeric_ops->is_exact;
-}
+    if (datatype.null()) {
+        return false; // the null-value, let the deferred ops propagate it
+    }
 
-bool CompensatedSum::is_inf(DeferredValue const &value) {
-    auto const *e = datatype_entry(value.second);
-    return e != nullptr && e->numeric_ops.has_value() && e->numeric_ops->is_impl() && e->numeric_ops->get_impl().is_inf_fptr(value.first);
+    if (datatype == cached_datatype_) {
+        return cached_exact_;
+    }
+
+    auto const *entry = datatypes::registry::DatatypeRegistry::get_entry(datatypes::registry::DatatypeIDView{datatype});
+
+    cached_datatype_ = datatype;
+    cached_exact_ = entry != nullptr && entry->numeric_ops.has_value() && entry->numeric_ops->is_exact;
+    return cached_exact_;
 }
 
 void CompensatedSum::add(Literal const &lit) {
     this->add(make_deferred_from_literal(lit));
 }
 
-void CompensatedSum::add(DeferredValue const &value) {
+void CompensatedSum::add(DeferredLiteral const &value) {
     if (!sum_.has_value()) {
         // the first value seeds the sum; adding it to a "0"^^xsd:integer instead would poison
         // owl:rational and owl:real, which have no common numeric type with xsd:integer
         sum_ = value;
-        compensating_ = !is_exact(value.second);
+        compensating_ = !is_exact(value.datatype);
         return;
     }
 
-    if (!compensating_ && is_exact(value.second)) {
+    if (!compensating_ && is_exact(value.datatype)) {
         // arbitrary precision, so there is no rounding error to carry
         sum_ = numeric_add_deferred(*sum_, value, node_storage_);
         return;
@@ -53,22 +46,17 @@ void CompensatedSum::add(DeferredValue const &value) {
 
     compensating_ = true;
 
-    auto const t = numeric_add_deferred(*sum_, value, node_storage_);
+    // Kahan-Babuska-Neumaier: collect the loss of each addition on the side and add it back in
+    // value().
+    auto [new_sum, loss] = numeric_add_with_loss_deferred(*sum_, value, node_storage_);
 
-    // Neumaier: accumulate what the additions lose instead of correcting the next value with it,
-    // which keeps the correction even if that value dwarfs the running total. The loss is Knuth's
-    // two-sum, exact for either order of magnitude, so no comparison of the two is needed.
-    // Skipped once the total is infinite: its loss would be inf - inf = NaN and poison the sum.
-    if (!is_inf(t)) {
-        auto const z = numeric_sub_deferred(t, *sum_, node_storage_);
-        auto const loss = numeric_add_deferred(numeric_sub_deferred(*sum_, numeric_sub_deferred(t, z, node_storage_), node_storage_),
-                                               numeric_sub_deferred(value, z, node_storage_),
-                                               node_storage_);
-
-        comp_ = comp_.second.null() ? loss : numeric_add_deferred(comp_, loss, node_storage_);
+    // a null loss is one there is nothing to account for: the total went infinite, or it is
+    // poisoned and t carries that on. comp_ itself is the null-value until the first loss seeds it
+    if (!loss.null()) {
+        comp_ = comp_.null() ? loss : numeric_add_deferred(comp_, loss, node_storage_);
     }
 
-    sum_ = t;
+    sum_ = std::move(new_sum);
 }
 
 Literal CompensatedSum::value() const {
@@ -76,7 +64,7 @@ Literal CompensatedSum::value() const {
         return Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
     }
 
-    if (comp_.second.null()) {
+    if (comp_.null()) {
         return materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
     }
 

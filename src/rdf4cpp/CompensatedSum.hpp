@@ -1,6 +1,7 @@
 #ifndef RDF4CPP_COMPENSATEDSUM_HPP
 #define RDF4CPP_COMPENSATEDSUM_HPP
 
+#include <rdf4cpp/DeferredLiteral.hpp>
 #include <rdf4cpp/IRI.hpp>
 #include <rdf4cpp/Literal.hpp>
 
@@ -24,21 +25,19 @@ struct CompensatedSum {
 private:
     storage::DynNodeStoragePtr node_storage_;
 
-    std::optional<DeferredValue> sum_;  // running total (initially zero)
-    DeferredValue comp_;                // low-order bits lost by the additions so far, the null-value until the first of them
+    std::optional<DeferredLiteral> sum_;  // running total (initially zero)
+    DeferredLiteral comp_;                // low-order bits lost by the additions so far, the null-value until the first of them
 
     // latched as soon as an inexact datatype is involved, and never cleared because the numeric
     // hierarchy only ever widens: once the total is a double it stays one
     bool compensating_ = false;
 
-    // registry entry of the datatype looked at last, so that a stream of a single datatype (the
-    // common case) costs one IRI comparison per element instead of a registry lookup
+    // exactness of the datatype added last, so that a stream of a single datatype (the common case)
+    // costs one IRI comparison per element instead of a registry lookup
     IRI cached_datatype_;
-    datatypes::registry::DatatypeRegistry::DatatypeEntry const *cached_entry_ = nullptr;
+    bool cached_exact_ = false;
 
-    [[nodiscard]] datatypes::registry::DatatypeRegistry::DatatypeEntry const *datatype_entry(IRI const &datatype);
     [[nodiscard]] bool is_exact(IRI const &datatype);
-    [[nodiscard]] bool is_inf(DeferredValue const &value);
 
 public:
     /**
@@ -48,7 +47,7 @@ public:
     explicit CompensatedSum(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     void add(Literal const &lit);
-    void add(DeferredValue const &value);
+    void add(DeferredLiteral const &value);
 
     /**
      * @return the sum, or the null-literal if a non-numeric or null value was added. The sum of

@@ -16,6 +16,7 @@
 #include <rdf4cpp/version.hpp>
 #include <rdf4cpp/writer/SerializationState.hpp>
 #include <rdf4cpp/GraphComparison.hpp>
+#include <rdf4cpp/DeferredLiteral.hpp>
 
 
 /**

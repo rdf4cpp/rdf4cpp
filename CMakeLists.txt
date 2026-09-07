@@ -73,6 +73,7 @@ add_library(rdf4cpp
         src/rdf4cpp/ClosedNamespace.cpp
         src/rdf4cpp/CompensatedSum.cpp
         src/rdf4cpp/Dataset.cpp
+        src/rdf4cpp/DeferredLiteral.cpp
         src/rdf4cpp/Graph.cpp
         src/rdf4cpp/IRI.cpp
         src/rdf4cpp/Literal.cpp
