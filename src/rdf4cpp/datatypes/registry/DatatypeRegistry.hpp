@@ -807,7 +807,7 @@ DatatypeRegistry::NumericOpsImpl DatatypeRegistry::make_numeric_ops_impl() noexc
                 auto const &operand_val = std::any_cast<typename LiteralDatatype_t::cpp_type const &>(operand);
                 return LiteralDatatype_t::is_inf(operand_val);
             },
-            // |a| <=> |b|
+            // compare(abs(a), abs(b))
             .magnitude_compare_fptr = []() -> compare_fptr_t {
                 if constexpr (ComparableLiteralDatatype<LiteralDatatype_t>) {
                     return [](std::any const &lhs, std::any const &rhs) noexcept -> std::partial_ordering {
