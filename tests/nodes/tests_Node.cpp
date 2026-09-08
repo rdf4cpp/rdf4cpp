@@ -217,12 +217,131 @@ TEST_CASE("effective boolean value") {
     CHECK(null_bnode.ebv() == TriBool::Err);
 }
 
+TEST_CASE("RDFterm-equal: mixed term kinds give a boolean, not an error") {
+    // SPARQL 1.1 section 17.4.1.7: RDFterm-equal returns TRUE for the same term.
+    // It produces a type error only when both arguments are literals.
+    // It returns FALSE otherwise. A blank node compared with an IRI is FALSE,
+    // and != is fn:not(RDFterm-equal), so != must be TRUE there.
+    Node const bnode = BlankNode{"b0"};
+    Node const iri = IRI{"http://example.org/Person"};
+    Node const lit = Literal::make_simple("hello");
+
+    CHECK(bnode.eq(iri) == TriBool::False);
+    CHECK(bnode.ne(iri) == TriBool::True);
+    CHECK(iri.eq(bnode) == TriBool::False);
+    CHECK(iri.ne(bnode) == TriBool::True);
+    CHECK(iri.eq(lit) == TriBool::False);
+    CHECK(lit.ne(bnode) == TriBool::True);
+
+    // the FILTER path: as_ne must produce "true"^^xsd:boolean, not the null literal
+    CHECK(!bnode.as_ne(iri).null());
+    CHECK(bnode.as_ne(iri).ebv() == TriBool::True);
+}
+
+TEST_CASE("ordering comparison of a term with itself") {
+    // "Operators invoked without appropriate operands result in a type error."
+    // - https://www.w3.org/TR/sparql11-query/#OperatorMapping
+    // The operator table lists <, <=, > and >= only for numeric, simple literal,
+    // xsd:string, xsd:boolean and xsd:dateTime operands. IRIs, blank nodes and
+    // variables give a type error, also when both operands are the same term.
+    Node const iri = IRI{"http://example.org/Person"};
+    Node const bnode = BlankNode{"b0"};
+    Node const var = query::Variable{"x"};
+    Node const lit = Literal::make_typed_from_value<datatypes::xsd::Int>(42);
+    Node const simple_lit = Literal::make_simple("hello");
+    Node const incomparable_lit = Literal::make_typed_from_value<datatypes::xsd::Incomparable>(1);
+
+    SUBCASE("IRI") {
+        CHECK(iri.lt(iri) == TriBool::Err);
+        CHECK(iri.le(iri) == TriBool::Err);
+        CHECK(iri.gt(iri) == TriBool::Err);
+        CHECK(iri.ge(iri) == TriBool::Err);
+    }
+
+    SUBCASE("blank node") {
+        CHECK(bnode.lt(bnode) == TriBool::Err);
+        CHECK(bnode.le(bnode) == TriBool::Err);
+        CHECK(bnode.gt(bnode) == TriBool::Err);
+        CHECK(bnode.ge(bnode) == TriBool::Err);
+    }
+
+    SUBCASE("variable") {
+        CHECK(var.lt(var) == TriBool::Err);
+        CHECK(var.le(var) == TriBool::Err);
+        CHECK(var.gt(var) == TriBool::Err);
+        CHECK(var.ge(var) == TriBool::Err);
+    }
+
+    SUBCASE("literal of a comparable datatype") {
+        CHECK(lit.lt(lit) == TriBool::False);
+        CHECK(lit.le(lit) == TriBool::True);
+        CHECK(lit.gt(lit) == TriBool::False);
+        CHECK(lit.ge(lit) == TriBool::True);
+
+        CHECK(simple_lit.lt(simple_lit) == TriBool::False);
+        CHECK(simple_lit.le(simple_lit) == TriBool::True);
+        CHECK(simple_lit.gt(simple_lit) == TriBool::False);
+        CHECK(simple_lit.ge(simple_lit) == TriBool::True);
+    }
+
+    SUBCASE("literal of a datatype without a defined order") {
+        // the datatype has no compare function, so no pair of its literals is ordered,
+        // not even a literal and itself
+        Literal const l = Literal::make_typed_from_value<datatypes::xsd::Incomparable>(1);
+        CHECK(l.compare(l) == std::partial_ordering::unordered);
+
+        CHECK(incomparable_lit.lt(incomparable_lit) == TriBool::Err);
+        CHECK(incomparable_lit.le(incomparable_lit) == TriBool::Err);
+        CHECK(incomparable_lit.gt(incomparable_lit) == TriBool::Err);
+        CHECK(incomparable_lit.ge(incomparable_lit) == TriBool::Err);
+    }
+
+    SUBCASE("the FILTER path") {
+        // a type error becomes the null literal, a boolean becomes a boolean literal
+        CHECK(iri.as_lt(iri).null());
+        CHECK(iri.as_le(iri).null());
+        CHECK(iri.as_gt(iri).null());
+        CHECK(iri.as_ge(iri).null());
+        CHECK(bnode.as_le(bnode).null());
+        CHECK(incomparable_lit.as_le(incomparable_lit).null());
+
+        CHECK(!lit.as_le(lit).null());
+        CHECK(lit.as_le(lit).ebv() == TriBool::True);
+        CHECK(!lit.as_ge(lit).null());
+        CHECK(lit.as_ge(lit).ebv() == TriBool::True);
+        CHECK(!lit.as_lt(lit).null());
+        CHECK(lit.as_lt(lit).ebv() == TriBool::False);
+    }
+
+    SUBCASE("ORDER BY keeps a total order") {
+        // ORDER BY needs a total order over all terms, so every term is equivalent to itself
+        CHECK(iri.order_le(iri));
+        CHECK(iri.order_ge(iri));
+        CHECK(!iri.order_lt(iri));
+        CHECK(!iri.order_gt(iri));
+        CHECK(bnode.order_le(bnode));
+        CHECK(bnode.order_ge(bnode));
+        CHECK(var.order_le(var));
+        CHECK(var.order_ge(var));
+        CHECK(incomparable_lit.order_le(incomparable_lit));
+        CHECK(incomparable_lit.order_ge(incomparable_lit));
+    }
+}
+
 TEST_CASE("IRI UUID") {
     IRI uuid = IRI::make_uuid();
     IRI uuid2 = IRI::make_uuid();
 
     CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
     CHECK(regex::Regex{"^urn:uuid:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
+}
+
+TEST_CASE("BNODE UUID") {
+    BlankNode uuid = BlankNode::make_uuid();
+    BlankNode uuid2 = BlankNode::make_uuid();
+
+    CHECK(uuid != uuid2);  // note: non-deterministic but should basically never fail
+    CHECK(regex::Regex{"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"}.regex_match(uuid.identifier()));
 }
 
 TEST_CASE("IRI fetch or serialize") {
@@ -248,8 +367,9 @@ struct get_find_values<IRI> {
 };
 template<>
 struct get_find_values<BlankNode> {
-    static constexpr std::string_view t = "bl1aaaa";
-    static constexpr std::string_view v = "bl2aaaa";
+    // too long to be inlined, so that find actually has to hit the node storage
+    static constexpr std::string_view t = "bl1aaaaa";
+    static constexpr std::string_view v = "bl2aaaaa";
 };
 
 TEST_CASE_TEMPLATE("IRI/BlankNode::find", T, IRI, BlankNode) {
@@ -354,6 +474,12 @@ TEST_CASE("null nodes") {
     run_checks(n3);
     run_checks(n4);
     run_checks(n5);
+
+    // casting from null nodes, stays a null node
+    CHECK(n2.as_literal().null());
+    CHECK(n3.as_blank_node().null());
+    CHECK(n4.as_iri().null());
+    CHECK(n5.as_variable().null());
 }
 
 TEST_CASE("variable inlining") {
@@ -430,17 +556,18 @@ TEST_CASE("variable inlining") {
     check_node_storage_transfer(v3);
     check_fetch_or_serialize(v3);
 
-    auto v4 = query::Variable::make_named("abcdef");
+    // one char longer than what fits into a NodeID (minus the anonymous tagging bit)
+    auto v4 = query::Variable::make_named("abcdefg");
     CHECK_FALSE(v4.is_inlined());
     CHECK_FALSE(v4.is_anonymous());
-    CHECK_EQ(v4.name(), "abcdef");
+    CHECK_EQ(v4.name(), "abcdefg");
     CHECK_EQ(v4.order(v1), std::strong_ordering::greater);
     check_fetch_or_serialize(v4);
 
-    auto v5 = query::Variable::make_anonymous("fghijk");
+    auto v5 = query::Variable::make_anonymous("fghijkl");
     CHECK_FALSE(v5.is_inlined());
     CHECK(v5.is_anonymous());
-    CHECK_EQ(v5.name(), "fghijk");
+    CHECK_EQ(v5.name(), "fghijkl");
     CHECK_EQ(v5.order(v4), std::strong_ordering::greater);
     check_fetch_or_serialize(v5);
 
@@ -457,7 +584,7 @@ TEST_CASE("variable inlining") {
     CHECK_EQ(v7.order(v6), std::strong_ordering::greater);
     check_fetch_or_serialize(v7);
 
-    auto v8 = query::Variable::make_named("aaaaaa");
+    auto v8 = query::Variable::make_named("aaaaaaa");
     CHECK_FALSE(v8.is_inlined());
     CHECK_FALSE(v8.is_anonymous());
     CHECK_GT(v8.name().size(), v1.name().size());
@@ -521,9 +648,10 @@ TEST_CASE("bnode inlining") {
     check_node_storage_transfer(v2);
     check_fetch_or_serialize(v2);
 
-    auto v3 = BlankNode::make("abcdefg");
+    // one char longer than what fits into a NodeID
+    auto v3 = BlankNode::make("abcdefgh");
     CHECK_FALSE(v3.is_inlined());
-    CHECK_EQ(v3.identifier(), "abcdefg");
+    CHECK_EQ(v3.identifier(), "abcdefgh");
     CHECK_EQ(v3.order(v1), std::strong_ordering::greater);
     check_fetch_or_serialize(v3);
 
@@ -533,7 +661,7 @@ TEST_CASE("bnode inlining") {
     CHECK_EQ(v4.order(v1), std::strong_ordering::less);
     check_fetch_or_serialize(v4);
 
-    auto v5 = BlankNode::make("aaaaaaa");
+    auto v5 = BlankNode::make("aaaaaaaa");
     CHECK_FALSE(v5.is_inlined());
     CHECK_GT(v5.identifier().size(), v1.identifier().size());
     CHECK_EQ(v5.order(v1), std::strong_ordering::less);

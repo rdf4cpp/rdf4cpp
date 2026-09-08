@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
-project(rdf4cpp VERSION 0.1.13)
-set(POBR_VERSION 3)  # Persisted Object Binary Representation
+project(rdf4cpp VERSION 0.2.5)
+set(POBR_VERSION 4)  # Persisted Object Binary Representation
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -16,7 +16,7 @@ endif ()
 # find packages
 find_package(expected-lite REQUIRED)
 find_package(Boost REQUIRED)
-find_package(re2 REQUIRED)
+find_package(PCRE2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo REQUIRED)
 find_package(highway REQUIRED)
@@ -24,58 +24,48 @@ find_package(dice-hash REQUIRED)
 find_package(dice-sparse-map REQUIRED)
 find_package(dice-template-library REQUIRED)
 find_package(libxml2 REQUIRED)
+find_package(simdjson REQUIRED)
+find_package(dragonbox REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
-set(serd_rev 44ed1719e80ef4cc833d1f7d8087fb506f9a55bf)
+include(FetchContent)
+# serd is compiled directly into rdf4cpp, we only need its sources.
+# serd builds with meson and ships no CMakeLists.txt, so FetchContent_MakeAvailable
+# only makes the sources available and adds no target of its own.
+FetchContent_Declare(serd
+        GIT_REPOSITORY https://github.com/dice-group/serd.git
+        GIT_TAG 12321d54430b4e9caf30903eff0203a372c94fd0 # v0.32.10+dice
+)
+FetchContent_MakeAvailable(serd)
+
+# keep serd's license at a stable path, it is picked up from there while packaging (see conanfile.py)
+file(COPY "${serd_SOURCE_DIR}/COPYING" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/serd")
+
 set(serd_source_files
-        include/serd/serd.h
-        src/attributes.h
         src/base64.c
-        src/base64.h
-        src/byte_sink.h
         src/byte_source.c
-        src/byte_source.h
         src/env.c
         src/n3.c
         src/node.c
-        src/node.h
         src/reader.c
-        src/reader.h
-        src/serd_config.h
-        src/serd_internal.h
-        src/stack.h
+        src/read_utf8.c
         src/string.c
-        src/string_utils.h
         src/system.c
-        src/system.h
-        src/try.h
         src/uri.c
-        src/uri_utils.h
-        src/warnings.h
         src/writer.c
 )
+list(TRANSFORM serd_source_files PREPEND "${serd_SOURCE_DIR}/")
+
 set(style_files
     .clang-format
     .clang-tidy
 )
-
-foreach(serd_source_file ${serd_source_files})
-    file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/${serd_rev}/${serd_source_file}"
-            "${CMAKE_CURRENT_BINARY_DIR}/serd/${serd_source_file}"
-            TLS_VERIFY ON)
-endforeach()
-file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/serd/${serd_rev}/COPYING"
-        "${CMAKE_CURRENT_BINARY_DIR}/serd/COPYING"
-        TLS_VERIFY ON)
 foreach(style_file ${style_files})
     file(DOWNLOAD "https://raw.githubusercontent.com/dice-group/tentris-cpp-coding-guidelines/main/${style_file}"
             "${CMAKE_SOURCE_DIR}/${style_file}"
             TLS_VERIFY ON)
 endforeach()
-
-list(FILTER serd_source_files INCLUDE REGEX "^.+\\.c$")
-list(TRANSFORM serd_source_files PREPEND "${CMAKE_CURRENT_BINARY_DIR}/serd/")
 
 ## Create the main rdf4cpp library target
 add_library(rdf4cpp
@@ -161,6 +151,10 @@ add_library(rdf4cpp
         private/rdf4cpp/parser/XMLStates/XMLParserRDFState.cpp
         private/rdf4cpp/parser/XMLStates/XMLParserTypedLiteralPredicateState.cpp
         private/rdf4cpp/parser/XMLStates/XMLParserXMLLiteralState.cpp
+        private/rdf4cpp/parser/JsonLdParser.cpp
+        private/rdf4cpp/parser/JsonLdParserTypes.cpp
+        private/rdf4cpp/parser/JsonLdContextParser.cpp
+        private/rdf4cpp/parser/JsonLdExpandParser.cpp
         private/rdf4cpp/regex/RegexImpl.cpp
         private/rdf4cpp/regex/RegexReplacerImpl.cpp
         ${serd_source_files}
@@ -174,8 +168,8 @@ target_include_directories(
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
         PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/private>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/serd/src>"
+        "$<BUILD_INTERFACE:${serd_SOURCE_DIR}/include>"
+        "$<BUILD_INTERFACE:${serd_SOURCE_DIR}/src>"
 )
 
 target_link_libraries(rdf4cpp
@@ -186,20 +180,25 @@ target_link_libraries(rdf4cpp
         dice-sparse-map::dice-sparse-map
         dice-template-library::dice-template-library
         PRIVATE
-        re2::re2
+        pcre2::pcre2
         OpenSSL::Crypto
         uni-algo::uni-algo
         highway::highway
         LibXml2::LibXml2
+        simdjson::simdjson
+        dragonbox::dragonbox
         )
 
 set_target_properties(rdf4cpp PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        CXX_STANDARD 20
+        CXX_STANDARD 23
         CXX_EXTENSIONS OFF
         CXX_STANDARD_REQUIRED ON
 )
+
+# consumers need C++23 as well, CXX_STANDARD alone does not propagate
+target_compile_features(rdf4cpp PUBLIC cxx_std_23)
 
 if (PROJECT_IS_TOP_LEVEL)
     include(cmake/install_library.cmake)

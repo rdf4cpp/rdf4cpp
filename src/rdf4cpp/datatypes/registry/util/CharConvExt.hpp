@@ -107,7 +107,7 @@ F from_chars(std::string_view s) {
     }
 }
 
-template<typename F, ConstexprString datatype>
+/*template<typename F, ConstexprString datatype>
 requires std::same_as<F, __int128>
 F from_chars(std::string_view s) {
     static constexpr __int128 max_pow10 = []() {
@@ -157,7 +157,7 @@ F from_chars(std::string_view s) {
         ++i;
     }
     return value;
-}
+}*/
 
 namespace detail  {
 /**

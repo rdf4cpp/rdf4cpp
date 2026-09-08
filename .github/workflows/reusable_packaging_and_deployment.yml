@@ -24,16 +24,16 @@ jobs:
 
     steps:
       - name: Add compiler repos
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@main
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/setup_apt@v2.1.1
 
       - name: Get minimum cmake version
-        uses: lukka/get-cmake@v3.29.3
+        uses: lukka/get-cmake@v4.4.2
         with:
           cmakeVersion: ${{ inputs.cmake-version }}
 
       - name: Install compiler
         id: install_cc
-        uses: rlalik/setup-cpp-compiler@v1.2
+        uses: rlalik/setup-cpp-compiler@v2
         with:
           compiler: ${{ inputs.compiler }}
 
@@ -41,7 +41,7 @@ jobs:
         uses: rui314/setup-mold@v1
 
       - name: Configure conan
-        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@main
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/configure_conan@v2.1.1
         with:
           conan-version: ${{ inputs.conan-version }}
 
@@ -51,13 +51,13 @@ jobs:
 
       - name: Cache conan data
         id: cache-conan
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: ~/.conan2/p
           key: ${{ inputs.os }}-${{ inputs.compiler }}-conan2
 
       - name: Check out sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7.0.1
 
       - name: Test conan package
         env:

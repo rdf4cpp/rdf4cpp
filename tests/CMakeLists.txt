@@ -1,8 +1,27 @@
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 find_package(doctest REQUIRED)
 find_package(nanobench REQUIRED)
-find_package(CURL REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(
+        rdf-tests
+        GIT_REPOSITORY https://github.com/w3c/rdf-tests.git
+        GIT_TAG        main
+)
+FetchContent_MakeAvailable(rdf-tests)
+
+FetchContent_Declare(
+        json-ld-streaming
+        GIT_REPOSITORY https://github.com/w3c/json-ld-streaming
+        GIT_TAG        main
+)
+FetchContent_MakeAvailable(json-ld-streaming)
+
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests_DataDirConfig.hpp.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/parser/tests_DataDirConfig.hpp"
+)
 
 # add the executable for all tests
 add_executable(tests_Variable query/tests_Variable.cpp)
@@ -42,6 +61,13 @@ target_link_libraries(tests_Literal_ops
         rdf4cpp
         )
 add_test(NAME tests_Literal_ops COMMAND tests_Literal_ops)
+
+add_executable(tests_Literal_order nodes/tests_Literal_order.cpp)
+target_link_libraries(tests_Literal_order
+        doctest::doctest
+        rdf4cpp
+        )
+add_test(NAME tests_Literal_order COMMAND tests_Literal_order)
 
 add_executable(tests_Node nodes/tests_Node.cpp)
 target_link_libraries(tests_Node
@@ -116,6 +142,7 @@ target_link_libraries(tests_AnyURI
 )
 add_test(NAME tests_AnyURI COMMAND tests_AnyURI)
 
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/datatype/doubles.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 add_executable(tests_Double datatype/tests_Double.cpp)
 target_link_libraries(tests_Double
         doctest::doctest
@@ -241,6 +268,13 @@ target_link_libraries(tests_TriBool
         rdf4cpp
         )
 add_test(NAME tests_TriBool COMMAND tests_TriBool)
+
+add_executable(tests_GraphComparison util/tests_GraphComparison.cpp)
+target_link_libraries(tests_GraphComparison
+        doctest::doctest
+        rdf4cpp
+        )
+add_test(NAME tests_GraphComparison COMMAND tests_GraphComparison)
 
 add_executable(tests_Regex util/tests_Regex.cpp)
 target_link_libraries(tests_Regex
@@ -371,13 +405,20 @@ add_executable(tests_XMLParser parser/tests_XMLParser.cpp)
 target_link_libraries(tests_XMLParser
         doctest::doctest
         rdf4cpp
-        CURL::libcurl
 )
 add_test(NAME tests_XMLParser COMMAND tests_XMLParser)
 
+add_executable(tests_JSON_LD_Parser parser/tests_JSON_LD_Parser.cpp)
+target_link_libraries(tests_JSON_LD_Parser
+        doctest::doctest
+        rdf4cpp
+)
+add_test(NAME tests_JSON_LD_Parser COMMAND tests_JSON_LD_Parser)
+
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.nt")
-        file(DOWNLOAD "https://files.tentris.dev/swdf.zip" "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.zip")
-        execute_process(COMMAND unzip "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.zip" -d "${CMAKE_CURRENT_BINARY_DIR}/test_swdf")
+        file(DOWNLOAD "https://files.tentris.dev/swdf.zip" "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.zip"
+                EXPECTED_HASH SHA256=14526b449f10f0ffd12c29a63161cdd7b3932eabdc305df5792d08ee3107c680)
+        file(ARCHIVE_EXTRACT INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.zip" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/test_swdf")
         file(REMOVE "${CMAKE_CURRENT_BINARY_DIR}/test_swdf/swdf.zip")
 endif ()
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/graph/tests_loading_simple.trig" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

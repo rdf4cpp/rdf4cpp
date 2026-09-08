@@ -31,12 +31,19 @@ struct BlankNode : Node {
     [[nodiscard]] static BlankNode make(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
+     * creates a new BlankNode from a random UUID (Universally Unique IDentifier)
+     * @return UUID IRI
+     */
+    [[nodiscard]] static BlankNode make_uuid(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
+
+
+    /**
      * Constructs a bnode from an identifier
      */
     [[nodiscard]] static BlankNode make_unchecked(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     BlankNode to_node_storage(storage::DynNodeStoragePtr node_storage) const;
-    [[nodiscard]] BlankNode try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const noexcept;
+    [[nodiscard]] BlankNode try_get_in_node_storage(storage::DynNodeStoragePtr node_storage) const;
 
     /**
      * searches for a bnode in the specified node storage and returns it.
@@ -45,12 +52,12 @@ struct BlankNode : Node {
      * @param node_storage
      * @return
      */
-    [[nodiscard]] static BlankNode find(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage) noexcept;
+    [[nodiscard]] static BlankNode find(std::string_view identifier, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
      * Validates the given blank node identifier
      * @param identifier identifier to validate
-     * @throws ParsingError if the blank node identifier is not valid
+     * @throws InvalidNode if the blank node identifier is not valid
      */
     static void validate(std::string_view identifier);
 
@@ -58,27 +65,27 @@ struct BlankNode : Node {
      * Get the string identifier of this. For BlankNode `_:abc` the identifier is `abc`.
      * @return string identifier
      */
-    [[nodiscard]] CowString identifier() const noexcept;
+    [[nodiscard]] CowString identifier() const;
 
     /**
      * @see Literal::fetch_or_serialize_lexical_form
      */
-    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_identifier(std::string_view &out, writer::BufWriterParts writer) const noexcept;
+    [[nodiscard]] FetchOrSerializeResult fetch_or_serialize_identifier(std::string_view &out, writer::BufWriterParts writer) const;
 
     /**
      * See Node::serialize
      */
-    bool serialize(writer::BufWriterParts writer) const noexcept;
+    bool serialize(writer::BufWriterParts writer) const;
 
-    [[nodiscard]] std::strong_ordering order(BlankNode const &other) const noexcept;
+    [[nodiscard]] std::strong_ordering order(BlankNode const &other) const;
 
-    [[nodiscard]] bool order_eq(BlankNode const &other) const noexcept;
-    [[nodiscard]] bool order_ne(BlankNode const &other) const noexcept;
+    [[nodiscard]] bool order_eq(BlankNode const &other) const;
+    [[nodiscard]] bool order_ne(BlankNode const &other) const;
 
-    [[nodiscard]] bool eq(BlankNode const &other) const noexcept;
-    [[nodiscard]] bool ne(BlankNode const &other) const noexcept;
+    [[nodiscard]] bool eq(BlankNode const &other) const;
+    [[nodiscard]] bool ne(BlankNode const &other) const;
 
-    [[nodiscard]] explicit operator std::string() const noexcept;
+    [[nodiscard]] explicit operator std::string() const;
 
     friend std::ostream &operator<<(std::ostream &os, BlankNode const &node);
 

@@ -3,17 +3,9 @@
 #include <uni_algo/ranges_conv.h>
 
 namespace rdf4cpp::parser {
-    XMLOutputQueue::XMLOutputQueue(state_type *state) : state_(state) {
-        if (state_ == nullptr) {
-            state_ = new state_type();
-            state_is_owned_ = true;
-        }
-    }
-
-    XMLOutputQueue::~XMLOutputQueue() {
-        if (state_is_owned_) {
-            delete state_;
-        }
+    XMLOutputQueue::XMLOutputQueue(state_type *initial_state)
+        : owned_state_(initial_state == nullptr ? std::make_unique<state_type>() : nullptr),
+          state_(initial_state == nullptr ? owned_state_.get() : initial_state) {
     }
 
     bool XMLOutputQueue::empty() const {
@@ -80,13 +72,17 @@ namespace rdf4cpp::parser {
         } else {
             state_->iri_factory.set_base_unchecked(base);
         }
-        auto exp = state_->iri_factory.from_maybe_relative(iri, state_->node_storage);
-        if (exp.has_value()) {
-            return inspect_node(*exp, i);
-        } else {
-            add_error(ParsingError::Type::BadIri, std::format("{}: {}", iri, exp.error()), i);
-            return IRI::make_null();
+
+        try {
+            auto const res = state_->iri_factory.from_maybe_relative(iri, state_->node_storage);
+            return inspect_node(res, i);
+        } catch (InvalidIRI const &ii) {
+            add_error(ParsingError::Type::BadIri, std::format("{}: {}", iri, ii.type()), i);
+        } catch (...) {
+            add_error(ParsingError::Type::Internal, "unknown internal error", i);
         }
+
+        return IRI::make_null();
     }
 
     IRI XMLOutputQueue::make_iri(std::string_view const uri, std::string_view const local_name, std::string_view const base, XMLStateInfo const &i) {
