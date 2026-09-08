@@ -46,12 +46,11 @@ void CompensatedSum::add(DeferredLiteral const &value) {
 
     compensating_ = true;
 
-    // Kahan-Babuska-Neumaier: collect the loss of each addition on the side and add it back in
-    // value().
+    // Kahan-Babuska-Neumaier: collect the loss of each addition on the side and add it back in value().
     auto [new_sum, loss] = numeric_add_with_loss_deferred(*sum_, value, node_storage_);
 
     // a null loss is one there is nothing to account for: the total went infinite, or it is
-    // poisoned and t carries that on. comp_ itself is the null-value until the first loss seeds it
+    // poisoned and sum_ carries that on. comp_ itself is the null-value until the first loss seeds it
     if (!loss.null()) {
         comp_ = comp_.null() ? loss : numeric_add_deferred(comp_, loss, node_storage_);
     }

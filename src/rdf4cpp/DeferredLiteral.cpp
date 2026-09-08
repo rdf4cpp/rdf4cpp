@@ -60,8 +60,8 @@ DeferredLiteral numeric_div_deferred(DeferredLiteral const &lhs, DeferredLiteral
 // is why the transformation runs on the equalized values rather than on the two DeferredValues.
 // See https://en.wikipedia.org/wiki/2Sum
 NumericAddWithLossResult numeric_add_with_loss_deferred(DeferredLiteral const &lhs,
-                                                                       DeferredLiteral const &rhs,
-                                                                       storage::DynNodeStoragePtr node_storage) {
+                                                        DeferredLiteral const &rhs,
+                                                        storage::DynNodeStoragePtr node_storage) {
     auto const op = [&](datatypes::registry::DatatypeRegistry::NumericOpsImpl const &num_ops,
                         std::any const &lhs,
                         std::any const &rhs) {
