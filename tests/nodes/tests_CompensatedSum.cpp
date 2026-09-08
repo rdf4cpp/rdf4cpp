@@ -386,3 +386,27 @@ TEST_CASE("compensation type changes") {
     CHECK(res.datatype_eq<datatypes::xsd::Double>());
     CHECK_EQ(res, 6.0_xsd_double);
 }
+
+TEST_CASE("near max") {
+    auto const d_max = Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::max());
+
+    std::array const rows = {
+        std::make_pair(d_max, 1),
+        std::make_pair(-d_max, 2),
+        std::make_pair(d_max, 1)
+    };
+
+    CompensatedSum s;
+    for (auto const &row : rows) {
+        s.add(row.first, row.second);
+    }
+
+    Literal manual_sum = 0_xsd_integer;
+    for (auto const &row : rows) {
+        for (int repeat = 0; repeat < row.second; ++repeat) {
+            manual_sum += row.first;
+        }
+    }
+
+    CHECK_EQ(s.value(), manual_sum);
+}

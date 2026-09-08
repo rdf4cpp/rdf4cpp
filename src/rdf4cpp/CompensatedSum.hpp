@@ -40,7 +40,6 @@ private:
     [[nodiscard]] bool is_exact(IRI const &datatype);
 
     void add_once(DeferredLiteral const &value);
-    void add_impl(DeferredLiteral value, uint64_t multiplicity);
 
 public:
     /**
@@ -50,12 +49,10 @@ public:
     explicit CompensatedSum(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
-     * Adds value multiplicity times, as if add(value) had been called that often. The multiplicity is
-     * never converted to a literal, so owl:rational and owl:real (no common type with xsd:integer) work.
+     * Adds value multiplicity times
      */
     void add(Literal const &lit, uint64_t multiplicity = 1);
     void add(DeferredLiteral const &value, uint64_t multiplicity = 1);
-    void add(DeferredLiteral &&value, uint64_t multiplicity = 1);
 
     /**
      * @return the sum, or the null-literal if a non-numeric or null value was added. The sum of

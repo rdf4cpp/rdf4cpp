@@ -29,35 +29,11 @@ void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
     this->add(make_deferred_from_literal(lit), multiplicity);
 }
 
-// value * multiplicity as the sum of value * 2^i over the set bits of multiplicity. Doubling is exact
-// in binary floating point (bar overflow, where the product overflows too), so every term is exact and
-// only the compensated additions round
 void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
-    if (multiplicity == 1) {
+    // assumption: multiplicity is usually smallI
+    while (multiplicity > 0) {
         add_once(value);
-        return;
-    }
-
-    add_impl(value, multiplicity);
-}
-
-void CompensatedSum::add(DeferredLiteral &&value, uint64_t multiplicity) {
-    if (multiplicity == 1) {
-        add_once(value);
-        return;
-    }
-
-    add_impl(std::move(value), multiplicity);
-}
-
-void CompensatedSum::add_impl(DeferredLiteral value, uint64_t multiplicity) {
-    for (; multiplicity != 0; multiplicity >>= 1u) {
-        if ((multiplicity & uint64_t{1}) != 0) {
-            add_once(value);
-        }
-        if (multiplicity > 1) {
-            value = numeric_add_deferred(value, value, node_storage_);
-        }
+        multiplicity -= 1;
     }
 }
 
