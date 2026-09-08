@@ -34,17 +34,29 @@ void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
 // only the compensated additions round
 void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
     if (multiplicity == 1) [[likely]] {
-        add_once(value);  // the common case, without copying value
+        add_once(value);
         return;
     }
 
-    DeferredLiteral term = value;
+    add_impl(value, multiplicity);
+}
+
+void CompensatedSum::add(DeferredLiteral &&value, uint64_t multiplicity) {
+    if (multiplicity == 1) [[likely]] {
+        add_once(value);
+        return;
+    }
+
+    add_impl(std::move(value), multiplicity);
+}
+
+void CompensatedSum::add_impl(DeferredLiteral value, uint64_t multiplicity) {
     for (; multiplicity != 0; multiplicity >>= 1u) {
         if ((multiplicity & uint64_t{1}) != 0) {
-            add_once(term);
+            add_once(value);
         }
         if (multiplicity > 1) {
-            term = numeric_add_deferred(term, term, node_storage_);
+            value = numeric_add_deferred(value, value, node_storage_);
         }
     }
 }

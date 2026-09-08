@@ -40,6 +40,7 @@ private:
     [[nodiscard]] bool is_exact(IRI const &datatype);
 
     void add_once(DeferredLiteral const &value);
+    void add_impl(DeferredLiteral value, uint64_t multiplicity);
 
 public:
     /**
@@ -54,6 +55,7 @@ public:
      */
     void add(Literal const &lit, uint64_t multiplicity = 1);
     void add(DeferredLiteral const &value, uint64_t multiplicity = 1);
+    void add(DeferredLiteral &&value, uint64_t multiplicity = 1);
 
     /**
      * @return the sum, or the null-literal if a non-numeric or null value was added. The sum of
