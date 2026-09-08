@@ -68,7 +68,7 @@ void CompensatedSum::add_once(DeferredLiteral const &value) {
 
 Literal CompensatedSum::value() const {
     if (!sum_.has_value()) {
-        return Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
+        return nullary_sum(node_storage_);
     }
 
     auto const final_result = [&] {
@@ -88,6 +88,10 @@ Literal CompensatedSum::value() const {
 
 bool CompensatedSum::poisoned() const noexcept {
     return sum_.has_value() && sum_->null();
+}
+
+Literal CompensatedSum::nullary_sum(storage::DynNodeStoragePtr node_storage) {
+    return Literal::make_typed_from_value<datatypes::xsd::Integer>(0, node_storage);
 }
 
 }  // namespace rdf4cpp

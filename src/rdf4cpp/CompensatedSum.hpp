@@ -64,6 +64,11 @@ public:
      * @return true if the sum will never return a non-null value again
      */
     [[nodiscard]] bool poisoned() const noexcept;
+
+    /**
+     * @return The result of a sum with no operands
+     */
+    [[nodiscard]] static Literal nullary_sum(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 };
 
 }  // namespace rdf4cpp
