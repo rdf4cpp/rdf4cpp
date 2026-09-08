@@ -375,3 +375,14 @@ TEST_CASE("non numeric literal nulls the sum") {
     s.add("Hello"_xsd_string);
     CHECK(s.value().null());
 }
+
+TEST_CASE("compensation type changes") {
+    CompensatedSum s;
+    s.add(1.0_xsd_float);
+    s.add(2.0_xsd_float);
+    s.add(3.0_xsd_double);
+
+    auto const res = s.value();
+    CHECK(res.datatype_eq<datatypes::xsd::Double>());
+    CHECK_EQ(res, 6.0_xsd_double);
+}
