@@ -25,11 +25,31 @@ bool CompensatedSum::is_exact(IRI const &datatype) {
     return cached_exact_;
 }
 
-void CompensatedSum::add(Literal const &lit) {
-    this->add(make_deferred_from_literal(lit));
+void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
+    this->add(make_deferred_from_literal(lit), multiplicity);
 }
 
-void CompensatedSum::add(DeferredLiteral const &value) {
+// value * multiplicity as the sum of value * 2^i over the set bits of multiplicity. Doubling is exact
+// in binary floating point (bar overflow, where the product overflows too), so every term is exact and
+// only the compensated additions round
+void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
+    if (multiplicity == 1) [[likely]] {
+        add_once(value);  // the common case, without copying value
+        return;
+    }
+
+    DeferredLiteral term = value;
+    for (; multiplicity != 0; multiplicity >>= 1u) {
+        if ((multiplicity & uint64_t{1}) != 0) {
+            add_once(term);
+        }
+        if (multiplicity > 1) {
+            term = numeric_add_deferred(term, term, node_storage_);
+        }
+    }
+}
+
+void CompensatedSum::add_once(DeferredLiteral const &value) {
     if (!sum_.has_value()) {
         // the first value seeds the sum; adding it to a "0"^^xsd:integer instead would poison
         // owl:rational and owl:real, which have no common numeric type with xsd:integer
@@ -63,7 +83,7 @@ Literal CompensatedSum::value() const {
         return Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
     }
 
-    auto final_result = [&] {
+    auto const final_result = [&] {
         if (comp_.null()) {
             return materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
         }

@@ -15,8 +15,8 @@ namespace rdf4cpp {
  * @example
  * @code
  * CompensatedSum sum;
- * for (Literal const &lit : literals) {
- *     sum.add(lit);
+ * for (auto const &[lit, multiplicity] : rows) {
+ *     sum.add(lit, multiplicity);
  * }
  * Literal const result = sum.value();
  * @endcode
@@ -39,6 +39,8 @@ private:
 
     [[nodiscard]] bool is_exact(IRI const &datatype);
 
+    void add_once(DeferredLiteral const &value);
+
 public:
     /**
      * @param node_storage the node storage the datatype IRIs live in, and that value() places its
@@ -46,8 +48,12 @@ public:
      */
     explicit CompensatedSum(storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
-    void add(Literal const &lit);
-    void add(DeferredLiteral const &value);
+    /**
+     * Adds value multiplicity times, as if add(value) had been called that often. The multiplicity is
+     * never converted to a literal, so owl:rational and owl:real (no common type with xsd:integer) work.
+     */
+    void add(Literal const &lit, uint64_t multiplicity = 1);
+    void add(DeferredLiteral const &value, uint64_t multiplicity = 1);
 
     /**
      * @return the sum, or the null-literal if a non-numeric or null value was added. The sum of

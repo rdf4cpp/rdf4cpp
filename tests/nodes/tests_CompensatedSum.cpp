@@ -214,14 +214,94 @@ TEST_CASE("intermediate results are not placed into the node storage") {
     auto const size_before = ns.size();
 
     for (Literal const &lit : lits) {
-        sum.add(lit);
+        sum.add(lit, 3);
     }
 
-    // only the datatype IRI may have been added, never any of the 100 partial sums
+    // only the datatype IRI may have been added, never any of the 100 partial sums or the doubled terms
     CHECK_LE(ns.size() - size_before, 1);
 
     auto const result = sum.value();
-    CHECK_EQ(result.value<datatypes::xsd::Decimal>(), BigDecimal<>{"1.0"});
+    CHECK_EQ(result.value<datatypes::xsd::Decimal>(), BigDecimal<>{"3.0"});
+}
+
+TEST_CASE("multiplicity") {
+    auto const with_multiplicity = [](Literal const &lit, uint64_t n) {
+        CompensatedSum sum;
+        sum.add(lit, n);
+        return sum.value();
+    };
+
+    SUBCASE("equals adding the value n times") {
+        for (uint64_t const n : {2, 3, 7, 10, 100, 1000}) {
+            CAPTURE(n);
+            auto const lit = Literal::make_typed_from_value<datatypes::xsd::Double>(0.1);
+            CHECK_EQ(with_multiplicity(lit, n), compensated_sum(std::vector<Literal>(n, lit)));
+        }
+
+        CHECK_EQ(with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Float>(0.1f), 10).value<datatypes::xsd::Float>(), 1.0f);
+    }
+
+    SUBCASE("the rounding of the product does not leak") {
+        // 0.1 * 3 rounds to 0.30000000000000004, ten of those would drift to 3.0000000000000004
+        CompensatedSum sum;
+        for (int i = 0; i < 10; ++i) {
+            sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(0.1), 3);
+        }
+
+        CHECK_EQ(sum.value().value<datatypes::xsd::Double>(), 3.0);
+    }
+
+    SUBCASE("a multiplied term dwarfed by the running sum") {
+        CompensatedSum sum;
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(1e16));
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(1.0), 3);
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(-1e16));
+
+        CHECK_EQ(sum.value().value<datatypes::xsd::Double>(), 3.0);
+    }
+
+    SUBCASE("exact datatypes") {
+        CHECK_EQ(with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Integer>(7), 6).value<datatypes::xsd::Integer>(), 42);
+        CHECK_EQ(with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Decimal>(BigDecimal<>{"0.01"}), 100).value<datatypes::xsd::Decimal>(), BigDecimal<>{"1.0"});
+
+        // no common type with xsd:integer, so the multiplicity must never become one
+        CHECK_EQ(with_multiplicity(Literal::make_typed_from_value<datatypes::owl::Rational>(boost::multiprecision::cpp_rational{1, 3}), 3).value<datatypes::owl::Rational>(), 1);
+        CHECK_EQ(with_multiplicity(Literal::make_typed_from_value<datatypes::owl::Real>(boost::multiprecision::cpp_bin_float_quad{0.1}), 10).value<datatypes::owl::Real>(), 1);
+    }
+
+    SUBCASE("xsd:int is a numeric stub, its arithmetic is exact xsd:integer") {
+        auto const result = with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Int>(1), 10);
+
+        CHECK_EQ(result.datatype(), IRI{datatypes::xsd::Integer::identifier});
+        CHECK_EQ(result.value<datatypes::xsd::Integer>(), 10);
+    }
+
+    SUBCASE("datatype promotion") {
+        CompensatedSum sum;
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(1), 2);
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(0.5), 2);
+
+        CHECK_EQ(sum.value(), Literal::make_typed_from_value<datatypes::xsd::Double>(3.0));
+    }
+
+    SUBCASE("zero adds nothing") {
+        CompensatedSum sum;
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(5), 0);
+        CHECK_EQ(sum.value(), Literal::make_typed_from_value<datatypes::xsd::Integer>(0));
+
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(1));
+        sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(5), 0);
+        CHECK_EQ(sum.value(), Literal::make_typed_from_value<datatypes::xsd::Integer>(1));
+    }
+
+    SUBCASE("non-numeric value poisons") {
+        CHECK(with_multiplicity("spherical cow"_xsd_string, 2).null());
+    }
+
+    SUBCASE("overflow and NaN") {
+        CHECK(std::isinf(with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::max()), 2).value<datatypes::xsd::Double>()));
+        CHECK(std::isnan(with_multiplicity(Literal::make_typed_from_value<datatypes::xsd::Double>(std::numeric_limits<double>::quiet_NaN()), 3).value<datatypes::xsd::Double>()));
+    }
 }
 
 TEST_CASE("a value dwarfing the running sum") {
