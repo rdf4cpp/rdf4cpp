@@ -33,7 +33,7 @@ void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
 // in binary floating point (bar overflow, where the product overflows too), so every term is exact and
 // only the compensated additions round
 void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
-    if (multiplicity == 1) [[likely]] {
+    if (multiplicity == 1) {
         add_once(value);
         return;
     }
@@ -42,7 +42,7 @@ void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
 }
 
 void CompensatedSum::add(DeferredLiteral &&value, uint64_t multiplicity) {
-    if (multiplicity == 1) [[likely]] {
+    if (multiplicity == 1) {
         add_once(value);
         return;
     }
