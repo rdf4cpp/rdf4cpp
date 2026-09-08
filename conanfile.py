@@ -30,7 +30,7 @@ class Recipe(ConanFile):
     generators = ("CMakeDeps", "CMakeToolchain")
 
     def requirements(self):
-        # Would like to use >= 1.91 because <1.90 has a bug in charconv for __int128.
+        # Would like to use >= 1.91 because <=1.90 has a bug in charconv for __int128.
         # But 1.91 does not compile on aarch64-linux.
         self.requires("boost/1.90.0", transitive_headers=True)
         self.requires("expected-lite/0.9.0", transitive_headers=True)
