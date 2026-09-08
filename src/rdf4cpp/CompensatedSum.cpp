@@ -30,7 +30,7 @@ void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
 }
 
 void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
-    // assumption: multiplicity is usually smallI
+    // assumption: multiplicity is usually small
     while (multiplicity > 0) {
         add_once(value);
         multiplicity -= 1;
