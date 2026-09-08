@@ -8,6 +8,18 @@ boilerplate_init()
 if (PROJECT_IS_TOP_LEVEL)
     set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=boost/*:without_cobalt=True")
 
+    # b2 hands clang a made-up --target=arm64-pc-linux (tools/build/src/tools/clang.jam,
+    # init-flags-cross). Clang has no aarch64 candidate triple with the pc vendor, so on
+    # Debian/Ubuntu it finds no libstdc++ and every C++ file fails on <cstddef>.
+    # Appending the compiler's own triple wins: extra_b2_flags is passed after b2's own flags.
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux"
+            AND CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64"
+            AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+
+        execute_process(COMMAND "${CMAKE_CXX_COMPILER}" -print-target-triple OUTPUT_VARIABLE HOST_TRIPLE OUTPUT_STRIP_TRAILING_WHITESPACE)
+        set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=boost/*:extra_b2_flags=cflags=--target=${HOST_TRIPLE} linkflags=--target=${HOST_TRIPLE}")
+    endif ()
+
     if (BUILD_TESTING)
         set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=&:with_test_deps=True")
     endif ()
