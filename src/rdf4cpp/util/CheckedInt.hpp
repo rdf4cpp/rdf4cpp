@@ -1,6 +1,8 @@
 #ifndef RDF4CPP_CHECKEDINT_HPP
 #define RDF4CPP_CHECKEDINT_HPP
 
+#include <concepts>
+
 namespace rdf4cpp::util {
 /**
  * Wraps an integer type and keeps track of Overflows and similar Undefined Behavior.
