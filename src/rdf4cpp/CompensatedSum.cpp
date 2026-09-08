@@ -86,4 +86,8 @@ Literal CompensatedSum::value() const {
     return final_result;
 }
 
+bool CompensatedSum::poisoned() const noexcept {
+    return sum_.has_value() && sum_->null();
+}
+
 }  // namespace rdf4cpp

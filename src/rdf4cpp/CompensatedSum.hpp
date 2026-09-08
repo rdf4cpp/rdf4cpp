@@ -59,6 +59,11 @@ public:
      *      nothing is "0"^^xsd:integer.
      */
     [[nodiscard]] Literal value() const;
+
+    /**
+     * @return true if the sum will never return a non-null value again
+     */
+    [[nodiscard]] bool poisoned() const noexcept;
 };
 
 }  // namespace rdf4cpp

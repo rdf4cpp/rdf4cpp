@@ -410,3 +410,13 @@ TEST_CASE("near max") {
 
     CHECK_EQ(s.value(), manual_sum);
 }
+
+TEST_CASE("poisoned") {
+    CompensatedSum s;
+    s.add(1_xsd_integer);
+    CHECK_FALSE(s.poisoned());
+
+    s.add("hello"_xsd_string);
+    CHECK(s.poisoned());
+    CHECK(s.value().null());
+}
