@@ -10,7 +10,7 @@ namespace rdf4cpp {
 
 /**
  * @brief The value of a Literal that is not (yet) placed into a node storage, together with the IRI of its datatype.
- * A DeferredValue with a null datatype IRI is the null-value; it is what the numeric_*_deferred functions
+ * A DeferredLiteral with a null datatype IRI is the null-value; it is what the numeric_*_deferred functions
  * return on error and it propagates through them, just like the null-Literal does for Literal::add and friends.
  * @warning the dynamic type of the value must be the cpp_type of the datatype, otherwise it is undefined behaviour
  * @note Use make_deferred_from_value or make_deferred_from_literal to construct one to avoid UB.
@@ -109,10 +109,10 @@ requires std::is_invocable_r_v<Result, ApplyOp, datatypes::registry::DatatypeReg
 }  // namespace deferred_detail
 
 /**
- * @brief Constructs a DeferredValue from a compatible type.
+ * @brief Constructs a DeferredLiteral from a compatible type.
  * The datatype is specified at compile time, which guarantees that the value and the datatype match.
  * @tparam T the datatype
- * @param value instance for which the DeferredValue is created
+ * @param value instance for which the DeferredLiteral is created
  * @param node_storage node storage the datatype IRI is placed in
  */
 template<datatypes::LiteralDatatype T>
@@ -127,7 +127,7 @@ template<datatypes::LiteralDatatype T>
 [[nodiscard]] DeferredLiteral make_deferred_from_literal(Literal const &lit);
 
 /**
- * @brief Places a DeferredValue into node_storage
+ * @brief Places a DeferredLiteral into node_storage
  * @return the resulting literal, or the null-literal if value is the null-value
  */
 [[nodiscard]] Literal materialize_deferred(DeferredLiteral value, storage::DynNodeStoragePtr node_storage = storage::default_node_storage);

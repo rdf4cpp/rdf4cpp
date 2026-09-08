@@ -148,8 +148,20 @@ TEST_CASE("datatype promotion matches a fold of operator+") {
 TEST_CASE("errors poison the sum") {
     SUBCASE("non-numeric value") {
         CompensatedSum sum;
-        sum.add(Literal::make_typed_from_value<datatypes::xsd::Double>(1.0));
-        sum.add(Literal::make_simple("not a number"));
+
+        SUBCASE("single value, non-numeric") {
+            sum.add("spherical cow"_xsd_string);
+        }
+
+        SUBCASE("start with non-numeric") {
+            sum.add("not a number"_xsd_string);
+            sum.add(1.0_xsd_double);
+        }
+
+        SUBCASE("start with numeric") {
+            sum.add(1.0_xsd_double);
+            sum.add("not a number"_xsd_string);
+        }
 
         CHECK(sum.value().null());
     }
@@ -157,7 +169,14 @@ TEST_CASE("errors poison the sum") {
     SUBCASE("null literal") {
         CompensatedSum sum;
         sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(1));
-        sum.add(Literal{});
+
+        SUBCASE("Literal") {
+            sum.add(Literal{});
+        }
+
+        SUBCASE("DeferredLiteral") {
+            sum.add(DeferredLiteral{});
+        }
 
         CHECK(sum.value().null());
     }
@@ -264,4 +283,15 @@ TEST_CASE("infinity is a value, as it is for operator+") {
         CHECK(std::isnan(naive_sum(lits).value<datatypes::xsd::Double>()));
         CHECK(std::isnan(compensated_sum(lits).value<datatypes::xsd::Double>()));
     }
+}
+
+TEST_CASE("non numeric literal nulls the sum") {
+    CompensatedSum s;
+    s.add(1_xsd_integer);
+    s.add(2.0_xsd_double);
+
+    CHECK_EQ(s.value(), 3.0_xsd_double);
+
+    s.add("Hello"_xsd_string);
+    CHECK(s.value().null());
 }

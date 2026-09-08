@@ -57,7 +57,7 @@ DeferredLiteral numeric_div_deferred(DeferredLiteral const &lhs, DeferredLiteral
 // Fast2Sum (Dekker): for |a| >= |b|, (a - (a + b)) + b is exactly the rounding error of a + b.
 // Adding those errors back up is what makes a running total compensated (Kahan-Babuska-Neumaier
 // summation, see CompensatedSum). The exactness only holds within one floating point format, which
-// is why the transformation runs on the equalized values rather than on the two DeferredValues.
+// is why the transformation runs on the equalized values rather than on the two DeferredLiterals.
 // See https://en.wikipedia.org/wiki/2Sum
 NumericAddWithLossResult numeric_add_with_loss_deferred(DeferredLiteral const &lhs,
                                                         DeferredLiteral const &rhs,

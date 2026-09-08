@@ -63,11 +63,19 @@ Literal CompensatedSum::value() const {
         return Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
     }
 
-    if (comp_.null()) {
-        return materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
+    auto final_result = [&] {
+        if (comp_.null()) {
+            return materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
+        }
+
+        return materialize_deferred(numeric_add_deferred(*sum_, comp_, node_storage_), node_storage_);
+    }();
+
+    if (!final_result.is_numeric()) {
+        return Literal{};
     }
 
-    return materialize_deferred(numeric_add_deferred(*sum_, comp_, node_storage_), node_storage_);
+    return final_result;
 }
 
 }  // namespace rdf4cpp
