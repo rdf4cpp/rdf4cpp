@@ -33,7 +33,8 @@ template<IntegralExt I>
 bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
-    static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
+    static_assert(std::numeric_limits<I>::is_specialized);
+    static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::numeric_limits<I>::is_signed);
 
     std::array<char, buf_sz> buf;
     boost::charconv::to_chars_result const res = [&] {
@@ -83,7 +84,7 @@ F from_chars(std::string_view s) {
     if (res.ec != std::errc{}) {
         if (res.ec == std::errc::invalid_argument) {
             bool neg = true;
-            if constexpr(!std::unsigned_integral<F>) {
+            if constexpr(std::numeric_limits<F>::is_signed) {
                 neg = *res.ptr != '-';
             }
 
@@ -149,6 +150,7 @@ bool to_chars_canonical(F const value, writer::BufWriterParts const writer) noex
     // +1 for E
     // +1 for minus in exponent
     // at least 2 for exponent because the (c++) standard says so (https://en.cppreference.com/w/cpp/utility/to_chars)
+    static_assert(std::numeric_limits<F>::is_specialized);
     static constexpr size_t buf_sz = 5 + std::numeric_limits<F>::max_digits10 + std::max(2ul, detail::log10ceil(std::numeric_limits<F>::max_exponent10));
     std::array<char, buf_sz> buf;
 
@@ -211,6 +213,7 @@ bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noe
     }
 
     if (auto const abs = std::abs(value); abs >= 0.000001 && abs < 1000000) {
+        static_assert(std::numeric_limits<F>::is_specialized);
         static constexpr size_t buf_sz = 2 + std::numeric_limits<F>::max_exponent10 + std::numeric_limits<F>::max_digits10;
         std::array<char, buf_sz> buf;
 
