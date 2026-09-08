@@ -1,12 +1,11 @@
 #ifndef RDF4CPP_XSD_INTEGER_HPP
 #define RDF4CPP_XSD_INTEGER_HPP
 
+#include <rdf4cpp/Int128.hpp>
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/FixedIdMappings.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/Decimal.hpp>
-
-#include <rdf4cpp/util/Int128.hpp>
 
 namespace rdf4cpp::datatypes::registry {
 

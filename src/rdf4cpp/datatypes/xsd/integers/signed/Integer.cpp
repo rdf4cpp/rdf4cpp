@@ -15,7 +15,7 @@ capabilities::Default<xsd_integer>::cpp_type capabilities::Default<xsd_integer>:
 
 template<>
 bool capabilities::Default<xsd_integer>::serialize_canonical_string(cpp_type const &value, writer::BufWriterParts writer) noexcept {
-    return rdf4cpp::util::to_chars_canonical(value, writer);
+    return util::to_chars_canonical(value, writer);
 }
 
 template<>

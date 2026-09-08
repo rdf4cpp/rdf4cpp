@@ -6,7 +6,7 @@ include(cmake/boilerplate_init.cmake)
 boilerplate_init()
 
 if (PROJECT_IS_TOP_LEVEL)
-    set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=boost/*:header_only=True")
+    set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=boost/*:without_cobalt=True")
 
     if (BUILD_TESTING)
         set(CONAN_INSTALL_ARGS "${CONAN_INSTALL_ARGS};-o=&:with_test_deps=True")
@@ -15,7 +15,7 @@ endif ()
 
 # find packages
 find_package(expected-lite REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost REQUIRED COMPONENTS charconv)
 find_package(PCRE2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(uni-algo REQUIRED)
@@ -176,6 +176,7 @@ target_link_libraries(rdf4cpp
         PUBLIC
         nonstd::expected-lite
         Boost::headers
+        Boost::charconv
         dice-hash::dice-hash
         dice-sparse-map::dice-sparse-map
         dice-template-library::dice-template-library

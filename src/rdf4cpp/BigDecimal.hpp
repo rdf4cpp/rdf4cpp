@@ -11,11 +11,11 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <dice/hash.hpp>
 
-#include <rdf4cpp/Expected.hpp>
-#include <rdf4cpp/InvalidNode.hpp>
-#include <rdf4cpp/util/Int128.hpp>
-#include <rdf4cpp/util/boost_int.hpp>
 #include <rdf4cpp/Assert.hpp>
+#include <rdf4cpp/Expected.hpp>
+#include <rdf4cpp/Int128.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
+#include <rdf4cpp/util/boost_int.hpp>
 
 namespace rdf4cpp {
     namespace util {

@@ -7,6 +7,7 @@
 
 #include <rdf4cpp/InvalidNode.hpp>
 #include <rdf4cpp/Assert.hpp>
+#include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
 
 namespace rdf4cpp::datatypes::registry {
 
@@ -31,7 +32,7 @@ bool capabilities::Default<xsd_decimal>::serialize_simplified_string(cpp_type co
     cpp_type v = value;
     v.normalize();
     if (v.get_exponent() == 0) {
-        return rdf4cpp::util::to_chars_canonical(v.get_unscaled_value(), writer);
+        return util::to_chars_canonical(v.get_unscaled_value(), writer);
     } else {
         auto const s = static_cast<std::string>(v);
         return writer::write_str(s, writer);

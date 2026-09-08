@@ -3,16 +3,21 @@
 
 #include <algorithm>
 #include <cassert>
-#include <charconv>
 #include <cmath>
 #include <concepts>
-#include <stdexcept>
 #include <format>
 
-#include <rdf4cpp/InvalidNode.hpp>
-#include <rdf4cpp/util/Int128.hpp>
-#include <rdf4cpp/util/boost_int.hpp>
+// using boost::charconv instead of std::charconv
+// because boost::charconv has an overload for __int128,
+// whereas std::charconv only has that since libstdc++-16
+#include <boost/charconv.hpp>
+#include <boost/version.hpp>
+
+#include <rdf4cpp/Int128.hpp>
 #include <rdf4cpp/Assert.hpp>
+#include <rdf4cpp/InvalidNode.hpp>
+#include <rdf4cpp/writer/BufWriter.hpp>
+#include <rdf4cpp/datatypes/registry/util/ConstexprString.hpp>
 
 namespace rdf4cpp::datatypes::registry::util {
 /**
@@ -24,15 +29,26 @@ namespace rdf4cpp::datatypes::registry::util {
  * @param writer writer parts to be used for serialization
  * @return true if serialization successful, otherwise false
  */
-template<std::integral I>
+template<IntegralExt I>
 bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noexcept {
     // +1 because of definition of digits10 https://en.cppreference.com/w/cpp/types/numeric_limits/digits10
     // +1 for sign
     static constexpr size_t buf_sz = std::numeric_limits<I>::digits10 + 1 + static_cast<size_t>(std::is_signed_v<I>);
 
     std::array<char, buf_sz> buf;
-    std::to_chars_result const res = std::to_chars(buf.data(), buf.data() + buf.size(), value);
-
+    boost::charconv::to_chars_result const res = [&] {
+        if constexpr (std::is_same_v<I, Int128> && BOOST_VERSION < 109100) {
+            // boost < 1.91 has a bug that causes incorrect formatting for __int128 (aka rdf4cpp::Int128)
+            char *first = buf.data();
+            UInt128 const mag = value < 0 ? -static_cast<UInt128>(value) : static_cast<UInt128>(value);
+            if (value < 0) {
+                *first++ = '-';
+            }
+            return boost::charconv::to_chars(first, buf.data() + buf.size(), mag);
+        } else {
+            return boost::charconv::to_chars(buf.data(), buf.data() + buf.size(), value);
+        }
+    }();
     RDF4CPP_ASSERT(res.ec == std::errc{});
 
     std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};
@@ -48,7 +64,7 @@ bool to_chars_canonical(I const value, writer::BufWriterParts const writer) noex
  * @throws rdf4cpp::InvalidNode if the string cannot be parsed
  */
 template<typename F, ConstexprString datatype>
-requires (std::floating_point<F> || std::integral<F>)
+requires (std::floating_point<F> || IntegralExt<F>)
 F from_chars(std::string_view s) {
     if (s.starts_with('+')) {
         // from_chars does not allow initial +
@@ -56,11 +72,11 @@ F from_chars(std::string_view s) {
     }
 
     F value;
-    std::from_chars_result res = [&]() noexcept {
+    boost::charconv::from_chars_result res = [&]() noexcept {
         if constexpr (std::floating_point<F>) {
-            return std::from_chars(s.data(), s.data() + s.size(), value, std::chars_format::general);
+            return boost::charconv::from_chars(s.data(), s.data() + s.size(), value, boost::charconv::chars_format::general);
         } else {
-            return std::from_chars(s.data(), s.data() + s.size(), value);
+            return boost::charconv::from_chars(s.data(), s.data() + s.size(), value);
         }
     }();
 
@@ -89,75 +105,6 @@ F from_chars(std::string_view s) {
 
     return value;
 }
-
-template<rdf4cpp::util::detail::BoostNumber F, ConstexprString datatype>
-F from_chars(std::string_view s) {
-    if (s.starts_with('+')) {
-        s.remove_prefix(1);
-    }
-    if (auto const pos = s.find_first_not_of('0'); pos != std::string::npos) {
-        s.remove_prefix(pos);
-    }
-
-    try {
-        return F{s};
-    }
-    catch (std::runtime_error const &e) {
-        throw InvalidNode{std::format("{} parsing error: {}", datatype, e.what())};
-    }
-}
-
-/*template<typename F, ConstexprString datatype>
-requires std::same_as<F, __int128>
-F from_chars(std::string_view s) {
-    static constexpr __int128 max_pow10 = []() {
-        auto n = std::numeric_limits<uint64_t>::digits10;
-        __int128 d = 1;
-        for (int i = 0; i < n; ++i) {
-            d = d * 10;
-        }
-        return d;
-    }();
-    static_assert(max_pow10 == 10'000'000'000'000'000'000ull);
-
-    bool neg = false;
-    if (s.starts_with('+')) {
-        s.remove_prefix(1);
-    }
-    else if(s.starts_with('-')) {
-        neg = true;
-        s.remove_prefix(1);
-    }
-
-    __int128 value = 0;
-    int i = 0;
-    while (!s.empty()) {
-        std::string_view p;
-        if (s.size() <= std::numeric_limits<uint64_t>::digits10) {
-            p = s;
-            s = "";
-        }
-        else {
-            const size_t pos = s.size() - std::numeric_limits<uint64_t>::digits10;
-            p = s.substr(pos);
-            s = s.substr(0, pos);
-        }
-        __int128 value2 = from_chars<uint64_t, datatype>(p);
-        if (neg) {
-            value2 = -value2;
-        }
-        for (int j = 0; j < i; ++j) {
-            if (rdf4cpp::util::detail::mul_checked<rdf4cpp::util::detail::OverflowMode::Checked>(value2, max_pow10, value2)) [[unlikely]] {
-                throw rdf4cpp::InvalidNode{std::format("{} parsing error: overflow", datatype)};
-            }
-        }
-        if (rdf4cpp::util::detail::add_checked<rdf4cpp::util::detail::OverflowMode::Checked>(value, value2, value)) [[unlikely]] {
-            throw rdf4cpp::InvalidNode{std::format("{} parsing error: overflow", datatype)};
-        }
-        ++i;
-    }
-    return value;
-}*/
 
 namespace detail  {
 /**
@@ -205,7 +152,7 @@ bool to_chars_canonical(F const value, writer::BufWriterParts const writer) noex
     static constexpr size_t buf_sz = 5 + std::numeric_limits<F>::max_digits10 + std::max(2ul, detail::log10ceil(std::numeric_limits<F>::max_exponent10));
     std::array<char, buf_sz> buf;
 
-    std::to_chars_result res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::scientific);
+    boost::charconv::to_chars_result res = boost::charconv::to_chars(buf.data(), buf.data() + buf.size(), value, boost::charconv::chars_format::scientific);
     RDF4CPP_ASSERT(res.ec == std::errc{});
 
     auto *e_ptr = std::find(buf.data(), res.ptr, 'e');
@@ -267,7 +214,7 @@ bool to_chars_simplified(F const value, writer::BufWriterParts const writer) noe
         static constexpr size_t buf_sz = 2 + std::numeric_limits<F>::max_exponent10 + std::numeric_limits<F>::max_digits10;
         std::array<char, buf_sz> buf;
 
-        auto const res = std::to_chars(buf.data(), buf.data() + buf.size(), value, std::chars_format::fixed);
+        boost::charconv::to_chars_result const res = boost::charconv::to_chars(buf.data(), buf.data() + buf.size(), value, boost::charconv::chars_format::fixed);
         RDF4CPP_ASSERT(res.ec == std::errc{});
 
         std::string_view const s{buf.data(), static_cast<std::string::size_type>(res.ptr - buf.data())};

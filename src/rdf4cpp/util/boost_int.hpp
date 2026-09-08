@@ -5,8 +5,8 @@
 // follow the example of https://gcc.gnu.org/onlinedocs/gcc/Integer-Overflow-Builtins.html
 // and return true, iff the operation failed.
 
+#include <rdf4cpp/Int128.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
-#include <rdf4cpp/util/Int128.hpp>
 
 
 namespace rdf4cpp::util::detail {
@@ -136,15 +136,6 @@ namespace rdf4cpp::util::detail {
         return false;
     }
 }  // namespace rdf4cpp::util::detail
-
-namespace rdf4cpp::util {
-    template<detail::BoostNumber T>
-    bool to_chars_canonical(T const &value, writer::BufWriterParts const &writer) noexcept {
-        std::stringstream s{};
-        s << value;
-        return writer::write_str(s.view(), writer);
-    }
-}  // namespace rdf4cpp::util
 
 
 template<typename Policy, typename N, boost::multiprecision::expression_template_option et>

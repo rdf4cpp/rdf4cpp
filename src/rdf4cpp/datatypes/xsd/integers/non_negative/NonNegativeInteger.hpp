@@ -1,11 +1,10 @@
 #ifndef RDF4CPP_XSD_NONNEGATIVEINTEGER_HPP
 #define RDF4CPP_XSD_NONNEGATIVEINTEGER_HPP
 
+#include <rdf4cpp/Int128.hpp>
 #include <rdf4cpp/datatypes/registry/DatatypeMapping.hpp>
 #include <rdf4cpp/datatypes/registry/LiteralDatatypeImpl.hpp>
 #include <rdf4cpp/datatypes/xsd/integers/signed/Integer.hpp>
-
-#include <rdf4cpp/util/Int128.hpp>
 
 namespace rdf4cpp::datatypes::registry {
 

@@ -3,6 +3,8 @@
 
 #include <random>
 
+#include <rdf4cpp/Int128.hpp>
+#include <rdf4cpp/Int128Ext.hpp>
 #include <rdf4cpp/BigDecimal.hpp>
 #include <rdf4cpp/datatypes/registry/util/ConstexprString.hpp>
 #include <rdf4cpp/datatypes/registry/util/CharConvExt.hpp>
@@ -12,19 +14,18 @@ using DecI = rdf4cpp::util::BigDecimal<int32_t, uint32_t>;
 using RoundingMode = rdf4cpp::util::RoundingMode;
 
 namespace doctest {
-    template<> struct StringMaker<__int128> {
-        static String convert(const __int128& value) {
-            std::stringstream s{};
-            ::operator<<(s, value);
-            return doctest::String{s.view().data(), static_cast<unsigned int>(s.view().size())};
+    template<> struct StringMaker<rdf4cpp::Int128> {
+        static String convert(const rdf4cpp::Int128& value) {
+            auto const s = rdf4cpp::to_string(value);
+            return doctest::String{s.data(), static_cast<unsigned int>(s.size())};
         }
     };
 }
-static_assert(!rdf4cpp::util::detail::BoostNumber<__int128>);
+static_assert(!rdf4cpp::util::detail::BoostNumber<rdf4cpp::Int128>);
 static_assert(rdf4cpp::util::detail::BoostNumber<boost::multiprecision::checked_cpp_int>);
 static_assert(!rdf4cpp::util::detail::BoostNumber<int>);
 
-TEST_CASE_TEMPLATE("checked arithmetic signed", T, int32_t, int64_t, __int128, boost::multiprecision::checked_int256_t) {
+TEST_CASE_TEMPLATE("checked arithmetic signed", T, int32_t, int64_t, rdf4cpp::Int128, boost::multiprecision::checked_int256_t) {
     using namespace rdf4cpp::util::detail;
 
     SUBCASE("add") {
@@ -80,7 +81,7 @@ TEST_CASE_TEMPLATE("checked arithmetic signed", T, int32_t, int64_t, __int128, b
         CHECK(pow_checked<OverflowMode::Checked>(std::numeric_limits<T>::max(), 2, re) == true);
     }
 }
-TEST_CASE_TEMPLATE("checked arithmetic unsigned", T, uint32_t, uint64_t, unsigned __int128, boost::multiprecision::checked_uint256_t) {
+TEST_CASE_TEMPLATE("checked arithmetic unsigned", T, uint32_t, uint64_t, rdf4cpp::UInt128, boost::multiprecision::checked_uint256_t) {
     using namespace rdf4cpp::util::detail;
 
     SUBCASE("add") {
@@ -136,8 +137,8 @@ TEST_CASE_TEMPLATE("checked arithmetic unsigned", T, uint32_t, uint64_t, unsigne
         CHECK(pow_checked<OverflowMode::Checked>(std::numeric_limits<T>::max(), 2, re) == true);
     }
 }
-TEST_CASE_TEMPLATE("checked casting", T, uint32_t, uint64_t, unsigned __int128, boost::multiprecision::checked_uint256_t,
-                   int32_t, int64_t, __int128, boost::multiprecision::checked_int256_t ) {
+TEST_CASE_TEMPLATE("checked casting", T, uint32_t, uint64_t, rdf4cpp::UInt128, boost::multiprecision::checked_uint256_t,
+                   int32_t, int64_t, rdf4cpp::Int128, boost::multiprecision::checked_int256_t ) {
     using namespace rdf4cpp::util::detail;
 
     static constexpr bool sign = std::numeric_limits<T>::is_signed;
@@ -153,7 +154,7 @@ TEST_CASE_TEMPLATE("checked casting", T, uint32_t, uint64_t, unsigned __int128, 
         CHECK(i8 == -5);
         CHECK(cast_checked<OverflowMode::Checked>(T{-5}, u8) == true);
         CHECK(cast_checked<OverflowMode::Checked>(std::numeric_limits<T>::min(), i8) == true);
-        if constexpr (IntegralExt<T>) {
+        if constexpr (rdf4cpp::IntegralExt<T>) {
             CHECK(cast_checked<OverflowMode::Checked>(std::numeric_limits<typename MakeUnsigned<T>::t>::max(), t) == true);
         }
         else {
@@ -167,27 +168,25 @@ TEST_CASE_TEMPLATE("checked casting", T, uint32_t, uint64_t, unsigned __int128, 
     CHECK(t == std::numeric_limits<uint8_t>::max());
 }
 
-constexpr __int128 Make128(int64_t h, int64_t l) {
-    constexpr __int128 p = []() {
-        __int128 r = 1;
+constexpr rdf4cpp::Int128 Make128(int64_t h, int64_t l) {
+    constexpr rdf4cpp::Int128 p = []() {
+        rdf4cpp::Int128 r = 1;
         for (int i = 0; i < std::numeric_limits<int64_t>::digits10; ++i) {
             r *= 10;
         }
         return r;
     }();
-    return static_cast<__int128>(h) * p + l;
+    return static_cast<rdf4cpp::Int128>(h) * p + l;
 }
 
 TEST_CASE("int128 to_chars") {
-    auto tos = [](__int128 x) {
-        return rdf4cpp::writer::StringWriter::oneshot([x](rdf4cpp::writer::StringWriter& w) {
-            return rdf4cpp::util::to_chars_canonical(x, w);
-        });
+    auto tos = [](rdf4cpp::Int128 x) {
+        return rdf4cpp::to_string(x);
     };
     CHECK(tos(0) == "0");
-    CHECK(tos(std::numeric_limits<__int128>::max()) == "170141183460469231731687303715884105727");
-    CHECK(tos(std::numeric_limits<__int128>::min()) == "-170141183460469231731687303715884105728");
-    CHECK(tos(std::numeric_limits<__int128>::min()+1) == "-170141183460469231731687303715884105727");
+    CHECK(tos(std::numeric_limits<rdf4cpp::Int128>::max()) == "170141183460469231731687303715884105727");
+    CHECK(tos(std::numeric_limits<rdf4cpp::Int128>::min()) == "-170141183460469231731687303715884105728");
+    CHECK(tos(std::numeric_limits<rdf4cpp::Int128>::min()+1) == "-170141183460469231731687303715884105727");
     CHECK(Make128(5000, 5) > std::numeric_limits<uint64_t>::max());
     CHECK(tos(Make128(1, 5)) == "1000000000000000005");
     CHECK(tos(Make128(5001, 5)) == "5001000000000000000005");
@@ -201,31 +200,31 @@ TEST_CASE("int128 to_chars") {
 
 TEST_CASE("int128 from_chars") {
     static constexpr rdf4cpp::datatypes::registry::util::ConstexprString s{"test"};
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("0") == 0);
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("170141183460469231731687303715884105727") == std::numeric_limits<__int128>::max());
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-170141183460469231731687303715884105728") == std::numeric_limits<__int128>::min());
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-170141183460469231731687303715884105727") == std::numeric_limits<__int128>::min()+1);
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("1000000000000000005") == Make128(1, 5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("5000000000000000000005") == Make128(5000, 5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("5001000000000000000005") == Make128(5001, 5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("5000000000000000500000") == Make128(5000, 500000));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-5001000000000000000005") == Make128(-5001, -5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-5000000000000000000005") == Make128(-5000, -5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-1000000000000000005") == Make128(-1, -5));
-    CHECK(rdf4cpp::datatypes::registry::util::from_chars<__int128, s>("-5000000000000000500000") == Make128(-5000, -500000));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("0") == 0);
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("170141183460469231731687303715884105727") == std::numeric_limits<rdf4cpp::Int128>::max());
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-170141183460469231731687303715884105728") == std::numeric_limits<rdf4cpp::Int128>::min());
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-170141183460469231731687303715884105727") == std::numeric_limits<rdf4cpp::Int128>::min()+1);
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("1000000000000000005") == Make128(1, 5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("5000000000000000000005") == Make128(5000, 5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("5001000000000000000005") == Make128(5001, 5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("5000000000000000500000") == Make128(5000, 500000));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-5001000000000000000005") == Make128(-5001, -5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-5000000000000000000005") == Make128(-5000, -5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-1000000000000000005") == Make128(-1, -5));
+    CHECK(rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>("-5000000000000000500000") == Make128(-5000, -500000));
 
     std::random_device rd{};
     std::default_random_engine r{rd()};
     std::uniform_int_distribution<int64_t> d{};
-    std::array<char, std::numeric_limits<__int128>::digits10 + 2> buff;
+    std::array<char, std::numeric_limits<rdf4cpp::Int128>::digits10 + 2> buff;
     for (int i = 0; i < 100000; ++i) {
-        __int128 const c = static_cast<__int128>(d(r)) << 64 | d(r);
-        auto char_res = rdf4cpp::util::to_chars(buff.data(), buff.data() + buff.size(), c);
+        rdf4cpp::Int128 const c = static_cast<rdf4cpp::Int128>(d(r)) << 64 | d(r);
+        auto char_res = boost::charconv::to_chars(buff.data(), buff.data() + buff.size(), c);
         CHECK(char_res.ec == std::errc{});
         auto len = char_res.ptr - buff.data();
         CHECK(len >= 0);
         CHECK(len < buff.size());
-        CHECK(c == rdf4cpp::datatypes::registry::util::from_chars<__int128, s>(std::string_view{buff.data(), static_cast<size_t>(len)}));
+        CHECK(c == rdf4cpp::datatypes::registry::util::from_chars<rdf4cpp::Int128, s>(std::string_view{buff.data(), static_cast<size_t>(len)}));
     }
 }
 
@@ -427,7 +426,7 @@ TEST_CASE("conversion") {
         str << Dec{50, 1};
         CHECK_EQ(str.view(), "5.0");
         // uses string conversion, so no more tests here
-        str << rdf4cpp::Int128{100};
+        str << rdf4cpp::to_string(rdf4cpp::Int128{100});
         CHECK_EQ(str.view(), "5.0100");
     }
     SUBCASE("from double") {
