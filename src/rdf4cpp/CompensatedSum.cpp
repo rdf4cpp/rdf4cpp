@@ -87,7 +87,8 @@ Literal CompensatedSum::value() const {
 }
 
 bool CompensatedSum::poisoned() const noexcept {
-    return sum_.has_value() && sum_->null();
+    // using explicit != Tribool::True to get boolean short-circuit (would not short circuit with TriBool operator&&)
+    return sum_.has_value() && sum_->datatype.is_numeric_datatype() != TriBool::True;
 }
 
 Literal CompensatedSum::nullary_sum(storage::DynNodeStoragePtr node_storage) {

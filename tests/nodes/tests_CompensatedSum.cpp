@@ -148,6 +148,7 @@ TEST_CASE("datatype promotion matches a fold of operator+") {
 TEST_CASE("errors poison the sum") {
     SUBCASE("non-numeric value") {
         CompensatedSum sum;
+        CHECK_FALSE(sum.poisoned());
 
         SUBCASE("single value, non-numeric") {
             sum.add("spherical cow"_xsd_string);
@@ -155,20 +156,25 @@ TEST_CASE("errors poison the sum") {
 
         SUBCASE("start with non-numeric") {
             sum.add("not a number"_xsd_string);
+            CHECK(sum.poisoned());
             sum.add(1.0_xsd_double);
         }
 
         SUBCASE("start with numeric") {
             sum.add(1.0_xsd_double);
+            CHECK_FALSE(sum.poisoned());
             sum.add("not a number"_xsd_string);
         }
 
+        CHECK(sum.poisoned());
         CHECK(sum.value().null());
     }
 
     SUBCASE("null literal") {
         CompensatedSum sum;
+        CHECK_FALSE(sum.poisoned());
         sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(1));
+        CHECK_FALSE(sum.poisoned());
 
         SUBCASE("Literal") {
             sum.add(Literal{});
@@ -178,14 +184,17 @@ TEST_CASE("errors poison the sum") {
             sum.add(DeferredLiteral{});
         }
 
+        CHECK(sum.poisoned());
         CHECK(sum.value().null());
     }
 
     SUBCASE("once poisoned it stays poisoned") {
         CompensatedSum sum;
+        CHECK_FALSE(sum.poisoned());
         sum.add(Literal{});
+        CHECK(sum.poisoned());
         sum.add(Literal::make_typed_from_value<datatypes::xsd::Integer>(1));
-
+        CHECK(sum.poisoned());
         CHECK(sum.value().null());
     }
 
