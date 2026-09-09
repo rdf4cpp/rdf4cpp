@@ -182,7 +182,7 @@ public:
     }
 
     /**
-     * @return err if this is null, otherwise true iff this IRI is the datatype IRI for a numeric type
+     * @return err if this is null, otherwise true iff this IRI is the datatype IRI for a numeric literal
      */
     [[nodiscard]] TriBool is_numeric_datatype() const;
 };
