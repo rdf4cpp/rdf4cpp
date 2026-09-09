@@ -369,6 +369,11 @@ namespace rdf4cpp {
                         return true;
                     ex = 0;
                 }
+                if constexpr (m == OverflowMode::Checked) {
+                    if (t == std::numeric_limits<UnscaledValue_t>::min() && div == -1) {
+                        return true;
+                    }
+                }
                 UnscaledValue_t res = t / div;
                 UnscaledValue_t rem = t % div;
                 while (rem != 0) {
@@ -386,13 +391,25 @@ namespace rdf4cpp {
                             return false;
                         }
                     }
+                    UnscaledValue_t next_res;
+                    UnscaledValue_t next_rem;
+                    if (detail::mul_checked<m>(res, UnscaledValue_t{base}, next_res)
+                        || detail::mul_checked<m>(rem, UnscaledValue_t{base}, next_rem)) {
+                        result = handle_rounding(res, ex, rem, mode);
+                        return false;
+                    }
+                    if constexpr (m == OverflowMode::Checked) {
+                        if (next_rem == std::numeric_limits<UnscaledValue_t>::min() && div == -1) {
+                            return true;
+                        }
+                    }
+                    if (detail::add_checked<m>(next_res, next_rem / div, next_res)) {
+                        result = handle_rounding(res, ex, rem, mode);
+                        return false;
+                    }
                     ++ex;
-                    if (detail::mul_checked<m>(res, UnscaledValue_t{base}, res))
-                        return true;
-                    if (detail::mul_checked<m>(rem, UnscaledValue_t{base}, rem))
-                        return true;
-                    res += rem / div;
-                    rem = rem % div;
+                    res = next_res;
+                    rem = next_rem % div;
                     --max_scale_increase;
                 }
                 result = BigDecimal{res, ex};

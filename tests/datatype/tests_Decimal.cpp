@@ -224,6 +224,16 @@ TEST_CASE("decimal inlining sanity check") {
     }
 }
 
+TEST_CASE("decimal limits") {
+    using namespace datatypes::xsd;
+    SUBCASE("div") {
+        CHECK((Literal::make_typed<Decimal>("7000000000000000000") / Literal::make_typed<Decimal>("3")) == Literal::make_typed<Decimal>("2333333333333333333.3333333333333333333"));
+        CHECK((Literal::make_typed<Decimal>("10000000000000000000") / Literal::make_typed<Decimal>("3")) == Literal::make_typed<Decimal>("3333333333333333333.3333333333333333333"));
+        CHECK((Literal::make_typed<Decimal>("1000000000000000000") / Literal::make_typed<Decimal>("3")) == Literal::make_typed<Decimal>("333333333333333333.33333333333333333333"));
+        CHECK((Literal::make_typed_from_value<Decimal>(std::numeric_limits<Decimal::cpp_type>::min()) / Literal::make_typed<Decimal>("-1")).null());
+    }
+}
+
 TEST_CASE("decimal possible bug") {
     // This bug only occurs in boost versions < 1.86.0
     auto const lit1 = Literal::make_typed_from_value<datatypes::xsd::Double>(5).cast<rdf4cpp::datatypes::xsd::Decimal>();
