@@ -41,6 +41,12 @@ void CompensatedSum::add_once(DeferredLiteral const &value) {
     if (!sum_.has_value()) {
         // the first value seeds the sum; adding it to a "0"^^xsd:integer instead would poison
         // owl:rational and owl:real, which have no common numeric type with xsd:integer
+        if (!value.datatype.is_numeric_datatype()) {
+            // poison
+            sum_.emplace();
+            return;
+        }
+
         sum_ = value;
         compensating_ = !is_exact(value.datatype);
         return;
@@ -87,8 +93,7 @@ Literal CompensatedSum::value() const {
 }
 
 bool CompensatedSum::poisoned() const noexcept {
-    // using explicit != Tribool::True to get boolean short-circuit (would not short circuit with TriBool operator&&)
-    return sum_.has_value() && sum_->datatype.is_numeric_datatype() != TriBool::True;
+    return sum_.has_value() && sum_->null();
 }
 
 Literal CompensatedSum::nullary_sum(storage::DynNodeStoragePtr node_storage) {
