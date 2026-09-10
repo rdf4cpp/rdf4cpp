@@ -892,3 +892,13 @@ TEST_CASE("@propagate false in a remote context does not reach nested node objec
     CHECK(r.errors == "");
     CHECK(r.quads == "<http://ex/s> <http://ex/t> <http://ex/o> .\n");
 }
+
+TEST_CASE("@base in a remote context is ignored") {
+    // a remote context cannot change the base IRI
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/ctx.jsonld", R"({"@context": {"@base": "http://other.example/"}})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": "http://ex/ctx.jsonld", "@id": "s", "http://ex/p": "v"})", "http://doc.example/", docs);
+    CHECK(r.errors == "");
+    CHECK(r.quads == "<http://doc.example/s> <http://ex/p> \"v\" .\n");
+}
