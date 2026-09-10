@@ -1001,3 +1001,14 @@ TEST_CASE("a protected term that is defined on demand may be redefined with the 
                          R"(_:b0 <http://ex/t> "x" .)",
                          "http://example.org/");
 }
+
+TEST_CASE("an invalid scoped context before a remote context is reported") {
+    // the scoped context of a is checked at the end of the whole @context, the remote context after it does not change that
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/r.jsonld", R"({"@context": {}})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": [{"a": {"@id": "http://ex/a", "@context": {"@vocab": 5}}}, "http://ex/r.jsonld"], "http://ex/p": "x"})", "http://ex/doc", docs);
+    CHECK(r.quads == "");
+    CAPTURE(r.errors);
+    CHECK(r.errors.starts_with("invalid scoped context"));
+}
