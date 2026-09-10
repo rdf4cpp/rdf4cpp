@@ -932,3 +932,37 @@ TEST_CASE("an imported context that is not a map is an invalid remote context") 
     CHECK(r.quads == "");
     CHECK(r.errors == "invalid remote context\n");
 }
+
+TEST_CASE("loading remote contexts does not change the base of the parsing state") {
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ctx.example.com/c1.jsonld", R"({"@context": ["c2.jsonld"]})"},
+        {"http://ctx.example.com/c2.jsonld", R"({"@context": {}})"},
+    };
+    IStreamQuadIterator::state_type state{};
+    state.iri_factory.set_base("http://example.com/doc");
+    state.request_url = [&](std::string_view url) -> nonstd::expected<std::string, std::string> {
+        auto it = docs.find(url);
+        if (it == docs.end()) {
+            return nonstd::unexpected{std::string{"not found"}};
+        }
+        return it->second;
+    };
+
+    // c2.jsonld resolves against the url of c1.jsonld, not against the base of the state
+    std::stringstream json{R"({"@context": "http://ctx.example.com/c1.jsonld", "@id": "http://ex/s", "http://ex/p": "v"})"};
+    std::string errors;
+    for (IStreamQuadIterator it{json, ParsingFlag::JsonLd, &state}; it != std::default_sentinel; ++it) {
+        if (!it->has_value()) {
+            errors += std::format("{}\n", it->error().message);
+        }
+    }
+    CHECK(errors == "");
+    CHECK(std::string{state.iri_factory.get_base()} == "http://example.com/doc");
+
+    // a turtle parse reusing the state resolves against that base
+    std::stringstream ttl{"<s> <http://ex/p> <o> ."};
+    IStreamQuadIterator ttl_it{ttl, ParsingFlag::Turtle, &state};
+    REQUIRE(ttl_it != std::default_sentinel);
+    REQUIRE(ttl_it->has_value());
+    CHECK(std::string{ttl_it->value().subject().as_iri().identifier()} == "http://example.com/s");
+}
