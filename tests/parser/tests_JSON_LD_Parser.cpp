@@ -966,3 +966,27 @@ TEST_CASE("loading remote contexts does not change the base of the parsing state
     REQUIRE(ttl_it->has_value());
     CHECK(std::string{ttl_it->value().subject().as_iri().identifier()} == "http://example.com/s");
 }
+
+TEST_CASE("an exception from request_url becomes a parsing error") {
+    IStreamQuadIterator::state_type state{};
+    state.iri_factory.set_base("http://ex/doc");
+    state.request_url = [](std::string_view) -> nonstd::expected<std::string, std::string> {
+        throw std::runtime_error{"timeout"};
+    };
+
+    std::stringstream json{R"({"@context": "http://ex/ctx.jsonld", "@id": "http://ex/s", "http://ex/p": "v"})"};
+    size_t values = 0;
+    size_t errors = 0;
+    auto const parse_all = [&] {
+        for (IStreamQuadIterator it{json, ParsingFlag::JsonLd, &state}; it != std::default_sentinel; ++it) {
+            if (it->has_value()) {
+                ++values;
+            } else {
+                ++errors;
+            }
+        }
+    };
+    CHECK_NOTHROW(parse_all());
+    CHECK(values == 0);
+    CHECK(errors == 1);
+}
