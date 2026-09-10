@@ -990,3 +990,14 @@ TEST_CASE("an exception from request_url becomes a parsing error") {
     CHECK(values == 0);
     CHECK(errors == 1);
 }
+
+TEST_CASE("a protected term that is defined on demand may be redefined with the same definition") {
+    // s uses t before the second definition of t, so t gets defined while s is defined.
+    // both definitions of t are the same, so the redefinition of the protected term is allowed.
+    jsonld_test_positive(R"({"@context": [
+        {"s": "http://ex/s", "t": {"@id": "http://ex/t", "@protected": true, "@context": {"@vocab": "http://ex/v/"}}},
+        {"s": {"@id": "t"}, "t": {"@id": "http://ex/t", "@protected": true, "@context": {"@vocab": "http://ex/v/"}}}
+      ], "s": "x"})",
+                         R"(_:b0 <http://ex/t> "x" .)",
+                         "http://example.org/");
+}
