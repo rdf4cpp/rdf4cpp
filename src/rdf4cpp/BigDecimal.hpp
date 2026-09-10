@@ -254,6 +254,10 @@ namespace rdf4cpp {
              * converts this BigDecimal to its smallest internal representation.
              */
             static constexpr void normalize(UnscaledValue_t &unscaled_value, Exponent_t &exponent) noexcept {
+                if (unscaled_value == 0) {
+                    exponent = 0;
+                    return;
+                }
                 while (exponent > 0 && unscaled_value % base == 0) {
                     unscaled_value /= base;
                     --exponent;
@@ -295,6 +299,7 @@ namespace rdf4cpp {
                 UnscaledValue_t res = 0;
                 if (op_checked(t, o, res))
                     return true;
+                normalize(res, new_exp);
                 result = BigDecimal{res, new_exp};
                 return false;
             }
@@ -307,6 +312,7 @@ namespace rdf4cpp {
                 Exponent_t e{0};
                 if (detail::add_checked<m>(this->exponent, other.exponent, e))
                     return true;
+                normalize(v, e);
                 result = BigDecimal{v, e};
                 return false;
             }
