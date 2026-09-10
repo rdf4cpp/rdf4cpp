@@ -3,6 +3,8 @@
 #include <rdf4cpp/datatypes/registry/DatatypeRegistry.hpp>
 #include <rdf4cpp/datatypes/xsd/integers/signed/Integer.hpp>
 
+#include "Literal.hpp"
+
 namespace rdf4cpp {
 
 CompensatedSum::CompensatedSum(storage::DynNodeStoragePtr node_storage)
@@ -73,20 +75,17 @@ void CompensatedSum::add_once(DeferredLiteral const &value) {
 }
 
 Literal CompensatedSum::value() const {
+    Literal final_result{};
     if (!sum_.has_value()) {
-        return nullary_sum(node_storage_);
+        final_result = nullary_sum(node_storage_);
+    } else if (comp_.null()) {
+        final_result = materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
+    } else {
+        final_result = materialize_deferred(numeric_add_deferred(*sum_, comp_, node_storage_), node_storage_);
     }
 
-    auto const final_result = [&] {
-        if (comp_.null()) {
-            return materialize_deferred(*sum_, node_storage_);  // nothing was lost (yet)
-        }
-
-        return materialize_deferred(numeric_add_deferred(*sum_, comp_, node_storage_), node_storage_);
-    }();
-
     if (!final_result.is_numeric()) {
-        return Literal{};
+        final_result = Literal{};
     }
 
     return final_result;
