@@ -14,13 +14,14 @@ namespace {
 // the plain fold this is meant to improve on. Seeded with the first value, just like CompensatedSum:
 // a "0"^^xsd:integer seed would make every owl:rational and owl:real fold null.
 Literal naive_sum(std::span<Literal const> lits) {
+    Literal sum{};
     if (lits.empty()) {
-        return Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
-    }
-
-    Literal sum = lits.front();
-    for (Literal const &lit : lits.subspan(1)) {
-        sum += lit;
+        sum = Literal::make_typed_from_value<datatypes::xsd::Integer>(0);
+    } else {
+        sum = lits.front();
+        for (Literal const &lit : lits.subspan(1)) {
+            sum += lit;
+        }
     }
     return sum;
 }
