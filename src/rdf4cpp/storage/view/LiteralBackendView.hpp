@@ -27,12 +27,12 @@ struct ValueLiteralBackendView {
 
     template<datatypes::FixedIdLiteralDatatype Contained>
     [[nodiscard]] bool eq(typename Contained::cpp_type const &other) const noexcept {
-        return *std::any_cast<typename Contained::cpp_type>(&value) == other;
+        return *std::any_cast<typename Contained::cpp_type const &>(&value) == other;
     }
 
     template<datatypes::FixedIdLiteralDatatype Contained>
     [[nodiscard]] size_t hash() const noexcept {
-        return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(*std::any_cast<typename Contained::cpp_type>(&value));
+        return dice::hash::dice_hash_templates<::dice::hash::Policies::wyhash>::dice_hash(*std::any_cast<typename Contained::cpp_type const &>(&value));
     }
 };
 
