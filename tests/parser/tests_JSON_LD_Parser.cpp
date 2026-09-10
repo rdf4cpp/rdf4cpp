@@ -868,3 +868,17 @@ TEST_CASE("remote contexts of sibling node objects do not add up to a context ov
     CHECK(r.errors == "");
     CHECK(r.quad_count == nodes);
 }
+
+TEST_CASE("relative urls in a remote context resolve against the url of that context") {
+    // http://ex/dir/ctx.jsonld and http://ex/ot/sub1.jsonld have the same length
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/dir/ctx.jsonld", R"({"@context": ["../ot/sub1.jsonld", "sub3.jsonld"]})"},
+        {"http://ex/ot/sub1.jsonld", R"({"@context": {}})"},
+        {"http://ex/dir/sub3.jsonld", R"({"@context": {}})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": "dir/ctx.jsonld", "@id": "http://ex/s", "http://ex/p": "v"})", "http://ex/doc", docs);
+    // both entries of ctx.jsonld resolve against http://ex/dir/ctx.jsonld, also after sub1.jsonld was loaded
+    CHECK(r.requested == "http://ex/dir/ctx.jsonld\nhttp://ex/ot/sub1.jsonld\nhttp://ex/dir/sub3.jsonld\n");
+    CHECK(r.errors == "");
+    CHECK(r.quads == "<http://ex/s> <http://ex/p> \"v\" .\n");
+}
