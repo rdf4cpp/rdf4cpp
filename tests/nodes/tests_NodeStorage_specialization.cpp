@@ -114,8 +114,9 @@ TEST_CASE_TEMPLATE("NodeStorage specialization big positive numbers", T,
 
 TEST_CASE_TEMPLATE("NodeStorage specialization uninlineable doubles", T, xsd::Double) {
     std::array<xsd::Double::cpp_type, 2> const test_values{
-            1.23141321,
-            54234.12378312};
+            1.0 / 3.0,       // significand needs all 16 significant digits
+            1.23141321e-300  // power of ten far outside the inlinable range
+    };
 
     check_specialized_storage_usage<T>(syncns, test_values);
     check_specialized_storage_usage<T>(unsyncns, test_values);
@@ -247,13 +248,15 @@ template<typename NS>
 void test_rdf_lang_string_non_specialization(NS &ns) {
     auto extract_backend_handle = [](Literal l) {
         auto h = l.backend_handle();
-        if (!h.is_inlined())
+        if (!h.is_inlined()) {
             return h;
+        }
         auto [_, id] = rdf4cpp::datatypes::registry::DatatypeRegistry::LangTagInlines::from_inlined(h.node_id().literal_id());
         auto node_id = storage::identifier::NodeID{id, h.node_id().literal_type()};
-        return rdf4cpp::storage::identifier::NodeBackendHandle{node_id,
-                                                                          storage::identifier::RDFNodeType::Literal,
-                                                                          h.storage()};
+        h = rdf4cpp::storage::identifier::NodeBackendHandle{node_id,
+                                                            storage::identifier::RDFNodeType::Literal,
+                                                            h.storage()};
+        return h;
     };
 
     CHECK(!ns.has_specialized_storage_for(rdf::LangString::fixed_id));

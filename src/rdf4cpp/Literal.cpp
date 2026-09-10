@@ -13,6 +13,7 @@
 
 #include <uni_algo/all.h>
 
+#include <rdf4cpp/DeferredLiteral.hpp>
 #include <rdf4cpp/writer/BufWriter.hpp>
 #include <rdf4cpp/writer/TryWrite.hpp>
 #include <rdf4cpp/IRI.hpp>
@@ -215,6 +216,32 @@ Literal Literal::make_typed(std::string_view lexical_form, IRI const &datatype, 
         auto const needs_escape = lexical_form_needs_escape(lexical_form);
         return Literal::make_noninlined_typed_unchecked(lexical_form, needs_escape, datatype, node_storage);
     }
+}
+
+Literal Literal::make_typed_from_value(std::any value, IRI const &datatype, storage::DynNodeStoragePtr node_storage) {
+    using namespace datatypes;
+
+    if (datatype.null()) {
+        return Literal{};
+    }
+
+    registry::DatatypeIDView const datatype_identifier{datatype};
+
+    if (datatype_identifier == rdf::LangString::datatype_id) {
+        auto const &repr = std::any_cast<registry::LangStringRepr const &>(value);
+        return Literal::make_lang_tagged(repr.lexical_form, repr.language_tag, node_storage);
+    }
+
+    if (datatype_identifier == xsd::String::datatype_id) {
+        return Literal::make_simple(std::any_cast<xsd::String::cpp_type const &>(value), node_storage);
+    }
+
+    auto const *entry = registry::DatatypeRegistry::get_entry(datatype_identifier);
+    if (entry == nullptr) {
+        return Literal{};
+    }
+
+    return Literal::make_typed_unchecked(std::move(value), datatype_identifier, *entry, node_storage);
 }
 
 Literal Literal::make_boolean(TriBool const b, storage::DynNodeStoragePtr node_storage) {
@@ -859,7 +886,7 @@ std::any Literal::value() const {
         return ops->from_inlined_fptr(inlined_value);
     }
 
-    auto const backend = handle_.literal_backend();
+    auto backend = handle_.literal_backend();
 
     if (datatype == rdf::LangString::datatype_id) {
         auto const &lex = backend.get_lexical();
@@ -874,7 +901,9 @@ std::any Literal::value() const {
         return std::any{lex.lexical_form};
     }
 
-    return backend.visit(
+    // backend is a local that dies with this call, so the stored value can be moved out of it
+    // instead of copied; for datatypes with a specialized (value) storage that copy is a heap allocation
+    return std::move(backend).visit(
             [&datatype](storage::view::LexicalFormLiteralBackendView const &lexical_backend) noexcept {
                 if (auto const factory = registry::DatatypeRegistry::get_factory(datatype); factory != nullptr) {
                     return factory(lexical_backend.lexical_form);
@@ -882,11 +911,11 @@ std::any Literal::value() const {
 
                 return std::any{};
             },
-            [&datatype](storage::view::ValueLiteralBackendView const &value_backend) noexcept {
+            [&datatype](storage::view::ValueLiteralBackendView &&value_backend) noexcept {
                 RDF4CPP_ASSERT(value_backend.datatype == datatype);
                 (void)datatype;
 
-                return value_backend.value;
+                return std::move(value_backend.value);
             });
 }
 
@@ -988,87 +1017,22 @@ Literal Literal::cast(IRI const &target, storage::DynNodeStoragePtr node_storage
 }
 
 template<typename OpSelect>
-    requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t, OpSelect, datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
+requires std::is_nothrow_invocable_r_v<datatypes::registry::DatatypeRegistry::binop_fptr_t,
+                                       OpSelect,
+                                       datatypes::registry::DatatypeRegistry::NumericOpsImpl const &>
 Literal Literal::numeric_binop_impl(OpSelect op_select, Literal const &other, storage::DynNodeStoragePtr node_storage) const {
-    using namespace datatypes::registry;
-
     RDF4CPP_ASSERT(!this->null() && !other.null());
 
     if (this->is_fixed_not_numeric() || other.is_fixed_not_numeric()) {
         return Literal{};
     }
 
-    auto const this_datatype = this->datatype_id();
-    auto const *this_entry = DatatypeRegistry::get_entry(this_datatype);
-    if (this_entry == nullptr || !this_entry->numeric_ops.has_value()) {
-        return Literal{};  // not registered or not numeric
-    }
+    auto res = deferred_detail::numeric_binop_deferred_impl(op_select,
+                                                            make_deferred_from_literal(*this),
+                                                            make_deferred_from_literal(other),
+                                                            node_storage);
 
-    auto const other_datatype = other.datatype_id();
-
-    if (this_datatype == other_datatype && this_entry->numeric_ops->is_impl()) {
-        DatatypeRegistry::OpResult op_res = op_select(this_entry->numeric_ops->get_impl())(this->value(),
-                                                                                           other.value());
-
-        if (!op_res.result_value.has_value()) {
-            return Literal{};
-        }
-
-        auto const *result_entry = [&]() {
-            if (op_res.result_type_id == this_datatype) [[likely]] {
-                return this_entry;
-            } else [[unlikely]] {
-                return DatatypeRegistry::get_entry(op_res.result_type_id);
-            }
-        }();
-
-        RDF4CPP_ASSERT(result_entry != nullptr);
-        return Literal::make_typed_unchecked(std::move(*op_res.result_value), op_res.result_type_id, *result_entry, node_storage);
-    } else {
-        auto const *other_entry = DatatypeRegistry::get_entry(other_datatype);
-        if (other_entry == nullptr || !other_entry->numeric_ops.has_value()) {
-            return Literal{}; // not registered, or not numeric
-        }
-
-        auto const equalizer = DatatypeRegistry::get_common_numeric_op_type_conversion(*this_entry,
-                                                                                       *other_entry);
-
-        if (!equalizer.has_value()) {
-            return Literal{};  // not convertible
-        }
-
-        auto const [equalized_entry, equalized_id] = [&]() {
-            if (equalizer->target_type_id == this_datatype) {
-                return std::make_pair(this_entry, this_datatype);
-            } else if (equalizer->target_type_id == other_datatype) {
-                return std::make_pair(other_entry, other_datatype);
-            } else {
-                return std::make_pair(DatatypeRegistry::get_entry(equalizer->target_type_id), equalizer->target_type_id);
-            }
-        }();
-
-        RDF4CPP_ASSERT(equalized_entry != nullptr);
-        RDF4CPP_ASSERT(equalized_entry->numeric_ops.has_value());
-        RDF4CPP_ASSERT(equalized_entry->numeric_ops->is_impl());
-
-        DatatypeRegistry::OpResult op_res = op_select(equalized_entry->numeric_ops->get_impl())(equalizer->convert_lhs(this->value()),
-                                                                                                equalizer->convert_rhs(other.value()));
-
-        if (!op_res.result_value.has_value()) {
-            return Literal{};
-        }
-
-        auto const *result_entry = [&, equalized_id = std::ref(equalized_id), equalized_entry = equalized_entry]() {
-            if (op_res.result_type_id == equalized_id.get()) [[likely]] {
-                return equalized_entry;
-            } else [[unlikely]] {
-                return DatatypeRegistry::get_entry(op_res.result_type_id);
-            }
-        }();
-
-        RDF4CPP_ASSERT(result_entry != nullptr);
-        return Literal::make_typed_unchecked(std::move(*op_res.result_value), op_res.result_type_id, *result_entry, node_storage);
-    }
+    return materialize_deferred(std::move(res), node_storage);
 }
 
 template<typename OpSelect>
@@ -1117,7 +1081,48 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, storage::DynNodeStoragePt
     return Literal::make_typed_unchecked(std::move(*op_res.result_value), op_res.result_type_id, *result_entry, node_storage);
 }
 
+std::partial_ordering Literal::compare_values_of_same_datatype(datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry,
+                                                               datatypes::registry::DatatypeIDView const &datatype,
+                                                               Literal const &lhs,
+                                                               Literal const &rhs) {
+    // rdf:langString does not inline its value, it inlines the language tag,
+    // so its from_inlined is not usable here (see Literal::value)
+    if (lhs.is_inlined() && rhs.is_inlined() && datatype != datatypes::rdf::LangString::datatype_id) {
+        if (entry.inlining_ops.has_value() && entry.inlining_ops->compare_inlined_fptr != nullptr) {
+            RDF4CPP_DEBUG_ASSERT(entry.inlining_ops->compare_inlined_fptr != nullptr);
+            return entry.inlining_ops->compare_inlined_fptr(lhs.backend_handle().node_id().literal_id(),
+                                                            rhs.backend_handle().node_id().literal_id());
+        }
+    }
 
+    if (datatype == datatypes::xsd::String::datatype_id) {
+        // xsd:String has no compare of its own, so this is the generic <=> on cpp_type = std::string_view
+        auto const &lhs_backend = lhs.handle_.literal_backend();
+        auto const &rhs_backend = rhs.handle_.literal_backend();
+        return lhs_backend.get_lexical().lexical_form <=> rhs_backend.get_lexical().lexical_form;
+    }
+
+    if (datatype == datatypes::rdf::LangString::datatype_id) {
+        // the lexical form of an inlined lang tagged literal lives under the de-inlined handle
+        auto const de_inlined = [](Literal const &literal) noexcept {
+            return literal.is_inlined() ? literal.lang_tagged_get_de_inlined() : literal;
+        };
+
+        auto const &lhs_backend = de_inlined(lhs).handle_.literal_backend();
+        auto const &rhs_backend = de_inlined(rhs).handle_.literal_backend();
+        auto const &lhs_lexical = lhs_backend.get_lexical();
+        auto const &rhs_lexical = rhs_backend.get_lexical();
+        auto const &lhs_lang_repr = datatypes::registry::LangStringRepr{
+            .lexical_form = lhs_lexical.lexical_form, .language_tag = lhs_lexical.language_tag
+        };
+        auto const &rhs_lang_repr = datatypes::registry::LangStringRepr{
+            .lexical_form = rhs_lexical.lexical_form, .language_tag = rhs_lexical.language_tag
+        };
+        return lhs_lang_repr <=> rhs_lang_repr;
+    }
+
+    return entry.compare_fptr(lhs.value(), rhs.value());
+}
 
 std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering) const {
     using datatypes::registry::DatatypeRegistry;
@@ -1161,16 +1166,24 @@ std::partial_ordering Literal::compare_impl(Literal const &other, std::strong_or
     auto const this_entry = DatatypeRegistry::get_entry(this_datatype);
 
     if (datatype_cmp_res == std::strong_ordering::equal) {
-        if (out_alternative_ordering != nullptr) {
-            // types equal, fallback to lexical form ordering
-            *out_alternative_ordering = this->lexical_form() <=> other.lexical_form();
-        }
+        auto calc_alt_ordering = [&]() {
+            if (out_alternative_ordering != nullptr) {
+                // types equal, fallback to lexical form ordering
+                *out_alternative_ordering = this->lexical_form() <=> other.lexical_form();
+            }
+        };
 
         if (this_entry == nullptr || this_entry->compare_fptr == nullptr) {
+            calc_alt_ordering();
             return std::partial_ordering::unordered;
         }
 
-        return this_entry->compare_fptr(this->value(), other.value());
+        auto const res = compare_values_of_same_datatype(*this_entry, this_datatype, *this, other);
+        if (res == std::partial_ordering::equivalent || res == std::partial_ordering::unordered) {
+            // std::partial_ordering::equivalent is needed for cases like `"0.0"^^xsd:double <=? "-0.0"^^xsd:double`
+            calc_alt_ordering();
+        }
+        return res;
     } else {
         if (out_alternative_ordering != nullptr) {
             // types are different, the only useful alternative ordering is the type ordering
@@ -1708,11 +1721,13 @@ std::optional<Literal> Literal::chrono_div_impl(Literal const &other, storage::D
 
     RDF4CPP_ASSERT(!this->null() && !other.null());
 
+    std::optional<Literal> res = std::nullopt;
+
     if (this->is_fixed_not_duration() || (other.is_fixed_not_duration() && other.is_fixed_not_numeric())) {
         // is not any of
         // duration / duration
         // duration / scalar
-        return std::nullopt;
+        return res;
     }
 
     auto const this_datatype = this->datatype_id();
@@ -1720,37 +1735,39 @@ std::optional<Literal> Literal::chrono_div_impl(Literal const &other, storage::D
     auto const *this_entry = DatatypeRegistry::get_entry(this_datatype);
     if (this_entry == nullptr || !this_entry->duration_ops.has_value()) {
         // lhs is not registered or not duration
-        return std::nullopt;
+        return res;
     }
 
     auto const other_datatype = other.datatype_id();
     auto const *other_entry = DatatypeRegistry::get_entry(other_datatype);
     if (other_entry == nullptr) {
-        return std::nullopt; // other is not registered
+        return res; // other is not registered
     }
 
     if (other_entry->duration_ops.has_value()) {
         // this & other are durations
 
-        auto const binop_res = run_binop(other, this_datatype, *this_entry, other_datatype, *other_entry, node_storage,
+        res = run_binop(other, this_datatype, *this_entry, other_datatype, *other_entry, node_storage,
             [](DatatypeRegistry::DatatypeEntry const &entry, std::any const &lhs, std::any const &rhs) noexcept {
                 RDF4CPP_ASSERT(entry.duration_ops.has_value());
                 return entry.duration_ops->duration_div(lhs, rhs);
             });
-        if (binop_res.has_value()) {
-            return binop_res;
+        if (res.has_value()) {
+            return res;
         }
+        res = std::nullopt;
     }
 
     if (other_entry->numeric_ops.has_value()) {
         // this is duration & other is scalar
-        return run_binop_cast_rhs(other, *other_entry, this_entry->duration_ops->duration_scalar_type, node_storage,
+        res = run_binop_cast_rhs(other, *other_entry, this_entry->duration_ops->duration_scalar_type, node_storage,
             [this_entry](std::any const &lhs, std::any const &rhs) noexcept {
                 return this_entry->duration_ops->duration_scalar_div(lhs, rhs);
             });
+        return res;
     }
 
-    return std::nullopt;
+    return res;
 }
 
 Literal Literal::div(Literal const &other, storage::DynNodeStoragePtr node_storage) const {

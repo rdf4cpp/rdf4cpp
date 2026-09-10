@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
-project(rdf4cpp VERSION 0.2.3)
-set(POBR_VERSION 3)  # Persisted Object Binary Representation
+project(rdf4cpp VERSION 0.2.6)
+set(POBR_VERSION 4)  # Persisted Object Binary Representation
 
 include(cmake/boilerplate_init.cmake)
 boilerplate_init()
@@ -25,6 +25,7 @@ find_package(dice-sparse-map REQUIRED)
 find_package(dice-template-library REQUIRED)
 find_package(libxml2 REQUIRED)
 find_package(simdjson REQUIRED)
+find_package(dragonbox REQUIRED)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/rdf4cpp/version.hpp)
 
@@ -70,7 +71,9 @@ endforeach()
 add_library(rdf4cpp
         src/rdf4cpp/BlankNode.cpp
         src/rdf4cpp/ClosedNamespace.cpp
+        src/rdf4cpp/CompensatedSum.cpp
         src/rdf4cpp/Dataset.cpp
+        src/rdf4cpp/DeferredLiteral.cpp
         src/rdf4cpp/Graph.cpp
         src/rdf4cpp/IRI.cpp
         src/rdf4cpp/Literal.cpp
@@ -185,6 +188,7 @@ target_link_libraries(rdf4cpp
         highway::highway
         LibXml2::LibXml2
         simdjson::simdjson
+        dragonbox::dragonbox
         )
 
 set_target_properties(rdf4cpp PROPERTIES

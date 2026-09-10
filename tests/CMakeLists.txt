@@ -62,6 +62,20 @@ target_link_libraries(tests_Literal_ops
         )
 add_test(NAME tests_Literal_ops COMMAND tests_Literal_ops)
 
+add_executable(tests_CompensatedSum nodes/tests_CompensatedSum.cpp)
+target_link_libraries(tests_CompensatedSum
+        doctest::doctest
+        rdf4cpp
+        )
+add_test(NAME tests_CompensatedSum COMMAND tests_CompensatedSum)
+
+add_executable(tests_Literal_order nodes/tests_Literal_order.cpp)
+target_link_libraries(tests_Literal_order
+        doctest::doctest
+        rdf4cpp
+        )
+add_test(NAME tests_Literal_order COMMAND tests_Literal_order)
+
 add_executable(tests_Node nodes/tests_Node.cpp)
 target_link_libraries(tests_Node
         doctest::doctest
@@ -135,6 +149,7 @@ target_link_libraries(tests_AnyURI
 )
 add_test(NAME tests_AnyURI COMMAND tests_AnyURI)
 
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/datatype/doubles.ttl" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
 add_executable(tests_Double datatype/tests_Double.cpp)
 target_link_libraries(tests_Double
         doctest::doctest

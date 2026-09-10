@@ -6,6 +6,7 @@
 #include <optional>
 #include <ostream>
 #include <random>
+#include <utility>
 #include <rdf4cpp/Node.hpp>
 #include <rdf4cpp/datatypes/LiteralDatatype.hpp>
 #include <rdf4cpp/datatypes/owl.hpp>
@@ -173,6 +174,19 @@ private:
      * @return the ordering of the values of this and other; if there is a value ordering
      */
     std::partial_ordering compare_impl(Literal const &other, std::strong_ordering *out_alternative_ordering = nullptr) const;
+
+    /**
+     * @brief compares the values of two non-null literals that are known to share a datatype
+     * @param entry the already looked up registry entry of the shared datatype
+     * @param datatype the shared datatype of lhs and rhs
+     * @param lhs the left-hand side literal of the comparison
+     * @param rhs the right-hand side literal of the comparison
+     * @return the ordering of the values of lhs and rhs
+     */
+    static std::partial_ordering compare_values_of_same_datatype(datatypes::registry::DatatypeRegistry::DatatypeEntry const &entry,
+                                                                 datatypes::registry::DatatypeIDView const &datatype,
+                                                                 Literal const &lhs,
+                                                                 Literal const &rhs);
 
     /**
      * get the DatatypeIDView for the datatype of *this,
@@ -441,6 +455,18 @@ public:
                                                         IRI{T::datatype_id, node_storage},
                                                         node_storage);
     }
+
+    /**
+     * Constructs a literal from a value and its datatype, both given at runtime.
+     *
+     * @param value instance for which the literal is created
+     * @param datatype the datatype of value
+     * @param node_storage NodeStorage used
+     * @return literal instance representing value, or the null-literal if datatype is null or not registered
+     * @warning the dynamic type of value must be the cpp_type of datatype, otherwise the behaviour is undefined
+     */
+    [[nodiscard]] static Literal make_typed_from_value(std::any value, IRI const &datatype,
+                                                       storage::DynNodeStoragePtr node_storage = storage::default_node_storage);
 
     /**
      * Constructs a literal from a tri-bool with the following mappings
@@ -1665,6 +1691,7 @@ public:
  *      - lang_range is not xsd:string
  */
 [[nodiscard]] Literal lang_matches(Literal const &lang_tag, Literal const &lang_range, storage::DynNodeStoragePtr node_storage = keep_node_storage);
+
 
 inline namespace shorthands {
 
