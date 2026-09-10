@@ -236,6 +236,17 @@ TEST_CASE("decimal limits") {
         CHECK(Literal::make_typed_from_value<Double>(1.8e38).cast<Decimal>().null());
         CHECK(Literal::make_typed_from_value<Float>(1.8e38f).cast<Decimal>().null());
     }
+    SUBCASE("unm") {
+        CHECK((-Literal::make_typed_from_value<Decimal>(std::numeric_limits<Decimal::cpp_type>::min())).null());
+    }
+    SUBCASE("compare") {
+        CHECK(Literal::make_typed<Decimal>("-0.00000000000000000000000000000000000001") > Literal::make_typed<Decimal>("-17014118346046923173168730371588410572"));
+        CHECK(!(Literal::make_typed<Decimal>("-0.00000000000000000000000000000000000001") < Literal::make_typed<Decimal>("-17014118346046923173168730371588410572")));
+    }
+    SUBCASE("round") {
+        CHECK(Literal::make_typed_from_value<Double>(1e-41).cast<Decimal>().ceil() == Literal::make_typed<Decimal>("1"));
+        CHECK(Literal::make_typed_from_value<Double>(-1e-41).cast<Decimal>().floor() == Literal::make_typed<Decimal>("-1"));
+    }
 }
 
 TEST_CASE("decimal possible bug") {

@@ -105,3 +105,7 @@ TEST_CASE("integer inlining") {
         CHECK(!lit.backend_handle().is_inlined());
     }
 }
+
+TEST_CASE("integer min unm") {
+    CHECK((-Literal::make_typed_from_value<xsd::Integer>(std::numeric_limits<xsd::Integer::cpp_type>::min())).null());
+}

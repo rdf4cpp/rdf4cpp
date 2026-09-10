@@ -1190,6 +1190,9 @@ Literal Literal::numeric_unop_impl(OpSelect op_select, storage::DynNodeStoragePt
     }();
 
     RDF4CPP_ASSERT(result_entry != nullptr);
+    if (!op_res.result_value.has_value()) {
+        return Literal{};
+    }
     return Literal::make_typed_unchecked(std::move(*op_res.result_value), op_res.result_type_id, *result_entry, node_storage);
 }
 

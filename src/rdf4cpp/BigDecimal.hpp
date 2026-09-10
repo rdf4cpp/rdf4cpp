@@ -48,7 +48,7 @@ namespace rdf4cpp {
             static constexpr uint32_t base = 10;
 
             static constexpr UnscaledValue_t abs(UnscaledValue_t const &value) noexcept {
-                if constexpr (std::is_integral_v<UnscaledValue_t> && !std::is_signed_v<UnscaledValue_t>) {
+                if constexpr (UnsignedIntegralExt<UnscaledValue_t>) {
                     return value;
                 } else {
                     return value < 0 ? -value : value;
@@ -383,7 +383,7 @@ namespace rdf4cpp {
                         result = handle_rounding(res, ex, rem / div, mode);
                         return false;
                     }
-                    if constexpr (std::is_integral_v<Exponent_t>) {
+                    if constexpr (IntegralExt<Exponent_t>) {
                         if (ex == std::numeric_limits<Exponent_t>::max()) {
                             if (detail::mul_checked<m>(rem, UnscaledValue_t{base}, rem))
                                 return true;
@@ -443,7 +443,7 @@ namespace rdf4cpp {
              * @return
              */
             [[nodiscard]] constexpr nonstd::expected<BigDecimal, DecimalError> unary_minus_checked() const noexcept {
-                if constexpr (std::is_integral_v<UnscaledValue_t>) {
+                if constexpr (IntegralExt<UnscaledValue_t>) {
                     if (std::numeric_limits<UnscaledValue_t>::min() == unscaled_value)
                         return nonstd::make_unexpected(DecimalError::Overflow);
                 }
@@ -672,6 +672,13 @@ namespace rdf4cpp {
                     uns /= 100;
                     if (detail::pow_checked<OverflowMode::Checked>(v, exponent - 2, v)) {
                         // base pow exponent overflows and this did not, we have to be close to 0
+                        auto cmp = *this <=> BigDecimal{0, 0};
+                        if (cmp == std::strong_ordering::greater && mode == RoundingMode::Ceil) {
+                            return BigDecimal{1, 0};
+                        }
+                        else if (cmp == std::strong_ordering::less && mode == RoundingMode::Floor) {
+                            return BigDecimal{-1, 0};
+                        }
                         return BigDecimal{0, 0};
                     }
                 }
@@ -721,15 +728,15 @@ namespace rdf4cpp {
                     if (this->exponent > other.exponent) {
                         UnscaledValue_t b{base};
                         if (detail::pow_checked<OverflowMode::Checked>(b, this->exponent - other.exponent, b))
-                            return std::strong_ordering::less;  // t does fit into the same precision, while o does not
+                            return this->positive() ? std::strong_ordering::less : std::strong_ordering::greater;  // t does fit into the same precision, while o does not
                         if (detail::mul_checked<OverflowMode::Checked>(o, b, o))
-                            return std::strong_ordering::less;  // t does fit into the same precision, while o does not
+                            return this->positive() ? std::strong_ordering::less : std::strong_ordering::greater;  // t does fit into the same precision, while o does not
                     } else if (this->exponent < other.exponent) {
                         UnscaledValue_t b{base};
                         if (detail::pow_checked<OverflowMode::Checked>(b, other.exponent - this->exponent, b))
-                            return std::strong_ordering::greater;  // o does fit into the same precision, while t does not
+                            return this->positive() ? std::strong_ordering::greater : std::strong_ordering::less;  // o does fit into the same precision, while t does not
                         if (detail::mul_checked<OverflowMode::Checked>(t, b, t))
-                            return std::strong_ordering::greater;  // o does fit into the same precision, while t does not
+                            return this->positive() ? std::strong_ordering::greater : std::strong_ordering::less;  // o does fit into the same precision, while t does not
                     }
                 }
                 if (t < o)

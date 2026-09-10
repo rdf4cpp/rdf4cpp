@@ -14,6 +14,10 @@ namespace rdf4cpp {
 
     template<typename T>
     concept IntegralExt = std::integral<T> || std::same_as<T, Int128> || std::same_as<T, UInt128>;
+    template<typename T>
+    concept SignedIntegralExt = std::signed_integral<T> || std::same_as<T, Int128>;
+    template<typename T>
+    concept UnsignedIntegralExt = std::unsigned_integral<T> || std::same_as<T, UInt128>;
 
     namespace util {
         namespace detail {
