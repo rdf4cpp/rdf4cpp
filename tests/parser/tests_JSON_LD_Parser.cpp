@@ -923,3 +923,12 @@ TEST_CASE("a remote context document without @context is an invalid remote conte
     CHECK(r.quads == "");
     CHECK(r.errors == "invalid remote context\n");
 }
+
+TEST_CASE("an imported context that is not a map is an invalid remote context") {
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/imp.jsonld", R"({"@context": ["x"]})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": {"@version": 1.1, "@import": "http://ex/imp.jsonld"}, "@id": "http://ex/s", "http://ex/p": "v"})", "http://ex/doc", docs);
+    CHECK(r.quads == "");
+    CHECK(r.errors == "invalid remote context\n");
+}
