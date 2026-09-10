@@ -914,3 +914,12 @@ TEST_CASE("a term defined on demand loads its remote scoped context") {
     CHECK(r.errors == "");
     CHECK(r.quads == "<http://ex/s> <http://ex/b/> <http://ex/o> .\n");
 }
+
+TEST_CASE("a remote context document without @context is an invalid remote context") {
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/ctx.jsonld", R"({"foo": 1})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": "http://ex/ctx.jsonld", "@id": "http://ex/s", "http://ex/p": "v"})", "http://ex/doc", docs);
+    CHECK(r.quads == "");
+    CHECK(r.errors == "invalid remote context\n");
+}
