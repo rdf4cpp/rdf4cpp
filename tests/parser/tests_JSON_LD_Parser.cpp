@@ -882,3 +882,13 @@ TEST_CASE("relative urls in a remote context resolve against the url of that con
     CHECK(r.errors == "");
     CHECK(r.quads == "<http://ex/s> <http://ex/p> \"v\" .\n");
 }
+
+TEST_CASE("@propagate false in a remote context does not reach nested node objects") {
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/ctx.jsonld", R"({"@context": {"@propagate": false, "t": "http://ex/t"}})"},
+    };
+    // the nested node object uses the context from before the remote context, which does not define t
+    auto const r = parse_with_remote_documents(R"({"@context": "http://ex/ctx.jsonld", "@id": "http://ex/s", "t": {"@id": "http://ex/o", "t": "v"}})", "http://ex/doc", docs);
+    CHECK(r.errors == "");
+    CHECK(r.quads == "<http://ex/s> <http://ex/t> <http://ex/o> .\n");
+}
