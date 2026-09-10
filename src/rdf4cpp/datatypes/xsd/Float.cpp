@@ -48,13 +48,15 @@ nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, Dynamic
 
 template<>
 nonstd::expected<capabilities::Default<xsd_float>::cpp_type, DynamicError> capabilities::Numeric<xsd_float>::from_multiplicity(uint64_t multiplicity) noexcept {
-    auto const float_val = static_cast<cpp_type>(multiplicity);
-    if (static_cast<uint64_t>(float_val) != multiplicity) [[unlikely]] {
-        // didn't fit
+    constexpr auto available_mantissa_bits = std::numeric_limits<cpp_type>::digits;
+    auto const required_mantissa_bits = std::bit_width(multiplicity) - std::countr_zero(multiplicity);
+
+    if (required_mantissa_bits > available_mantissa_bits) [[unlikely]] {
+        // doesn't fit
         return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
     }
 
-    return float_val;
+    return static_cast<cpp_type>(multiplicity);
 }
 
 template<>
