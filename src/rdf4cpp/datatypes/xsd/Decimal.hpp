@@ -78,6 +78,23 @@ std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_decim
 
 template<>
 capabilities::Inlineable<xsd_decimal>::cpp_type capabilities::Inlineable<xsd_decimal>::from_inlined(storage::identifier::LiteralID inlined) noexcept;
+
+template<>
+template<>
+capabilities::Promotable<xsd_decimal>::promoted_cpp_type<0> capabilities::Promotable<xsd_decimal>::promote<0>(cpp_type const &value) noexcept;
+
+template<>
+template<>
+nonstd::expected<capabilities::Promotable<xsd_decimal>::cpp_type, DynamicError> capabilities::Promotable<xsd_decimal>::demote<0>(promoted_cpp_type<0> const &value) noexcept;
+
+template<>
+template<>
+capabilities::Promotable<xsd_decimal>::promoted_cpp_type<1> capabilities::Promotable<xsd_decimal>::promote<1>(cpp_type const &value) noexcept;
+
+template<>
+template<>
+nonstd::expected<capabilities::Promotable<xsd_decimal>::cpp_type, DynamicError> capabilities::Promotable<xsd_decimal>::demote<1>(promoted_cpp_type<1> const &value) noexcept;
+
 #endif
 
 extern template struct LiteralDatatypeImpl<xsd_decimal,

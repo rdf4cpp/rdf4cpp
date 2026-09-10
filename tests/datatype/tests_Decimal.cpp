@@ -232,6 +232,10 @@ TEST_CASE("decimal limits") {
         CHECK((Literal::make_typed<Decimal>("1000000000000000000") / Literal::make_typed<Decimal>("3")) == Literal::make_typed<Decimal>("333333333333333333.33333333333333333333"));
         CHECK((Literal::make_typed_from_value<Decimal>(std::numeric_limits<Decimal::cpp_type>::min()) / Literal::make_typed<Decimal>("-1")).null());
     }
+    SUBCASE("cast") {
+        CHECK(Literal::make_typed_from_value<Double>(1.8e38).cast<Decimal>().null());
+        CHECK(Literal::make_typed_from_value<Float>(1.8e38f).cast<Decimal>().null());
+    }
 }
 
 TEST_CASE("decimal possible bug") {
