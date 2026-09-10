@@ -902,3 +902,15 @@ TEST_CASE("@base in a remote context is ignored") {
     CHECK(r.errors == "");
     CHECK(r.quads == "<http://doc.example/s> <http://ex/p> \"v\" .\n");
 }
+
+TEST_CASE("a term defined on demand loads its remote scoped context") {
+    // A uses B before the definition of B, so B gets defined while A is defined
+    std::map<std::string, std::string, std::less<>> const docs{
+        {"http://ex/ctx.jsonld", R"({"@context": {}})"},
+    };
+    auto const r = parse_with_remote_documents(R"({"@context": {"A": {"@id": "B:x"}, "B": {"@id": "http://ex/b/", "@prefix": true, "@context": "http://ex/ctx.jsonld"}},
+      "@id": "http://ex/s", "B": {"@id": "http://ex/o"}})",
+                                               "http://ex/doc", docs);
+    CHECK(r.errors == "");
+    CHECK(r.quads == "<http://ex/s> <http://ex/b/> <http://ex/o> .\n");
+}
