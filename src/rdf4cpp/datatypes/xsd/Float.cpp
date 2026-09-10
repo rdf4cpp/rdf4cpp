@@ -47,6 +47,17 @@ nonstd::expected<capabilities::Numeric<xsd_float>::ceil_result_cpp_type, Dynamic
 }
 
 template<>
+nonstd::expected<capabilities::Default<xsd_float>::cpp_type, DynamicError> capabilities::Numeric<xsd_float>::from_multiplicity(uint64_t multiplicity) noexcept {
+    auto const float_val = static_cast<cpp_type>(multiplicity);
+    if (static_cast<uint64_t>(float_val) != multiplicity) [[unlikely]] {
+        // didn't fit
+        return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+    }
+
+    return float_val;
+}
+
+template<>
 std::optional<storage::identifier::LiteralID> capabilities::Inlineable<xsd_float>::try_into_inlined(cpp_type const &value) noexcept {
     return util::pack<storage::identifier::LiteralID>(value);
 }

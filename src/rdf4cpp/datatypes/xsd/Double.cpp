@@ -48,6 +48,18 @@ nonstd::expected<capabilities::Numeric<xsd_double>::ceil_result_cpp_type, Dynami
     return std::ceil(operand);
 }
 
+template<>
+nonstd::expected<capabilities::Default<xsd_double>::cpp_type, DynamicError> capabilities::Numeric<xsd_double>::from_multiplicity(uint64_t multiplicity) noexcept {
+    auto const double_val = static_cast<cpp_type>(multiplicity);
+    if (static_cast<uint64_t>(double_val) != multiplicity) [[unlikely]] {
+        // didn't fit
+        return nonstd::make_unexpected(DynamicError::InvalidValueForCast);
+    }
+
+    return double_val;
+}
+
+
 // A double stored as its shortest round-tripping decimal, i.e. as significand * 10^exponent.
 struct __attribute__((packed)) DecimalDoubleLayout {
     static constexpr size_t exponent_width = 6;

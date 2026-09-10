@@ -30,6 +30,20 @@ void CompensatedSum::add(Literal const &lit, uint64_t multiplicity) {
 }
 
 void CompensatedSum::add(DeferredLiteral const &value, uint64_t multiplicity) {
+    if (multiplicity == 1) {
+        add_once(value);
+        return;
+    }
+
+    if (is_exact(value.datatype)) {
+        // use multiplication by multiplicity instead of loop
+        // no precision loss possible because the dt is exact
+        auto const mult = make_deferred_from_multiplicity(multiplicity, value.datatype);
+        add_once(numeric_mul_deferred(value, mult, node_storage_));
+        return;
+    }
+
+    // datatype is not exact, multiplying with multiplicity would result in precision loss
     // assumption: multiplicity is usually small
     while (multiplicity > 0) {
         add_once(value);
